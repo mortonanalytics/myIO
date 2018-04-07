@@ -1,6 +1,8 @@
 # myIO
 Open Source Project to illustrate `R` + `d3.js` DOM manipulation and plotting
 
+See Demo: https://mortonanalytics.shinyapps.io/myIOdemo/
+
 # Overview
 This project is intended to illustrate the power of using `R` and `d3.js` together in Shiny applications. It utilizes the `htmlwidgets` 
 library to create visualizations in the browser.  Ultimately, I'd like to create divs with data driven CSS as well - but I'll start with
