@@ -592,6 +592,7 @@ chart.prototype.addToolTip = function() {
 				var key = d.label;
 				var color = d.color;
 				var values = d.data;
+				console.log(d.mapping.x_var);
 				var x_var = d.mapping.x_var;
 				var y_var = d.mapping.y_var;
 				
