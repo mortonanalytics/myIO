@@ -349,7 +349,7 @@ chart.prototype.addPoints = function(ly) {
 	  .transition()
 		.ease(d3.easeQuad)
 		.duration(1500)
-		.style('opacity', 0.3);
+		.style('opacity', 0.7);
 }
 
 chart.prototype.addCrosshairsY = function(ly) {
