@@ -4,6 +4,7 @@ library(dplyr)
 
 devtools::reload()
 devtools::install()
+devtools::document()
 df <- mtcars
 
 library(myIO)
