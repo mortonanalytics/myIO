@@ -49,7 +49,7 @@ chart.prototype.initialize = function(){
 	this.processScales(this.plotLayers);
 	this.addAxes();
 	this.routeLayers();
-	if(this.options.referenceLine != "none")this.addReferenceLines();
+	if(this.options.referenceLine) {if(this.options.referenceLine != "none")this.addReferenceLines();}
 	this.addLegend();
 	this.addToolTip();
 }
@@ -123,8 +123,8 @@ chart.prototype.processScales = function(lys){
 	
 	lys.forEach(function(d){
 		
-		const x_var = d.x_var; 
-		const y_var = d.y_var;
+		const x_var = d.mapping.x_var; 
+		const y_var = d.mapping.y_var;
 		
 		const x = d3.extent( d.data, function(e) { return +e[x_var]; });
 		const y = d3.extent( d.data, function(e) { return +e[y_var]; });
@@ -210,12 +210,12 @@ chart.prototype.routeLayers = function() {
 		var layerType = d.type;
 
 		if(layerType == "line") {
-			if(d.low_y) {that.addArea(d);}
+			if(d.mapping.low_y) {that.addArea(d);}
 			that.addLine(d);
 			that.addPoints(d);
 		} else if(layerType == "point") {
-			if(d.low_y) { that.addCrosshairsY(d); }
-			if(d.low_x) { that.addCrosshairsX(d); }
+			if(d.mapping.low_y) { that.addCrosshairsY(d); }
+			if(d.mapping.low_x) { that.addCrosshairsX(d); }
 			that.addPoints(d);
 		}
 		
@@ -246,8 +246,8 @@ chart.prototype.addLine = function(ly) {
 	
 	var valueLine = d3.line()
 		.curve(d3.curveMonotoneX)
-		.x(function( d ) { return that.xScale( d[ly.x_var] ); })
-		.y(function( d ) { return that.yScale( d[ly.y_var] ); });
+		.x(function( d ) { return that.xScale( d[ly.mapping.x_var] ); })
+		.y(function( d ) { return that.yScale( d[ly.mapping.y_var] ); });
 	
 	var linePath = this.chart
 		.selectAll( '.tag-line-' + that.element.id + '-'  + key.replace(/\s+/g, '')) 
@@ -285,9 +285,9 @@ chart.prototype.addArea = function(ly) {
 	
 	var valueArea = d3.area()
 		.curve(d3.curveMonotoneX)
-		.x(function(d) { return that.xScale(d[ly.x_var]); })
-		.y0(function(d) { return that.yScale(d[ly.low_y]); })
-		.y1(function(d) { return that.yScale(d[ly.high_y]); });
+		.x(function(d) { return that.xScale(d[ly.mapping.x_var]); })
+		.y0(function(d) { return that.yScale(d[ly.mapping.low_y]); })
+		.y1(function(d) { return that.yScale(d[ly.mapping.high_y]); });
 		
 	var linePath = this.chart
 		.selectAll( '.tag-area-' + that.element.id + '-'  + key.replace(/\s+/g, '')) 
@@ -334,8 +334,8 @@ chart.prototype.addPoints = function(ly) {
 	  .transition()
 	  .ease(d3.easeQuad)
 	  .duration(1500)
-		.attr('cx', function(e) { return that.xScale( e[ly.x_var] ); })
-		.attr('cy', function(e) { return that.yScale( e[ly.y_var] ); })
+		.attr('cx', function(e) { return that.xScale( e[ly.mapping.x_var] ); })
+		.attr('cy', function(e) { return that.yScale( e[ly.mapping.y_var] ); })
 	
 	points.enter()
 		.append('circle')
@@ -343,8 +343,8 @@ chart.prototype.addPoints = function(ly) {
 		.style('fill',  ly.color )
 		.style('opacity', 0)
 		.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
-		.attr('cx', function(e) {return that.xScale( e[ly.x_var] ); })
-		.attr('cy', function(e) { return that.yScale( e[ly.y_var] ); })
+		.attr('cx', function(e) {return that.xScale( e[ly.mapping.x_var] ); })
+		.attr('cy', function(e) { return that.yScale( e[ly.mapping.y_var] ); })
 		.attr("class", 'tag-point-' + that.element.id + '-' + ly.label.replace(/\s+/g, '')  )
 	  .transition()
 		.ease(d3.easeQuad)
@@ -366,10 +366,10 @@ chart.prototype.addCrosshairsY = function(ly) {
 		.transition()
 		.ease(d3.easeQuad)
 		.duration(1500)
-		.attr('x1', function(d) { return that.xScale(d[ly.x_var]); })
-		.attr('x2', function(d) { return that.xScale(d[ly.x_var]); })
-		.attr('y1', function(d) { return that.yScale(d[ly.low_y]); })
-		.attr('y2', function(d) { return that.yScale(d[ly.high_y]); });
+		.attr('x1', function(d) { return that.xScale(d[ly.mapping.x_var]); })
+		.attr('x2', function(d) { return that.xScale(d[ly.mapping.x_var]); })
+		.attr('y1', function(d) { return that.yScale(d[ly.mapping.low_y]); })
+		.attr('y2', function(d) { return that.yScale(d[ly.mapping.high_y]); });
 		
 	crosshairsY.enter()
 		.append('line')
@@ -377,10 +377,10 @@ chart.prototype.addCrosshairsY = function(ly) {
 		.style('stroke', 'black')
 		.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
 		.style('opacity', 0.5)
-		.attr('x1', function(d) { return that.xScale(d[ly.x_var]); })
-		.attr('x2', function(d) { return that.xScale(d[ly.x_var]); })
-		.attr('y1', function(d) { return that.yScale(d[ly.low_y]); })
-		.attr('y2', function(d) { return that.yScale(d[ly.high_y]); })
+		.attr('x1', function(d) { return that.xScale(d[ly.mapping.x_var]); })
+		.attr('x2', function(d) { return that.xScale(d[ly.mapping.x_var]); })
+		.attr('y1', function(d) { return that.yScale(d[ly.mapping.low_y]); })
+		.attr('y2', function(d) { return that.yScale(d[ly.mapping.high_y]); })
 		.attr("class", 'tag-crosshairY-' + that.element.id + '-' + ly.label.replace(/\s+/g, '')  );
 }
 
@@ -398,10 +398,10 @@ chart.prototype.addCrosshairsX = function(ly) {
 		.transition()
 		.duration(1500)
 		.ease(d3.easeQuad)
-		.attr('x1', function(d) { return that.xScale(d[ly.low_x]); })
-		.attr('x2', function(d) { return that.xScale(d[ly.high_x]); })
-		.attr('y1', function(d) { return that.yScale(d[ly.y_var]); })
-		.attr('y2', function(d) { return that.yScale(d[ly.y_var]); });
+		.attr('x1', function(d) { return that.xScale(d[ly.mapping.low_x]); })
+		.attr('x2', function(d) { return that.xScale(d[ly.mapping.high_x]); })
+		.attr('y1', function(d) { return that.yScale(d[ly.mapping.y_var]); })
+		.attr('y2', function(d) { return that.yScale(d[ly.mapping.y_var]); });
 		
 	crosshairsX.enter()
 		.append('line')
@@ -409,10 +409,10 @@ chart.prototype.addCrosshairsX = function(ly) {
 		.style('stroke', 'black')
 		.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
 		.style('opacity', 0.5)
-		.attr('x1', function(d) { return that.xScale(d[ly.low_x]); })
-		.attr('x2', function(d) { return that.xScale(d[ly.high_x]); })
-		.attr('y1', function(d) { return that.yScale(d[ly.y_var]); })
-		.attr('y2', function(d) { return that.yScale(d[ly.y_var]); })
+		.attr('x1', function(d) { return that.xScale(d[ly.mapping.low_x]); })
+		.attr('x2', function(d) { return that.xScale(d[ly.mapping.high_x]); })
+		.attr('y1', function(d) { return that.yScale(d[ly.mapping.y_var]); })
+		.attr('y2', function(d) { return that.yScale(d[ly.mapping.y_var]); })
 		.attr("class", 'tag-crosshairX-' + that.element.id + '-' + ly.label.replace(/\s+/g, '')  );
 }
 
@@ -592,8 +592,8 @@ chart.prototype.addToolTip = function() {
 				var key = d.label;
 				var color = d.color;
 				var values = d.data;
-				var x_var = d.x_var;
-				var y_var = d.y_var;
+				var x_var = d.mapping.x_var;
+				var y_var = d.mapping.y_var;
 				
 				var xPos =  that.xScale.invert(mouse[0]);
 				var bisect = d3.bisector(function(d) {return d[x_var]; }).left;

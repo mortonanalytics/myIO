@@ -4,7 +4,7 @@ dependencies:
   src: htmlwidgets/lib
   script: ./d3.min.js
 - name: myIO
-  version: 1.0
+  version: 0.1.0
   src: htmlwidgets/myIO
   script: ./myIOapi.js
   stylesheet: ./style.css

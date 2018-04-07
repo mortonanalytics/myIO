@@ -12,14 +12,26 @@ HTMLWidgets.widget({
 
       renderValue: function(x) {
 
-        // TODO: code to render the widget, e.g.
-        el.innerText = x.message;
+        // general chart with layers
+		if(x.layers) {
+			if(this.chart){
+				this.chart.update(x);
+			} else {
+				this.chart = new chart({
+					element: document.getElementById(el.id),
+					plotLayers: x.layers,
+					options: x.options
+					});
+			}
+		}
 
       },
 
       resize: function(width, height) {
-
-        // TODO: code to re-render the widget with a new size
+		//chart will use its own resize method
+        if(this.chart) {
+			this.chart.resize();
+		}
 
       }
 

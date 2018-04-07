@@ -2,10 +2,10 @@
 % Please edit documentation in R/myIO.R
 \name{myIO}
 \alias{myIO}
-\title{<Add Title>}
+\title{myIO}
 \usage{
 myIO(data = NULL, width = NULL, height = NULL, elementId = NULL)
 }
 \description{
-<Add Description>
+myIO R + d3.js project
 }

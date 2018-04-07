@@ -1,15 +1,17 @@
-#' <Add Title>
+#' myIO
 #'
-#' <Add Description>
+#' myIO R + d3.js project
 #'
 #' @import htmlwidgets
+#' @import dplyr
 #'
 #' @export
 myIO <- function(data = NULL, width = NULL, height = NULL, elementId = NULL) {
 
   # forward options using x
   x = list(
-    data = data
+    data = data,
+    options = list(referenceLine = 0)
   )
 
   # create widget

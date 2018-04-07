@@ -21,19 +21,19 @@ addIoLayer <- function(myIO,
                      mapping ){
 
   ## assign data
-  if(is.null(layerData)) {
-    layerData <- myIO$x$dataset
+  if(is.null(data)) {
+    data <- myIO$x$dataset
   }
   myIO$x$dataset <- NULL
-  layerData <- unname(split(layerData, 1:nrow(layerData)))
+  data <- unname(split(data, 1:nrow(data)))
 
   ##create layer object
   layer <- list(
     type = type,
     color = color,
     label = label,
-    data = layerData,
-    mapping - mapping
+    data = data,
+    mapping = mapping
   )
 
   ##put the layers together
