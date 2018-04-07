@@ -1,6 +1,6 @@
 #' addLayer()
 #'
-#' Adds individual layer to a PopRViz widget
+#' Adds individual layer to a myIO widget
 #'
 #' @param myIO an htmlwidget object created by the PopRViz() function
 #' @param layerType a quoted string defining the type of layer: 'bar', 'line', 'point'
@@ -13,12 +13,12 @@
 #'
 #' @export
 
-addLayer <- function(myIO,
-                     layerType,
-                     layerColor,
-                     layerLabel,
-                     layerData = NULL,
-                     layerMapping ){
+addIoLayer <- function(myIO,
+                     type,
+                     color,
+                     label,
+                     data = NULL,
+                     mapping ){
 
   ## assign data
   if(is.null(layerData)) {
@@ -29,17 +29,11 @@ addLayer <- function(myIO,
 
   ##create layer object
   layer <- list(
-    type = layerType,
-    color = layerColor,
-    label = layerLabel,
+    type = type,
+    color = color,
+    label = label,
     data = layerData,
-    ##plot variables
-    x_var = layerMapping$x_var,
-    low_x = layerMapping$low_x,
-    high_x = layerMapping$high_x,
-    y_var = layerMapping$y_var,
-    low_y = layerMapping$low_y,
-    high_y = layerMapping$high_y
+    mapping - mapping
   )
 
   ##put the layers together
