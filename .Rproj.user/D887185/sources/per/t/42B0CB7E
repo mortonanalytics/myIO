@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1523119881346.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3526849900",
+    "id" : "42B0CB7E",
+    "lastKnownWriteTime" : 1523120808,
+    "last_content_update" : 1523120808686,
+    "path" : "~/GitHub/myIO/R/addIoLayer.R",
+    "project_path" : "R/addIoLayer.R",
+    "properties" : {
+        "cursorPosition" : "35,13",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1523120626137.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2656945594",
+    "id" : "43705374",
+    "lastKnownWriteTime" : 1523122690,
+    "last_content_update" : 1523122690161,
+    "path" : "~/GitHub/myIO/R/myIO.R",
+    "project_path" : "R/myIO.R",
+    "properties" : {
+        "cursorPosition" : "13,36",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

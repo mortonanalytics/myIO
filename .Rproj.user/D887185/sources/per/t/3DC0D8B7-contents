@@ -1,4 +1,16 @@
 library(devtools)
 library(htmlwidgets)
+library(dplyr)
 
+devtools::reload()
 devtools::install()
+df <- mtcars
+
+library(myIO)
+myIO() %>%
+  addIoLayer(type = 'point',
+                   color = 'steelblue',
+                   label = 'mypoints',
+                   data = df,
+                   mapping = list(x_var = "wt",
+                                  y_var = "mpg"))
