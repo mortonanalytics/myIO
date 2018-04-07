@@ -1,0 +1,4 @@
+library(devtools)
+library(htmlwidgets)
+
+devtools::install()
