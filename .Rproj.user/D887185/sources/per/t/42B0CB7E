@@ -5,15 +5,15 @@
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "3526849900",
+    "hash" : "3576958655",
     "id" : "42B0CB7E",
-    "lastKnownWriteTime" : 1523120808,
-    "last_content_update" : 1523120808686,
-    "path" : "~/GitHub/myIO/R/addIoLayer.R",
-    "project_path" : "R/addIoLayer.R",
+    "lastKnownWriteTime" : 1523323373,
+    "last_content_update" : 1523323373138,
+    "path" : "~/GitHub/myIO/R/addIoStatLayer.R",
+    "project_path" : "R/addIoStatLayer.R",
     "properties" : {
-        "cursorPosition" : "35,13",
-        "scrollLine" : "0"
+        "cursorPosition" : "30,55",
+        "scrollLine" : "22"
     },
     "relative_order" : 2,
     "source_on_save" : false,

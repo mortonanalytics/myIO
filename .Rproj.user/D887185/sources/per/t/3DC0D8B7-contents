@@ -2,16 +2,25 @@ library(devtools)
 library(htmlwidgets)
 library(dplyr)
 
-devtools::reload()
+#devtools::reload()
 devtools::install()
 devtools::document()
 df <- mtcars
 
 library(myIO)
+
+
 myIO() %>%
   addIoLayer(type = 'point',
                    color = 'steelblue',
                    label = 'mypoints',
-                   data = df,
+                   data = df[order(df$mpg),],
                    mapping = list(x_var = "wt",
-                                  y_var = "mpg"))
+                                  y_var = "mpg")) %>%
+  addIoStatLayer(type = "lm",
+                 color = "red",
+                 label = "LinearModel",
+                 data = df,
+                 mapping = list(x_var = "wt",
+                                y_var = "mpg")
+                 )

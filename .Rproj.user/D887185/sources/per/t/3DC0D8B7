@@ -5,14 +5,14 @@
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "1281487350",
+    "hash" : "712343130",
     "id" : "3DC0D8B7",
-    "lastKnownWriteTime" : 1523125256,
-    "last_content_update" : 1523125256030,
+    "lastKnownWriteTime" : 1523323428,
+    "last_content_update" : 1523323428,
     "path" : "~/dev_script_myIO.R",
     "project_path" : null,
     "properties" : {
-        "cursorPosition" : "7,0",
+        "cursorPosition" : "25,18",
         "scrollLine" : "0"
     },
     "relative_order" : 1,

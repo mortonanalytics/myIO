@@ -49,7 +49,7 @@ chart.prototype.initialize = function(){
 	this.processScales(this.plotLayers);
 	this.addAxes();
 	this.routeLayers();
-	if(this.options.referenceLine) {if(this.options.referenceLine != "none")this.addReferenceLines();}
+	this.addReferenceLines();
 	this.addLegend();
 	this.addToolTip();
 }
@@ -204,7 +204,7 @@ chart.prototype.routeLayers = function() {
 	var that = this;
 	
 	this.layerIndex = this.plotLayers.map(function(d) {return d.label; });
-	
+	console.log(this.plotLayers);
 	this.plotLayers.forEach(function(d){
 		
 		var layerType = d.type;
@@ -217,7 +217,10 @@ chart.prototype.routeLayers = function() {
 			if(d.mapping.low_y) { that.addCrosshairsY(d); }
 			if(d.mapping.low_x) { that.addCrosshairsX(d); }
 			that.addPoints(d);
-		}
+		} else if(layerType == "stat_line") {
+			console.log(d);
+			that.addLine(d);
+		} else {alert("Wrong Layer Type! Can be: line, point, stat_line")}
 		
 	})
 	
