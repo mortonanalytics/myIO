@@ -1,3 +1,5 @@
+[![Travis-CI Build Status](https://travis-ci.org/mortonanalytics/myIO.svg?branch=master)](https://travis-ci.org/mortonanalytics/myIO)
+
 # myIO
 Open Source Project to illustrate `R` + `d3.js` DOM manipulation and plotting
 
