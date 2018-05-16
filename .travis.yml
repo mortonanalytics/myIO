@@ -11,7 +11,9 @@ r_packages:
   - covr
   - dplyr
   - htmlwidgets
-  
+
+warnings_are_errors: false
+
 r_build_args: "--no-build-vignettes"
 
 after_success:
