@@ -1,3 +1,6 @@
+[![Travis-CI Build Status](https://travis-ci.org/mortonanalytics/myIO.svg?branch=master)](https://travis-ci.org/mortonanalytics/myIO)
+[![codecov](https://codecov.io/gh/mortonanalytics/myIO/branch/master/graph/badge.svg)](https://codecov.io/gh/mortonanalytics/myIO)
+
 # myIO
 Open Source Project to illustrate `R` + `d3.js` DOM manipulation and plotting
 
@@ -12,7 +15,7 @@ breaking changes.**
 # Make a plot
 You'll use two functions to make a plot: `myio() %>% addLayer()`
 
-# `addIoLayer()`
+# `addIoLayer()` or `addIoStatLayer()`
 This function takes the follwing arguments:
 
 `type` is a character string of the plot primitive you intend to use, e.g. "line" or "point"
