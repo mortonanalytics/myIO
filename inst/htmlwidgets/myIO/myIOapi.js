@@ -51,7 +51,7 @@ chart.prototype.initialize = function(){
 	this.routeLayers();
 	this.addReferenceLines();
 	this.addLegend();
-	this.addToolTip();
+	if(this.plotLayers[0].type != "hexbin") {this.addToolTip();}
 }
 
 chart.prototype.setClipPath = function(){
@@ -73,7 +73,7 @@ chart.prototype.setZoom = function() {
 	
 	//define zoom behavior
 	var zoom = d3.zoom()
-		.scaleExtent([1,3])
+		.scaleExtent([1,6])
 		.translateExtent([
 			[0,0],
 			[this.width- (m.right + m.left), this.height - (m.top + m.bottom)]
@@ -85,7 +85,8 @@ chart.prototype.setZoom = function() {
 	
 	//what gets changed
 	function zoomed () {
-		
+		that.plot.selectAll('.hexagon').attr("transform", d3.event.transform).style('opacity', d3.event.transform.k > 3.5 ? 0 : 1 );
+		that.plot.selectAll('.hexPoint').selectAll('circle').style('opacity', d3.event.transform.k < 3.4 ? 0 : 1 );
 		that.plot.selectAll('path').attr('transform', d3.event.transform);
 		that.plot.selectAll('circle').attr('transform', d3.event.transform);
 		that.plot.selectAll('line').attr('transform', d3.event.transform);
@@ -204,7 +205,7 @@ chart.prototype.routeLayers = function() {
 	var that = this;
 	
 	this.layerIndex = this.plotLayers.map(function(d) {return d.label; });
-	console.log(this.plotLayers);
+	
 	this.plotLayers.forEach(function(d){
 		
 		var layerType = d.type;
@@ -218,8 +219,10 @@ chart.prototype.routeLayers = function() {
 			if(d.mapping.low_x) { that.addCrosshairsX(d); }
 			that.addPoints(d);
 		} else if(layerType == "stat_line") {
-			console.log(d);
 			that.addLine(d);
+		} else if(layerType == "hexbin"){
+			that.addHexBin(d);
+			//that.addHexPoints(d);
 		} else {alert("Wrong Layer Type! Can be: line, point, stat_line")}
 		
 	})
@@ -234,6 +237,7 @@ chart.prototype.removeLayers = function(lys){
 		console.log(d);
 		d3.selectAll( '.tag-line-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
 		d3.selectAll( '.tag-point-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
+		d3.selectAll( '.tag-hexbin-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
 		d3.selectAll( '.tag-area-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
 		d3.selectAll( '.tag-crosshairY-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
 		d3.selectAll( '.tag-crosshairX-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
@@ -324,7 +328,7 @@ chart.prototype.addArea = function(ly) {
 chart.prototype.addPoints = function(ly) {
 	
 	var that = this;
-	
+
 	//join data to points
 	var points = this.chart
 		.selectAll( '.tag-point-' + that.element.id + '-'  +ly.label.replace(/\s+/g, '')) 
@@ -353,6 +357,86 @@ chart.prototype.addPoints = function(ly) {
 		.ease(d3.easeQuad)
 		.duration(1500)
 		.style('opacity', 0.7);
+}
+
+chart.prototype.addHexPoints = function(ly) {
+	
+	var that = this;
+	console.log(ly);
+	//join data to points
+	var points = this.chart
+		.append('g')
+		.attr('class', 'hexPoint')
+		.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
+		.selectAll( '.tag-point-' + that.element.id + '-'  +ly.label.replace(/\s+/g, '')) 
+		.data(ly.data);
+
+	points.exit()
+	  .transition().remove();
+	
+	points
+	  .transition()
+	  .ease(d3.easeQuad)
+	  .duration(1500)
+		.attr('cx', function(e) { return that.xScale( e[ly.mapping.x_var] ); })
+		.attr('cy', function(e) { return that.yScale( e[ly.mapping.y_var] ); })
+	
+	points.enter()
+		.append('circle')
+		.attr('r', 1)
+		.style('fill',  ly.color )
+		.attr('cx', function(e) {return that.xScale( e[ly.mapping.x_var] ); })
+		.attr('cy', function(e) { return that.yScale( e[ly.mapping.y_var] ); })
+		.attr("class", 'tag-point-' + that.element.id + '-' + ly.label.replace(/\s+/g, '')  )
+		.style('opacity', 0);
+}
+
+chart.prototype.addHexBin = function(ly){
+	var that = this;
+	
+	//create points	
+	var points = ly.data.map(function(d) { return  { 0: that.xScale(+d[ly.mapping.x_var]), 1: that.yScale(+d[ly.mapping.y_var]) } ; });
+	var x_extent = d3.extent(ly.data, function(d) { return +d[ly.mapping.x_var]; })
+	var y_extent = d3.extent(ly.data, function(d) { return +d[ly.mapping.y_var]; })
+	
+	//color scale
+	var color = d3.scaleSequential(d3.interpolateHslLong("white", "steelblue"))
+		.domain([0, 200]);
+		
+	//hexbin function
+	var hexbin = d3.hexbin()
+		.radius(20)
+		.extent([
+			[x_extent[0], y_extent[0]],
+			[x_extent[1], y_extent[1]]
+		]);
+			
+	//data join
+	var bins = this.chart
+		.append('g')
+		.attr('class', 'hexagon')
+		.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
+		.selectAll( '.tag-hexbin-' + that.element.id + '-'  +ly.label.replace(/\s+/g, '')) 
+		.data(hexbin(points));
+	console.log(bins);	
+	//EXIT
+	bins.exit()
+	  .transition().remove();
+	  
+	//ENTER
+	var newbins = bins.enter()
+		.append('path')
+		.attr("class", 'tag-hexbin-' + that.element.id + '-' + ly.label.replace(/\s+/g, '')  )
+		.attr('d', hexbin.hexagon())
+		.attr('transform', function(d) { return "translate(" + d.x + "," + d.y + ")"; })	
+		.attr('fill', 'white');
+		
+	//UPDATE
+	bins.merge(newbins)
+		.transition()
+			.ease(d3.easeQuad)
+			.duration(1500)
+		.attr('fill', function(d) { return color(d.length); });
 }
 
 chart.prototype.addCrosshairsY = function(ly) {
