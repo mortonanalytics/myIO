@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1528067026518.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "854240695",
+    "id" : "F804632",
+    "lastKnownWriteTime" : 1528067247,
+    "last_content_update" : 1528067247050,
+    "path" : "~/GitHub/myIO/tests/testthat/test-layer.R",
+    "project_path" : "tests/testthat/test-layer.R",
+    "properties" : {
+        "cursorPosition" : "23,5",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
