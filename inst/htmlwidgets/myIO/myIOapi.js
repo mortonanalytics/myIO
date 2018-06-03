@@ -47,11 +47,11 @@ chart.prototype.initialize = function(){
 	this.setClipPath();
 	//this.setZoom();
 	this.processScales(this.plotLayers);
-	this.addAxes();
+	if(this.plotLayers[0].type != "treemap")this.addAxes();
 	this.routeLayers();
-	this.addReferenceLines();
-	this.addLegend();
-	if(this.plotLayers[0].type != "hexbin") {this.addToolTip();}
+	if(this.plotLayers[0].type != "hexbin" & this.plotLayers[0].type != "treemap")this.addReferenceLines();
+	if(this.plotLayers[0].type != "hexbin" & this.plotLayers[0].type != "treemap")this.addLegend();
+	if(this.plotLayers[0].type != "hexbin" & this.plotLayers[0].type != "treemap") {this.addToolTip();}
 }
 
 chart.prototype.setClipPath = function(){
