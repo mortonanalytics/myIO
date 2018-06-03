@@ -223,6 +223,8 @@ chart.prototype.routeLayers = function() {
 		} else if(layerType == "hexbin"){
 			that.addHexBin(d);
 			//that.addHexPoints(d);
+		} else if(layerType == "treemap"){
+			that.addTreemap(d);
 		} else {alert("Wrong Layer Type! Can be: line, point, stat_line")}
 		
 	})
@@ -437,6 +439,93 @@ chart.prototype.addHexBin = function(ly){
 			.ease(d3.easeQuad)
 			.duration(1500)
 		.attr('fill', function(d) { return color(d.length); });
+}
+
+chart.prototype.addTreemap = function(ly) {
+	
+	var that = this;
+	var m = this.margin;
+	var format = d3.format(",d")
+	// create hierarchy from data
+	var root = d3.hierarchy(ly.data)
+		.eachBefore(function(d) { d.data.id = (d.parent ? d.parent.data.id + "." : "") + d.data.name; })
+		.sum(sumBySize)
+		.sort(function(a,b) { return b.height - a.height || b.value - a.value});
+	
+	// define treemap function
+	var treemap = d3.treemap()
+		.tile(d3.treemapResquarify)
+		.size([
+			this.width - (m.left + m.right),
+			this.height - (m.top + m.bottom)
+		])
+		.round(true)
+		.paddingInner(1);
+	
+	treemap(root);
+	console.log(root);
+	// define color scale
+	var color = d3.scaleOrdinal(ly.color);
+	
+	// data join
+	var cell = this.chart
+		.selectAll('.root')
+		.data(root.leaves());
+		
+	// EXIT
+	cell.exit().remove();
+	
+	// ENTER
+	var newCell = cell.enter()
+		.append('g')
+		.attr('class', 'root')
+		.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
+		.attr('transform', function(d) { return "translate(" + d.x0 + "," + d.y0 + ")"; });
+	
+	// append rect
+	newCell.append("rect")
+		.attr('id', function(d) { return d.data.id; })
+		.attr('width', function(d) { return d.x1 - d.x0; })
+		.attr('height', function(d) { return d.y1 - d.y0; })
+		.attr('opacity', 0.5)
+		.attr('fill', function(d) { while (d.depth > 1) d = d.parent; return color(d.data.id); });
+	
+	// append text
+	newCell.append('text')
+		.selectAll('tspan')
+		.data(function(d) { 
+			var name = d.data[ly.mapping.x_var];
+			return name[0].split(/(?=[A-Z][^A-Z])/g).concat(format(d.value)); 
+		})
+		.enter().append('tspan')
+		.attr('x', 3)
+		.attr('y', function(d,i,nodes) { return (i === nodes.length - 1) * 3 + 16 + (i - 0.5) * 9; })
+		.attr('fill-opacity',  function(d,i,nodes) { return i === nodes.length - 1 ? 0.9 : null; })
+		//.attr('fill', 'black')
+		.text(function(d) { return d; });
+		
+	// append title/tooltip
+	newCell.append('title')
+		.text(function(d) { 
+			return d.data[ly.mapping.level_1] + " \\ \n" + 
+				d.data[ly.mapping.level_2] + " \\ \n" +
+				d.data[ly.mapping.x_var] + " \\ \n" +
+				format(d.value); })
+	
+	// UPDATE
+	cell.merge(newCell)
+		.transition()
+        .duration(750)
+        .attr("transform", function(d) { return "translate(" + d.x0 + "," + d.y0 + ")"; })
+      .select("rect")
+        .attr("width", function(d) { return d.x1 - d.x0; })
+        .attr("height", function(d) { return d.y1 - d.y0; });
+	
+	//helper functions
+	function sumBySize(d) {
+		return d[ly.mapping.y_var];
+	}
+	
 }
 
 chart.prototype.addCrosshairsY = function(ly) {

@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1528064100376.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "2C27700D",
+    "lastKnownWriteTime" : 1528064675,
+    "last_content_update" : 1528064675837,
+    "path" : "~/dev_script_myIO.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "24,0",
+        "scrollLine" : "3"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
