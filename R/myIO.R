@@ -2,8 +2,6 @@
 #'
 #' myIO R + d3.js project
 #'
-#' @import htmlwidgets
-#'
 #' @export
 myIO <- function(data = NULL, width = NULL, height = NULL, elementId = NULL) {
 
