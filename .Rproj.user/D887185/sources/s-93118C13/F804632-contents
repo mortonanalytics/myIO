@@ -1,4 +1,6 @@
 library(testthat)
+library(htmlwidgets)
+library(myIO)
 
 context("add layer results")
 testObject <-  myIO() %>%
