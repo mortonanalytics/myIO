@@ -10,7 +10,7 @@ testObject <-  myIO() %>%
            mapping = list(x_var = "wt",
                                y_var = "mpg"))
 
-test_that("add layer creates a list of two", {
+testthat("add layer creates a list of two", {
   expect_output(str(testObject$x$layers), "List of 1")
 })
 
@@ -22,6 +22,6 @@ testObject2 <- testObject %>%
            mapping = list(x_var = "drat",
                                y_var = "wt"))
 
-test_that("add layer creates a list of two", {
+testthat("add layer creates a list of two", {
   expect_output(str(testObject2$x$layers), "List of 2")
 })
