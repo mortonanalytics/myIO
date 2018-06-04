@@ -5,14 +5,14 @@
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "1367586992",
+    "hash" : "1567802894",
     "id" : "F804632",
-    "lastKnownWriteTime" : 1528069310,
-    "last_content_update" : 1528069310512,
+    "lastKnownWriteTime" : 1528070939,
+    "last_content_update" : 1528070939502,
     "path" : "~/GitHub/myIO/tests/testthat/test-layer.R",
     "project_path" : "tests/testthat/test-layer.R",
     "properties" : {
-        "cursorPosition" : "24,4",
+        "cursorPosition" : "23,5",
         "scrollLine" : "0",
         "tempName" : "Untitled1"
     },
