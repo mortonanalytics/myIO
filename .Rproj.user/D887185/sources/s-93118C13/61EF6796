@@ -5,14 +5,14 @@
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "0",
+    "hash" : "3105819369",
     "id" : "61EF6796",
-    "lastKnownWriteTime" : 1528069845,
-    "last_content_update" : 1528069845215,
+    "lastKnownWriteTime" : 1528071510,
+    "last_content_update" : 1528071510096,
     "path" : "~/GitHub/myIO/R/myIO.R",
     "project_path" : "R/myIO.R",
     "properties" : {
-        "cursorPosition" : "4,22",
+        "cursorPosition" : "4,10",
         "scrollLine" : "0"
     },
     "relative_order" : 5,
