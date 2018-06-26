@@ -51,7 +51,9 @@ chart.prototype.initialize = function(){
 	this.routeLayers();
 	if(this.plotLayers[0].type != "hexbin" & this.plotLayers[0].type != "treemap")this.addReferenceLines();
 	if(this.plotLayers[0].type != "hexbin" & this.plotLayers[0].type != "treemap")this.addLegend();
-	if(this.plotLayers[0].type != "hexbin" & this.plotLayers[0].type != "treemap") {this.addToolTip();}
+	if(this.plotLayers[0].type != "hexbin" & 
+	   this.plotLayers[0].type != "treemap" &
+	   this.plotLayers[0].type != "point") {this.addToolTip();}
 }
 
 chart.prototype.setClipPath = function(){
@@ -359,6 +361,37 @@ chart.prototype.addPoints = function(ly) {
 		.ease(d3.easeQuad)
 		.duration(1500)
 		.style('opacity', 0.7);
+	console.log(this.options);
+	if(this.options.dragPoints == true) { this.dragPoints(); }	
+}
+
+chart.prototype.dragPoints = function(){
+	var that = this;
+	
+	var drag = d3.drag()
+	.on('start', dragStart)
+	.on('drag', dragging)
+	.on('end', dragEnd);
+	
+	this.chart.selectAll('circle')
+		.call(drag);
+		
+	function dragStart(d) {
+		d3.select(this).raise().classed('active', true);
+	}
+	
+	function dragging(d) {
+		d[0] = that.xScale.invert(d3.event.x);
+		d[1] = that.yScale.invert(d3.event.y);
+		
+		d3.select(this)
+			.attr('cx', that.xScale(d[0]))
+			.attr('cy', that.yScale(d[1]));
+	}
+	
+	function dragEnd(d){
+		d3.select(this).calss('active', false);
+	}
 }
 
 chart.prototype.addHexPoints = function(ly) {
@@ -420,7 +453,7 @@ chart.prototype.addHexBin = function(ly){
 		.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
 		.selectAll( '.tag-hexbin-' + that.element.id + '-'  +ly.label.replace(/\s+/g, '')) 
 		.data(hexbin(points));
-	console.log(bins);	
+	
 	//EXIT
 	bins.exit()
 	  .transition().remove();
@@ -438,6 +471,7 @@ chart.prototype.addHexBin = function(ly){
 		.transition()
 			.ease(d3.easeQuad)
 			.duration(1500)
+		.attr('transform', function(d) { return "translate(" + d.x + "," + d.y + ")"; })
 		.attr('fill', function(d) { return color(d.length); });
 }
 

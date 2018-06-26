@@ -2,6 +2,8 @@
 
 export(addIoLayer)
 export(addIoStatLayer)
+export(dragPoints)
 export(myIO)
 export(myIOOutput)
 export(renderMyIO)
+import(htmlwidgets)
