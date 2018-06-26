@@ -1,3 +1,5 @@
+<img src="/inst/myIOsticker.png" width = "200px" height = "200px">
+
 [![Travis-CI Build Status](https://travis-ci.org/mortonanalytics/myIO.svg?branch=master)](https://travis-ci.org/mortonanalytics/myIO)
 [![codecov](https://codecov.io/gh/mortonanalytics/myIO/branch/master/graph/badge.svg)](https://codecov.io/gh/mortonanalytics/myIO)
 
