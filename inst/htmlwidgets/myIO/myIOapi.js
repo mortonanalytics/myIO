@@ -362,10 +362,10 @@ chart.prototype.addPoints = function(ly) {
 		.duration(1500)
 		.style('opacity', 0.7);
 	console.log(this.options);
-	if(this.options.dragPoints == true) { this.dragPoints(); }	
+	if(this.options.dragPoints == true) { this.dragPoints(ly); }	
 }
 
-chart.prototype.dragPoints = function(){
+chart.prototype.dragPoints = function(ly){
 	var that = this;
 	
 	var drag = d3.drag()
@@ -390,8 +390,58 @@ chart.prototype.dragPoints = function(){
 	}
 	
 	function dragEnd(d){
-		d3.select(this).calss('active', false);
+		d3.select(this).classed('active', false);
+		
+		var points = [];
+		that.chart.selectAll('circle').each(function(){
+			var x = that.xScale.invert(this.getAttribute('cx'));
+			var y = that.yScale.invert(this.getAttribute('cy'));	
+			var point = {
+				x_var:x,
+				y_var:y
+			}
+			points.push(point)
+		});
+		that.updateRegression(points);
 	}
+}
+
+chart.prototype.updateRegression = function(points){
+	
+	var that = this;
+	//define line function
+	var valueLine = d3.line()
+		.x(function(d){ return that.xScale(d.x_var); })
+		.y(function(d) {return that.yScale(d.y_est); });
+	
+	//regress points
+	
+	//data join regressed points
+	var linePath = this.chart
+		.selectAll( 'tag-regression-line-' + that.element.id)
+		.data([points]);
+	
+	//EXIT old elements not present in new data
+	linePath.exit()
+	  .transition().duration(500).style('opacity', 0)
+		.remove();
+	
+	//ENTER new elements present in new data
+	var newLinePath = linePath.enter().append("path")
+		.attr("fill", "none")
+		.style("stroke", "orange")
+		.style("stroke-width", 3)
+		.style('opacity', 0)
+		.attr("class", 'tag-regression-line-' + that.element.id );
+		
+	//UPDATE old elements present in new data
+	linePath.merge(newLinePath)	
+	  .transition()
+	  .ease(d3.easeQuad)
+	  .duration(1500)
+		.style('opacity', 1)
+		.attr("d", valueLine);	
+	
 }
 
 chart.prototype.addHexPoints = function(ly) {
