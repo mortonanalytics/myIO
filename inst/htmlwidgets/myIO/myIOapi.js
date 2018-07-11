@@ -407,7 +407,7 @@ chart.prototype.dragPoints = function(ly){
 		
 		if(HTMLWidgets.shinyMode) {
 			console.log(points);
-			Shiny.onInputChange('myIO-points', points);
+			Shiny.onInputChange('myIOpoints', points);
 		}
 		
 	}
@@ -437,7 +437,7 @@ chart.prototype.updateRegression = function(points){
 	
 	if(HTMLWidgets.shinyMode) {
 		console.log("regressionSent");
-		Shiny.onInputChange('myIO-regression', regression);
+		Shiny.onInputChange('myIOregression', regression);
 	}
 	
 	points.forEach(function(d){
