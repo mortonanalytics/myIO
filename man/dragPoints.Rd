@@ -4,7 +4,7 @@
 \alias{dragPoints}
 \title{dragPoints()}
 \usage{
-dragPoints(myIO, dragPoints = T)
+dragPoints(myIO, dragPoints = TRUE)
 }
 \description{
 Function to make points draggable
