@@ -406,10 +406,13 @@ chart.prototype.dragPoints = function(ly){
 		that.updateRegression(points);
 		
 		if(HTMLWidgets.shinyMode) {
-			console.log(points);
-			Shiny.onInputChange('myIOpointsX', points.map(function(d){return d[x_var]; }));
-			Shiny.onInputChange('myIOpointsY', points.map(function(d){return d[y_var]; }));
-			Shiny.onInputChange('myIOpointsEst', points.map(function(d){return d[y_est]; }));
+			var x = points.map(function(d){return d['x_var']; });
+			var y = points.map(function(d){return d['y_var']; });
+			var est = points.map(function(d){return d['y_est']; });
+			console.log(y);
+			Shiny.onInputChange('myIOpointsX', x);
+			Shiny.onInputChange('myIOpointsY', y);
+			Shiny.onInputChange('myIOpointsEst', est);
 		}
 		
 	}
