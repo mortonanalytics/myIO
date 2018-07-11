@@ -402,8 +402,21 @@ chart.prototype.dragPoints = function(ly){
 			}
 			points.push(point)
 		});
+		
 		that.updateRegression(points);
+		if(HTMLWidgets.shinyMode) Shiny.onInputChange('myIO-points', points);
 	}
+	var points = [];
+	this.chart.selectAll('circle').each(function(){
+			var x = that.xScale.invert(this.getAttribute('cx'));
+			var y = that.yScale.invert(this.getAttribute('cy'));	
+			var point = {
+				x_var:x,
+				y_var:y
+			}
+			points.push(point)
+		});
+	that.updateRegression(points);
 }
 
 chart.prototype.updateRegression = function(points){
@@ -415,10 +428,19 @@ chart.prototype.updateRegression = function(points){
 		.y(function(d) {return that.yScale(d.y_est); });
 	
 	//regress points
+	var regression = linearRegression(points, "y_var", "x_var");
+	
+	if(HTMLWidgets.shinyMode) Shiny.onInputChange('myIO-regression', regression);
+	
+	points.forEach(function(d){
+	 d.y_est = regression.fn(d.x_var);
+	});
+	
+	points.sort(function(a,b){ return a.x_var - b.x_var; });
 	
 	//data join regressed points
 	var linePath = this.chart
-		.selectAll( 'tag-regression-line-' + that.element.id)
+		.selectAll( '.tag-regression-line-' + that.element.id)
 		.data([points]);
 	
 	//EXIT old elements not present in new data
@@ -967,3 +989,37 @@ chart.prototype.resize = function(){
 	this.updateLegend();
 	this.updateToolTip();
 }
+
+/////////////////////
+///General Functions
+/////////////////////
+function linearRegression(data,y_var,x_var){
+		
+		var x = data.map(function(d) { return d[x_var]; });
+		var y = data.map(function(d) { return d[y_var]; });
+		
+		var lr = {};
+		var n = y.length;
+		var sum_x = 0;
+		var sum_y = 0;
+		var sum_xy = 0;
+		var sum_xx = 0;
+		var sum_yy = 0;
+		
+		for (var i = 0; i < y.length; i++) {
+			
+			sum_x += x[i];
+			sum_y += y[i];
+			sum_xy += (x[i]*y[i]);
+			sum_xx += (x[i]*x[i]);
+			sum_yy += (y[i]*y[i]);
+		} 
+		
+		lr['slope'] = (n * sum_xy - sum_x * sum_y) / (n*sum_xx - sum_x * sum_x);
+		lr['intercept'] = (sum_y - lr.slope * sum_x)/n;
+		lr['r2'] = Math.pow((n*sum_xy - sum_x*sum_y)/Math.sqrt((n*sum_xx-sum_x*sum_x)*(n*sum_yy-sum_y*sum_y)),2);
+		lr['fn'] = function (x) { return this.slope * x + this.intercept; };
+		return lr;
+}
+
+
