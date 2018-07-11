@@ -407,9 +407,9 @@ chart.prototype.dragPoints = function(ly){
 		
 		if(HTMLWidgets.shinyMode) {
 			console.log(points);
-			Shiny.onInputChange('myIOpointsX', points.x_var);
-			Shiny.onInputChange('myIOpointsY', points.y_var);
-			Shiny.onInputChange('myIOpointsEst', points.y_est);
+			Shiny.onInputChange('myIOpointsX', points.map(function(d){return d[x_var]; }));
+			Shiny.onInputChange('myIOpointsY', points.map(function(d){return d[y_var]; }));
+			Shiny.onInputChange('myIOpointsEst', points.map(function(d){return d[y_est]; }));
 		}
 		
 	}
