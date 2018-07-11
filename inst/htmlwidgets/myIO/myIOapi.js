@@ -404,7 +404,12 @@ chart.prototype.dragPoints = function(ly){
 		});
 		
 		that.updateRegression(points);
-		if(HTMLWidgets.shinyMode) Shiny.onInputChange('myIO-points', points);
+		
+		if(HTMLWidgets.shinyMode) {
+			console.log("pointsSent");
+			Shiny.onInputChange('myIO-points', points);
+		}
+		
 	}
 	var points = [];
 	this.chart.selectAll('circle').each(function(){
@@ -430,7 +435,10 @@ chart.prototype.updateRegression = function(points){
 	//regress points
 	var regression = linearRegression(points, "y_var", "x_var");
 	
-	if(HTMLWidgets.shinyMode) Shiny.onInputChange('myIO-regression', regression);
+	if(HTMLWidgets.shinyMode) {
+		console.log("regressionSent");
+		Shiny.onInputChange('myIO-regression', regression);
+	}
 	
 	points.forEach(function(d){
 	 d.y_est = regression.fn(d.x_var);
