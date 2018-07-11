@@ -361,7 +361,7 @@ chart.prototype.addPoints = function(ly) {
 		.ease(d3.easeQuad)
 		.duration(1500)
 		.style('opacity', 0.7);
-	console.log(this.options);
+
 	if(this.options.dragPoints == true) { this.dragPoints(ly); }	
 }
 
@@ -977,9 +977,12 @@ chart.prototype.update = function(x){
 	this.updateToolTip();
 	this.removeLayers(oldLayers);
 	
+	
 }
 
 chart.prototype.resize = function(){
+	var that = this;
+	
 	this.width = this.element.offsetWidth;
 	this.height = this.element.offsetHeight;
 	
@@ -1001,6 +1004,18 @@ chart.prototype.resize = function(){
 	this.routeLayers();
 	this.updateLegend();
 	this.updateToolTip();
+	if(this.options.dragPoints == true) { 
+
+		//define line function
+		var valueLine = d3.line()
+			.x(function(d){ return that.xScale(d.x_var); })
+			.y(function(d){ return that.yScale(d.y_est); });
+		
+		console.log(this.chart.selectAll( '.tag-regression-line-' + that.element.id));
+		this.chart
+			.selectAll( '.tag-regression-line-' + that.element.id)
+			.attr('d', function(d) {return valueLine(d.datapoints); });
+	}
 }
 
 /////////////////////
