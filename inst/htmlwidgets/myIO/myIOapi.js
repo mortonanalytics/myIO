@@ -449,12 +449,12 @@ chart.prototype.updateRegression = function(points){
 	 d.y_est = regression.fn(d.x_var);
 	});
 	
-	points.sort(function(a,b){ return a.x_var - b.x_var; });
+	var newPoints = points.sort(function(a,b){ return a.x_var - b.x_var; });
 	
 	//data join regressed points
 	var linePath = this.chart
 		.selectAll( '.tag-regression-line-' + that.element.id)
-		.data([points]);
+		.data([newPoints]);
 	
 	//EXIT old elements not present in new data
 	linePath.exit()
