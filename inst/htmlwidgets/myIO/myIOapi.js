@@ -973,8 +973,8 @@ chart.prototype.update = function(x){
 	this.updateAxes();
 	this.routeLayers();
 	this.addReferenceLines();
-	this.updateLegend();
-	this.updateToolTip();
+	if(this.plotLayers[0].type != "hexbin" & this.plotLayers[0].type != "treemap")this.updateLegend();
+	if(this.plotLayers[0].type != "hexbin" & this.plotLayers[0].type != "treemap")this.updateToolTip();
 	this.removeLayers(oldLayers);
 	
 	
