@@ -1002,8 +1002,8 @@ chart.prototype.resize = function(){
 	this.processScales(this.plotLayers);
 	this.updateAxes();
 	this.routeLayers();
-	this.updateLegend();
-	this.updateToolTip();
+	if(this.plotLayers[0].type != "hexbin" & this.plotLayers[0].type != "treemap")this.updateLegend();
+	if(this.plotLayers[0].type != "hexbin" & this.plotLayers[0].type != "treemap")this.updateToolTip();
 	if(this.options.dragPoints == true) { 
 
 		//define line function
