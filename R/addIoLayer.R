@@ -7,7 +7,7 @@
 #' @param color a quoted string defining the layer's color as an CSS recognized color
 #' @param label a unique quoted label/id string for the plot
 #' @param data (optional) R dataframe/tibble
-#' @param mapping a list object defining variables for the layer: layer(x_var = "xVar", y_var = "yVar", z_var = "groupVar")
+#' @param mapping a list object defining variables for the layer: layer(x_var = "xVar", y_var = "yVar")
 #'
 #' @return the same myIO object with the new layer attached to the message for the browser (PopRViz$x$layers)
 #'
