@@ -9,15 +9,15 @@ addIoLayer(myIO, type, color, label, data = NULL, mapping)
 \arguments{
 \item{myIO}{an htmlwidget object created by the PopRViz() function}
 
-\item{layerType}{a quoted string defining the type of layer: 'bar', 'line', 'point'}
+\item{type}{a quoted string defining the type of layer: 'bar', 'line', 'point'}
 
-\item{layerColor}{a quoted string defining the layer's color as an CSS recognized color}
+\item{color}{a quoted string defining the layer's color as an CSS recognized color}
 
-\item{layerLabel}{a unique quoted label/id string for the plot}
+\item{label}{a unique quoted label/id string for the plot}
 
-\item{layeData}{(optional) R dataframe/tibble}
+\item{data}{(optional) R dataframe/tibble}
 
-\item{layerMapping}{a list object defining variables for the layer: layer(x_var = "xVar", y_var = "yVar", z_var = "groupVar")}
+\item{mapping}{a list object defining variables for the layer: layer(x_var = "xVar", y_var = "yVar", z_var = "groupVar")}
 }
 \value{
 the same myIO object with the new layer attached to the message for the browser (PopRViz$x$layers)

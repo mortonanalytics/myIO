@@ -2,8 +2,8 @@
 #'
 #' Adds individual statistics layer to a myIO widget
 #'
-#' @param myIO an htmlwidget object created by the PopRViz() function
-#' @param type a quoted string defining the type of layer: 'bar', 'line', 'point'
+#' @param myIO an htmlwidget object created by the myIO() function
+#' @param type a quoted string defining the type of layer: "lm"
 #' @param color a quoted string defining the layer's color as an CSS recognized color
 #' @param label a unique quoted label/id string for the plot
 #' @param data (optional) R dataframe/tibble
@@ -19,6 +19,12 @@ addIoStatLayer <- function(myIO,
                      label,
                      data = NULL,
                      mapping ){
+  ##assert layer types
+  stopifnot(is.character(type))
+  stopifnot(is.character(color))
+  stopifnot(is.character(label))
+  stopifnot(is.list(mapping))
+  stopifnot(type %in% c("lm"))
 
   ## assign data
   if(is.null(data)) {
