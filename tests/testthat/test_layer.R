@@ -1,4 +1,5 @@
 # test IO layer
+library(htmlwidgets)
 test_object <- myIO::addIoLayer(myIO::myIO(),
                  type = "line",
                  label = "test_line",
