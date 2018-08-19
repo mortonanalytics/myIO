@@ -1,5 +1,5 @@
 # test IO layer
-library(htmlwidgets)
+context("layer_functions")
 test_object <- myIO::addIoLayer(myIO::myIO(),
                  type = "line",
                  label = "test_line",
