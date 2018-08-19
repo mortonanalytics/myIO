@@ -2,6 +2,8 @@
 #'
 #' Adds individual statistics layer to a myIO widget
 #'
+#' @importFrom stats lm
+#'
 #' @param myIO an htmlwidget object created by the myIO() function
 #' @param type a quoted string defining the type of layer: "lm"
 #' @param color a quoted string defining the layer's color as an CSS recognized color
@@ -9,7 +11,7 @@
 #' @param data (optional) R dataframe/tibble
 #' @param mapping a list object defining variables for the layer: layer(x_var = "xVar", y_var = "yVar")
 #'
-#' @return the same myIO object with the new layer attached to the message for the browser (PopRViz$x$layers)
+#' @return the same myIO object with the new layer attached to the message for the browser (myIO$x$layers)
 #'
 #' @export
 

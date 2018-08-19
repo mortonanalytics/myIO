@@ -20,7 +20,7 @@ addIoStatLayer(myIO, type, color, label, data = NULL, mapping)
 \item{mapping}{a list object defining variables for the layer: layer(x_var = "xVar", y_var = "yVar")}
 }
 \value{
-the same myIO object with the new layer attached to the message for the browser (PopRViz$x$layers)
+the same myIO object with the new layer attached to the message for the browser (myIO$x$layers)
 }
 \description{
 Adds individual statistics layer to a myIO widget

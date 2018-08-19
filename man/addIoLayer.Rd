@@ -7,9 +7,9 @@
 addIoLayer(myIO, type, color, label, data = NULL, mapping)
 }
 \arguments{
-\item{myIO}{an htmlwidget object created by the PopRViz() function}
+\item{myIO}{an htmlwidget object created by the myIO() function}
 
-\item{type}{a quoted string defining the type of layer: 'bar', 'line', 'point'}
+\item{type}{a quoted string defining the type of layer: 'bar', 'line', 'point', 'hexbin', 'treemap'}
 
 \item{color}{a quoted string defining the layer's color as an CSS recognized color}
 
@@ -20,7 +20,7 @@ addIoLayer(myIO, type, color, label, data = NULL, mapping)
 \item{mapping}{a list object defining variables for the layer: layer(x_var = "xVar", y_var = "yVar")}
 }
 \value{
-the same myIO object with the new layer attached to the message for the browser (PopRViz$x$layers)
+the same myIO object with the new layer attached to the message for the browser (myIO$x$layers)
 }
 \description{
 Adds individual layer to a myIO widget

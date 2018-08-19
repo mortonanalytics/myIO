@@ -4,6 +4,13 @@
 #'
 #' @import htmlwidgets
 #'
+#' @param data an optional point of entry for the data frame or vector
+#' @param width a string of either pixel width or a percentage width
+#' @param height a string of pixel height
+#' @param elementId a unique id for the htmlwidget object
+#'
+#' @return the same myIO object
+#'
 #' @export
 myIO <- function(data = NULL, width = NULL, height = NULL, elementId = NULL) {
 

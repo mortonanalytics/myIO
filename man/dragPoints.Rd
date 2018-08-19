@@ -6,6 +6,14 @@
 \usage{
 dragPoints(myIO, dragPoints = TRUE)
 }
+\arguments{
+\item{myIO}{an htmlwidget object created by the myIO() function}
+
+\item{dragPoints}{a logical argument (TRUE) for creating draggable points}
+}
+\value{
+the same myIO object
+}
 \description{
 Function to make points draggable
 }
