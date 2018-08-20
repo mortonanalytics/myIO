@@ -8,7 +8,7 @@ test_object <- myIO::addIoLayer(myIO::myIO(),
                  mapping = list(x_var = "wt",
                                 y_var = "mpg"))
 
-testthat::test_that("add layer creates a list of two", {
+testthat::test_that("add layer creates a list of one", {
   expect_output(str(test_object$x$layers), "List of 1")
 })
 
@@ -27,6 +27,6 @@ test_stat_object <- myIO::addIoStatLayer(myIO::myIO(),
                                          data = mtcars,
                                          mapping = list(x_var = "wt",
                                                         y_var = "mpg"))
-testthat::test_that("add layer creates a list of two", {
+testthat::test_that("add stat layer creates a list of one", {
   expect_output(str(test_stat_object$x$layers), "List of 1")
 })
