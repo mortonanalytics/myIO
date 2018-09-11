@@ -53,7 +53,12 @@ chart.prototype.initialize = function(){
 	if(this.plotLayers[0].type != "hexbin" & this.plotLayers[0].type != "treemap")this.addLegend();
 	if(this.plotLayers[0].type != "hexbin" & 
 	   this.plotLayers[0].type != "treemap" &
-	   this.plotLayers[0].type != "point") {this.addToolTip();}
+	   this.plotLayers[0].type != "bar" &
+	   this.plotLayers[0].type != "point") {
+		   this.addToolTip();
+	   } else { 
+			this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
+			}
 }
 
 chart.prototype.setClipPath = function(){
@@ -227,6 +232,8 @@ chart.prototype.routeLayers = function() {
 			//that.addHexPoints(d);
 		} else if(layerType == "treemap"){
 			that.addTreemap(d);
+		} else if(layerType == "bar"){
+			that.addBars(d);
 		} else {alert("Wrong Layer Type! Can be: line, point, stat_line")}
 		
 	})
@@ -240,6 +247,7 @@ chart.prototype.removeLayers = function(lys){
 	lys.forEach(function(d) {
 		console.log(d);
 		d3.selectAll( '.tag-line-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
+		d3.selectAll( '.tag-bar-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
 		d3.selectAll( '.tag-point-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
 		d3.selectAll( '.tag-hexbin-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
 		d3.selectAll( '.tag-area-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
@@ -248,6 +256,60 @@ chart.prototype.removeLayers = function(lys){
 	})
 }
 
+chart.prototype.addBars = function(ly){
+	var that = this;
+	var m = this.margin;
+	var data = ly.data;
+	var key = ly.label;
+	
+	var bandwidth = (this.width - (m.right + m.left)) / ly.data.length;
+	
+	var bars = this.chart
+		.selectAll('.tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
+		.data(data);
+		
+	console.log(ly);
+	bars.exit()
+		.transition().duration(500).style('opacity', 0)
+		.remove();
+	
+	var newBars = bars.enter()
+		.append('rect')
+		.attr('class', '.tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
+		.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
+		.style('fill', ly.color)
+		.attr('x', function(d) { return that.xScale(d[ly.mapping.x_var]); })
+		.attr('y', this.yScale(0))
+		.attr('width', bandwidth)
+		.attr('height', that.height -( m.top + m.bottom ))
+		.on('mouseover', hoverTip)
+		.on('mouseout', hoverTipHide);
+		
+	bars.merge(newBars)
+		.transition()
+		.ease(d3.easeQuad)
+		.duration(1000)
+		.attr('x', function(d) { return that.xScale(d[ly.mapping.x_var]); })
+		.attr('y', function(d) { return that.yScale(d[ly.mapping.y_var]); })
+		.attr('width', bandwidth-2)
+		.attr('height', function(d) { return (that.height -( m.top + m.bottom )) - that.yScale(d[ly.mapping.y_var]); });
+		
+	function hoverTip(){
+		var bar = d3.select(this);
+		var data = bar.data()[0];
+		var toolTipVar = [ly.mapping.x_var, ly.mapping.y_var]
+		
+		that.tooltip
+              .style("left", d3.event.pageX - 50 + "px")
+              .style("top", d3.event.pageY - 70 + "px")
+              .style("display", "inline-block")
+              .html(ly.mapping.x_var + ": " + data[ly.mapping.x_var] + '<br>' + ly.mapping.y_var + ": " +data[ly.mapping.y_var]);
+	}
+	
+	function hoverTipHide(){
+		that.tooltip.style("display", "none");
+	}
+}
 chart.prototype.addLine = function(ly) {
 	
 	var that = this;
@@ -272,6 +334,7 @@ chart.prototype.addLine = function(ly) {
 	//ENTER new elements present in new data
 	var newLinePath = linePath.enter().append("path")
 		.attr("fill", "none")
+		.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
 		.style("stroke", ly.color)
 		.style("stroke-width", 3)
 		.style('opacity', 0)
