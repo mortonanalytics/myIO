@@ -1,3 +1,5 @@
+~%2FGitHub%2FPopR_viz%2F.Rbuildignore="F47D7241"
+~%2FGitHub%2FPopR_viz%2F.gitignore="8291DE35"
 ~%2FGitHub%2FPopR_viz%2FR%2FaddLayer.R="4114756E"
 ~%2FGitHub%2FPopR_viz%2Ftests%2Ftestthat%2Ftest-layer_list.R="5F44F02B"
 ~%2FGitHub%2FmyIO%2F.Rbuildignore="821B188C"
@@ -26,3 +28,4 @@
 ~%2FmyIO%2Finst%2Fhtmlwidgets%2FmyIO.yaml="BDCD03BA"
 ~%2FmyIOdemo%2Fapp.R="B73031D6"
 ~%2Fregline%2Fapp.R="EC6A4367"
+~%2Ftest_app%2Fapp.R="586025DD"

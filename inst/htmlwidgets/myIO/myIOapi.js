@@ -265,12 +265,12 @@ chart.prototype.addBars = function(ly){
 	var bandwidth = (this.width - (m.right + m.left)) / ly.data.length;
 	
 	var bars = this.chart
-		.selectAll('.tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
+		.selectAll('rect')
+		//.selectAll('.tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
 		.data(data);
-		
-	console.log(ly);
+	
 	bars.exit()
-		.transition().duration(500).style('opacity', 0)
+		.transition().duration(500).attr('y', this.yScale(0))
 		.remove();
 	
 	var newBars = bars.enter()
@@ -278,7 +278,7 @@ chart.prototype.addBars = function(ly){
 		.attr('class', '.tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
 		.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
 		.style('fill', ly.color)
-		.attr('x', function(d) { return that.xScale(d[ly.mapping.x_var]); })
+		.attr('x', function(d) { return that.xScale(d[ly.mapping.x_var])- (bandwidth/2); })
 		.attr('y', this.yScale(0))
 		.attr('width', bandwidth)
 		.attr('height', that.height -( m.top + m.bottom ))
@@ -289,7 +289,7 @@ chart.prototype.addBars = function(ly){
 		.transition()
 		.ease(d3.easeQuad)
 		.duration(1000)
-		.attr('x', function(d) { return that.xScale(d[ly.mapping.x_var]); })
+		.attr('x', function(d) { return that.xScale(d[ly.mapping.x_var]) - (bandwidth/2); })
 		.attr('y', function(d) { return that.yScale(d[ly.mapping.y_var]); })
 		.attr('width', bandwidth-2)
 		.attr('height', function(d) { return (that.height -( m.top + m.bottom )) - that.yScale(d[ly.mapping.y_var]); });
@@ -1037,7 +1037,7 @@ chart.prototype.update = function(x){
 	this.routeLayers();
 	this.addReferenceLines();
 	if(this.plotLayers[0].type != "hexbin" & this.plotLayers[0].type != "treemap")this.updateLegend();
-	if(this.plotLayers[0].type != "hexbin" & this.plotLayers[0].type != "treemap")this.updateToolTip();
+	if(this.plotLayers[0].type != "hexbin" & this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "bar" )this.updateToolTip();
 	this.removeLayers(oldLayers);
 	
 	
