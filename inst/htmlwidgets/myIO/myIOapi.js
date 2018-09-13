@@ -195,7 +195,7 @@ chart.prototype.updateAxes = function() {
 		.transition().ease(d3.easeQuad)
 		.duration(500)
 		.attr("transform", "translate(0," + (that.height-(m.top+m.bottom)) + ")")
-		.call(d3.axisBottom(this.xScale)).ticks(null, ".0f"))
+		.call(d3.axisBottom(this.xScale).ticks(null, ".0f"))
 			.selectAll("text")
 				.attr('dy', '.35em')
 				.style('text-anchor', 'center');
