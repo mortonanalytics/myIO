@@ -304,8 +304,8 @@ chart.prototype.addBars = function(ly){
 		var toolTipVar = [ly.mapping.x_var, ly.mapping.y_var]
 		
 		that.tooltip
-              .style("left", d3.event.pageX - 50 + "px")
-              .style("top", d3.event.pageY - 70 + "px")
+              .style("left", (d3.mouse(this)[0]) + 'px')
+			  .style("top", 0 + 'px')
               .style("display", "inline-block")
               .html(ly.mapping.x_var + ": " + data[ly.mapping.x_var] + '<br>' + ly.mapping.y_var + ": " +data[ly.mapping.y_var]);
 	}
