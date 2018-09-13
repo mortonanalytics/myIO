@@ -172,7 +172,7 @@ chart.prototype.addAxes = function(){
 	this.plot.append('g')
 		.attr("class", "x axis")
 		.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
-		.call(d3.axisBottom(this.xScale).ticks("d"))
+		.call(d3.axisBottom(this.xScale).ticks(null,"d"))
 			.selectAll("text")
 				.attr('dy', '.35em')
 				.attr('text-anchor', 'center');
@@ -195,7 +195,7 @@ chart.prototype.updateAxes = function() {
 		.transition().ease(d3.easeQuad)
 		.duration(500)
 		.attr("transform", "translate(0," + (that.height-(m.top+m.bottom)) + ")")
-		.call(d3.axisBottom(this.xScale).ticks("d"))
+		.call(d3.axisBottom(this.xScale).ticks(null,"d"))
 			.selectAll("text")
 				.attr('dy', '.35em')
 				.style('text-anchor', 'center');
