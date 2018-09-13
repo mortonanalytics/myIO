@@ -174,7 +174,7 @@ chart.prototype.addAxes = function(){
 		.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
 		.call(d3.axisBottom(this.xScale)
 				.ticks(null,"d")
-				.tickformat(function(e){ if(Math.floor(e) != e){return;} return e;}))
+				.tickFormat(function(e){ if(Math.floor(e) != e){return;} return e;}))
 			.selectAll("text")
 				.attr('dy', '.35em')
 				.attr('text-anchor', 'center');
@@ -199,7 +199,7 @@ chart.prototype.updateAxes = function() {
 		.attr("transform", "translate(0," + (that.height-(m.top+m.bottom)) + ")")
 		.call(d3.axisBottom(this.xScale)
 				.ticks(null,"d")
-				.tickformat(function(e){ if(Math.floor(e) != e){return;} return e;}))
+				.tickFormat(function(e){ if(Math.floor(e) != e){return;} return e;}))
 			.selectAll("text")
 				.attr('dy', '.35em')
 				.style('text-anchor', 'center');
