@@ -23,7 +23,7 @@ chart.prototype.draw = function() {
 	//define dimensions
 	this.width = this.element.offsetWidth;
 	this.height = this.element.offsetHeight;
-	this.margin = { top: 20, right: 100, bottom: 40, left: 40};
+	this.margin = { top: 20, right: 100, bottom: 40, left: 60};
 	
 	//set up parent element and SVG
 	this.element.innerHTML = '';
@@ -32,8 +32,14 @@ chart.prototype.draw = function() {
 	this.svg.attr('height', this.height);
 	
 	//create g element
-	this.plot = this.svg.append('g')
-		.attr('transform','translate('+this.margin.left+','+this.margin.top+')');
+	if(this.plotLayers[0].type != "gauge"){
+		this.plot = this.svg.append('g')
+			.attr('transform','translate('+this.margin.left+','+this.margin.top+')');
+	} else {
+		this.plot = this.svg.append('g')
+			.attr('transform','translate('+this.width/2+','+this.height/2+')');
+	}
+	
 				
 	this.chart = this.plot.append('g');
 	
@@ -44,16 +50,17 @@ chart.prototype.draw = function() {
 
 chart.prototype.initialize = function(){
 	
-	this.setClipPath();
+	if(this.plotLayers[0].type != "gauge")this.setClipPath();
 	//this.setZoom();
 	this.processScales(this.plotLayers);
-	if(this.plotLayers[0].type != "treemap")this.addAxes();
+	if(this.plotLayers[0].type != "treemap" & this.plotLayers[0].type != "gauge")this.addAxes();
 	this.routeLayers();
-	if(this.plotLayers[0].type != "hexbin" & this.plotLayers[0].type != "treemap")this.addReferenceLines();
-	if(this.plotLayers[0].type != "hexbin" & this.plotLayers[0].type != "treemap")this.addLegend();
+	if(this.plotLayers[0].type != "hexbin" & this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge")this.addReferenceLines();
+	if(this.plotLayers[0].type != "hexbin" & this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge")this.addLegend();
 	if(this.plotLayers[0].type != "hexbin" & 
 	   this.plotLayers[0].type != "treemap" &
 	   this.plotLayers[0].type != "bar" &
+	   this.plotLayers[0].type != "gauge" &
 	   this.plotLayers[0].type != "point") {
 		   this.addToolTip();
 	   } else { 
@@ -179,9 +186,10 @@ chart.prototype.addAxes = function(){
 				.attr('dy', '.35em')
 				.attr('text-anchor', 'center');
 	//console.log(this.yScale.domain());
+	var yFormat = this.options.yAxisFormat ? this.options.yAxisFormat : "s";
 	this.plot.append('g')
 		.attr("class", "y axis")
-		.call(d3.axisLeft(this.yScale).ticks(null, "s"))
+		.call(d3.axisLeft(this.yScale).ticks(null, yFormat))
 			.selectAll("text")
 				.attr("dx", "-.25em");
 				
@@ -238,6 +246,8 @@ chart.prototype.routeLayers = function() {
 			that.addTreemap(d);
 		} else if(layerType == "bar"){
 			that.addBars(d);
+		} else if(layerType == "gauge"){
+			that.makeGauge(d);
 		} else {alert("Wrong Layer Type! Can be: line, point, stat_line")}
 		
 	})
@@ -287,6 +297,7 @@ chart.prototype.addBars = function(ly){
 		.attr('width', bandwidth)
 		.attr('height', that.height -( m.top + m.bottom ))
 		.on('mouseover', hoverTip)
+		.on('mousemove', hoverTip)
 		.on('mouseout', hoverTipHide);
 		
 	bars.merge(newBars)
@@ -300,20 +311,24 @@ chart.prototype.addBars = function(ly){
 		
 	function hoverTip(){
 		var bar = d3.select(this);
-		var data = bar.data()[0];
-		var toolTipVar = [ly.mapping.x_var, ly.mapping.y_var]
+		var barData = bar.data()[0];
+		var yFormat = d3.format(that.options.yAxisFormat ? that.options.yAxisFormat : "d");
 		
 		that.tooltip
               .style("left", (d3.mouse(this)[0]) + 'px')
 			  .style("top", 0 + 'px')
               .style("display", "inline-block")
-              .html(ly.mapping.x_var + ": " + data[ly.mapping.x_var] + '<br>' + ly.mapping.y_var + ": " +data[ly.mapping.y_var]);
+              .html(ly.mapping.x_var + ": " + barData[ly.mapping.x_var] + '<br>' + 
+					ly.mapping.y_var + ": " + yFormat(barData[ly.mapping.y_var]) + '<br>' +
+					ly.mapping.toolTip + ": " + barData[ly.mapping.toolTip]);
+			  
 	}
 	
 	function hoverTipHide(){
 		that.tooltip.style("display", "none");
 	}
 }
+
 chart.prototype.addLine = function(ly) {
 	
 	var that = this;
@@ -1007,6 +1022,84 @@ chart.prototype.updateToolTip = function() {
 			.attr("transform", "translate(" + that.margin.left + "," + that.margin.top + ")");
 }
 
+chart.prototype.makeGauge = function(ly){
+	var that = this;
+	var m = this.margin;
+	
+	//define gauge variable
+	var twoPi = Math.PI;
+	var radius = Math.min(this.width, this.height)/2;
+	var barWidth = 30 * this.width/300;
+	var progress = ly.data[0].value[0];
+		
+	//define gauge functions
+	var arc = d3.arc()
+		.innerRadius(radius-barWidth)
+		.outerRadius(radius)
+		.startAngle(0);
+	
+	var percentFormat = d3.format(".1%")
+	
+	function arcTween(newAngle){
+
+			var interpolate = d3.interpolate(this._current, newAngle);
+			this.current = i(0);
+			return function(t){
+				return arc(interpolate(d));
+			};
+		
+	}
+
+	//create gauge
+	if(!background){
+	  var background = this.chart
+		.append('path')
+		.attr('class', 'background')
+		.style('fill', "gray")
+		.attr('transform', 'rotate(-90)')
+		.attr('d', arc.endAngle(twoPi));
+
+	}
+	/* var arcs = this.chart
+		.selectAll('.foreground')
+		.data([ (progress * twoPi) ]);
+		
+	arcs
+		.transition().duration(1000)
+		.attrTween('d', arcTween);
+		
+	arcs.enter().append('path')
+		.attr('class', 'foreground')
+		.attr('fill', ly.color)
+		.attr('transform', 'rotate(-90)')
+		.attr('d', function(d) {return arc.endAngle(d * twoPi); })
+		.each(function(d) { this._current = d; }); */
+	if(!foreground){
+		var foreground = this.chart
+			.append('path')
+			.style('fill', ly.color)
+			.attr('class','foreground')
+			.attr('transform', 'rotate(-90)')
+			.attr('d', arc.endAngle(progress * twoPi));
+	} else {
+		foreground
+			.transition().duration(1000)
+			.attrTween('d', function(d) { console.log("tween"); return arcTween(progress * twoPi); });
+	}
+
+	this.chart.selectAll('.gauge-text').remove();
+	
+	var label = this.chart
+			.append('g')
+			.append('text')
+			.text(percentFormat(progress))
+			.attr('class', 'gauge-text')
+			.attr('text-anchor', 'middle')
+			.attr('font-size', 20)
+			.attr('dy', '-0.45em');
+	
+}
+
 chart.prototype.update = function(x){
 	var that = this;
 	var m = this.margin;
@@ -1030,8 +1123,13 @@ chart.prototype.update = function(x){
 		.attr('width', this.width)
 		.attr('height', this.height);
 	
-	this.plot
-		.attr('transform','translate('+this.margin.left+','+this.margin.top+')');
+	if(this.plotLayers[0].type != "gauge"){
+		this.plot = this.svg.append('g')
+			.attr('transform','translate('+this.margin.left+','+this.margin.top+')');
+	} else {
+		this.plot = this.svg.append('g')
+			.attr('transform','translate('+this.width/2+','+this.height/2+')');
+	}
 	
 	//update all the other stuff
 	this.options.referenceLine = x.options.referenceLine;
@@ -1040,8 +1138,13 @@ chart.prototype.update = function(x){
 	this.updateAxes();
 	this.routeLayers();
 	this.addReferenceLines();
-	if(this.plotLayers[0].type != "hexbin" & this.plotLayers[0].type != "treemap")this.updateLegend();
-	if(this.plotLayers[0].type != "hexbin" & this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "bar" )this.updateToolTip();
+	if(this.plotLayers[0].type != "hexbin" & 
+	   this.plotLayers[0].type != "treemap"& 
+	   this.plotLayers[0].type != "gauge")this.updateLegend();
+	if(this.plotLayers[0].type != "hexbin" & 
+	   this.plotLayers[0].type != "treemap"&
+       this.plotLayers[0].type != "gauge" &	   
+	   this.plotLayers[0].type != "bar" )this.updateToolTip();
 	this.removeLayers(oldLayers);
 	
 	
@@ -1057,8 +1160,13 @@ chart.prototype.resize = function(){
 		.attr('width', this.width)
 		.attr('height', this.height);
 	
-	this.plot
-		.attr('transform','translate('+this.margin.left+','+this.margin.top+')');
+	if(this.plotLayers[0].type != "gauge"){
+		this.plot = this.svg.append('g')
+			.attr('transform','translate('+this.margin.left+','+this.margin.top+')');
+	} else {
+		this.plot = this.svg.append('g')
+			.attr('transform','translate('+this.width/2+','+this.height/2+')');
+	}
 	
 	this.clipPath
 		.attr('x', 0)
@@ -1069,8 +1177,13 @@ chart.prototype.resize = function(){
 	this.processScales(this.plotLayers);
 	this.updateAxes();
 	this.routeLayers();
-	if(this.plotLayers[0].type != "hexbin" & this.plotLayers[0].type != "treemap")this.updateLegend();
-	if(this.plotLayers[0].type != "hexbin" & this.plotLayers[0].type != "treemap")this.updateToolTip();
+	if(this.plotLayers[0].type != "hexbin" & 
+	   this.plotLayers[0].type != "treemap"& 
+	   this.plotLayers[0].type != "gauge")this.updateLegend();
+	if(this.plotLayers[0].type != "hexbin" & 
+	   this.plotLayers[0].type != "treemap"&
+       this.plotLayers[0].type != "gauge" &	   
+	   this.plotLayers[0].type != "bar" )this.updateToolTip();
 	if(this.options.dragPoints == true) { 
 
 		//define line function

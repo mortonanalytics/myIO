@@ -25,7 +25,7 @@ addIoLayer <- function(myIO,
   stopifnot(is.character(color))
   stopifnot(is.character(label))
   stopifnot(is.list(mapping))
-  stopifnot(type %in% c("line", "point", "treemap", "bar", "hexbin"))
+  stopifnot(type %in% c("line", "point", "treemap", "bar", "hexbin", "gauge"))
 
   ## assign data
   if(type == "treemap"){
