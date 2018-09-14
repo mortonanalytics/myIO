@@ -211,11 +211,11 @@ chart.prototype.updateAxes = function() {
 			.selectAll("text")
 				.attr('dy', '.35em')
 				.style('text-anchor', 'center');
-	
+	var yFormat = this.options.yAxisFormat ? this.options.yAxisFormat : "s";
 	this.svg.selectAll('.y.axis')
 		.transition().ease(d3.easeQuad)
 		.duration(500)
-		.call(d3.axisLeft(this.yScale).ticks(null, "s"))
+		.call(d3.axisLeft(this.yScale).ticks(null,yFormat))
 			.selectAll("text")
 				.attr("dx", "-.25em");
 }
@@ -950,6 +950,7 @@ chart.prototype.addToolTip = function() {
 	var tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
 	var toolLine =  this.chart.append('line').attr('class', 'toolLine');
 	var format1d = d3.format('.0f');
+	var yFormat = d3.format(that.options.yAxisFormat ? that.options.yAxisFormat : "d");
 	
 	var tipBox = this.svg.append("rect")
 			.attr('class', 'toolTipBox')
@@ -1010,7 +1011,7 @@ chart.prototype.addToolTip = function() {
 		.data(tipText).enter()
 		.append('div')
 		.style('color', function(d) { return d.color; })
-		.html(function(d) { return d.y_var + ": " + format1d(d.values[d.y_var]); });
+		.html(function(d) { return d.y_var + ": " + yFormat(d.values[d.y_var]); });
 	}
 }
 
