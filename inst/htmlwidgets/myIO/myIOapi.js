@@ -313,6 +313,7 @@ chart.prototype.addBars = function(ly){
 		var bar = d3.select(this);
 		var barData = bar.data()[0];
 		var yFormat = d3.format(that.options.yAxisFormat ? that.options.yAxisFormat : "d");
+		var toolTipFormat = d3.format(that.options.toolTipFormat ? that.options.toolTipFormat : "d");
 		
 		that.tooltip
               .style("left", (d3.mouse(this)[0]) + 'px')
@@ -320,7 +321,8 @@ chart.prototype.addBars = function(ly){
               .style("display", "inline-block")
               .html(ly.mapping.x_var + ": " + barData[ly.mapping.x_var] + '<br>' + 
 					ly.mapping.y_var + ": " + yFormat(barData[ly.mapping.y_var]) + '<br>' +
-					ly.mapping.toolTip + ": " + barData[ly.mapping.toolTip]);
+					ly.mapping.toolTip + ": " + toolTipFormat(barData[ly.mapping.toolTip])
+					);
 			  
 	}
 	
