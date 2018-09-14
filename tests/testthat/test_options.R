@@ -1,6 +1,6 @@
 #test option functions
 context("option_functions")
-test_object <- myIO::addIoLayer(myIO::myIO(),
+test_object_opt <- myIO::addIoLayer(myIO::myIO(),
                                 type = "line",
                                 label = "test_line",
                                 color = "red",
@@ -10,6 +10,6 @@ test_object <- myIO::addIoLayer(myIO::myIO(),
               myIO::setAxisFormat(xAxis = ".0f", yAxis = ".1f")
 
 testthat::test_that("axis options get set", {
-  expect_output(test_object$x$options$xAxisFormat, ".0f")
-  expect_output(test_object$x$options$yAxisFormat, ".1f")
+  testthat::equals(test_object_opt$x$options$xAxisFormat, ".0f")
+  testthat::equals(test_object_opt$x$options$yAxisFormat, ".1f")
 })
