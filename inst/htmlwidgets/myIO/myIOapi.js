@@ -334,11 +334,12 @@ chart.prototype.addBars = function(ly){
 	var data = ly.data;
 	var key = ly.label;
 	
-	var bandwidth = (this.width - (m.right + m.left)) / ly.data.length;
 	if(this.options.categoricalScale == true & this.options.flipAxis == true){
 		var y_scale = this.bandedScale;
+		var bandwidth = (this.height - (m.top + m.bottom)) / ly.data.length;
 	} else {
 		var y_scale = this.yScale;
+		var bandwidth = (this.width - (m.right + m.left)) / ly.data.length;
 	}
 	
 	if(this.options.flipAxis == false){
@@ -387,7 +388,7 @@ chart.prototype.addBars = function(ly){
 			.attr('class', '.tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
 			.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
 			.style('fill', ly.color)
-			.attr('y', function(d) { return y_scale(d[ly.mapping.x_var])- (bandwidth/2); })
+			.attr('y', function(d) { return y_scale(d[ly.mapping.x_var]); })
 			.attr('x', 0)
 			.attr('height', bandwidth-2)
 			.attr('width', 0)
@@ -399,7 +400,7 @@ chart.prototype.addBars = function(ly){
 			.transition()
 			.ease(d3.easeQuad)
 			.duration(1000)
-			.attr('y', function(d) { return y_scale(d[ly.mapping.x_var]) - ((bandwidth-2)/2); })
+			.attr('y', function(d) { return y_scale(d[ly.mapping.x_var]) ; })
 			.attr('height', bandwidth-2)
 			.attr('width', function(d) { return that.xScale(d[ly.mapping.y_var]); });
 	}	
