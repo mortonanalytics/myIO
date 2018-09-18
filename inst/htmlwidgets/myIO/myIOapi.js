@@ -131,19 +131,25 @@ chart.prototype.setZoom = function() {
 }
 
 chart.prototype.processScales = function(lys){
+	var that = this;
 	var m = this.margin;
 	
 	var x_extents = [];
 	var y_extents = [];
 	
 	lys.forEach(function(d){
+		if(that.options.flipAxis == false){
+			const x_var = d.mapping.x_var; 
+			const y_var = d.mapping.y_var;
+		} else{
+			const y_var = d.mapping.x_var; 
+			const x_var = d.mapping.y_var;
+		}
 		
-		const x_var = d.mapping.x_var; 
-		const y_var = d.mapping.y_var;
 		
 		const x = d3.extent( d.data, function(e) { return +e[x_var]; });
 		const y = d3.extent( d.data, function(e) { return +e[y_var]; });
-		
+
 		x_extents.push(x);
 		y_extents.push(y);
 	})
@@ -169,29 +175,56 @@ chart.prototype.processScales = function(lys){
 		.range([this.height - (m.top + m.bottom), 0])
 		.domain(yExtent);
 	
+	this.bandedScale = d3.scaleBand()
+		.range([this.height - (m.top + m.bottom), 0])
+		.domain(lys[0].data.map(function(e) { return e[lys[0].mapping.x_var]; }));
+		
 }
 
 chart.prototype.addAxes = function(){
-	
+	var that = this;
 	var m = this.margin;
-	
+		
 	//create and append axes
-	this.plot.append('g')
-		.attr("class", "x axis")
-		.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
-		.call(d3.axisBottom(this.xScale)
-				.ticks(null,"d")
+	if(this.options.categoricalScale == true & this.options.flipAxis == true){
+		console.log(this.bandedScale.domain());
+		var xFormat = this.options.xAxisFormat ? this.options.xAxisFormat : "d";
+		this.plot.append('g')
+			.attr("class", "x axis")
+			.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
+			.call(d3.axisBottom(this.xScale)
+					.ticks(null,xFormat)
+					.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
+				.selectAll("text")
+					.attr('dy', '.35em')
+					.attr('text-anchor', 'center');
+		this.plot.append('g')
+			.attr("class", "y axis")
+			.call(d3.axisLeft(this.bandedScale))
+				.selectAll("text")
+				.attr("dx", "-.25em");
+		
+	} else {
+		var xFormat = this.options.xAxisFormat ? this.options.xAxisFormat : "d";
+		this.plot.append('g')
+			.attr("class", "x axis")
+			.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
+			.call(d3.axisBottom(this.xScale)
+					.ticks(null,xFormat)
+					.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
+				.selectAll("text")
+					.attr('dy', '.35em')
+					.attr('text-anchor', 'center');
+					
+		var yFormat = this.options.yAxisFormat ? this.options.yAxisFormat : "s";
+		this.plot.append('g')
+			.attr("class", "y axis")
+			.call(d3.axisLeft(this.yScale)
+				.ticks(null, yFormat)
 				.tickFormat(function(e){ if(Math.floor(e) != e){return;} return e;}))
 			.selectAll("text")
-				.attr('dy', '.35em')
-				.attr('text-anchor', 'center');
-	//console.log(this.yScale.domain());
-	var yFormat = this.options.yAxisFormat ? this.options.yAxisFormat : "s";
-	this.plot.append('g')
-		.attr("class", "y axis")
-		.call(d3.axisLeft(this.yScale).ticks(null, yFormat))
-			.selectAll("text")
 				.attr("dx", "-.25em");
+	}	
 				
 }
 
@@ -199,25 +232,51 @@ chart.prototype.updateAxes = function() {
 	
 	var that = this;
 	var m = this.margin;
-	
-	//console.log(this.yScale.domain());
-	this.svg.selectAll('.x.axis')
-		.transition().ease(d3.easeQuad)
-		.duration(500)
-		.attr("transform", "translate(0," + (that.height-(m.top+m.bottom)) + ")")
-		.call(d3.axisBottom(this.xScale)
-				.ticks(null,"d")
+		
+	//update axes
+	if(this.options.categoricalScale == true & this.options.flipAxis == true){
+		var xFormat = this.options.xAxisFormat ? this.options.xAxisFormat : "d";
+		this.svg.selectAll('.x.axis')
+			.transition().ease(d3.easeQuad)
+			.duration(500)
+			.attr("transform", "translate(0," + (that.height-(m.top+m.bottom)) + ")")
+			.call(d3.axisBottom(this.xScale)
+					.ticks(null,xFormat)
+					.tickFormat(function(e){ if(Math.floor(e) != e){return;} return e;}))
+				.selectAll("text")
+					.attr('dy', '.35em')
+					.style('text-anchor', 'center');
+					
+		this.svg.selectAll('.y.axis')
+			.transition().ease(d3.easeQuad)
+			.duration(500)
+			.call(d3.axisLeft(this.bandedScale))
+				.selectAll("text")
+					.attr("dx", "-.25em");
+	} else{
+		var xFormat = this.options.xAxisFormat ? this.options.xAxisFormat : "d";
+		this.svg.selectAll('.x.axis')
+			.transition().ease(d3.easeQuad)
+			.duration(500)
+			.attr("transform", "translate(0," + (that.height-(m.top+m.bottom)) + ")")
+			.call(d3.axisBottom(this.xScale)
+					.ticks(null,xFormat)
+					.tickFormat(function(e){ if(Math.floor(e) != e){return;} return e;}))
+				.selectAll("text")
+					.attr('dy', '.35em')
+					.style('text-anchor', 'center');
+		
+		var yFormat = this.options.yAxisFormat ? this.options.yAxisFormat : "s";
+		this.svg.selectAll('.y.axis')
+			.transition().ease(d3.easeQuad)
+			.duration(500)
+			.call(d3.axisLeft(this.yScale)
+				.ticks(null,yFormat)
 				.tickFormat(function(e){ if(Math.floor(e) != e){return;} return e;}))
 			.selectAll("text")
-				.attr('dy', '.35em')
-				.style('text-anchor', 'center');
-	var yFormat = this.options.yAxisFormat ? this.options.yAxisFormat : "s";
-	this.svg.selectAll('.y.axis')
-		.transition().ease(d3.easeQuad)
-		.duration(500)
-		.call(d3.axisLeft(this.yScale).ticks(null,yFormat))
-			.selectAll("text")
 				.attr("dx", "-.25em");
+		
+	}
 }
 
 chart.prototype.routeLayers = function() {
@@ -277,41 +336,79 @@ chart.prototype.addBars = function(ly){
 	var key = ly.label;
 	
 	var bandwidth = (this.width - (m.right + m.left)) / ly.data.length;
+	if(this.options.categoricalScale == true & this.options.flipAxis == true){
+		var y_scale = this.bandedScale;
+	} else {
+		var y_scale = this.yScale;
+	}
 	
-	var bars = this.chart
-		.selectAll('rect')
-		//.selectAll('.tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
-		.data(data);
-	
-	bars.exit()
-		.transition().duration(500).attr('y', this.yScale(0))
-		.remove();
-	
-	var newBars = bars.enter()
-		.append('rect')
-		.attr('class', '.tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
-		.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
-		.style('fill', ly.color)
-		.attr('x', function(d) { return that.xScale(d[ly.mapping.x_var])- (bandwidth/2); })
-		.attr('y', this.yScale(0))
-		.attr('width', bandwidth)
-		.attr('height', that.height -( m.top + m.bottom ))
-		.on('mouseover', hoverTip)
-		.on('mousemove', hoverTip)
-		.on('mouseout', hoverTipHide);
+	if(this.options.flipAxis == false){
+		var bars = this.chart
+			.selectAll('rect')
+			//.selectAll('.tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
+			.data(data);
 		
-	bars.merge(newBars)
-		.transition()
-		.ease(d3.easeQuad)
-		.duration(1000)
-		.attr('x', function(d) { return that.xScale(d[ly.mapping.x_var]) - (bandwidth/2); })
-		.attr('y', function(d) { return that.yScale(d[ly.mapping.y_var]); })
-		.attr('width', bandwidth-2)
-		.attr('height', function(d) { return (that.height -( m.top + m.bottom )) - that.yScale(d[ly.mapping.y_var]); });
+		bars.exit()
+			.transition().duration(500).attr('y', this.yScale(0))
+			.remove();
 		
+		var newBars = bars.enter()
+			.append('rect')
+			.attr('class', '.tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
+			.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
+			.style('fill', ly.color)
+			.attr('x', function(d) { return that.xScale(d[ly.mapping.x_var])- (bandwidth/2); })
+			.attr('y', this.yScale(0))
+			.attr('width', bandwidth)
+			.attr('height', that.height -( m.top + m.bottom ))
+			.on('mouseover', hoverTip)
+			.on('mousemove', hoverTip)
+			.on('mouseout', hoverTipHide);
+			
+		bars.merge(newBars)
+			.transition()
+			.ease(d3.easeQuad)
+			.duration(1000)
+			.attr('x', function(d) { return that.xScale(d[ly.mapping.x_var]) - ((bandwidth-2)/2); })
+			.attr('y', function(d) { return that.yScale(d[ly.mapping.y_var]); })
+			.attr('width', bandwidth-2)
+			.attr('height', function(d) { return (that.height -( m.top + m.bottom )) - that.yScale(d[ly.mapping.y_var]); });
+	} else {
+		var bars = this.chart
+			.selectAll('rect')
+			//.selectAll('.tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
+			.data(data);
+		
+		bars.exit()
+			.transition().duration(500).attr('y', y_scale(0))
+			.remove();
+		
+		var newBars = bars.enter()
+			.append('rect')
+			.attr('class', '.tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
+			.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
+			.style('fill', ly.color)
+			.attr('y', function(d) { return y_scale(d[ly.mapping.x_var])- (bandwidth/2); })
+			.attr('x', 0)
+			.attr('height', bandwidth-2)
+			.attr('width', 0)
+			.on('mouseover', hoverTip)
+			.on('mousemove', hoverTip)
+			.on('mouseout', hoverTipHide);
+			
+		bars.merge(newBars)
+			.transition()
+			.ease(d3.easeQuad)
+			.duration(1000)
+			.attr('y', function(d) { return y_scale(d[ly.mapping.x_var]) - ((bandwidth-2)/2); })
+			.attr('height', bandwidth-2)
+			.attr('width', function(d) { return that.xScale(d[ly.mapping.y_var]); });
+	}	
+	
 	function hoverTip(){
 		var bar = d3.select(this);
 		var barData = bar.data()[0];
+		var xFormat = d3.format(that.options.xAxisFormat ? that.options.xAxisFormat : "d");
 		var yFormat = d3.format(that.options.yAxisFormat ? that.options.yAxisFormat : "d");
 		var toolTipFormat = d3.format(that.options.toolTipFormat ? that.options.toolTipFormat : "d");
 		
@@ -319,7 +416,7 @@ chart.prototype.addBars = function(ly){
               .style("left", (d3.mouse(this)[0]) + 'px')
 			  .style("top", 0 + 'px')
               .style("display", "inline-block")
-              .html(ly.mapping.x_var + ": " + barData[ly.mapping.x_var] + '<br>' + 
+              .html(ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 
 					ly.mapping.y_var + ": " + yFormat(barData[ly.mapping.y_var]) + '<br>' +
 					ly.mapping.toolTip + ": " + toolTipFormat(barData[ly.mapping.toolTip])
 					);

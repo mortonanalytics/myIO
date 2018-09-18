@@ -17,7 +17,8 @@ myIO <- function(data = NULL, width = NULL, height = NULL, elementId = NULL) {
   # forward options using x
   x = list(
     data = data,
-    options = list(referenceLine = 0)
+    options = list(referenceLine = list(x = 0, y = 0),
+                   flipAxis = FALSE)
   )
 
   # create widget
