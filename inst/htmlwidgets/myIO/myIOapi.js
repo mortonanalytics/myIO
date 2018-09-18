@@ -23,7 +23,7 @@ chart.prototype.draw = function() {
 	//define dimensions
 	this.width = this.element.offsetWidth;
 	this.height = this.element.offsetHeight;
-	this.margin = { top: 20, right: 100, bottom: 40, left: 60};
+	this.margin = { top: 20, right: 100, bottom: 40, left: 100};
 	
 	//set up parent element and SVG
 	this.element.innerHTML = '';
