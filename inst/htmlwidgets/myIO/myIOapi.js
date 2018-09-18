@@ -139,16 +139,15 @@ chart.prototype.processScales = function(lys){
 	
 	lys.forEach(function(d){
 		if(that.options.flipAxis == false){
-			const x_var = d.mapping.x_var; 
-			const y_var = d.mapping.y_var;
-		} else{
-			const y_var = d.mapping.x_var; 
-			const x_var = d.mapping.y_var;
-		}
+			var x_var = d.mapping.x_var; 
+			var y_var = d.mapping.y_var;
+		} else {
+			var y_var = d.mapping.x_var; 
+			var x_var = d.mapping.y_var;
+		}		
 		
-		
-		const x = d3.extent( d.data, function(e) { return +e[x_var]; });
-		const y = d3.extent( d.data, function(e) { return +e[y_var]; });
+		var x = d3.extent( d.data, function(e) { return +e[x_var]; });
+		var y = d3.extent( d.data, function(e) { return +e[y_var]; });
 
 		x_extents.push(x);
 		y_extents.push(y);
