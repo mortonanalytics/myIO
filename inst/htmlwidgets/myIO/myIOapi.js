@@ -52,7 +52,7 @@ chart.prototype.initialize = function(){
 	
 	if(this.plotLayers[0].type != "gauge")this.setClipPath();
 	//this.setZoom();
-	this.processScales(this.plotLayers);
+	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge")this.processScales(this.plotLayers);
 	if(this.plotLayers[0].type != "treemap" & this.plotLayers[0].type != "gauge")this.addAxes();
 	this.routeLayers();
 	if(this.plotLayers[0].type != "hexbin" & this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge")this.addReferenceLines();
