@@ -1234,7 +1234,7 @@ chart.prototype.update = function(x){
 	//update all the other stuff
 	this.options.referenceLine = x.options.referenceLine;
 	
-	this.processScales(this.plotLayers);
+	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge")this.processScales(this.plotLayers);
 	this.updateAxes();
 	this.routeLayers();
 	this.addReferenceLines();
@@ -1274,7 +1274,7 @@ chart.prototype.resize = function(){
 		.attr('width', this.width - (this.margin.left + this.margin.right))
 		.attr('height', this.height - (this.margin.top + this.margin.bottom));
 		
-	this.processScales(this.plotLayers);
+	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge")this.processScales(this.plotLayers);
 	this.updateAxes();
 	this.routeLayers();
 	if(this.plotLayers[0].type != "hexbin" & 
