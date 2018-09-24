@@ -160,10 +160,11 @@ chart.prototype.processScales = function(lys){
 	//calculate buffer
 	var x_buffer = Math.max(Math.abs(x_max - x_min) * .05, 0.5) ;
 	//user inputs if available
-	var final_x_min = this.options.xlim.min ? this.options.xlim.min : x_min ;
-	var final_x_max = this.options.xlim.max ? this.options.xlim.max : x_max ;
-	var xExtent = [final_x_min-x_buffer, 
-				   final_x_max + x_buffer];
+	var final_x_min = this.options.xlim.min ? this.options.xlim.min : (x_min-x_buffer) ;
+	console.log(final_x_min);
+	var final_x_max = this.options.xlim.max ? this.options.xlim.max : (x_max+ x_buffer) ;
+	var xExtent = [final_x_min, 
+				   final_x_max ];
 	
 	//find min and max - Y axis
 	var y_min = d3.min(y_extents, function(d,i) {return d[0]; });
@@ -175,7 +176,6 @@ chart.prototype.processScales = function(lys){
 	//user inputs if available
 	var final_y_min = this.options.ylim.min ? this.options.ylim.min : (y_min-y_buffer) ;
 	var final_y_max = this.options.ylim.max ? this.options.ylim.max : (y_max+y_buffer) ;
-	console.log(final_y_min);
 	var yExtent = [(final_y_min), 
 				   (final_y_max)];
 	
