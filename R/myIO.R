@@ -18,7 +18,11 @@ myIO <- function(data = NULL, width = NULL, height = NULL, elementId = NULL) {
   x = list(
     data = data,
     options = list(referenceLine = list(x = 0, y = 0),
-                   flipAxis = FALSE)
+                   flipAxis = FALSE,
+                   margin = list(top = 20,
+                                 bottom = 40,
+                                 left = 50,
+                                 right = 50))
   )
 
   # create widget

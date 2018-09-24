@@ -10,7 +10,8 @@ test_object_opt <- myIO::addIoLayer(myIO::myIO(),
               myIO::setAxisFormat(xAxis = ".0f", yAxis = ".1f") %>%
               myIO::dragPoints() %>%
               myIO::flipAxis() %>%
-              myIO::defineCategoricalAxis()
+              myIO::defineCategoricalAxis() %>%
+              myIO::setmargin(top = 100)
 
 testthat::test_that("axis options get set", {
   testthat::equals(test_object_opt$x$options$xAxisFormat, ".0f")
@@ -29,5 +30,10 @@ testthat::test_that("flipAxis options get set to TRUE", {
 
 testthat::test_that("categoricalScale options get set to TRUE", {
   testthat::equals(test_object_opt$x$options$categoricalScale, TRUE)
+
+})
+
+testthat::test_that("categoricalScale options get set to TRUE", {
+  testthat::equals(test_object_opt$x$options$margin$top, 100)
 
 })
