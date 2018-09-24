@@ -156,7 +156,7 @@ chart.prototype.processScales = function(lys){
 	var x_min = d3.min(x_extents, function(d,i) {return d[0]; });
 	var x_max = d3.max(x_extents, function(d,i) {return d[1]; });
 	if(x_min == x_max) { x_min = x_min-1; x_max = x_max+1;}
-	var x_buffer = Math.abs(x_max - x_min) * .05 ;
+	var x_buffer = Math.max(Math.abs(x_max - x_min) * .05, 1) ;
 	var xExtent = [x_min-x_buffer, x_max + x_buffer];
 	
 	var y_min = d3.min(y_extents, function(d,i) {return d[0]; });
