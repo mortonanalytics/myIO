@@ -1,4 +1,4 @@
-#' setmargin()
+#' setMargin()
 #'
 #' Sets margins for the top, bottom, left, and right sides of the chart
 #'
@@ -8,7 +8,7 @@
 #' @param left a numeric value representing in pixels the left margin
 #' @param right a numeric value representing in pixels the right margin
 #'
-#' @return the same myIO object with options set for the tooltip formats
+#' @return the same myIO object
 #'
 #' @export
 setmargin <- function(myIO, top = 20, bottom = 40, left = 50, right = 50){

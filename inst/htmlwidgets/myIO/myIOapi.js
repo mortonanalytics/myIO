@@ -152,18 +152,32 @@ chart.prototype.processScales = function(lys){
 		x_extents.push(x);
 		y_extents.push(y);
 	})
-	
+	//find min and max - X axis
 	var x_min = d3.min(x_extents, function(d,i) {return d[0]; });
 	var x_max = d3.max(x_extents, function(d,i) {return d[1]; });
+	//prevent single tick on axis
 	if(x_min == x_max) { x_min = x_min-1; x_max = x_max+1;}
+	//calculate buffer
 	var x_buffer = Math.max(Math.abs(x_max - x_min) * .05, 0.5) ;
-	var xExtent = [x_min-x_buffer, x_max + x_buffer];
+	//user inputs if available
+	var final_x_min = "" + this.options.xlim.min ? this.options.xlim.min : x_min ;
+	var final_x_max = this.options.xlim.max ? this.options.xlim.max : x_max ;
+	var xExtent = [final_x_min-x_buffer, 
+				   final_x_max + x_buffer];
 	
+	//find min and max - Y axis
 	var y_min = d3.min(y_extents, function(d,i) {return d[0]; });
 	var y_max = d3.max(y_extents, function(d,i) {return d[1]; });
+	//prevent single tick on axis
 	if(y_min == y_max) { y_min = y_min-1; y_max = y_max+1;}
+	//calculate buffer
 	var y_buffer = Math.abs(y_max - y_min) * .15 ;
-	var yExtent = [(y_min-y_buffer), (y_max+y_buffer)];
+	//user inputs if available
+	var final_y_min = "" + this.options.ylim.min ? this.options.ylim.min : (y_min-y_buffer) ;
+	var final_y_max = this.options.ylim.max ? this.options.ylim.max : (y_max+y_buffer) ;
+	console.log(final_y_min);
+	var yExtent = [(final_y_min), 
+				   (final_y_max)];
 	
 	//create scales
 	this.xScale = d3.scaleLinear()

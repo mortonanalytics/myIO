@@ -2,7 +2,7 @@
 % Please edit documentation in R/setMargin.R
 \name{setmargin}
 \alias{setmargin}
-\title{setmargin()}
+\title{setMargin()}
 \usage{
 setmargin(myIO, top = 20, bottom = 40, left = 50, right = 50)
 }
@@ -18,7 +18,7 @@ setmargin(myIO, top = 20, bottom = 40, left = 50, right = 50)
 \item{right}{a numeric value representing in pixels the right margin}
 }
 \value{
-the same myIO object with options set for the tooltip formats
+the same myIO object
 }
 \description{
 Sets margins for the top, bottom, left, and right sides of the chart

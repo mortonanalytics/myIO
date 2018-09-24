@@ -22,7 +22,11 @@ myIO <- function(data = NULL, width = NULL, height = NULL, elementId = NULL) {
                    margin = list(top = 20,
                                  bottom = 40,
                                  left = 50,
-                                 right = 50))
+                                 right = 50),
+                   xlim = list(min = NULL,
+                               max = NULL),
+                   ylim = list(min = NULL,
+                                max = NULL))
   )
 
   # create widget
