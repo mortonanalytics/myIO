@@ -216,11 +216,11 @@ chart.prototype.addAxes = function(){
 					.attr('text-anchor', 'center');
 					
 		var yFormat = this.options.yAxisFormat ? this.options.yAxisFormat : "s";
+		console.log(yFormat);
 		this.plot.append('g')
 			.attr("class", "y axis")
 			.call(d3.axisLeft(this.yScale)
-				.ticks(null, yFormat)
-				.tickFormat(function(e){ if(Math.floor(e) != e){return;} return e;}))
+				.ticks(null, yFormat))
 			.selectAll("text")
 				.attr("dx", "-.25em");
 	}	
@@ -1069,7 +1069,7 @@ chart.prototype.addToolTip = function() {
 				var key = d.label;
 				var color = d.color;
 				var values = d.data;
-				console.log(d.mapping.x_var);
+				
 				var x_var = d.mapping.x_var;
 				var y_var = d.mapping.y_var;
 				
