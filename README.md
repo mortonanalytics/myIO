@@ -15,7 +15,7 @@ plots.  Feel free to use and contribute! **I would not use it for production unl
 breaking changes.**
 
 # Make a plot
-You'll use two functions to make a plot: `myio() %>% addLayer()`
+You'll use two functions to make a plot: `myio() %>% addIoLayer()`
 
 # `addIoLayer()` or `addIoStatLayer()`
 This function takes the follwing arguments:
