@@ -23,7 +23,7 @@ chart.prototype.draw = function() {
 	//define dimensions
 	this.width = this.element.offsetWidth;
 	this.height = this.element.offsetHeight;
-	this.margin = this.options.margin//{ top: 20, right: 100, bottom: 40, left: 100};
+	this.margin = this.options.margin
 	
 	//set up parent element and SVG
 	this.element.innerHTML = '';
@@ -420,7 +420,7 @@ chart.prototype.addBars = function(ly){
 	function hoverTip(){
 		var bar = d3.select(this);
 		var barData = bar.data()[0];
-		var xFormat = d3.format(that.options.xAxisFormat ? that.options.xAxisFormat : "d");
+		var xFormat = that.options.xAxisFormat != "text" ? d3.format(that.options.xAxisFormat ? that.options.xAxisFormat : "d") : function(x) {return x;} ;
 		var yFormat = d3.format(that.options.yAxisFormat ? that.options.yAxisFormat : "d");
 		var toolTipFormat = d3.format(that.options.toolTipFormat ? that.options.toolTipFormat : "d");
 		
