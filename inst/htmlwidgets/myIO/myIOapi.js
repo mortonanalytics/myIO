@@ -363,8 +363,8 @@ chart.prototype.addBars = function(ly){
 	
 	if(this.options.flipAxis == false){
 		var bars = this.chart
-			//.selectAll('rect')
 			.selectAll('.tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
+			//.selectAll('rect')
 			.data(data);
 		
 		bars.exit()
@@ -373,7 +373,7 @@ chart.prototype.addBars = function(ly){
 		
 		var newBars = bars.enter()
 			.append('rect')
-			.attr('class', '.tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
+			.attr('class', 'tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
 			.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
 			.style('fill', ly.color)
 			.attr('x', function(d) { return that.xScale(d[ly.mapping.x_var])- (bandwidth/2); })
@@ -394,8 +394,8 @@ chart.prototype.addBars = function(ly){
 			.attr('height', function(d) { return (that.height -( m.top + m.bottom )) - that.yScale(d[ly.mapping.y_var]); });
 	} else {
 		var bars = this.chart
-			//.selectAll('rect')
 			.selectAll('.tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
+			//.selectAll('rect')
 			.data(data);
 		
 		bars.exit()
@@ -404,7 +404,7 @@ chart.prototype.addBars = function(ly){
 		
 		var newBars = bars.enter()
 			.append('rect')
-			.attr('class', '.tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
+			.attr('class', 'tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
 			.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
 			.style('fill', ly.color)
 			.attr('y', function(d) { return barSize == 1? y_scale(d[ly.mapping.x_var]) : y_scale(d[ly.mapping.x_var]) + bandwidth/4 ;})
@@ -451,6 +451,8 @@ chart.prototype.addBars = function(ly){
 	function hoverTipHide(){
 		that.tooltip.style("display", "none");
 	}
+	
+	console.log(this.chart.selectAll('.tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, '')));
 }
 
 chart.prototype.addLine = function(ly) {
