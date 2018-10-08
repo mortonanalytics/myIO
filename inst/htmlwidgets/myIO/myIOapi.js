@@ -1072,7 +1072,9 @@ chart.prototype.addToolTip = function() {
 	var tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
 	var toolLine =  this.chart.append('line').attr('class', 'toolLine');
 	var format1d = d3.format('.0f');
-	var yFormat = d3.format(that.options.yAxisFormat ? that.options.yAxisFormat : "d");
+	var xFormat = this.options.xAxisFormat != "text" ? d3.format(this.options.xAxisFormat ? this.options.xAxisFormat : "d") : function(x) {return x;} ;
+	var yFormat = d3.format(this.options.yAxisFormat ? this.options.yAxisFormat : "d");
+	var toolTipFormat = d3.format(this.options.toolTipFormat ? this.options.toolTipFormat : "d");
 	
 	var tipBox = this.svg.append("rect")
 			.attr('class', 'toolTipBox')
@@ -1097,6 +1099,7 @@ chart.prototype.addToolTip = function() {
 				
 				var x_var = d.mapping.x_var;
 				var y_var = d.mapping.y_var;
+				var toolTip_var = d.mapping.toolTip;
 				
 				var xPos =  that.xScale.invert(mouse[0]);
 				var bisect = d3.bisector(function(d) {return d[x_var]; }).left;
@@ -1110,12 +1113,13 @@ chart.prototype.addToolTip = function() {
 					color: color,
 					x_var: x_var,
 					y_var: y_var,
+					toolTip_var: toolTip_var,
 					values: v
 				}
 				tipText.push(finalObject);
 			});
 			
-	
+	console.log(tipText);
 	toolLine
 		.style('stroke', 'darkgray')
 		.style('stroke-dasharray', '3,3')
@@ -1124,16 +1128,21 @@ chart.prototype.addToolTip = function() {
 		.attr('y1',0)
 		.attr('y2', that.height - (that.margin.top +that.margin.bottom));
 		
-	tooltip.html(tipText[0].values[tipText[0].x_var])
+	tooltip
 		.style('display', 'inline-block')
 		.style('opacity', 0.9)
 		.style("left", (d3.mouse(this)[0]) + 'px')
 		.style("top", 0 + 'px')
-		.selectAll(".tip-text")
-		.data(tipText).enter()
-		.append('div')
-		.style('color', function(d) { return d.color; })
-		.html(function(d) { return d.y_var + ": " + yFormat(d.values[d.y_var]); });
+		.html(function() { 
+			if(tipText[0].toolTip_var){			
+				return tipText[0].x_var + ": " + xFormat(tipText[0].values[tipText[0].x_var]) + '<br>' + 
+				tipText[0].y_var + ": " + yFormat(tipText[0].values[tipText[0].y_var]) + '<br>' +
+				tipText[0].toolTip_var + ": " + toolTipFormat(tipText[0].values[tipText[0].toolTip_var])
+			  } else {
+				return tipText[0].x_var + ": " + xFormat(tipText[0].values[tipText[0].x_var]) + '<br>' + 
+				tipText[0].y_var + ": " + yFormat(tipText[0].values[tipText[0].y_var])
+			  }
+		});
 	}
 }
 
