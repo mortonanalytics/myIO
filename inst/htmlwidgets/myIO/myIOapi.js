@@ -429,10 +429,16 @@ chart.prototype.addBars = function(ly){
               .style("left", (d3.mouse(this)[0]) + 'px')
 			  .style("top", 0 + 'px')
               .style("display", "inline-block")
-              .html(ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 
+              .html(function() {
+				  if(ly.mapping.toolTip){
+					return ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 
 					ly.mapping.y_var + ": " + yFormat(barData[ly.mapping.y_var]) + '<br>' +
 					ly.mapping.toolTip + ": " + toolTipFormat(barData[ly.mapping.toolTip])
-					);
+				  } else {
+					return ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 
+					ly.mapping.y_var + ": " + yFormat(barData[ly.mapping.y_var])
+				  }
+			  });
 			  
 	}
 	
