@@ -378,7 +378,7 @@ chart.prototype.addBars = function(ly){
 			.style('fill', ly.color)
 			.attr('x', function(d) { return that.xScale(d[ly.mapping.x_var])- (bandwidth/2); })
 			.attr('y', this.yScale(0))
-			.attr('width', barSize * bandwidth-2)
+			.attr('width', (barSize * bandwidth)-2)
 			.attr('height', that.height -( m.top + m.bottom ))
 			.on('mouseover', hoverTip)
 			.on('mousemove', hoverTip)
@@ -390,7 +390,7 @@ chart.prototype.addBars = function(ly){
 			.duration(1000)
 			.attr('x', function(d) { return that.xScale(d[ly.mapping.x_var]) - ((bandwidth-2)/2); })
 			.attr('y', function(d) { return that.yScale(d[ly.mapping.y_var]); })
-			.attr('width', barSize * bandwidth-2)
+			.attr('width', (barSize * bandwidth)-2)
 			.attr('height', function(d) { return (that.height -( m.top + m.bottom )) - that.yScale(d[ly.mapping.y_var]); });
 	} else {
 		var bars = this.chart
@@ -409,7 +409,7 @@ chart.prototype.addBars = function(ly){
 			.style('fill', ly.color)
 			.attr('y', function(d) { return barSize == 1? y_scale(d[ly.mapping.x_var]) : y_scale(d[ly.mapping.x_var]) + bandwidth/4 ;})
 			.attr('x', 0)
-			.attr('height', barSize * bandwidth-2)
+			.attr('height', (barSize * bandwidth)-2)
 			.attr('width', 0)
 			.on('mouseover', hoverTip)
 			.on('mousemove', hoverTip)
@@ -420,7 +420,7 @@ chart.prototype.addBars = function(ly){
 			.ease(d3.easeQuad)
 			.duration(1000)
 			.attr('y', function(d) { return barSize == 1? y_scale(d[ly.mapping.x_var]) : y_scale(d[ly.mapping.x_var]) + bandwidth/4 ; })
-			.attr('height', barSize * bandwidth-2)
+			.attr('height', (barSize * bandwidth)-2)
 			.attr('width', function(d) { return that.xScale(d[ly.mapping.y_var]); });
 	}	
 	
