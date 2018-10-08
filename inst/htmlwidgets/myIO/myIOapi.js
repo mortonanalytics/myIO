@@ -1274,9 +1274,13 @@ chart.prototype.update = function(x){
 	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge")this.updateAxes();
 	this.routeLayers();
 	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge")this.addReferenceLines();
-	if(this.plotLayers[0].type != "hexbin" & 
-	   this.plotLayers[0].type != "treemap"& 
-	   this.plotLayers[0].type != "gauge")this.updateLegend();
+	if(this.options.suppressLegend == false){
+		if(this.plotLayers[0].type != "hexbin" & 
+		   this.plotLayers[0].type != "treemap"& 
+		   this.plotLayers[0].type != "gauge"){
+			this.updateLegend();
+		}		
+	} 
 	if(this.plotLayers[0].type != "hexbin" & 
 	   this.plotLayers[0].type != "treemap"&
        this.plotLayers[0].type != "gauge" &	   
@@ -1313,9 +1317,13 @@ chart.prototype.resize = function(){
 	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge")this.processScales(this.plotLayers);
 	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge")this.updateAxes();
 	this.routeLayers();
-	if(this.plotLayers[0].type != "hexbin" & 
-	   this.plotLayers[0].type != "treemap"& 
-	   this.plotLayers[0].type != "gauge")this.updateLegend();
+	if(this.options.suppressLegend == false){
+		if(this.plotLayers[0].type != "hexbin" & 
+		   this.plotLayers[0].type != "treemap"& 
+		   this.plotLayers[0].type != "gauge"){
+			this.updateLegend();
+		}		
+	} 
 	if(this.plotLayers[0].type != "hexbin" & 
 	   this.plotLayers[0].type != "treemap"&
        this.plotLayers[0].type != "gauge" &	   
