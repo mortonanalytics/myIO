@@ -345,6 +345,7 @@ chart.prototype.addBars = function(ly){
 	var m = this.margin;
 	var data = ly.data;
 	var key = ly.label;
+	var barSize = ly.options.barSize == "small" ? 0.5 : 1;
 	
 	if(this.options.categoricalScale == true & this.options.flipAxis == true){
 		var y_scale = this.bandedScale;
@@ -356,8 +357,8 @@ chart.prototype.addBars = function(ly){
 	
 	if(this.options.flipAxis == false){
 		var bars = this.chart
-			.selectAll('rect')
-			//.selectAll('.tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
+			//.selectAll('rect')
+			.selectAll('.tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
 			.data(data);
 		
 		bars.exit()
@@ -371,7 +372,7 @@ chart.prototype.addBars = function(ly){
 			.style('fill', ly.color)
 			.attr('x', function(d) { return that.xScale(d[ly.mapping.x_var])- (bandwidth/2); })
 			.attr('y', this.yScale(0))
-			.attr('width', bandwidth)
+			.attr('width', barSize * bandwidth-2)
 			.attr('height', that.height -( m.top + m.bottom ))
 			.on('mouseover', hoverTip)
 			.on('mousemove', hoverTip)
@@ -383,12 +384,12 @@ chart.prototype.addBars = function(ly){
 			.duration(1000)
 			.attr('x', function(d) { return that.xScale(d[ly.mapping.x_var]) - ((bandwidth-2)/2); })
 			.attr('y', function(d) { return that.yScale(d[ly.mapping.y_var]); })
-			.attr('width', bandwidth-2)
+			.attr('width', barSize * bandwidth-2)
 			.attr('height', function(d) { return (that.height -( m.top + m.bottom )) - that.yScale(d[ly.mapping.y_var]); });
 	} else {
 		var bars = this.chart
-			.selectAll('rect')
-			//.selectAll('.tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
+			//.selectAll('rect')
+			.selectAll('.tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
 			.data(data);
 		
 		bars.exit()
@@ -400,9 +401,9 @@ chart.prototype.addBars = function(ly){
 			.attr('class', '.tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
 			.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
 			.style('fill', ly.color)
-			.attr('y', function(d) { return y_scale(d[ly.mapping.x_var]); })
+			.attr('y', function(d) { return barSize == 1? y_scale(d[ly.mapping.x_var]) : y_scale(d[ly.mapping.x_var]) + bandwidth/4 ;})
 			.attr('x', 0)
-			.attr('height', bandwidth-2)
+			.attr('height', barSize * bandwidth-2)
 			.attr('width', 0)
 			.on('mouseover', hoverTip)
 			.on('mousemove', hoverTip)
@@ -412,8 +413,8 @@ chart.prototype.addBars = function(ly){
 			.transition()
 			.ease(d3.easeQuad)
 			.duration(1000)
-			.attr('y', function(d) { return y_scale(d[ly.mapping.x_var]) ; })
-			.attr('height', bandwidth-2)
+			.attr('y', function(d) { return barSize == 1? y_scale(d[ly.mapping.x_var]) : y_scale(d[ly.mapping.x_var]) + bandwidth/4 ; })
+			.attr('height', barSize * bandwidth-2)
 			.attr('width', function(d) { return that.xScale(d[ly.mapping.y_var]); });
 	}	
 	

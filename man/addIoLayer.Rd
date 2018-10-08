@@ -4,7 +4,8 @@
 \alias{addIoLayer}
 \title{addLayer()}
 \usage{
-addIoLayer(myIO, type, color, label, data = NULL, mapping)
+addIoLayer(myIO, type, color, label, data = NULL, mapping,
+  options = NULL)
 }
 \arguments{
 \item{myIO}{an htmlwidget object created by the myIO() function}
@@ -18,6 +19,8 @@ addIoLayer(myIO, type, color, label, data = NULL, mapping)
 \item{data}{(optional) R dataframe/tibble}
 
 \item{mapping}{a list object defining variables for the layer: layer(x_var = "xVar", y_var = "yVar")}
+
+\item{options}{a list oboject defining options for that layer}
 }
 \value{
 the same myIO object with the new layer attached to the message for the browser (myIO$x$layers)
