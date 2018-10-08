@@ -41,7 +41,9 @@ addIoLayer <- function(myIO,
     data <- unname(split(data, 1:nrow(data)))
 
   }
-
+  if(is.null(options)) {
+    options <- list(barSize = "large")
+    }
 
   ##create layer object
   layer <- list(
