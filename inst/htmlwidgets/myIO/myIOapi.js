@@ -243,7 +243,8 @@ chart.prototype.addAxes = function(){
 			.selectAll("text")
 				.attr("dx", "-.25em");
 	}	
-				
+	if(this.options.suppressAxis.xAxis == true){this.svg.selectAll('.x.axis').remove();}
+	if(this.options.suppressAxis.yAxis == true) {this.svg.selectAll('.y.axis').remove(); }
 }
 
 chart.prototype.updateAxes = function() {

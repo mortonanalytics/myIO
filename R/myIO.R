@@ -27,7 +27,8 @@ myIO <- function(data = NULL, width = NULL, height = NULL, elementId = NULL) {
                                max = NULL),
                    ylim = list(min = NULL,
                                 max = NULL),
-                   suppressLegend = FALSE)
+                   suppressLegend = FALSE,
+                   suppressAxis = list(xAxis = FALSE, yAxis = FALSE))
   )
 
   # create widget
