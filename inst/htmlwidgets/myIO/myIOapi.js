@@ -409,7 +409,7 @@ chart.prototype.addBars = function(ly){
 			.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
 			.style('fill', ly.color)
 			.attr('y', function(d) { return barSize == 1? y_scale(d[ly.mapping.x_var]) : y_scale(d[ly.mapping.x_var]) + bandwidth/4 ;})
-			.attr('x', 0)
+			.attr('x', function(d) { return this.xScale(Math.min(0, d[ly.mapping.y_var]; })
 			.attr('height', (barSize * bandwidth)-2)
 			.attr('width', 0)
 			.on('mouseover', hoverTip)
@@ -422,7 +422,7 @@ chart.prototype.addBars = function(ly){
 			.duration(1000)
 			.attr('y', function(d) { return barSize == 1? y_scale(d[ly.mapping.x_var]) : y_scale(d[ly.mapping.x_var]) + bandwidth/4 ; })
 			.attr('height', (barSize * bandwidth)-2)
-			.attr('width', function(d) { return that.xScale(d[ly.mapping.y_var]); });
+			.attr('width', function(d) { return Math.abs(that.xScale(d[ly.mapping.y_var]) - that.xScale(0)); });
 	}	
 	
 	function hoverTip(){
