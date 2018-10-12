@@ -377,7 +377,12 @@ chart.prototype.addBars = function(ly){
 			.attr('class', 'tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
 			.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
 			.style('fill', ly.color)
-			.attr('x', function(d) { return that.xScale(d[ly.mapping.x_var])- (bandwidth/2); })
+			.attr('x', function(d) { 
+				console.log(barSize); 
+				console.log(bandwidth);
+				console.log(that.xScale(d[ly.mapping.x_var]));
+				return barSize == 1 ? that.xScale(d[ly.mapping.x_var]) - (bandwidth/2) : that.xScale(d[ly.mapping.x_var]) - (bandwidth/4); 
+			})
 			.attr('y', this.yScale(0))
 			.attr('width', (barSize * bandwidth)-2)
 			.attr('height', that.height -( m.top + m.bottom ))
@@ -389,7 +394,6 @@ chart.prototype.addBars = function(ly){
 			.transition()
 			.ease(d3.easeQuad)
 			.duration(1000)
-			.attr('x', function(d) { return that.xScale(d[ly.mapping.x_var]) - ((bandwidth-2)/2); })
 			.attr('y', function(d) { return that.yScale(d[ly.mapping.y_var]); })
 			.attr('width', (barSize * bandwidth)-2)
 			.attr('height', function(d) { return (that.height -( m.top + m.bottom )) - that.yScale(d[ly.mapping.y_var]); });
