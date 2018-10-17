@@ -29,7 +29,7 @@ myIO <- function(data = NULL, width = NULL, height = NULL, elementId = NULL) {
                                 max = NULL),
                    suppressLegend = FALSE,
                    suppressAxis = list(xAxis = FALSE, yAxis = FALSE),
-                   addAxisLabel = list(xAxis = FALSE, yAxis = FALSE))
+                   addAxisLabel = list(xAxis = "none", yAxis = "none"))
   )
 
   # create widget
