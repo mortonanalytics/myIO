@@ -252,7 +252,7 @@ chart.prototype.addAxes = function(){
 	if(this.options.suppressAxis.xAxis == true){this.svg.selectAll('.x.axis').remove();}
 	if(this.options.suppressAxis.yAxis == true) {this.svg.selectAll('.y.axis').remove(); }
 	console.log(this.options);
-	if(this.options.axisLabel.xAxis != "None"){
+	if(this.options.axisLabel.xAxis){
 		this.svg.append("text")
 			.attr('class', 'x label')
 		  .attr("transform",
@@ -261,7 +261,7 @@ chart.prototype.addAxes = function(){
 		  .style("text-anchor", "middle")
 		  .text(this.options.axisLabel.xAxis);
 	}
-	if(this.options.axisLabel.yAxis!= "None"){
+	if(this.options.axisLabel.yAxis){
 		this.svg.append("text")
 			.attr('class', 'y label')
 		  .attr("transform", "rotate(-90)")

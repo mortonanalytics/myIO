@@ -63,6 +63,6 @@ testthat::test_that("x axis set to user inputs", {
 })
 
 testthat::test_that("x axis label set to user inputs", {
-  testthat::equals(test_object_opt$x$options$addAxisLabel$xAxis, "x_var")
+  testthat::equals(test_object_opt$x$options$axisLabel$xAxis, "x_var")
 
 })
