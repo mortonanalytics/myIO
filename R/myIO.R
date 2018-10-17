@@ -19,6 +19,7 @@ myIO <- function(data = NULL, width = NULL, height = NULL, elementId = NULL) {
     data = data,
     options = list(referenceLine = list(x = 0, y = 0),
                    flipAxis = FALSE,
+                   addAxisLabel = list(xAxis = "None", yAxis = "None"),
                    margin = list(top = 20,
                                  bottom = 40,
                                  left = 50,
@@ -28,8 +29,8 @@ myIO <- function(data = NULL, width = NULL, height = NULL, elementId = NULL) {
                    ylim = list(min = NULL,
                                 max = NULL),
                    suppressLegend = FALSE,
-                   suppressAxis = list(xAxis = FALSE, yAxis = FALSE),
-                   addAxisLabel = list(xAxis = "None", yAxis = "None"))
+                   suppressAxis = list(xAxis = FALSE, yAxis = FALSE)
+                   )
   )
 
   # create widget
