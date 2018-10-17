@@ -14,7 +14,8 @@ test_object_opt <- myIO::addIoLayer(myIO::myIO(),
               myIO::setmargin(top = 100) %>%
               myIO::setAxisLimits(xlim = list(min = 0)) %>%
               myIO::suppressAxis(xAxis = TRUE, yAxis = TRUE) %>%
-              myIO::suppressLegend()
+              myIO::suppressLegend() %>%
+              myIO::addAxisLabel(xAxis = "x_var", yAxis = "y_var")
 
 testthat::test_that("axis options get set", {
   testthat::equals(test_object_opt$x$options$xAxisFormat, ".0f")
@@ -58,5 +59,10 @@ testthat::test_that("margins are set to user inputs", {
 
 testthat::test_that("x axis set to user inputs", {
   testthat::equals(test_object_opt$x$options$xlim$min, 10)
+
+})
+
+testthat::test_that("x axis label set to user inputs", {
+  testthat::equals(test_object_opt$x$options$addAxisLabel$xAxis, "x_var")
 
 })

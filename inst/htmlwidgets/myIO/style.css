@@ -3,6 +3,19 @@
 	font-size: 13px;
 	fill: darkgray;
 }
+
+.x.label {
+	font-family: sans-serif;
+	font-size: 13px;
+	fill: darkgray;
+}
+
+.y.label {
+	font-family: sans-serif;
+	font-size: 13px;
+	fill: darkgray;
+}
+
 .axis {
   shape-rendering: crispEdges;
 }

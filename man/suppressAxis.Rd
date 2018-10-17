@@ -17,5 +17,5 @@ suppressAxis(myIO, xAxis = NULL, yAxis = NULL)
 the same myIO object
 }
 \description{
-Suppresses legend from printing
+Suppresses axes from printing
 }

@@ -158,6 +158,7 @@ chart.prototype.processScales = function(lys){
 		x_extents.push(x);
 		y_extents.push(y);
 	})
+	
 	//find min and max - X axis
 	var x_min = d3.min(x_extents, function(d,i) {return d[0]; });
 	var x_max = d3.max(x_extents, function(d,i) {return d[1]; });
@@ -166,7 +167,13 @@ chart.prototype.processScales = function(lys){
 	//calculate buffer
 	var x_buffer = Math.max(Math.abs(x_max - x_min) * .05, 0.5) ;
 	//user inputs if available
-	var final_x_min = this.options.xlim.min ? this.options.xlim.min : (x_min-x_buffer) ;
+	//var final_x_min = this.options.xlim.min ? this.options.xlim.min : (x_min-x_buffer) ;
+	if(this.options.xlim.min){
+		var final_x_min = this.options.xlim.min;
+	} else {
+		var final_x_min = x_min-x_buffer;
+	}
+	
 	var final_x_max = this.options.xlim.max ? this.options.xlim.max : (x_max+ x_buffer) ;
 	var xExtent = [final_x_min, 
 				   final_x_max ];
@@ -205,7 +212,6 @@ chart.prototype.addAxes = function(){
 		
 	//create and append axes
 	if(this.options.categoricalScale == true & this.options.flipAxis == true){
-		console.log(this.bandedScale.domain());
 		var xFormat = this.options.xAxisFormat ? this.options.xAxisFormat : "d";
 		this.plot.append('g')
 			.attr("class", "x axis")
@@ -245,6 +251,26 @@ chart.prototype.addAxes = function(){
 	}	
 	if(this.options.suppressAxis.xAxis == true){this.svg.selectAll('.x.axis').remove();}
 	if(this.options.suppressAxis.yAxis == true) {this.svg.selectAll('.y.axis').remove(); }
+	
+	if(this.options.addAxisLabel.xAxis){
+		this.svg.append("text")
+			.attr('class', 'x label')
+		  .attr("transform",
+				"translate(" + ((this.width - (m.right + m.left)) /2) + " ," + 
+							   (this.height- m.top + 20) + ")")
+		  .style("text-anchor", "middle")
+		  .text(this.options.addAxisLabel.xAxis);
+	}
+	if(this.options.addAxisLabel.yAxis){
+		this.svg.append("text")
+			.attr('class', 'y label')
+		  .attr("transform", "rotate(-90)")
+		  .attr("y", 0)
+		  .attr("x",0 - (this.height / 2))
+		  .attr("dy", "1em")
+		  .style("text-anchor", "middle")
+		  .text(this.options.addAxisLabel.yAxis);  
+	}
 }
 
 chart.prototype.updateAxes = function() {
@@ -272,7 +298,7 @@ chart.prototype.updateAxes = function() {
 			.call(d3.axisLeft(this.bandedScale))
 				.selectAll("text")
 					.attr("dx", "-.25em");
-	} else{
+	} else {
 		var xFormat = this.options.xAxisFormat ? this.options.xAxisFormat : "d";
 		this.svg.selectAll('.x.axis')
 			.transition().ease(d3.easeQuad)
@@ -377,12 +403,7 @@ chart.prototype.addBars = function(ly){
 			.attr('class', 'tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
 			.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
 			.style('fill', ly.color)
-			.attr('x', function(d) { 
-				console.log(barSize); 
-				console.log(bandwidth);
-				console.log(that.xScale(d[ly.mapping.x_var]));
-				return barSize == 1 ? that.xScale(d[ly.mapping.x_var]) - (bandwidth/2) : that.xScale(d[ly.mapping.x_var]) - (bandwidth/4); 
-			})
+			.attr('x', function(d) { return barSize == 1 ? that.xScale(d[ly.mapping.x_var]) - (bandwidth/2) : that.xScale(d[ly.mapping.x_var]) - (bandwidth/4); })
 			.attr('y', this.yScale(0))
 			.attr('width', (barSize * bandwidth)-2)
 			.attr('height', that.height -( m.top + m.bottom ))
@@ -394,6 +415,7 @@ chart.prototype.addBars = function(ly){
 			.transition()
 			.ease(d3.easeQuad)
 			.duration(1000)
+			.attr('x', function(d) { return barSize == 1 ? that.xScale(d[ly.mapping.x_var]) - (bandwidth/2) : that.xScale(d[ly.mapping.x_var]) - (bandwidth/4); })
 			.attr('y', function(d) { return that.yScale(d[ly.mapping.y_var]); })
 			.attr('width', (barSize * bandwidth)-2)
 			.attr('height', function(d) { return (that.height -( m.top + m.bottom )) - that.yScale(d[ly.mapping.y_var]); });
@@ -404,7 +426,7 @@ chart.prototype.addBars = function(ly){
 			.data(data);
 		
 		bars.exit()
-			.transition().duration(500).attr('y', y_scale(0))
+			.transition().duration(500).attr('width', 0)
 			.remove();
 		
 		var newBars = bars.enter()
@@ -424,7 +446,8 @@ chart.prototype.addBars = function(ly){
 			.transition()
 			.ease(d3.easeQuad)
 			.duration(1000)
-			.attr('y', function(d) { return barSize == 1? y_scale(d[ly.mapping.x_var]) : y_scale(d[ly.mapping.x_var]) + bandwidth/4 ; })
+			.attr('y', function(d) { return barSize == 1? y_scale(d[ly.mapping.x_var]) : y_scale(d[ly.mapping.x_var]) + bandwidth/4 ;})
+			.attr('x', function(d) { return that.xScale(Math.min(0, d[ly.mapping.y_var])); })
 			.attr('height', (barSize * bandwidth)-2)
 			.attr('width', function(d) { return Math.abs(that.xScale(d[ly.mapping.y_var]) - that.xScale(0)); });
 	}	
@@ -441,10 +464,17 @@ chart.prototype.addBars = function(ly){
 			  .style("top", 0 + 'px')
               .style("display", "inline-block")
               .html(function() {
-				  if(ly.mapping.toolTip){
+				  
+				  if(ly.mapping.toolTip & !ly.mapping.toolTip2){
 					return ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 
 					ly.mapping.y_var + ": " + yFormat(barData[ly.mapping.y_var]) + '<br>' +
 					ly.mapping.toolTip + ": " + toolTipFormat(barData[ly.mapping.toolTip])
+				  } else if(ly.mapping.toolTip2){
+					  console.log("tooltip2");
+					 return ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 
+					ly.mapping.y_var + ": " + yFormat(barData[ly.mapping.y_var]) + '<br>' +
+					ly.mapping.toolTip + ": " + toolTipFormat(barData[ly.mapping.toolTip]) + '<br>' +
+					ly.mapping.toolTip2 + ": " + toolTipFormat(barData[ly.mapping.toolTip2])
 				  } else {
 					return ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 
 					ly.mapping.y_var + ": " + yFormat(barData[ly.mapping.y_var])
@@ -457,7 +487,6 @@ chart.prototype.addBars = function(ly){
 		that.tooltip.style("display", "none");
 	}
 	
-	console.log(this.chart.selectAll('.tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, '')));
 }
 
 chart.prototype.addLine = function(ly) {
@@ -1265,10 +1294,10 @@ chart.prototype.update = function(x){
 		.attr('height', this.height);
 	
 	if(this.plotLayers[0].type != "gauge"){
-		this.plot = this.svg.append('g')
+		this.plot
 			.attr('transform','translate('+this.margin.left+','+this.margin.top+')');
 	} else {
-		this.plot = this.svg.append('g')
+		this.plot
 			.attr('transform','translate('+this.width/2+','+this.height/2+')');
 	}
 	
@@ -1306,10 +1335,10 @@ chart.prototype.resize = function(){
 		.attr('height', this.height);
 	
 	if(this.plotLayers[0].type != "gauge"){
-		this.plot = this.svg.append('g')
+		this.plot 
 			.attr('transform','translate('+this.margin.left+','+this.margin.top+')');
 	} else {
-		this.plot = this.svg.append('g')
+		this.plot 
 			.attr('transform','translate('+this.width/2+','+this.height/2+')');
 	}
 	

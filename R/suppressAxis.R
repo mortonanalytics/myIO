@@ -1,6 +1,6 @@
 #' suppressAxis()
 #'
-#' Suppresses legend from printing
+#' Suppresses axes from printing
 #'
 #' @param myIO an htmlwidget object created by the myIO() function
 #' @param xAxis a logical operator defining whether the x axis should be printed or not
