@@ -252,25 +252,25 @@ chart.prototype.addAxes = function(){
 	if(this.options.suppressAxis.xAxis == true){this.svg.selectAll('.x.axis').remove();}
 	if(this.options.suppressAxis.yAxis == true) {this.svg.selectAll('.y.axis').remove(); }
 	console.log(this.options);
-	// if(this.options.axisLabel.xAxis){
-		// this.svg.append("text")
-			// .attr('class', 'x label')
-		  // .attr("transform",
-				// "translate(" + ((this.width - (m.right + m.left)) /2) + " ," + 
-							   // (this.height- m.top + 20) + ")")
-		  // .style("text-anchor", "middle")
-		  // .text(this.options.axisLabel.xAxis);
-	// }
-	// if(this.options.axisLabel.yAxis){
-		// this.svg.append("text")
-			// .attr('class', 'y label')
-		  // .attr("transform", "rotate(-90)")
-		  // .attr("y", 0)
-		  // .attr("x",0 - (this.height / 2))
-		  // .attr("dy", "1em")
-		  // .style("text-anchor", "middle")
-		  // .text(this.options.axisLabel.yAxis);  
-	// }
+	if(this.options.axisLabel.xAxis){
+		this.svg.append("text")
+			.attr('class', 'x label')
+		  .attr("transform",
+				"translate(" + ((this.width - (m.right + m.left)) /2) + " ," + 
+							   (this.height- m.top + 20) + ")")
+		  .style("text-anchor", "middle")
+		  .text(this.options.axisLabel.xAxis);
+	}
+	if(this.options.axisLabel.yAxis){
+		this.svg.append("text")
+			.attr('class', 'y label')
+		  .attr("transform", "rotate(-90)")
+		  .attr("y", 0)
+		  .attr("x",0 - (this.height / 2))
+		  .attr("dy", "1em")
+		  .style("text-anchor", "middle")
+		  .text(this.options.axisLabel.yAxis);  
+	}
 }
 
 chart.prototype.updateAxes = function() {
