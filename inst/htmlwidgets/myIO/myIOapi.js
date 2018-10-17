@@ -251,7 +251,7 @@ chart.prototype.addAxes = function(){
 	}	
 	if(this.options.suppressAxis.xAxis == true){this.svg.selectAll('.x.axis').remove();}
 	if(this.options.suppressAxis.yAxis == true) {this.svg.selectAll('.y.axis').remove(); }
-	console.log(this.options.addAxisLabel);
+	console.log(this.options);
 	if(this.options.addAxisLabel.xAxis != "None"){
 		this.svg.append("text")
 			.attr('class', 'x label')
