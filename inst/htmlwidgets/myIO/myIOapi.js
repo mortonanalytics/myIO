@@ -1199,7 +1199,7 @@ chart.prototype.makeGauge = function(ly){
 	//define gauge variable
 	var twoPi = Math.PI;
 	var radius = Math.min(this.width, this.height)/2;
-	var barWidth = 30 * this.width/300;
+	var barWidth = 30 ;
 	var progress = ly.data[0].value[0];
 		
 	//define gauge functions
@@ -1303,7 +1303,7 @@ chart.prototype.update = function(x){
 	
 	//update all the other stuff
 	this.options.referenceLine = x.options.referenceLine;
-	
+	if(this.plotLayers[0].type == "gauge")this.draw();
 	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge")this.processScales(this.plotLayers);
 	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge")this.updateAxes();
 	this.routeLayers();
@@ -1347,7 +1347,8 @@ chart.prototype.resize = function(){
 		.attr('y', 0)
 		.attr('width', this.width - (this.margin.left + this.margin.right))
 		.attr('height', this.height - (this.margin.top + this.margin.bottom));
-		
+	
+	if(this.plotLayers[0].type == "gauge")this.draw();
 	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge")this.processScales(this.plotLayers);
 	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge")this.updateAxes();
 	this.routeLayers();
