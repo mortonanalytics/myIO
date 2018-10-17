@@ -19,7 +19,7 @@ myIO <- function(data = NULL, width = NULL, height = NULL, elementId = NULL) {
     data = data,
     options = list(referenceLine = list(x = 0, y = 0),
                    flipAxis = FALSE,
-                   addAxisLabel = list(xAxis = "None", yAxis = "None"),
+                   axisLabel = list(xAxis = "None", yAxis = "None"),
                    margin = list(top = 20,
                                  bottom = 40,
                                  left = 50,

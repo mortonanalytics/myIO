@@ -11,8 +11,8 @@
 #' @export
 addAxisLabel <- function(myIO, xAxis = NULL, yAxis = NULL){
 
-  addAxisLabel <- list(xAxis = xAxis, yAxis = yAxis)
-  myIO$x$options$addAxisLabel <- addAxisLabel
+  axisLabel <- list(xAxis = xAxis, yAxis = yAxis)
+  myIO$x$options$axisLabel <- axisLabel
 
   return(myIO)
 }
