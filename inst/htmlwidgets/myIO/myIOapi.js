@@ -277,6 +277,13 @@ chart.prototype.addAxes = function(){
 						return e.slice(0,4) + "-" + e.slice(4,6) 
 					}
 					});
+			this.svg.append("text")
+				.attr('class', 'x label')
+				.attr("transform",
+					"translate(" + (this.width / 2) + " ," + 
+								   (this.height- m.top + 15) + ")")
+				.style("text-anchor", "middle")
+				.text("Date");
 		}
 					
 		var yFormat = this.options.yAxisFormat ? this.options.yAxisFormat : "s";
