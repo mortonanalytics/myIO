@@ -249,7 +249,12 @@ chart.prototype.addAxes = function(){
 				.attr("dx", "-.25em");
 		
 	} else {
-		var xFormat = this.options.xAxisFormat ? this.options.xAxisFormat : "d";
+		if(this.options.xAxisFormat){
+			var xFormat = this.options.xAxisFormat == "yearMon" ? "s" : this.options.xAxisFormat ;
+		} else {
+			var xFormat = "s";
+		}
+		
 		this.plot.append('g')
 			.attr("class", "x axis")
 			.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
@@ -260,8 +265,21 @@ chart.prototype.addAxes = function(){
 					.attr('dy', '.35em')
 					.attr('text-anchor', 'center');
 					
+		if(this.options.xAxisFormat == "yearMon"){
+			
+			this.plot.select('.x.axis').selectAll('text')
+				.text(function(d){ 
+					if(Math.floor(+d) != +d){
+						return ;
+					} else {
+						var e = d.toString();
+						console.log(e);
+						return e.slice(0,4) + "-" + e.slice(4,6) 
+					}
+					});
+		}
+					
 		var yFormat = this.options.yAxisFormat ? this.options.yAxisFormat : "s";
-		console.log(yFormat);
 		this.plot.append('g')
 			.attr("class", "y axis")
 			.call(d3.axisLeft(this.yScale)
@@ -337,7 +355,11 @@ chart.prototype.updateAxes = function() {
 				.selectAll("text")
 					.attr("dx", "-.25em");
 	} else {
-		var xFormat = this.options.xAxisFormat ? this.options.xAxisFormat : "s";
+		if(this.options.xAxisFormat){
+			var xFormat = this.options.xAxisFormat == "yearMon" ? "s" : this.options.xAxisFormat ;
+		} else {
+			var xFormat = "s";
+		}
 		this.svg.selectAll('.x.axis')
 			.transition().ease(d3.easeQuad)
 			.duration(500)
@@ -348,6 +370,20 @@ chart.prototype.updateAxes = function() {
 				.selectAll("text")
 					.attr('dy', '.35em')
 					.style('text-anchor', 'center');
+					
+		if(this.options.xAxisFormat == "yearMon"){
+			
+			this.plot.select('.x.axis').selectAll('text')
+				.text(function(d){ 
+					if(Math.floor(+d) != +d){
+						return ;
+					} else {
+						var e = d.toString();
+						console.log(e);
+						return e.slice(0,4) + "-" + e.slice(4,6) 
+					}
+					});
+		}
 		
 		var yFormat = this.options.yAxisFormat ? this.options.yAxisFormat : "s";
 		this.svg.selectAll('.y.axis')
