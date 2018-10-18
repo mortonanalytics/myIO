@@ -17,8 +17,8 @@ setAxisFormat <- function(myIO, xAxis = NULL, yAxis = NULL, toolTip = NULL, xLab
   myIO$x$options$xAxisFormat <- xAxis
   myIO$x$options$yAxisFormat <- yAxis
   myIO$x$options$toolTipFormat <- toolTip
-  axisLabel <- list(xLabel = xAxis, yLabel = yAxis)
-  myIO$x$options$axisLabelOption <- axisLabel
+  myIO$x$options$xAxisLabel <- xLabel
+  myIO$x$options$yAxisLabel <- yLabel
 
   return(myIO)
 }
