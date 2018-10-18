@@ -21,6 +21,7 @@ HTMLWidgets.widget({
 					element: document.getElementById(el.id),
 					plotLayers: x.layers,
 					options: x.options
+					console.log(x);
 					});
 			}
 		}
