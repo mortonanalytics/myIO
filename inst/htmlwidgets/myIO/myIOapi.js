@@ -549,17 +549,20 @@ chart.prototype.addBars = function(ly){
               .style("display", "inline-block")
               .html(function() {
 				  
-				  if(ly.mapping.toolTip & !ly.mapping.toolTip2){
-					return ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 
-					ly.mapping.y_var + ": " + yFormat(barData[ly.mapping.y_var]) + '<br>' +
-					ly.mapping.toolTip + ": " + toolTipFormat(barData[ly.mapping.toolTip])
-				  } else if(ly.mapping.toolTip2){
-					  console.log("tooltip2");
+				  if(ly.mapping.toolTip2){
+					  console.log("toolTip2");
+					  return ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 
+						ly.mapping.y_var + ": " + yFormat(barData[ly.mapping.y_var]) + '<br>' +
+						ly.mapping.toolTip + ": " + toolTipFormat(barData[ly.mapping.toolTip]) + '<br>' +
+						ly.mapping.toolTip2 + ": " + toolTipFormat(barData[ly.mapping.toolTip2])
+					
+				  } else if(ly.mapping.toolTip){
+					  console.log("toolTip");
 					 return ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 
-					ly.mapping.y_var + ": " + yFormat(barData[ly.mapping.y_var]) + '<br>' +
-					ly.mapping.toolTip + ": " + toolTipFormat(barData[ly.mapping.toolTip]) + '<br>' +
-					ly.mapping.toolTip2 + ": " + toolTipFormat(barData[ly.mapping.toolTip2])
+						ly.mapping.y_var + ": " + yFormat(barData[ly.mapping.y_var]) + '<br>' +
+						ly.mapping.toolTip + ": " + toolTipFormat(barData[ly.mapping.toolTip])
 				  } else {
+					  console.log("no tooltip");
 					return ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 
 					ly.mapping.y_var + ": " + yFormat(barData[ly.mapping.y_var])
 				  }
