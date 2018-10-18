@@ -213,6 +213,7 @@ chart.prototype.addAxes = function(){
 	//create and append axes
 	if(this.options.categoricalScale == true & this.options.flipAxis == true){
 		var xFormat = this.options.xAxisFormat ? this.options.xAxisFormat : "s";
+		
 		this.plot.append('g')
 			.attr("class", "x axis")
 			.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
@@ -222,6 +223,7 @@ chart.prototype.addAxes = function(){
 				.selectAll("text")
 					.attr('dy', '.35em')
 					.attr('text-anchor', 'center');
+		
 		this.plot.append('g')
 			.attr("class", "y axis")
 			.call(d3.axisLeft(this.bandedScale))
@@ -280,7 +282,7 @@ chart.prototype.updateAxes = function() {
 		
 	//update axes
 	if(this.options.categoricalScale == true & this.options.flipAxis == true){
-		var xFormat = this.options.xAxisFormat ? this.options.xAxisFormat : "d";
+		var xFormat = this.options.xAxisFormat ? this.options.xAxisFormat : "s";
 		this.svg.selectAll('.x.axis')
 			.transition().ease(d3.easeQuad)
 			.duration(500)
@@ -299,7 +301,7 @@ chart.prototype.updateAxes = function() {
 				.selectAll("text")
 					.attr("dx", "-.25em");
 	} else {
-		var xFormat = this.options.xAxisFormat ? this.options.xAxisFormat : "d";
+		var xFormat = this.options.xAxisFormat ? this.options.xAxisFormat : "s";
 		this.svg.selectAll('.x.axis')
 			.transition().ease(d3.easeQuad)
 			.duration(500)
