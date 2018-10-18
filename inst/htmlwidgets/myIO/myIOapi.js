@@ -253,16 +253,15 @@ chart.prototype.addAxes = function(){
 	}	
 	if(this.options.suppressAxis.xAxis == true){this.svg.selectAll('.x.axis').remove();}
 	if(this.options.suppressAxis.yAxis == true) {this.svg.selectAll('.y.axis').remove(); }
-	console.log(this.options);
-	// if(this.options.axisLabelOption.xAxis){
-		// this.svg.append("text")
-			// .attr('class', 'x label')
-		  // .attr("transform",
-				// "translate(" + ((this.width - (m.right + m.left)) /2) + " ," + 
-							   // (this.height- m.top + 20) + ")")
-		  // .style("text-anchor", "middle")
-		  // .text(this.options.axisLabel.xAxis);
-	// }
+	if(this.plotLayers.length == 1){
+		this.svg.append("text")
+			.attr('class', 'x label')
+		  .attr("transform",
+				"translate(" + ((this.width - (m.right + m.left)) /2) + " ," + 
+							   (this.height- m.top + 20) + ")")
+		  .style("text-anchor", "middle")
+		  .text(this.plotLayers[0].label);
+	}
 	// if(this.options.axisLabelOption.yAxis){
 		// this.svg.append("text")
 			// .attr('class', 'y label')
