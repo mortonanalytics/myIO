@@ -14,8 +14,7 @@ test_object_opt <- myIO::addIoLayer(myIO::myIO(),
               myIO::setmargin(top = 100) %>%
               myIO::setAxisLimits(xlim = list(min = 0)) %>%
               myIO::suppressAxis(xAxis = TRUE, yAxis = TRUE) %>%
-              myIO::suppressLegend() %>%
-              myIO::addAxisLabel(xAxis = "x_var", yAxis = "y_var")
+              myIO::suppressLegend()
 
 testthat::test_that("axis options get set", {
   testthat::equals(test_object_opt$x$options$xAxisFormat, ".0f")
