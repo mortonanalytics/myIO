@@ -257,7 +257,7 @@ chart.prototype.addAxes = function(){
 		this.svg.append("text")
 			.attr('class', 'x label')
 		  .attr("transform",
-				"translate(" + ((this.width / 2) + " ," + 
+				"translate(" + (this.width / 2) + " ," + 
 							   (this.height- m.top + 20) + ")")
 		  .style("text-anchor", "middle")
 		  .text(this.plotLayers[0].label);
