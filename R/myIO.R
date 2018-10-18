@@ -19,7 +19,6 @@ myIO <- function(data = NULL, width = NULL, height = NULL, elementId = NULL) {
     data = data,
     options = list(referenceLine = list(x = 0, y = 0),
                    flipAxis = FALSE,
-                   axisLabel = list(xAxis = NULL, yAxis = NULL),
                    margin = list(top = 20,
                                  bottom = 40,
                                  left = 50,
@@ -28,6 +27,7 @@ myIO <- function(data = NULL, width = NULL, height = NULL, elementId = NULL) {
                                max = NULL),
                    ylim = list(min = NULL,
                                 max = NULL),
+                   axisLabel = list(xAxis = NULL, yAxis = NULL),
                    suppressLegend = FALSE,
                    suppressAxis = list(xAxis = FALSE, yAxis = FALSE)
                    )
