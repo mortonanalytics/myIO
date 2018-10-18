@@ -536,7 +536,10 @@ chart.prototype.addBars = function(ly){
 	function hoverTip(){
 		var bar = d3.select(this);
 		var barData = bar.data()[0];
-		var xFormat = that.options.xAxisFormat != "text" ? d3.format(that.options.xAxisFormat ? that.options.xAxisFormat : "d") : function(x) {return x;} ;
+		var exclusions = ["text", "yearMon"];
+		console.log(that.options.xAxisFormat);
+		console.log(exclusions.indexOf(that.options.xAxisFormat) in exclusions);
+		var xFormat = !(exclusions.indexOf(that.options.xAxisFormat) in exclusions) ? d3.format(that.options.xAxisFormat ? that.options.xAxisFormat : "d") : function(x) {return x;} ;
 		var yFormat = d3.format(that.options.yAxisFormat ? that.options.yAxisFormat : "d");
 		var toolTipFormat = d3.format(that.options.toolTipFormat ? that.options.toolTipFormat : "d");
 		
