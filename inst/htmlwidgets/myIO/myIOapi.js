@@ -1151,7 +1151,7 @@ chart.prototype.addLegend = function() {
 			
 		if(d.type == 'line'){
 			legendElement.append("rect")
-				.attr("x", that.width - 10)
+				.attr("x", that.width - 12)
 				.attr('y', 5)
 				.attr("width", 12)
 				.attr("height", 3)
@@ -1164,7 +1164,7 @@ chart.prototype.addLegend = function() {
 				.attr("fill", d.color);
 		} else {
 			legendElement.append("rect")
-				.attr("x", that.width - 10)
+				.attr("x", that.width - 12)
 				.attr("width", 12)
 				.attr("height", 12)
 				.attr("fill", d.color);
