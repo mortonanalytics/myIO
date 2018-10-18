@@ -4,7 +4,8 @@
 \alias{setAxisFormat}
 \title{setAxisFormat()}
 \usage{
-setAxisFormat(myIO, xAxis = NULL, yAxis = NULL, toolTip = NULL)
+setAxisFormat(myIO, xAxis = NULL, yAxis = NULL, toolTip = NULL,
+  xLabel = NULL, yLabel = NULL)
 }
 \arguments{
 \item{myIO}{an htmlwidget object created by the myIO() function}
@@ -14,6 +15,10 @@ setAxisFormat(myIO, xAxis = NULL, yAxis = NULL, toolTip = NULL)
 \item{yAxis}{a string indicating a d3.js format}
 
 \item{toolTip}{a string indicating a d3.js format}
+
+\item{xLabel}{a string label for axis}
+
+\item{yLabel}{a string label for axis}
 }
 \value{
 the same myIO object with options set for the tooltip formats
