@@ -27,7 +27,7 @@ myIO <- function(data = NULL, width = NULL, height = NULL, elementId = NULL) {
                                max = NULL),
                    ylim = list(min = NULL,
                                 max = NULL),
-                   axisLabel = list(xAxis = NULL, yAxis = NULL),
+                   axisLabelOption = list(xAxis = NULL, yAxis = NULL),
                    suppressLegend = FALSE,
                    suppressAxis = list(xAxis = FALSE, yAxis = FALSE)
                    )

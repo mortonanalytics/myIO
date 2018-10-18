@@ -12,7 +12,7 @@
 addAxisLabel <- function(myIO, xAxis = NULL, yAxis = NULL){
 
   axisLabel <- list(xAxis = xAxis, yAxis = yAxis)
-  myIO$x$options$axisLabel <- axisLabel
+  myIO$x$options$axisLabelOption <- axisLabel
 
   return(myIO)
 }
