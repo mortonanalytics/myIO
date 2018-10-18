@@ -212,7 +212,7 @@ chart.prototype.addAxes = function(){
 		
 	//create and append axes
 	if(this.options.categoricalScale == true & this.options.flipAxis == true){
-		var xFormat = this.options.xAxisFormat ? this.options.xAxisFormat : "d";
+		var xFormat = this.options.xAxisFormat ? this.options.xAxisFormat : "s";
 		this.plot.append('g')
 			.attr("class", "x axis")
 			.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
