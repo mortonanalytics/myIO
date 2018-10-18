@@ -258,7 +258,7 @@ chart.prototype.addAxes = function(){
 			.attr('class', 'x label')
 		  .attr("transform",
 				"translate(" + (this.width / 2) + " ," + 
-							   (this.height- m.top + 20) + ")")
+							   (this.height- m.top + 25) + ")")
 		  .style("text-anchor", "middle")
 		  .text(this.plotLayers[0].label);
 	}
