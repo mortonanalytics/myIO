@@ -537,15 +537,13 @@ chart.prototype.addBars = function(ly){
 		var bar = d3.select(this);
 		var barData = bar.data()[0];
 		var exclusions = ["text", "yearMon"];
-		console.log(that.options.xAxisFormat);
-		console.log(exclusions.indexOf(that.options.xAxisFormat) in exclusions);
 		var xFormat = !(exclusions.indexOf(that.options.xAxisFormat) in exclusions) ? d3.format(that.options.xAxisFormat ? that.options.xAxisFormat : "d") : function(x) {return x;} ;
 		var yFormat = d3.format(that.options.yAxisFormat ? that.options.yAxisFormat : "d");
 		var toolTipFormat = d3.format(that.options.toolTipFormat ? that.options.toolTipFormat : "d");
 		
 		that.tooltip
-              .style("left", (d3.mouse(this)[0]) + 'px')
-			  .style("top", 0 + 'px')
+              .style("left", (d3.mouse(this)[0] + m.left) + 'px')
+			  .style("top", 5 + 'px')
               .style("display", "inline-block")
               .html(function() {
 				  
