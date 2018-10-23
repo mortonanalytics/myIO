@@ -539,7 +539,7 @@ chart.prototype.addBars = function(ly){
 		var exclusions = ["text", "yearMon"];
 		var xFormat = !(exclusions.indexOf(that.options.xAxisFormat) in exclusions) ? d3.format(that.options.xAxisFormat ? that.options.xAxisFormat : "d") : function(x) {return x;} ;
 		var yFormat = d3.format(that.options.yAxisFormat ? that.options.yAxisFormat : "d");
-		var toolTipFormat = d3.format(that.options.toolTipFormat ? that.options.toolTipFormat : "d");
+		var toolTipFormat = !(exclusions.indexOf(that.options.xAxisFormat) in exclusions) ?  d3.format(that.options.toolTipFormat ? that.options.toolTipFormat : "d"): function(x) {return x;} ;
 		
 		that.tooltip
               .style("left", (d3.mouse(this)[0] + m.left) + 'px')
