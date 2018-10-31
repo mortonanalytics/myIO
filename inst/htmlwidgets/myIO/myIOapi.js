@@ -171,8 +171,8 @@ chart.prototype.processScales = function(lys){
 	var x_buffer = Math.max(Math.abs(x_max - x_min) * .05, 0.5) ;
 	//user inputs if available
 	//var final_x_min = this.options.xlim.min ? this.options.xlim.min : (x_min-x_buffer) ;
-	//console.log(lys[0].type);
-	if(lys[0].type == "bar"){
+	console.log(lys[0].type);
+	if(lys[0].type == "bar" & this.options.categoricalScale == true){
 		var final_x_min = Math.min(0, x_min);
 		console.log(final_x_min);
 	} else {
