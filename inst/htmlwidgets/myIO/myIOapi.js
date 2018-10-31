@@ -171,7 +171,8 @@ chart.prototype.processScales = function(lys){
 	var x_buffer = Math.max(Math.abs(x_max - x_min) * .05, 0.5) ;
 	//user inputs if available
 	//var final_x_min = this.options.xlim.min ? this.options.xlim.min : (x_min-x_buffer) ;
-	if(lys[0].layerType == 'bar'){
+	//console.log(lys[0].type);
+	if(lys[0].type == "bar"){
 		var final_x_min = Math.min(0, x_min);
 		console.log(final_x_min);
 	} else {
@@ -179,7 +180,7 @@ chart.prototype.processScales = function(lys){
 	}
 	
 	var final_x_max = this.options.xlim.max ? this.options.xlim.max : (x_max+ x_buffer) ;
-	var xExtent = [Math.min(0,final_x_min), 
+	var xExtent = [final_x_min, 
 				   final_x_max ];
 	
 	//find min and max - Y axis
