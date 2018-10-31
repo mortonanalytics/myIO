@@ -477,7 +477,7 @@ chart.prototype.addBars = function(ly){
 		var bandwidth = (this.height - (m.top + m.bottom)) / that.y_banded.length;
 	} else {
 		var y_scale = this.yScale;
-		var bandwidth = (Math.min(100, this.width - (m.right + m.left)) / ly.data.length);
+		var bandwidth = Math.min(100, (this.width - (m.right + m.left)) / ly.data.length);
 	}
 	
 	if(this.options.flipAxis == false){
