@@ -203,7 +203,7 @@ chart.prototype.processScales = function(lys){
 		.range([this.height - (m.top + m.bottom), 0])
 		.domain(yExtent);
 	
-	var y_banded = y_bands.reduce(function(d){ 
+	this.y_banded = y_bands.reduce(function(d){ 
 		return d.map(function(e){ 
 			return e[0]; 
 			}); 
@@ -211,7 +211,7 @@ chart.prototype.processScales = function(lys){
 		
 	this.bandedScale = d3.scaleBand()
 		.range([this.height - (m.top + m.bottom), 0])
-		.domain(y_banded);
+		.domain(this.y_banded);
 		
 }
 
@@ -472,7 +472,7 @@ chart.prototype.addBars = function(ly){
 	
 	if(this.options.categoricalScale == true & this.options.flipAxis == true){
 		var y_scale = this.bandedScale;
-		var bandwidth = (this.height - (m.top + m.bottom)) / ly.data.length;
+		var bandwidth = (this.height - (m.top + m.bottom)) / that.y_banded.length;
 	} else {
 		var y_scale = this.yScale;
 		var bandwidth = (Math.min(100, this.width - (m.right + m.left)) / ly.data.length);
