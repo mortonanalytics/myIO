@@ -142,6 +142,7 @@ chart.prototype.processScales = function(lys){
 	
 	var x_extents = [];
 	var y_extents = [];
+	var y_bands = [];
 	
 	lys.forEach(function(d){
 		if(that.options.flipAxis == false){
@@ -154,9 +155,11 @@ chart.prototype.processScales = function(lys){
 		
 		var x = d3.extent( d.data, function(e) { return +e[x_var]; });
 		var y = d3.extent( d.data, function(e) { return +e[y_var]; });
+		var y_cat = d.data.map(function(e) { return e[y_var]; });
 
 		x_extents.push(x);
 		y_extents.push(y);
+		y_bands.push(y_cat);
 	})
 	
 	//find min and max - X axis
@@ -168,8 +171,8 @@ chart.prototype.processScales = function(lys){
 	var x_buffer = Math.max(Math.abs(x_max - x_min) * .05, 0.5) ;
 	//user inputs if available
 	//var final_x_min = this.options.xlim.min ? this.options.xlim.min : (x_min-x_buffer) ;
-	if(this.options.xlim.min){
-		var final_x_min = this.options.xlim.min;
+	if(lys[0].layerType == 'bar'){
+		var final_x_min = d3.min(0, x_min);
 	} else {
 		var final_x_min = x_min-x_buffer;
 	}
@@ -200,9 +203,15 @@ chart.prototype.processScales = function(lys){
 		.range([this.height - (m.top + m.bottom), 0])
 		.domain(yExtent);
 	
+	var y_banded = y_bands.reduce(function(d){ 
+		return d.map(function(e){ 
+			return e[0]; 
+			}); 
+		});
+		
 	this.bandedScale = d3.scaleBand()
 		.range([this.height - (m.top + m.bottom), 0])
-		.domain(lys[0].data.map(function(e) { return e[lys[0].mapping.x_var]; }));
+		.domain(y_banded);
 		
 }
 
@@ -466,7 +475,7 @@ chart.prototype.addBars = function(ly){
 		var bandwidth = (this.height - (m.top + m.bottom)) / ly.data.length;
 	} else {
 		var y_scale = this.yScale;
-		var bandwidth = (this.width - (m.right + m.left)) / ly.data.length;
+		var bandwidth = (Math.min(100, this.width - (m.right + m.left)) / ly.data.length);
 	}
 	
 	if(this.options.flipAxis == false){
