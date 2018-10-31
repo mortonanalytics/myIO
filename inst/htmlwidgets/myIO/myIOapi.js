@@ -172,13 +172,14 @@ chart.prototype.processScales = function(lys){
 	//user inputs if available
 	//var final_x_min = this.options.xlim.min ? this.options.xlim.min : (x_min-x_buffer) ;
 	if(lys[0].layerType == 'bar'){
-		var final_x_min = d3.min(0, x_min);
+		var final_x_min = Math.min(0, x_min);
+		console.log(final_x_min);
 	} else {
 		var final_x_min = x_min-x_buffer;
 	}
 	
 	var final_x_max = this.options.xlim.max ? this.options.xlim.max : (x_max+ x_buffer) ;
-	var xExtent = [final_x_min, 
+	var xExtent = [Math.min(0,final_x_min), 
 				   final_x_max ];
 	
 	//find min and max - Y axis
