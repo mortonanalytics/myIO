@@ -165,6 +165,8 @@ chart.prototype.processScales = function(lys){
 	//find min and max - X axis
 	var x_min = d3.min(x_extents, function(d,i) {return d[0]; });
 	var x_max = d3.max(x_extents, function(d,i) {return d[1]; });
+	var x_check1 = d3.min(x_extents, function(d,i) {return d[0]; });
+	var x_check2 = d3.max(x_extents, function(d,i) {return d[1]; });
 	//prevent single tick on axis
 	if(x_min == x_max) { x_min = x_min-1; x_max = x_max+1;}
 	//calculate buffer
@@ -214,7 +216,11 @@ chart.prototype.processScales = function(lys){
 	this.bandedScale = d3.scaleBand()
 		.range([this.height - (m.top + m.bottom), 0])
 		.domain(this.y_banded);
-		
+	
+	//assess if there's any data
+	console.log('check1: '+ x_check1);
+	console.log('check2: '+ x_check2);
+	this.x_check = (x_check1 == 0 & x_check2 == 0) == 1;
 }
 
 chart.prototype.addAxes = function(){
@@ -512,6 +518,7 @@ chart.prototype.addBars = function(ly){
 			.attr('width', (barSize * bandwidth)-2)
 			.attr('height', function(d) { return (that.height -( m.top + m.bottom )) - that.yScale(d[ly.mapping.y_var]); });
 	} else {
+		
 		var bars = this.chart
 			.selectAll('.tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
 			//.selectAll('rect')
@@ -1391,8 +1398,13 @@ chart.prototype.update = function(x){
 	this.svg
 		.attr('width', this.width)
 		.attr('height', this.height);
+	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge")this.processScales(this.plotLayers);
+	console.log('final_check: ' + this.x_check);
 	
-	if(this.plotLayers[0].type != "gauge"){
+	if(this.x_check ){
+		
+	} else {
+		if(this.plotLayers[0].type != "gauge"){
 		this.plot
 			.attr('transform','translate('+this.margin.left+','+this.margin.top+')');
 	} else {
@@ -1419,6 +1431,9 @@ chart.prototype.update = function(x){
        this.plotLayers[0].type != "gauge" &	   
 	   this.plotLayers[0].type != "bar" )this.updateToolTip();
 	this.removeLayers(oldLayers);
+	}
+	
+	
 	
 	
 }
