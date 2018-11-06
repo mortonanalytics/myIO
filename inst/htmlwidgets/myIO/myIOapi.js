@@ -173,10 +173,9 @@ chart.prototype.processScales = function(lys){
 	var x_buffer = Math.max(Math.abs(x_max - x_min) * .05, 0.5) ;
 	//user inputs if available
 	//var final_x_min = this.options.xlim.min ? this.options.xlim.min : (x_min-x_buffer) ;
-	console.log(lys[0].type);
+	
 	if(lys[0].type == "bar" & this.options.categoricalScale == true){
 		var final_x_min = Math.min(0, x_min);
-		console.log(final_x_min);
 	} else {
 		var final_x_min = x_min-x_buffer;
 	}
@@ -207,12 +206,12 @@ chart.prototype.processScales = function(lys){
 		.range([this.height - (m.top + m.bottom), 0])
 		.domain(yExtent);
 	
-	this.y_banded = y_bands.reduce(function(d){ 
-		return d.map(function(e){ 
-			return e[0]; 
+	this.y_banded = y_bands.map(function(d){ 
+		return d.reduce(function(e){ 
+			return e; 
 			}); 
 		});
-		
+	
 	this.bandedScale = d3.scaleBand()
 		.range([this.height - (m.top + m.bottom), 0])
 		.domain(this.y_banded);
