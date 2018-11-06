@@ -8,6 +8,7 @@
 #' @param label a unique quoted label/id string for the plot
 #' @param data (optional) R dataframe/tibble
 #' @param mapping a list object defining variables for the layer: layer(x_var = "xVar", y_var = "yVar")
+#' @param options a list oboject defining options for that layer
 #'
 #' @return the same myIO object with the new layer attached to the message for the browser (myIO$x$layers)
 #'
@@ -18,7 +19,8 @@ addIoLayer <- function(myIO,
                      color,
                      label,
                      data = NULL,
-                     mapping ){
+                     mapping,
+                     options = NULL){
 
   ##assert layer types
   stopifnot(is.character(type))
@@ -39,7 +41,9 @@ addIoLayer <- function(myIO,
     data <- unname(split(data, 1:nrow(data)))
 
   }
-
+  if(is.null(options)) {
+    options <- list(barSize = "large")
+    }
 
   ##create layer object
   layer <- list(
@@ -47,7 +51,8 @@ addIoLayer <- function(myIO,
     color = color,
     label = label,
     data = data,
-    mapping = mapping
+    mapping = mapping,
+    options = options
   )
 
   ##put the layers together

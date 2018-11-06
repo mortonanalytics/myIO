@@ -17,6 +17,7 @@ HTMLWidgets.widget({
 			if(this.chart){
 				this.chart.update(x);
 			} else {
+				console.log(x);
 				this.chart = new chart({
 					element: document.getElementById(el.id),
 					plotLayers: x.layers,
