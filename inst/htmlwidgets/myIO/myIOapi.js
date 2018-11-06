@@ -207,18 +207,17 @@ chart.prototype.processScales = function(lys){
 		.domain(yExtent);
 	
 	this.y_banded = y_bands.map(function(d){ 
+	console.log(d);
 		return d.reduce(function(e){ 
 			return e; 
 			}); 
 		});
-	
+	console.log(this.y_banded);
 	this.bandedScale = d3.scaleBand()
 		.range([this.height - (m.top + m.bottom), 0])
 		.domain(this.y_banded);
 	
 	//assess if there's any data
-	console.log('check1: '+ x_check1);
-	console.log('check2: '+ x_check2);
 	this.x_check = (x_check1 == 0 & x_check2 == 0) == 1;
 }
 
