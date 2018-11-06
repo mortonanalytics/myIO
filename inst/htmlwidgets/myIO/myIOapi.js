@@ -206,12 +206,14 @@ chart.prototype.processScales = function(lys){
 		.range([this.height - (m.top + m.bottom), 0])
 		.domain(yExtent);
 	
-	this.y_banded = y_bands.map(function(d){ 
-	console.log(d);
-		return d.reduce(function(e){ 
-			return e; 
-			}); 
-		});
+	function onlyUnique(value, index, self) { 
+		return self.indexOf(value) === index;
+	}
+
+	this.y_banded = [].concat.apply([], y_bands).map(function(d){
+		return d[0];
+	}).filter(onlyUnique);
+	
 	console.log(this.y_banded);
 	this.bandedScale = d3.scaleBand()
 		.range([this.height - (m.top + m.bottom), 0])
