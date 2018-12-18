@@ -564,7 +564,12 @@ chart.prototype.addBars = function(ly){
 			  .style("top", 5 + 'px')
               .style("display", "inline-block")
               .html(function() {
-				  
+				  if(!ly.options.toolTipOptions){
+					  
+					  ly.options['toolTipOptions'] = {suppressY: false};
+
+					  console.log(ly.options);
+				  }
 				  if(ly.mapping.toolTip2){
 					  if(ly.options.toolTipOptions.suppressY == true){
 						  return ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 

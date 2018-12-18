@@ -20,7 +20,8 @@ addIoLayer <- function(myIO,
                      label,
                      data = NULL,
                      mapping,
-                     options = NULL){
+                     options = list(barSize = "large",
+                                    toolTipOptions = list(suppressY = FALSE))){
 
   ##assert layer types
   stopifnot(is.character(type))
@@ -41,15 +42,12 @@ addIoLayer <- function(myIO,
     data <- unname(split(data, 1:nrow(data)))
 
   }
-  if(is.null(options)) {
-    options <- list(barSize = "large",
-                    toolTipOptions = list(suppressY = FALSE))
-  } else {
-    if(is.null(options$toolTipOptions)){
-      options$toolTipOptions = list(suppressY = FALSE)
-    }
-  }
+  presets <-list(barSize = "large",
+                 toolTipOptions = list(suppressY = FALSE))
 
+  if(is.null(options)) {
+    options <- presets
+  }
 
   ##create layer object
   layer <- list(
