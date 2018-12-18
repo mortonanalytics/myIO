@@ -44,9 +44,10 @@ addIoLayer <- function(myIO,
   if(is.null(options)) {
     options <- list(barSize = "large",
                     toolTipOptions = list(suppressY = FALSE))
-  }
-  if(is.null(options$toolTipOptions)){
-    options$toolTipOptions = list(suppressY = FALSE)
+  } else {
+    if(is.null(options$toolTipOptions)){
+      options$toolTipOptions = list(suppressY = FALSE)
+    }
   }
 
 
