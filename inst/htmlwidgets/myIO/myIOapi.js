@@ -566,11 +566,17 @@ chart.prototype.addBars = function(ly){
               .html(function() {
 				  
 				  if(ly.mapping.toolTip2){
-					  return ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 
-						ly.mapping.y_var + ": " + yFormat(barData[ly.mapping.y_var]) + '<br>' +
-						ly.mapping.toolTip + ": " + toolTipFormat(barData[ly.mapping.toolTip]) + '<br>' +
-						ly.mapping.toolTip2 + ": " + toolTipFormat(barData[ly.mapping.toolTip2])
-					
+					  if(ly.options.toolTipOptions.suppressY == true){
+						  return ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 
+						  ly.mapping.toolTip + ": " + toolTipFormat(barData[ly.mapping.toolTip]) + '<br>' +
+						  ly.mapping.toolTip2 + ": " + toolTipFormat(barData[ly.mapping.toolTip2])
+					  } else {
+						  return ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 
+						  ly.mapping.y_var + ": " + yFormat(barData[ly.mapping.y_var]) + '<br>' +
+						  ly.mapping.toolTip + ": " + toolTipFormat(barData[ly.mapping.toolTip]) + '<br>' +
+						  ly.mapping.toolTip2 + ": " + toolTipFormat(barData[ly.mapping.toolTip2])
+					  }
+					  	
 				  } else if(ly.mapping.toolTip){
 					  if(ly.options.toolTipOptions.suppressY == true){
 						 return ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 
