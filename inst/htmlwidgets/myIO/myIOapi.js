@@ -957,6 +957,15 @@ chart.prototype.addTreemap = function(ly) {
 		.attr('opacity', 0.5)
 		.attr('fill', function(d) { while (d.depth > 1) d = d.parent; return color(d.data.id); });
 	
+	// UPDATE
+	cell.merge(newCell)
+		.transition()
+        .duration(750)
+        .attr("transform", function(d) { return "translate(" + d.x0 + "," + d.y0 + ")"; })
+      .select("rect")
+        .attr("width", function(d) { return d.x1 - d.x0; })
+        .attr("height", function(d) { return d.y1 - d.y0; });
+		
 	// append text
 	newCell.append('text')
 		.selectAll('tspan')
@@ -978,15 +987,32 @@ chart.prototype.addTreemap = function(ly) {
 				d.data[ly.mapping.level_2] + " \\ \n" +
 				d.data[ly.mapping.x_var] + " \\ \n" +
 				format(d.value); })
+				
+	// append text
+	cell.selectAll('text').remove();
 	
-	// UPDATE
-	cell.merge(newCell)
-		.transition()
-        .duration(750)
-        .attr("transform", function(d) { return "translate(" + d.x0 + "," + d.y0 + ")"; })
-      .select("rect")
-        .attr("width", function(d) { return d.x1 - d.x0; })
-        .attr("height", function(d) { return d.y1 - d.y0; });
+	cell.append('text')
+		.selectAll('tspan')
+		.data(function(d) { 
+			var name = d.data[ly.mapping.x_var];
+			return name[0].split(/(?=[A-Z][^A-Z])/g).concat(format(d.value)); 
+		})
+		.enter().append('tspan')
+		.attr('x', 3)
+		.attr('y', function(d,i,nodes) { return (i === nodes.length - 1) * 3 + 16 + (i - 0.5) * 9; })
+		.attr('fill-opacity',  function(d,i,nodes) { return i === nodes.length - 1 ? 0.9 : null; })
+		//.attr('fill', 'black')
+		.text(function(d) { return d; });
+		
+	// append title/tooltip
+	cell.selectAll('title').remove();
+	
+	cell.append('title')
+		.text(function(d) { 
+			return d.data[ly.mapping.level_1] + " \\ \n" + 
+				d.data[ly.mapping.level_2] + " \\ \n" +
+				d.data[ly.mapping.x_var] + " \\ \n" +
+				format(d.value); })
 	
 	//helper functions
 	function sumBySize(d) {
