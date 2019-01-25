@@ -11,7 +11,6 @@ HTMLWidgets.widget({
     return {
 
       renderValue: function(x) {
-
         // general chart with layers
 		if(x.layers) {
 			if(this.chart){
