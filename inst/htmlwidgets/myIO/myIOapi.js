@@ -173,9 +173,10 @@ chart.prototype.processScales = function(lys){
 	var x_buffer = Math.max(Math.abs(x_max - x_min) * .05, 0.5) ;
 	//user inputs if available
 	//var final_x_min = this.options.xlim.min ? this.options.xlim.min : (x_min-x_buffer) ;
-	
+	console.log(lys[0].type);
 	if(lys[0].type == "bar" & this.options.categoricalScale == true){
 		var final_x_min = Math.min(0, x_min);
+		console.log(final_x_min);
 	} else {
 		var final_x_min = x_min-x_buffer;
 	}
@@ -213,13 +214,14 @@ chart.prototype.processScales = function(lys){
 	this.y_banded = [].concat.apply([], y_bands).map(function(d){
 		return d[0];
 	}).filter(onlyUnique);
-	
-	console.log(this.y_banded);
+		
 	this.bandedScale = d3.scaleBand()
 		.range([this.height - (m.top + m.bottom), 0])
 		.domain(this.y_banded);
 	
 	//assess if there's any data
+	console.log('check1: '+ x_check1);
+	console.log('check2: '+ x_check2);
 	this.x_check = (x_check1 == 0 & x_check2 == 0) == 1;
 }
 
@@ -564,12 +566,13 @@ chart.prototype.addBars = function(ly){
 			  .style("top", 5 + 'px')
               .style("display", "inline-block")
               .html(function() {
-				  if(!ly.options.toolTipOptions){
+				   if(!ly.options.toolTipOptions){
 					  
 					  ly.options['toolTipOptions'] = {suppressY: false};
 
 					  console.log(ly.options);
 				  }
+				  
 				  if(ly.mapping.toolTip2){
 					  if(ly.options.toolTipOptions.suppressY == true){
 						  return ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 
@@ -581,7 +584,7 @@ chart.prototype.addBars = function(ly){
 						  ly.mapping.toolTip + ": " + toolTipFormat(barData[ly.mapping.toolTip]) + '<br>' +
 						  ly.mapping.toolTip2 + ": " + toolTipFormat(barData[ly.mapping.toolTip2])
 					  }
-					  	
+					
 				  } else if(ly.mapping.toolTip){
 					  if(ly.options.toolTipOptions.suppressY == true){
 						 return ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 
@@ -968,6 +971,15 @@ chart.prototype.addTreemap = function(ly) {
 		.attr('opacity', 0.5)
 		.attr('fill', function(d) { while (d.depth > 1) d = d.parent; return color(d.data.id); });
 	
+	// UPDATE
+	cell.merge(newCell)
+		.transition()
+        .duration(750)
+        .attr("transform", function(d) { return "translate(" + d.x0 + "," + d.y0 + ")"; })
+      .select("rect")
+        .attr("width", function(d) { return d.x1 - d.x0; })
+        .attr("height", function(d) { return d.y1 - d.y0; });
+		
 	// append text
 	newCell.append('text')
 		.selectAll('tspan')
@@ -989,15 +1001,32 @@ chart.prototype.addTreemap = function(ly) {
 				d.data[ly.mapping.level_2] + " \\ \n" +
 				d.data[ly.mapping.x_var] + " \\ \n" +
 				format(d.value); })
+				
+	// append text
+	cell.selectAll('text').remove();
 	
-	// UPDATE
-	cell.merge(newCell)
-		.transition()
-        .duration(750)
-        .attr("transform", function(d) { return "translate(" + d.x0 + "," + d.y0 + ")"; })
-      .select("rect")
-        .attr("width", function(d) { return d.x1 - d.x0; })
-        .attr("height", function(d) { return d.y1 - d.y0; });
+	cell.append('text')
+		.selectAll('tspan')
+		.data(function(d) { 
+			var name = d.data[ly.mapping.x_var];
+			return name[0].split(/(?=[A-Z][^A-Z])/g).concat(format(d.value)); 
+		})
+		.enter().append('tspan')
+		.attr('x', 3)
+		.attr('y', function(d,i,nodes) { return (i === nodes.length - 1) * 3 + 16 + (i - 0.5) * 9; })
+		.attr('fill-opacity',  function(d,i,nodes) { return i === nodes.length - 1 ? 0.9 : null; })
+		//.attr('fill', 'black')
+		.text(function(d) { return d; });
+		
+	// append title/tooltip
+	cell.selectAll('title').remove();
+	
+	cell.append('title')
+		.text(function(d) { 
+			return d.data[ly.mapping.level_1] + "  \n" + 
+				d.data[ly.mapping.level_2] + "  \n" +
+				d.data[ly.mapping.x_var] + "  \n" +
+				format(d.value); })
 	
 	//helper functions
 	function sumBySize(d) {
