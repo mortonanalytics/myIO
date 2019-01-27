@@ -935,6 +935,7 @@ chart.prototype.addTreemap = function(ly) {
 	var that = this;
 	var m = this.margin;
 	var format = d3.format(",d")
+	var key = ly.label;
 	// create hierarchy from data
 	var root = d3.hierarchy(ly.data)
 		.eachBefore(function(d) { d.data.id = (d.parent ? d.parent.data.id + "." : "") + d.data.name; })
@@ -973,6 +974,7 @@ chart.prototype.addTreemap = function(ly) {
 	
 	// append rect
 	newCell.append("rect")
+		.attr('class', 'tag-tree-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
 		.attr('id', function(d) { return d.data.id; })
 		.attr('width', function(d) { return d.x1 - d.x0; })
 		.attr('height', function(d) { return d.y1 - d.y0; })
