@@ -1262,7 +1262,7 @@ chart.prototype.addToolTip = function() {
 	var tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
 	var toolLine =  this.chart.append('line').attr('class', 'toolLine');
 	var format1d = d3.format('.0f');
-	var xFormat = this.options.xAxisFormat != "text" this.options.xAxisFormat == "yearmon" || ? d3.format(this.options.xAxisFormat ? this.options.xAxisFormat : "d") : function(x) {return x;} ;
+	var xFormat = this.options.xAxisFormat != "text" || this.options.xAxisFormat == "yearmon" ? d3.format(this.options.xAxisFormat ? this.options.xAxisFormat : "d") : function(x) {return x;} ;
 	
 	var yFormat = d3.format(this.options.yAxisFormat ? this.options.yAxisFormat : "d");
 	var toolTipFormat = d3.format(this.options.toolTipFormat ? this.options.toolTipFormat : "d");
