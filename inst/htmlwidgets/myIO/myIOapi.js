@@ -27,7 +27,7 @@ chart.prototype.draw = function() {
 	
 	//set up parent element and SVG
 	this.element.innerHTML = '';
-	this.svg = d3.select(this.element).append('svg').attr('id', this.element);
+	this.svg = d3.select(this.element).append('svg').attr('id', this.element.id);
 	this.svg.attr('width', this.width);
 	this.svg.attr('height', this.height);
 	
