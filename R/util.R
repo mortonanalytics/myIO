@@ -16,3 +16,21 @@ build_tree <- function(df, layerLabel, level_1, level_2) {
   })
   list(name = layerLabel, children = my_tree)
 }
+
+buildLayers <- function(x, group, grouping, color, data, type, mapping, options){
+
+  #subset data for each layer
+  filter_criteria <- lazyeval::interp( ~ which_column == x, which_column = as.name(mapping$group))
+  temp_df <- data %>%
+    filter_(filter_criteria)
+
+  ##create layer element
+  layer <- list(
+    type = type,
+    color = color[match(x, grouping)],
+    label = x,
+    mapping = mapping,
+    data = unname(split(temp_df, 1:nrow(temp_df))),
+    options = options
+  )
+}

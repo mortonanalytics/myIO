@@ -152,7 +152,7 @@ chart.prototype.processScales = function(lys){
 			var y_var = d.mapping.x_var; 
 			var x_var = d.mapping.y_var;
 		}		
-		
+
 		var x = d3.extent( d.data, function(e) { return +e[x_var]; });
 		var y = d3.extent( d.data, function(e) { return +e[y_var]; });
 		var y_cat = d.data.map(function(e) { return e[y_var]; });
@@ -161,7 +161,7 @@ chart.prototype.processScales = function(lys){
 		y_extents.push(y);
 		y_bands.push(y_cat);
 	})
-	
+
 	//find min and max - X axis
 	var x_min = d3.min(x_extents, function(d,i) {return d[0]; });
 	var x_max = d3.max(x_extents, function(d,i) {return d[1]; });
@@ -173,7 +173,7 @@ chart.prototype.processScales = function(lys){
 	var x_buffer = Math.max(Math.abs(x_max - x_min) * .05, 0.5) ;
 	//user inputs if available
 	//var final_x_min = this.options.xlim.min ? this.options.xlim.min : (x_min-x_buffer) ;
-	console.log(lys[0].type);
+
 	if(lys[0].type == "bar" & this.options.categoricalScale == true){
 		var final_x_min = Math.min(0, x_min);
 		console.log(final_x_min);
@@ -210,9 +210,15 @@ chart.prototype.processScales = function(lys){
 	function onlyUnique(value, index, self) { 
 		return self.indexOf(value) === index;
 	}
-
+	
 	this.y_banded = [].concat.apply([], y_bands).map(function(d){
-		return d[0];
+		try {
+			return d[0];
+		}
+		
+		catch(err) {
+			console.log(err.message);
+		}
 	}).filter(onlyUnique);
 		
 	this.bandedScale = d3.scaleBand()

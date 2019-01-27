@@ -8,8 +8,10 @@ Description: Open Source project to demonstrate R + d3.js combination
 License: MIT
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 6.1.0
+RoxygenNote: 6.1.1
 Suggests: testthat
 Imports:
   htmlwidgets,
-  stats
+  stats,
+  dplyr,
+  lazyeval
