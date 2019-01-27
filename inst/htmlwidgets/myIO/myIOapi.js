@@ -441,7 +441,7 @@ chart.prototype.routeLayers = function() {
 		if(layerType == "line") {
 			if(d.mapping.low_y) {that.addArea(d);}
 			//that.addLine(d);
-			that.addPoints(d);
+			//that.addPoints(d);
 		} else if(layerType == "point") {
 			if(d.mapping.low_y) { that.addCrosshairsY(d); }
 			if(d.mapping.low_x) { that.addCrosshairsX(d); }
