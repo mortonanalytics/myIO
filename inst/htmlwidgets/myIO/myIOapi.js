@@ -452,6 +452,8 @@ chart.prototype.routeLayers = function() {
 			that.addHexBin(d);
 			//that.addHexPoints(d);
 		} else if(layerType == "treemap"){
+			console.log("treemap next");
+			console.log(d);
 			that.addTreemap(d);
 		} else if(layerType == "bar"){
 			that.addBars(d);
