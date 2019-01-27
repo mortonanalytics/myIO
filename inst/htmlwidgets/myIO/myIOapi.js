@@ -27,7 +27,7 @@ chart.prototype.draw = function() {
 	
 	//set up parent element and SVG
 	this.element.innerHTML = '';
-	this.svg = d3.select(this.element).append('svg');
+	this.svg = d3.select(this.element).append('svg').attr('id', this.element);
 	this.svg.attr('width', this.width);
 	this.svg.attr('height', this.height);
 	
@@ -440,8 +440,8 @@ chart.prototype.routeLayers = function() {
 
 		if(layerType == "line") {
 			if(d.mapping.low_y) {that.addArea(d);}
-			//that.addLine(d);
-			//that.addPoints(d);
+			that.addLine(d);
+			that.addPoints(d);
 		} else if(layerType == "point") {
 			if(d.mapping.low_y) { that.addCrosshairsY(d); }
 			if(d.mapping.low_x) { that.addCrosshairsX(d); }
