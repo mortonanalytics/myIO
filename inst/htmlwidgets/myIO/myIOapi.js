@@ -441,7 +441,7 @@ chart.prototype.routeLayers = function() {
 		if(layerType == "line") {
 			if(d.mapping.low_y) {that.addArea(d);}
 			that.addLine(d);
-			that.addPoints(d);
+			//that.addPoints(d);
 		} else if(layerType == "point") {
 			if(d.mapping.low_y) { that.addCrosshairsY(d); }
 			if(d.mapping.low_x) { that.addCrosshairsX(d); }
@@ -452,8 +452,6 @@ chart.prototype.routeLayers = function() {
 			that.addHexBin(d);
 			//that.addHexPoints(d);
 		} else if(layerType == "treemap"){
-			console.log("treemap next");
-			console.log(d);
 			that.addTreemap(d);
 		} else if(layerType == "bar"){
 			that.addBars(d);
