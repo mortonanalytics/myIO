@@ -1338,7 +1338,7 @@ chart.prototype.addToolTip = function() {
 			  } else {
 				  var y_text = []
 				  tipText.forEach(function(d){
-					y_text.push('<font color="' + d.color + '">' + d.y_var + '</font>' + ": " + yFormat(d.values[d.y_var]) + '<br>' );
+					y_text.push('<font color="' + d.color + '">' + d.label + '</font>' + ": " + yFormat(d.values[d.y_var]) + '<br>' );
 				});
 				console.log(y_text.join(' '));
 				return tipText[0].x_var + ": " + xFormat(tipText[0].values[tipText[0].x_var]) + '<br>' + y_text.join(' ');
