@@ -1269,14 +1269,10 @@ chart.prototype.addToolTip = function() {
 	var tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
 	var toolLine =  this.chart.append('line').attr('class', 'toolLine');
 	var format1d = d3.format('.0f');
-	if(this.options.xAxisFormat == "yearMon") {
-		var xFormat = d3.format('s');
-	} else {
-		var xFormat = this.options.xAxisFormat != "text" ? d3.format(this.options.xAxisFormat ? this.options.xAxisFormat : "d") : function(x) {return x;} ;
-		}
-	
+	var exclusions = ["text", "yearMon"];
+	var xFormat = !(exclusions.indexOf(that.options.xAxisFormat) in exclusions) ? d3.format(that.options.xAxisFormat ? that.options.xAxisFormat : "d") : function(x) {return x;} ;
 	var yFormat = d3.format(this.options.yAxisFormat ? this.options.yAxisFormat : "d");
-	var toolTipFormat = d3.format(this.options.toolTipFormat ? this.options.toolTipFormat : "d");
+	var toolTipFormat = !(exclusions.indexOf(that.options.xAxisFormat) in exclusions) ?  d3.format(that.options.toolTipFormat ? that.options.toolTipFormat : "d"): function(x) {return x;} ;
 	
 	var tipBox = this.svg.append("rect")
 			.attr('class', 'toolTipBox')
