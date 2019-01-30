@@ -242,7 +242,7 @@ chart.prototype.addAxes = function(){
 		} else {
 			var xFormat = "s";
 		}
-		
+		console.log(xFormat);
 		this.plot.append('g')
 			.attr("class", "x axis")
 			.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
@@ -349,11 +349,13 @@ chart.prototype.updateAxes = function() {
 		
 	//update axes
 	if(this.options.categoricalScale == true & this.options.flipAxis == true){
+		console.log("flip and cat true");
 		if(this.options.xAxisFormat){
 			var xFormat = this.options.xAxisFormat == "yearMon" ? "s" : this.options.xAxisFormat ;
 		} else {
 			var xFormat = "s";
 		}
+		console.log(xFormat);
 		
 		this.svg.selectAll('.x.axis')
 			.transition().ease(d3.easeQuad)
@@ -387,6 +389,7 @@ chart.prototype.updateAxes = function() {
 				.selectAll("text")
 					.attr("dx", "-.25em");
 	} else {
+		console.log("flip and cat false");
 		if(this.options.xAxisFormat){
 			var xFormat = this.options.xAxisFormat == "yearMon" ? "s" : this.options.xAxisFormat ;
 		} else {
