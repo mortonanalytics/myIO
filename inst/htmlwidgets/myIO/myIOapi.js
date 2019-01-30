@@ -435,7 +435,7 @@ chart.prototype.routeLayers = function() {
 	this.layerIndex = this.plotLayers.map(function(d) {return d.label; });
 	
 	this.plotLayers.forEach(function(d){
-		
+		console.log(d);
 		var layerType = d.type;
 
 		if(layerType == "line") {
@@ -651,6 +651,7 @@ chart.prototype.addLine = function(ly) {
 	  .ease(d3.easeQuad)
 	  .duration(1500)
 		.style('opacity', 1)
+		.style("stroke", ly.color)
 		.attr("d", valueLine);
 
 }
