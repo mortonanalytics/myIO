@@ -976,7 +976,7 @@ chart.prototype.addTreemap = function(ly) {
 		.attr('id', function(d) { return d.data.id; })
 		.attr('width', function(d) { return d.x1 - d.x0; })
 		.attr('height', function(d) { return d.y1 - d.y0; })
-		.attr('opacity', 0.5)
+		//.attr('opacity', 0.5)
 		.attr('fill', function(d) { while (d.depth > 1) d = d.parent; return color(d.data.id); });
 	
 	// UPDATE
@@ -986,7 +986,8 @@ chart.prototype.addTreemap = function(ly) {
         .attr("transform", function(d) { return "translate(" + d.x0 + "," + d.y0 + ")"; })
       .select("rect")
         .attr("width", function(d) { return d.x1 - d.x0; })
-        .attr("height", function(d) { return d.y1 - d.y0; });
+        .attr("height", function(d) { return d.y1 - d.y0; })
+		.attr('fill', function(d) { while (d.depth > 1) d = d.parent; return color(d.data.id); });
 		
 	// append text
 	newCell.append('text')
@@ -998,16 +999,18 @@ chart.prototype.addTreemap = function(ly) {
 		.enter().append('tspan')
 		.attr('x', 3)
 		.attr('y', function(d,i,nodes) { return (i === nodes.length - 1) * 3 + 16 + (i - 0.5) * 9; })
-		.attr('fill-opacity',  function(d,i,nodes) { return i === nodes.length - 1 ? 0.9 : null; })
-		//.attr('fill', 'black')
+		.attr('fill-opacity',  function(d,i) { 
+			return this.parentNode.parentNode.getBBox().width > 40 ? 1 : 0; 
+			})
+		.attr('fill', 'black')
 		.text(function(d) { return d; });
 		
 	// append title/tooltip
 	newCell.append('title')
 		.text(function(d) { 
-			return d.data[ly.mapping.level_1] + " \\ \n" + 
-				d.data[ly.mapping.level_2] + " \\ \n" +
-				d.data[ly.mapping.x_var] + " \\ \n" +
+			return d.data[ly.mapping.level_1] + "  \n" + 
+				d.data[ly.mapping.level_2] + " \n" +
+				d.data[ly.mapping.x_var] + "  \n" +
 				format(d.value); })
 				
 	// append text
@@ -1022,8 +1025,10 @@ chart.prototype.addTreemap = function(ly) {
 		.enter().append('tspan')
 		.attr('x', 3)
 		.attr('y', function(d,i,nodes) { return (i === nodes.length - 1) * 3 + 16 + (i - 0.5) * 9; })
-		.attr('fill-opacity',  function(d,i,nodes) { return i === nodes.length - 1 ? 0.9 : null; })
-		//.attr('fill', 'black')
+		.attr('fill-opacity',  function(d,i) { 
+			return this.parentNode.parentNode.getBBox().width > 40 ? 1 : 0; 
+			})
+		.attr('fill', 'black')
 		.text(function(d) { return d; });
 		
 	// append title/tooltip
