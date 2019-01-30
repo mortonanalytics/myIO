@@ -435,7 +435,7 @@ chart.prototype.routeLayers = function() {
 	this.layerIndex = this.plotLayers.map(function(d) {return d.label; });
 	
 	this.plotLayers.forEach(function(d){
-		console.log(d);
+		
 		var layerType = d.type;
 
 		if(layerType == "line") {
@@ -714,6 +714,7 @@ chart.prototype.addPoints = function(ly) {
 	  .transition()
 	  .ease(d3.easeQuad)
 	  .duration(1500)
+		.style('fill',  ly.color )
 		.attr('cx', function(e) { return that.xScale( e[ly.mapping.x_var] ); })
 		.attr('cy', function(e) { return that.yScale( e[ly.mapping.y_var] ); })
 	
