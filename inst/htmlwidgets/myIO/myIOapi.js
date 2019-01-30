@@ -242,13 +242,13 @@ chart.prototype.addAxes = function(){
 		} else {
 			var xFormat = "s";
 		}
-		console.log(xFormat);
+		
 		this.plot.append('g')
 			.attr("class", "x axis")
 			.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
 			.call(d3.axisBottom(this.xScale)
-					.ticks(null,xFormat))
-					//.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
+					.ticks(null,xFormat)
+					.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
 				.selectAll("text")
 					.attr('dy', '.35em')
 					.attr('text-anchor', 'center');
@@ -362,8 +362,8 @@ chart.prototype.updateAxes = function() {
 			.duration(500)
 			.attr("transform", "translate(0," + (that.height-(m.top+m.bottom)) + ")")
 			.call(d3.axisBottom(this.xScale)
-					.ticks(null,xFormat))
-					//.tickFormat(function(e){ if(Math.floor(e) != e){return;} return e;}))
+					.ticks(null,xFormat)
+					.tickFormat(function(e){ if(Math.floor(e) != e){return;} return e;}))
 				.selectAll("text")
 					.attr('dy', '.35em')
 					.style('text-anchor', 'center');
@@ -389,7 +389,7 @@ chart.prototype.updateAxes = function() {
 				.selectAll("text")
 					.attr("dx", "-.25em");
 	} else {
-		console.log("flip and cat false");
+		
 		if(this.options.xAxisFormat){
 			var xFormat = this.options.xAxisFormat == "yearMon" ? "s" : this.options.xAxisFormat ;
 		} else {
