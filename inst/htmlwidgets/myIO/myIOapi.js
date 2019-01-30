@@ -1290,7 +1290,8 @@ chart.prototype.addToolTip = function() {
 			var mouse = d3.mouse(this);
 			
 			//line tool tip text
-			that.plotLayers.forEach(function(d,i) {			
+			that.plotLayers.forEach(function(d,i) {	
+				console.log(d);
 				var key = d.label;
 				var color = d.color;
 				var values = d.data;
@@ -1309,6 +1310,7 @@ chart.prototype.addToolTip = function() {
 
 				var finalObject = {
 					color: color,
+					label: key,
 					x_var: x_var,
 					y_var: y_var,
 					toolTip_var: toolTip_var,
@@ -1338,7 +1340,7 @@ chart.prototype.addToolTip = function() {
 			  } else {
 				  var y_text = []
 				  tipText.forEach(function(d){
-					y_text.push('<font color="' + d.color + '">' + d.y_var + '</font>' + ": " + yFormat(d.values[d.y_var]) + '<br>' );
+					y_text.push('<font color="' + d.color + '">' + d.label + '</font>' + ": " + yFormat(d.values[d.y_var]) + '<br>' );
 				});
 				console.log(y_text.join(' '));
 				return tipText[0].x_var + ": " + xFormat(tipText[0].values[tipText[0].x_var]) + '<br>' + y_text.join(' ');
