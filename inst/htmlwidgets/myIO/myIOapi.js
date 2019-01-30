@@ -1268,7 +1268,7 @@ chart.prototype.addToolTip = function() {
 	var toolLine =  this.chart.append('line').attr('class', 'toolLine');
 	var format1d = d3.format('.0f');
 	if(this.options.xAxisFormat == "yearMon") {
-		var xFormat = "s"
+		var xFormat = d3.format('s');
 	} else {
 		var xFormat = this.options.xAxisFormat != "text" ? d3.format(this.options.xAxisFormat ? this.options.xAxisFormat : "d") : function(x) {return x;} ;
 		}
@@ -1319,7 +1319,6 @@ chart.prototype.addToolTip = function() {
 				tipText.push(finalObject);
 			});
 			
-	console.log(tipText);
 	toolLine
 		.style('stroke', 'darkgray')
 		.style('stroke-dasharray', '3,3')
@@ -1339,8 +1338,15 @@ chart.prototype.addToolTip = function() {
 				tipText[0].y_var + ": " + yFormat(tipText[0].values[tipText[0].y_var]) + '<br>' +
 				tipText[0].toolTip_var + ": " + toolTipFormat(tipText[0].values[tipText[0].toolTip_var])
 			  } else {
-				return tipText[0].x_var + ": " + xFormat(tipText[0].values[tipText[0].x_var]) + '<br>' + 
-				tipText[0].y_var + ": " + yFormat(tipText[0].values[tipText[0].y_var])
+				  var y_text = []
+				  tipText.forEach(function(d){
+					y_text.push('<font color="' + d.color + '">' + d.y_var + '</font>' + ": " + yFormat(d.values[d.y_var]) + '<br>' );
+				});
+				console.log(y_text.join(' '));
+				return tipText[0].x_var + ": " + xFormat(tipText[0].values[tipText[0].x_var]) + '<br>' + y_text.join(' ');
+				
+				
+				//tipText[0].y_var + ": " + yFormat(tipText[0].values[tipText[0].y_var])
 			  }
 		});
 	}
