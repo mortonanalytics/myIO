@@ -1389,7 +1389,7 @@ chart.prototype.makeDonut = function(ly) {
 	
 	//define gauge variable
 	var twoPi = 2 * Math.PI;
-	var radius = Math.min(this.width, this.height)/2;
+	var radius = Math.min(this.width - (m.right + m.left), this.height - (m.top + m.bottom))/2;
 	var barWidth = 30 ;
 	
 	var pie = d3.pie()
