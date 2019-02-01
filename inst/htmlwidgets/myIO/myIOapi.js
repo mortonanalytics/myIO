@@ -1521,7 +1521,7 @@ chart.prototype.makeDonut = function(ly) {
 		var toolTipFormat = !(exclusions.indexOf(that.options.xAxisFormat) in exclusions) ?  d3.format(that.options.toolTipFormat ? that.options.toolTipFormat : "d"): function(x) {return x;} ;
 		
 		that.tooltip
-              .style("left", (d3.mouse(this)[0] + m.left) + 'px')
+              .style("left", 10 + 'px')
 			  .style("top", 5 + 'px')
               .style("display", "inline-block")
               .html(function() {
