@@ -1718,7 +1718,7 @@ chart.prototype.resize = function(){
 		.attr('width', this.width)
 		.attr('height', this.height);
 	
-	if(this.plotLayers[0].type != "gauge"){
+	if(this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut"){
 		this.plot 
 			.attr('transform','translate('+this.margin.left+','+this.margin.top+')');
 	} else {
