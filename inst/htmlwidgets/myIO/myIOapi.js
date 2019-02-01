@@ -1440,6 +1440,8 @@ chart.prototype.makeDonut = function(ly) {
 
 	var newText = text.enter()
 		.append("text")
+		.attr('class', 'donut-text')
+		.style('font-size', '15px')
 		.attr("dy", ".35em")
 		.text(function(d) {
 			return d.data[ly.mapping.x_var];
