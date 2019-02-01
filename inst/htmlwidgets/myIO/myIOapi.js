@@ -1431,6 +1431,7 @@ chart.prototype.makeDonut = function(ly) {
 		
 	path.merge(newPath).transition()
 		.duration(1500)
+		.attr('fill', function(d,i) { return color(i); })
 		.attrTween('d', arcTween)
 	
 	/* ------- TEXT LABELS -------*/
