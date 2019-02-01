@@ -1453,6 +1453,9 @@ chart.prototype.makeDonut = function(ly) {
 	}
 
 	text.merge(newText).transition().duration(1000)
+		.text(function(d) {
+				return d.data[ly.mapping.x_var];
+			})
 		.attrTween("transform", function(d) {
 			this._current = this._current || d;
 			var interpolate = d3.interpolate(this._current, d);
