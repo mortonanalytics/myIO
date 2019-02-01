@@ -1443,6 +1443,7 @@ chart.prototype.makeDonut = function(ly) {
 		.append("text")
 		.attr('class', 'donut-text')
 		.style('font-size', '12px')
+		.style('opacity', 0)
 		.attr("dy", ".35em")
 		.text(function(d) {
 			return d.data[ly.mapping.x_var];
@@ -1459,7 +1460,7 @@ chart.prototype.makeDonut = function(ly) {
 		.style('opacity', function(d){
 			console.log(d);
 			var wedgeSize =  Math.abs(d.endAngle - d.startAngle);
-			if(wedgeSize > 0.5) {
+			if(wedgeSize > 0.3) {
 				return 1;
 				} else {
 					return 0;
@@ -1498,13 +1499,14 @@ chart.prototype.makeDonut = function(ly) {
 		.append("polyline")
 		.style('fill', 'none')
 		.style('stroke-width', '1px')
+		.style('opacity', 0)
 		.style('stroke' , 'gray');
 
 	polyline.merge(newPolyline).transition().duration(1000)
 		.style('opacity', function(d){
 			console.log(d);
 			var wedgeSize =  Math.abs(d.endAngle - d.startAngle);
-			if(wedgeSize > 0.5) {
+			if(wedgeSize > 0.3) {
 				return 1;
 				} else {
 					return 0;
