@@ -1456,6 +1456,15 @@ chart.prototype.makeDonut = function(ly) {
 		.text(function(d) {
 				return d.data[ly.mapping.x_var];
 			})
+		.style('opacity', function(d){
+			console.log(d);
+			var wedgeSize =  Math.abs(d.endAngle - d.startAngle);
+			if(wedgeSize > 0.5) {
+				return 1;
+				} else {
+					return 0;
+				}
+		})
 		.attrTween("transform", function(d) {
 			this._current = this._current || d;
 			var interpolate = d3.interpolate(this._current, d);
@@ -1492,6 +1501,15 @@ chart.prototype.makeDonut = function(ly) {
 		.style('stroke' , 'gray');
 
 	polyline.merge(newPolyline).transition().duration(1000)
+		.style('opacity', function(d){
+			console.log(d);
+			var wedgeSize =  Math.abs(d.endAngle - d.startAngle);
+			if(wedgeSize > 0.5) {
+				return 1;
+				} else {
+					return 0;
+				}
+		})
 		.attrTween("points", function(d){
 			this._current = this._current || d;
 			var interpolate = d3.interpolate(this._current, d);
