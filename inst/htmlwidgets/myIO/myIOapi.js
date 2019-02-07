@@ -1009,8 +1009,10 @@ chart.prototype.addTreemap = function(ly) {
         .attr("transform", function(d) { return "translate(" + d.x0 + "," + d.y0 + ")"; })
       .select("rect")
         .attr("width", function(d) { return d.x1 - d.x0; })
+
         .attr("height", function(d) { return d.y1 - d.y0; })
 		.attr('fill', function(d) { while (d.depth > 1) d = d.parent; return color(d.data.id); });
+
 		
 	// append text
 	newCell.append('text')
@@ -1052,6 +1054,7 @@ chart.prototype.addTreemap = function(ly) {
 			return this.parentNode.parentNode.getBBox().width > 40 ? 1 : 0; 
 			})
 		.attr('fill', 'black')
+
 		.text(function(d) { return d; });
 		
 	// append title/tooltip
@@ -1062,6 +1065,7 @@ chart.prototype.addTreemap = function(ly) {
 			return d.data[ly.mapping.level_1] + "  \n" + 
 				d.data[ly.mapping.level_2] + "  \n" +
 				d.data[ly.mapping.x_var] + "  \n" +
+
 				format(d.value); })
 	
 	//helper functions
@@ -1819,4 +1823,4 @@ function linearRegression(data,y_var,x_var){
 		return lr;
 }
 
-
+
