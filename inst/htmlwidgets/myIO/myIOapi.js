@@ -27,12 +27,12 @@ chart.prototype.draw = function() {
 	
 	//set up parent element and SVG
 	this.element.innerHTML = '';
-	this.svg = d3.select(this.element).append('svg');
+	this.svg = d3.select(this.element).append('svg').attr('id', this.element.id);
 	this.svg.attr('width', this.width);
 	this.svg.attr('height', this.height);
 	
 	//create g element
-	if(this.plotLayers[0].type != "gauge"){
+	if(this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut"){
 		this.plot = this.svg.append('g')
 			.attr('transform','translate('+this.margin.left+','+this.margin.top+')');
 	} else {
@@ -50,23 +50,41 @@ chart.prototype.draw = function() {
 
 chart.prototype.initialize = function(){
 	
-	if(this.plotLayers[0].type != "gauge")this.setClipPath();
+	if(this.plotLayers[0].type != "gauge"& 
+	   this.plotLayers[0].type != "donut")this.setClipPath();
 	//this.setZoom();
-	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge")this.processScales(this.plotLayers);
-	if(this.plotLayers[0].type != "treemap" & this.plotLayers[0].type != "gauge")this.addAxes();
+	///SCALES
+	if(this.plotLayers[0].type != "treemap" & 
+	   this.plotLayers[0].type != "gauge" & 
+	   this.plotLayers[0].type != "donut"
+	   )this.processScales(this.plotLayers);
+	   
+	///AXES
+	if(this.plotLayers[0].type != "treemap" & 
+	   this.plotLayers[0].type != "gauge" & 
+	   this.plotLayers[0].type != "donut")this.addAxes();
+	///ROUTER
 	this.routeLayers();
-	if(this.plotLayers[0].type != "hexbin" & this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge")this.addReferenceLines();
+	///REFERENCE LINES
+	if(this.plotLayers[0].type != "hexbin" & 
+	   this.plotLayers[0].type != "treemap"& 
+	   this.plotLayers[0].type != "gauge" & 
+	   this.plotLayers[0].type != "donut")this.addReferenceLines();
+	///LEGEND
 	if(this.options.suppressLegend == false){
 		if(this.plotLayers[0].type != "hexbin" & 
 		   this.plotLayers[0].type != "treemap"& 
-		   this.plotLayers[0].type != "gauge"){
+		   this.plotLayers[0].type != "gauge" &
+		   this.plotLayers[0].type != "donut" ){
 			this.addLegend();
 		}		
 	} 
+	///TOOL TIP
 	if(this.plotLayers[0].type != "hexbin" & 
 	   this.plotLayers[0].type != "treemap" &
 	   this.plotLayers[0].type != "bar" &
 	   this.plotLayers[0].type != "gauge" &
+	   this.plotLayers[0].type != "donut" &
 	   this.plotLayers[0].type != "point") {
 		   this.addToolTip();
 	   } else { 
@@ -152,7 +170,7 @@ chart.prototype.processScales = function(lys){
 			var y_var = d.mapping.x_var; 
 			var x_var = d.mapping.y_var;
 		}		
-		
+
 		var x = d3.extent( d.data, function(e) { return +e[x_var]; });
 		var y = d3.extent( d.data, function(e) { return +e[y_var]; });
 		var y_cat = d.data.map(function(e) { return e[y_var]; });
@@ -161,7 +179,7 @@ chart.prototype.processScales = function(lys){
 		y_extents.push(y);
 		y_bands.push(y_cat);
 	})
-	
+
 	//find min and max - X axis
 	var x_min = d3.min(x_extents, function(d,i) {return d[0]; });
 	var x_max = d3.max(x_extents, function(d,i) {return d[1]; });
@@ -173,7 +191,7 @@ chart.prototype.processScales = function(lys){
 	var x_buffer = Math.max(Math.abs(x_max - x_min) * .05, 0.5) ;
 	//user inputs if available
 	//var final_x_min = this.options.xlim.min ? this.options.xlim.min : (x_min-x_buffer) ;
-	console.log(lys[0].type);
+
 	if(lys[0].type == "bar" & this.options.categoricalScale == true){
 		var final_x_min = Math.min(0, x_min);
 		console.log(final_x_min);
@@ -207,11 +225,19 @@ chart.prototype.processScales = function(lys){
 		.range([this.height - (m.top + m.bottom), 0])
 		.domain(yExtent);
 	
-	this.y_banded = y_bands.reduce(function(d){ 
-		return d.map(function(e){ 
-			return e[0]; 
-			}); 
-		});
+	function onlyUnique(value, index, self) { 
+		return self.indexOf(value) === index;
+	}
+	
+	this.y_banded = [].concat.apply([], y_bands).map(function(d){
+		try {
+			return d[0];
+		}
+		
+		catch(err) {
+			console.log(err.message);
+		}
+	}).filter(onlyUnique);
 		
 	this.bandedScale = d3.scaleBand()
 		.range([this.height - (m.top + m.bottom), 0])
@@ -379,6 +405,7 @@ chart.prototype.updateAxes = function() {
 				.selectAll("text")
 					.attr("dx", "-.25em");
 	} else {
+		
 		if(this.options.xAxisFormat){
 			var xFormat = this.options.xAxisFormat == "yearMon" ? "s" : this.options.xAxisFormat ;
 		} else {
@@ -449,6 +476,8 @@ chart.prototype.routeLayers = function() {
 			that.addBars(d);
 		} else if(layerType == "gauge"){
 			that.makeGauge(d);
+		} else if(layerType == "donut"){
+			that.makeDonut(d);
 		} else {alert("Wrong Layer Type! Can be: line, point, stat_line")}
 		
 	})
@@ -564,12 +593,24 @@ chart.prototype.addBars = function(ly){
 			  .style("top", 5 + 'px')
               .style("display", "inline-block")
               .html(function() {
+				   if(!ly.options.toolTipOptions){
+					  
+					  ly.options['toolTipOptions'] = {suppressY: false};
+
+					  console.log(ly.options);
+				  }
 				  
 				  if(ly.mapping.toolTip2){
-					  return ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 
-						ly.mapping.y_var + ": " + yFormat(barData[ly.mapping.y_var]) + '<br>' +
-						ly.mapping.toolTip + ": " + toolTipFormat(barData[ly.mapping.toolTip]) + '<br>' +
-						ly.mapping.toolTip2 + ": " + toolTipFormat(barData[ly.mapping.toolTip2])
+					  if(ly.options.toolTipOptions.suppressY == true){
+						  return ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 
+						  ly.mapping.toolTip + ": " + toolTipFormat(barData[ly.mapping.toolTip]) + '<br>' +
+						  ly.mapping.toolTip2 + ": " + toolTipFormat(barData[ly.mapping.toolTip2])
+					  } else {
+						  return ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 
+						  ly.mapping.y_var + ": " + yFormat(barData[ly.mapping.y_var]) + '<br>' +
+						  ly.mapping.toolTip + ": " + toolTipFormat(barData[ly.mapping.toolTip]) + '<br>' +
+						  ly.mapping.toolTip2 + ": " + toolTipFormat(barData[ly.mapping.toolTip2])
+					  }
 					
 				  } else if(ly.mapping.toolTip){
 					  if(ly.options.toolTipOptions.suppressY == true){
@@ -631,6 +672,7 @@ chart.prototype.addLine = function(ly) {
 	  .ease(d3.easeQuad)
 	  .duration(1500)
 		.style('opacity', 1)
+		.style("stroke", ly.color)
 		.attr("d", valueLine);
 
 }
@@ -693,6 +735,7 @@ chart.prototype.addPoints = function(ly) {
 	  .transition()
 	  .ease(d3.easeQuad)
 	  .duration(1500)
+		.style('fill',  ly.color )
 		.attr('cx', function(e) { return that.xScale( e[ly.mapping.x_var] ); })
 		.attr('cy', function(e) { return that.yScale( e[ly.mapping.y_var] ); })
 	
@@ -913,6 +956,7 @@ chart.prototype.addTreemap = function(ly) {
 	var that = this;
 	var m = this.margin;
 	var format = d3.format(",d")
+	var key = ly.label;
 	// create hierarchy from data
 	var root = d3.hierarchy(ly.data)
 		.eachBefore(function(d) { d.data.id = (d.parent ? d.parent.data.id + "." : "") + d.data.name; })
@@ -951,10 +995,11 @@ chart.prototype.addTreemap = function(ly) {
 	
 	// append rect
 	newCell.append("rect")
+		.attr('class', 'tag-tree-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
 		.attr('id', function(d) { return d.data.id; })
 		.attr('width', function(d) { return d.x1 - d.x0; })
 		.attr('height', function(d) { return d.y1 - d.y0; })
-		.attr('opacity', 0.5)
+		//.attr('opacity', 0.5)
 		.attr('fill', function(d) { while (d.depth > 1) d = d.parent; return color(d.data.id); });
 	
 	// UPDATE
@@ -964,7 +1009,10 @@ chart.prototype.addTreemap = function(ly) {
         .attr("transform", function(d) { return "translate(" + d.x0 + "," + d.y0 + ")"; })
       .select("rect")
         .attr("width", function(d) { return d.x1 - d.x0; })
-        .attr("height", function(d) { return d.y1 - d.y0; });
+
+        .attr("height", function(d) { return d.y1 - d.y0; })
+		.attr('fill', function(d) { while (d.depth > 1) d = d.parent; return color(d.data.id); });
+
 		
 	// append text
 	newCell.append('text')
@@ -976,16 +1024,18 @@ chart.prototype.addTreemap = function(ly) {
 		.enter().append('tspan')
 		.attr('x', 3)
 		.attr('y', function(d,i,nodes) { return (i === nodes.length - 1) * 3 + 16 + (i - 0.5) * 9; })
-		.attr('fill-opacity',  function(d,i,nodes) { return i === nodes.length - 1 ? 0.9 : null; })
-		//.attr('fill', 'black')
+		.attr('fill-opacity',  function(d,i) { 
+			return this.parentNode.parentNode.getBBox().width > 40 ? 1 : 0; 
+			})
+		.attr('fill', 'black')
 		.text(function(d) { return d; });
 		
 	// append title/tooltip
 	newCell.append('title')
 		.text(function(d) { 
-			return d.data[ly.mapping.level_1] + " \\ \n" + 
-				d.data[ly.mapping.level_2] + " \\ \n" +
-				d.data[ly.mapping.x_var] + " \\ \n" +
+			return d.data[ly.mapping.level_1] + "  \n" + 
+				d.data[ly.mapping.level_2] + " \n" +
+				d.data[ly.mapping.x_var] + "  \n" +
 				format(d.value); })
 				
 	// append text
@@ -1000,8 +1050,11 @@ chart.prototype.addTreemap = function(ly) {
 		.enter().append('tspan')
 		.attr('x', 3)
 		.attr('y', function(d,i,nodes) { return (i === nodes.length - 1) * 3 + 16 + (i - 0.5) * 9; })
-		.attr('fill-opacity',  function(d,i,nodes) { return i === nodes.length - 1 ? 0.9 : null; })
-		//.attr('fill', 'black')
+		.attr('fill-opacity',  function(d,i) { 
+			return this.parentNode.parentNode.getBBox().width > 40 ? 1 : 0; 
+			})
+		.attr('fill', 'black')
+
 		.text(function(d) { return d; });
 		
 	// append title/tooltip
@@ -1009,9 +1062,10 @@ chart.prototype.addTreemap = function(ly) {
 	
 	cell.append('title')
 		.text(function(d) { 
-			return d.data[ly.mapping.level_1] + " \\ \n" + 
-				d.data[ly.mapping.level_2] + " \\ \n" +
-				d.data[ly.mapping.x_var] + " \\ \n" +
+			return d.data[ly.mapping.level_1] + "  \n" + 
+				d.data[ly.mapping.level_2] + "  \n" +
+				d.data[ly.mapping.x_var] + "  \n" +
+
 				format(d.value); })
 	
 	//helper functions
@@ -1240,9 +1294,10 @@ chart.prototype.addToolTip = function() {
 	var tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
 	var toolLine =  this.chart.append('line').attr('class', 'toolLine');
 	var format1d = d3.format('.0f');
-	var xFormat = this.options.xAxisFormat != "text" ? d3.format(this.options.xAxisFormat ? this.options.xAxisFormat : "d") : function(x) {return x;} ;
+	var exclusions = ["text", "yearMon"];
+	var xFormat = !(exclusions.indexOf(that.options.xAxisFormat) in exclusions) ? d3.format(that.options.xAxisFormat ? that.options.xAxisFormat : "d") : function(x) {return x;} ;
 	var yFormat = d3.format(this.options.yAxisFormat ? this.options.yAxisFormat : "d");
-	var toolTipFormat = d3.format(this.options.toolTipFormat ? this.options.toolTipFormat : "d");
+	var toolTipFormat = !(exclusions.indexOf(that.options.xAxisFormat) in exclusions) ?  d3.format(that.options.toolTipFormat ? that.options.toolTipFormat : "d"): function(x) {return x;} ;
 	
 	var tipBox = this.svg.append("rect")
 			.attr('class', 'toolTipBox')
@@ -1260,7 +1315,8 @@ chart.prototype.addToolTip = function() {
 			var mouse = d3.mouse(this);
 			
 			//line tool tip text
-			that.plotLayers.forEach(function(d,i) {			
+			that.plotLayers.forEach(function(d,i) {	
+				console.log(d);
 				var key = d.label;
 				var color = d.color;
 				var values = d.data;
@@ -1279,6 +1335,7 @@ chart.prototype.addToolTip = function() {
 
 				var finalObject = {
 					color: color,
+					label: key,
 					x_var: x_var,
 					y_var: y_var,
 					toolTip_var: toolTip_var,
@@ -1287,7 +1344,6 @@ chart.prototype.addToolTip = function() {
 				tipText.push(finalObject);
 			});
 			
-	console.log(tipText);
 	toolLine
 		.style('stroke', 'darkgray')
 		.style('stroke-dasharray', '3,3')
@@ -1307,8 +1363,15 @@ chart.prototype.addToolTip = function() {
 				tipText[0].y_var + ": " + yFormat(tipText[0].values[tipText[0].y_var]) + '<br>' +
 				tipText[0].toolTip_var + ": " + toolTipFormat(tipText[0].values[tipText[0].toolTip_var])
 			  } else {
-				return tipText[0].x_var + ": " + xFormat(tipText[0].values[tipText[0].x_var]) + '<br>' + 
-				tipText[0].y_var + ": " + yFormat(tipText[0].values[tipText[0].y_var])
+				  var y_text = []
+				  tipText.forEach(function(d){
+					y_text.push('<font color="' + d.color + '">' + d.label + '</font>' + ": " + yFormat(d.values[d.y_var]) + '<br>' );
+				});
+				console.log(y_text.join(' '));
+				return tipText[0].x_var + ": " + xFormat(tipText[0].values[tipText[0].x_var]) + '<br>' + y_text.join(' ');
+				
+				
+				//tipText[0].y_var + ": " + yFormat(tipText[0].values[tipText[0].y_var])
 			  }
 		});
 	}
@@ -1322,6 +1385,213 @@ chart.prototype.updateToolTip = function() {
 			.attr("width", that.width - (that.margin.left + that.margin.right))
 			.attr("height", that.height - ( that.margin.top + that.margin.bottom))
 			.attr("transform", "translate(" + that.margin.left + "," + that.margin.top + ")");
+}
+
+chart.prototype.makeDonut = function(ly) {
+	var that = this;
+	var m = this.margin;
+	
+	//define gauge variable
+	var twoPi = 2 * Math.PI;
+	var radius = Math.min(this.width - (m.right + m.left), this.height - (m.top + m.bottom))/2;
+	var barWidth = 30 ;
+	
+	var pie = d3.pie()
+		.sort(null)
+		.value(function(d) { 
+			return d[ly.mapping.y_var]; 
+			});
+		
+	var arc = d3.arc()
+	  .innerRadius(radius * 0.8)
+	  .outerRadius(radius * 0.4);
+	  
+	var outerArc  = d3.arc()
+	  .innerRadius(radius * 0.9)
+	  .outerRadius(radius * 0.9);
+	  
+	var data = ly.data;
+	
+	var color = d3.scaleOrdinal(ly.color);
+	
+	var key = function(d){ return d.data[ly.mapping.x_var]; };
+	
+	//data join
+	var path = this.chart
+		.selectAll('.donut')
+		.data(pie(data));
+	 
+	path.exit().remove();
+	
+	var newPath = path.enter()
+		.append('path')
+		.attr('class', 'donut')
+		.attr('fill', function(d,i) { return color(i); })
+		.attr('d', arc)
+		.each(function(d) { this._current = 0; })
+		.on('mouseover', hoverTip)
+		.on('mousemove', hoverTip)
+		.on('mouseout', hoverTipHide);
+		
+	path.merge(newPath).transition()
+		.duration(1500)
+		.attr('fill', function(d,i) { return color(i); })
+		.attrTween('d', arcTween)
+	
+	/* ------- TEXT LABELS -------*/
+
+	var text = this.plot.selectAll("text")
+		.data(pie(data));
+
+	var newText = text.enter()
+		.append("text")
+		.attr('class', 'donut-text')
+		.style('font-size', '12px')
+		.style('opacity', 0)
+		.attr("dy", ".35em")
+		.text(function(d) {
+			return d.data[ly.mapping.x_var];
+		});
+	
+	function midAngle(d){
+		return d.startAngle + (d.endAngle - d.startAngle)/2;
+	}
+
+	text.merge(newText).transition().duration(1000)
+		.text(function(d) {
+				return d.data[ly.mapping.x_var];
+			})
+		.style('opacity', function(d){
+			console.log(d);
+			var wedgeSize =  Math.abs(d.endAngle - d.startAngle);
+			if(wedgeSize > 0.3) {
+				return 1;
+				} else {
+					return 0;
+				}
+		})
+		.attrTween("transform", function(d) {
+			this._current = this._current || d;
+			var interpolate = d3.interpolate(this._current, d);
+			this._current = interpolate(0);
+			return function(t) {
+				var d2 = interpolate(t);
+				var pos = outerArc.centroid(d2);
+				pos[0] = radius * (midAngle(d2) < Math.PI ? 1 : -1);
+				return "translate("+ pos +")";
+			};
+		})
+		.styleTween("text-anchor", function(d){
+			this._current = this._current || d;
+			var interpolate = d3.interpolate(this._current, d);
+			this._current = interpolate(0);
+			return function(t) {
+				var d2 = interpolate(t);
+				return midAngle(d2) < Math.PI ? "start":"end";
+			};
+		});
+
+	text.exit()
+		.remove();
+
+	/* ------- SLICE TO TEXT POLYLINES -------*/
+
+	var polyline = this.plot.selectAll("polyline")
+		.data(pie(data));
+	
+	var newPolyline = polyline.enter()
+		.append("polyline")
+		.style('fill', 'none')
+		.style('stroke-width', '1px')
+		.style('opacity', 0)
+		.style('stroke' , 'gray');
+
+	polyline.merge(newPolyline).transition().duration(1000)
+		.style('opacity', function(d){
+			console.log(d);
+			var wedgeSize =  Math.abs(d.endAngle - d.startAngle);
+			if(wedgeSize > 0.3) {
+				return 1;
+				} else {
+					return 0;
+				}
+		})
+		.attrTween("points", function(d){
+			this._current = this._current || d;
+			var interpolate = d3.interpolate(this._current, d);
+			this._current = interpolate(0);
+			return function(t) {
+				var d2 = interpolate(t);
+				var pos = outerArc.centroid(d2);
+				pos[0] = radius * 0.95 * (midAngle(d2) < Math.PI ? 1 : -1);
+				return [arc.centroid(d2), outerArc.centroid(d2), pos];
+			};			
+		});
+	
+	polyline.exit()
+		.remove();
+		
+	function arcTween(a) {
+	  this._current = this._current || a;		
+      var i = d3.interpolate(this._current, a);
+      this._current = i(0);
+      return function(t) {
+        return arc(i(t));
+      };
+    }
+	
+	function hoverTip(){
+		var bar = d3.select(this);
+		var barData = bar.data()[0].data;
+		var exclusions = ["text", "yearMon"];
+		var xFormat = !(exclusions.indexOf(that.options.xAxisFormat) in exclusions) ? d3.format(that.options.xAxisFormat ? that.options.xAxisFormat : "d") : function(x) {return x;} ;
+		var yFormat = d3.format(that.options.yAxisFormat ? that.options.yAxisFormat : "d");
+		var toolTipFormat = !(exclusions.indexOf(that.options.xAxisFormat) in exclusions) ?  d3.format(that.options.toolTipFormat ? that.options.toolTipFormat : "d"): function(x) {return x;} ;
+		
+		that.tooltip
+              .style("left", 10 + 'px')
+			  .style("top", 5 + 'px')
+              .style("display", "inline-block")
+              .html(function() {
+				   if(!ly.options.toolTipOptions){
+					  
+					  ly.options['toolTipOptions'] = {suppressY: false};
+
+				  }
+				  
+				  if(ly.mapping.toolTip2){
+					  if(ly.options.toolTipOptions.suppressY == true){
+						  return ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 
+						  ly.mapping.toolTip + ": " + toolTipFormat(barData[ly.mapping.toolTip]) + '<br>' +
+						  ly.mapping.toolTip2 + ": " + toolTipFormat(barData[ly.mapping.toolTip2])
+					  } else {
+						  return ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 
+						  ly.mapping.y_var + ": " + yFormat(barData[ly.mapping.y_var]) + '<br>' +
+						  ly.mapping.toolTip + ": " + toolTipFormat(barData[ly.mapping.toolTip]) + '<br>' +
+						  ly.mapping.toolTip2 + ": " + toolTipFormat(barData[ly.mapping.toolTip2])
+					  }
+					
+				  } else if(ly.mapping.toolTip){
+					  if(ly.options.toolTipOptions.suppressY == true){
+						 return ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 
+							ly.mapping.toolTip + ": " + toolTipFormat(barData[ly.mapping.toolTip]) 
+					  } else {
+						  return ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 
+							ly.mapping.y_var + ": " + yFormat(barData[ly.mapping.y_var]) + '<br>' +
+							ly.mapping.toolTip + ": " + toolTipFormat(barData[ly.mapping.toolTip])
+					  }
+					 
+				  } else {
+					return ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 
+					ly.mapping.y_var + ": " + yFormat(barData[ly.mapping.y_var])
+				  }
+			  });
+			  
+	}
+	
+	function hoverTipHide(){
+		that.tooltip.style("display", "none");
+	}
 }
 
 chart.prototype.makeGauge = function(ly){
@@ -1430,7 +1700,7 @@ chart.prototype.update = function(x){
 	if(this.x_check ){
 		
 	} else {
-		if(this.plotLayers[0].type != "gauge"){
+		if(this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut"){
 		this.plot
 			.attr('transform','translate('+this.margin.left+','+this.margin.top+')');
 	} else {
@@ -1441,20 +1711,22 @@ chart.prototype.update = function(x){
 	//update all the other stuff
 	this.options.referenceLine = x.options.referenceLine;
 	if(this.plotLayers[0].type == "gauge")this.draw();
-	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge")this.processScales(this.plotLayers);
-	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge")this.updateAxes();
+	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut")this.processScales(this.plotLayers);
+	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut")this.updateAxes();
 	this.routeLayers();
-	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge")this.addReferenceLines();
+	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut")this.addReferenceLines();
 	if(this.options.suppressLegend == false){
 		if(this.plotLayers[0].type != "hexbin" & 
 		   this.plotLayers[0].type != "treemap"& 
-		   this.plotLayers[0].type != "gauge"){
+		   this.plotLayers[0].type != "gauge" &
+		   this.plotLayers[0].type != "donut"){
 			this.updateLegend();
 		}		
 	} 
 	if(this.plotLayers[0].type != "hexbin" & 
 	   this.plotLayers[0].type != "treemap"&
-       this.plotLayers[0].type != "gauge" &	   
+       this.plotLayers[0].type != "gauge" &	  
+		this.plotLayers[0].type != "donut" &
 	   this.plotLayers[0].type != "bar" )this.updateToolTip();
 	this.removeLayers(oldLayers);
 	}
@@ -1474,7 +1746,7 @@ chart.prototype.resize = function(){
 		.attr('width', this.width)
 		.attr('height', this.height);
 	
-	if(this.plotLayers[0].type != "gauge"){
+	if(this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut"){
 		this.plot 
 			.attr('transform','translate('+this.margin.left+','+this.margin.top+')');
 	} else {
@@ -1489,19 +1761,21 @@ chart.prototype.resize = function(){
 		.attr('height', this.height - (this.margin.top + this.margin.bottom));
 	
 	if(this.plotLayers[0].type == "gauge")this.draw();
-	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge")this.processScales(this.plotLayers);
-	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge")this.updateAxes();
+	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut")this.processScales(this.plotLayers);
+	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut")this.updateAxes();
 	this.routeLayers();
 	if(this.options.suppressLegend == false){
 		if(this.plotLayers[0].type != "hexbin" & 
 		   this.plotLayers[0].type != "treemap"& 
+		   this.plotLayers[0].type != "donut" &
 		   this.plotLayers[0].type != "gauge"){
 			this.updateLegend();
 		}		
 	} 
 	if(this.plotLayers[0].type != "hexbin" & 
 	   this.plotLayers[0].type != "treemap"&
-       this.plotLayers[0].type != "gauge" &	   
+       this.plotLayers[0].type != "gauge" &	 
+	   this.plotLayers[0].type != "donut" &	   
 	   this.plotLayers[0].type != "bar" )this.updateToolTip();
 	if(this.options.dragPoints == true) { 
 
@@ -1549,4 +1823,4 @@ function linearRegression(data,y_var,x_var){
 		return lr;
 }
 
-
+
