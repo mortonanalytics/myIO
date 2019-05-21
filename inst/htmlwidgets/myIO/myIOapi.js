@@ -1749,16 +1749,18 @@ chart.prototype.resize = function(){
 	if(this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut"){
 		this.plot 
 			.attr('transform','translate('+this.margin.left+','+this.margin.top+')');
+		this.clipPath
+		.attr('x', 0)
+		.attr('y', 0)
+		.attr('width', this.width - (this.margin.left + this.margin.right))
+		.attr('height', this.height - (this.margin.top + this.margin.bottom));
+		
 	} else {
 		this.plot 
 			.attr('transform','translate('+this.width/2+','+this.height/2+')');
 	}
 	
-	this.clipPath
-		.attr('x', 0)
-		.attr('y', 0)
-		.attr('width', this.width - (this.margin.left + this.margin.right))
-		.attr('height', this.height - (this.margin.top + this.margin.bottom));
+	
 	
 	if(this.plotLayers[0].type == "gauge")this.draw();
 	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut")this.processScales(this.plotLayers);
