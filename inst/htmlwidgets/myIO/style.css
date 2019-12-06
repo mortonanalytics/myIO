@@ -1,19 +1,19 @@
 .axis text {
 	font-family: sans-serif;
 	font-size: 13px;
-	fill: darkgray;
+	fill: #7a7a52;
 }
 
 .x.label {
 	font-family: sans-serif;
 	font-size: 13px;
-	fill: darkgray;
+	fill: #7a7a52;
 }
 
 .y.label {
 	font-family: sans-serif;
 	font-size: 13px;
-	fill: darkgray;
+	fill: #7a7a52;
 }
 
 .axis {

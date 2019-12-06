@@ -1331,6 +1331,7 @@ chart.prototype.addToolTip = function() {
 
 				var d0 = values[idx-1];
 				var d1 = values[idx];
+				if(d1 == undefined) return
 				var v = xPos - d0[x_var] > d1[x_var] - xPos ? d1 : d0;	
 
 				var finalObject = {
