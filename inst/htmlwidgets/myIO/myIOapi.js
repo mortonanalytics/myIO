@@ -1331,6 +1331,7 @@ chart.prototype.addToolTip = function() {
 
 				var d0 = values[idx-1];
 				var d1 = values[idx];
+				if(d1 == undefined) return
 				var v = xPos - d0[x_var] > d1[x_var] - xPos ? d1 : d0;	
 
 				var finalObject = {
@@ -1390,7 +1391,7 @@ chart.prototype.updateToolTip = function() {
 chart.prototype.makeDonut = function(ly) {
 	var that = this;
 	var m = this.margin;
-	
+
 	//define gauge variable
 	var twoPi = 2 * Math.PI;
 	var radius = Math.min(this.width - (m.right + m.left), this.height - (m.top + m.bottom))/2;
@@ -1401,7 +1402,7 @@ chart.prototype.makeDonut = function(ly) {
 		.value(function(d) { 
 			return d[ly.mapping.y_var]; 
 			});
-		
+	
 	var arc = d3.arc()
 	  .innerRadius(radius * 0.8)
 	  .outerRadius(radius * 0.4);
@@ -1411,7 +1412,7 @@ chart.prototype.makeDonut = function(ly) {
 	  .outerRadius(radius * 0.9);
 	  
 	var data = ly.data;
-	
+	console.log(pie(data));
 	var color = d3.scaleOrdinal(ly.color);
 	
 	var key = function(d){ return d.data[ly.mapping.x_var]; };
@@ -1437,7 +1438,7 @@ chart.prototype.makeDonut = function(ly) {
 		.duration(1500)
 		.attr('fill', function(d,i) { return color(i); })
 		.attrTween('d', arcTween)
-	
+
 	/* ------- TEXT LABELS -------*/
 
 	var text = this.plot.selectAll("text")
@@ -1462,7 +1463,6 @@ chart.prototype.makeDonut = function(ly) {
 				return d.data[ly.mapping.x_var];
 			})
 		.style('opacity', function(d){
-			console.log(d);
 			var wedgeSize =  Math.abs(d.endAngle - d.startAngle);
 			if(wedgeSize > 0.3) {
 				return 1;
@@ -1749,16 +1749,18 @@ chart.prototype.resize = function(){
 	if(this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut"){
 		this.plot 
 			.attr('transform','translate('+this.margin.left+','+this.margin.top+')');
+		this.clipPath
+		.attr('x', 0)
+		.attr('y', 0)
+		.attr('width', this.width - (this.margin.left + this.margin.right))
+		.attr('height', this.height - (this.margin.top + this.margin.bottom));
+		
 	} else {
 		this.plot 
 			.attr('transform','translate('+this.width/2+','+this.height/2+')');
 	}
 	
-	this.clipPath
-		.attr('x', 0)
-		.attr('y', 0)
-		.attr('width', this.width - (this.margin.left + this.margin.right))
-		.attr('height', this.height - (this.margin.top + this.margin.bottom));
+	
 	
 	if(this.plotLayers[0].type == "gauge")this.draw();
 	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut")this.processScales(this.plotLayers);
