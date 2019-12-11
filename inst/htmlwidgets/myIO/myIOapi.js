@@ -160,6 +160,7 @@ chart.prototype.processScales = function(lys){
 	
 	var x_extents = [];
 	var y_extents = [];
+	var x_bands = [];
 	var y_bands = [];
 	
 	lys.forEach(function(d){
@@ -173,10 +174,12 @@ chart.prototype.processScales = function(lys){
 
 		var x = d3.extent( d.data, function(e) { return +e[x_var]; });
 		var y = d3.extent( d.data, function(e) { return +e[y_var]; });
+		var x_cat = d.data.map(function(e) { return e[x_var]; });
 		var y_cat = d.data.map(function(e) { return e[y_var]; });
 
 		x_extents.push(x);
 		y_extents.push(y);
+		x_bands.push(x_cat);
 		y_bands.push(y_cat);
 	})
 
@@ -228,6 +231,16 @@ chart.prototype.processScales = function(lys){
 	function onlyUnique(value, index, self) { 
 		return self.indexOf(value) === index;
 	}
+	
+	this.x_banded = [].concat.apply([], x_bands).map(function(d){
+		try {
+			return d[0];
+		}
+		
+		catch(err) {
+			console.log(err.message);
+		}
+	}).filter(onlyUnique);
 	
 	this.y_banded = [].concat.apply([], y_bands).map(function(d){
 		try {
@@ -511,8 +524,8 @@ chart.prototype.addBars = function(ly){
 		var y_scale = this.bandedScale;
 		var bandwidth = (this.height - (m.top + m.bottom)) / that.y_banded.length;
 	} else if(this.options.categoricalScale == true & this.options.flipAxis == false){ 
-		var y_scale = this.bandedScale;
-		var bandwidth = (this.height - (m.top + m.bottom)) / that.y_banded.length;
+		var x_scale = this.bandedScale;
+		var bandwidth = (this.height - (m.top + m.bottom)) / that.x_banded.length;
 	} else {
 		var y_scale = this.yScale;
 		var bandwidth = Math.min(100, (this.width - (m.right + m.left)) / ly.data.length);
