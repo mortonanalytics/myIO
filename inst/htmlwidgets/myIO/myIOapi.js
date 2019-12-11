@@ -510,6 +510,9 @@ chart.prototype.addBars = function(ly){
 	if(this.options.categoricalScale == true & this.options.flipAxis == true){
 		var y_scale = this.bandedScale;
 		var bandwidth = (this.height - (m.top + m.bottom)) / that.y_banded.length;
+	} else if(this.options.categoricalScale == true & this.options.flipAxis == false){ 
+		var y_scale = this.bandedScale;
+		var bandwidth = (this.height - (m.top + m.bottom)) / that.y_banded.length;
 	} else {
 		var y_scale = this.yScale;
 		var bandwidth = Math.min(100, (this.width - (m.right + m.left)) / ly.data.length);
