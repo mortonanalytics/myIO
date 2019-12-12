@@ -565,6 +565,7 @@ chart.prototype.addBars = function(ly){
 			.attr('width', (barSize * bandwidth)-2)
 			.attr('height', function(d) { return (that.height -( m.top + m.bottom )) - that.yScale(d[ly.mapping.y_var]); });
 	} else {
+		this.chart.selectAll('rect').remove();
 		
 		var bars = this.chart
 			.selectAll('.tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
