@@ -280,7 +280,7 @@ chart.prototype.addAxes = function(){
 			.attr("class", "x axis")
 			.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
 			.call(d3.axisBottom(this.xScale)
-					.ticks(null,finalFormat)
+					.ticks(null,finalFormat))
 					//.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
 				.selectAll("text")
 					.attr('dy', '.35em')
