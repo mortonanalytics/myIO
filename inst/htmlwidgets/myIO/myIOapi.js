@@ -382,11 +382,13 @@ chart.prototype.updateAxes = function() {
 		
 	//update axes
 	if(this.options.categoricalScale == true & this.options.flipAxis == true){
-		if(this.options.xAxisFormat){
-			var xFormat = this.options.xAxisFormat == "yearMon" ? "s" : this.options.xAxisFormat ;
+		if(this.options.yAxisFormat){
+			var xFormat = this.options.yAxisFormat == "yearMon" ? "s" : this.options.yAxisFormat ;
+			console.log(xFormat);
 		} else {
 			var xFormat = "s";
 		}
+		var finalFormat = d3.format(xFormat);
 		
 		this.svg.selectAll('.x.axis')
 			.transition().ease(d3.easeQuad)
