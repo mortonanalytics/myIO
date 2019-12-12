@@ -274,13 +274,14 @@ chart.prototype.addAxes = function(){
 		} else {
 			var xFormat = "s";
 		}
+		var finalFormat = d3.format(xFormat);
 		
 		this.plot.append('g')
 			.attr("class", "x axis")
 			.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
 			.call(d3.axisBottom(this.xScale)
-					.ticks(null,d3.format(xFormat))
-					.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
+					.ticks(null,finalFormat)
+					//.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
 				.selectAll("text")
 					.attr('dy', '.35em')
 					.attr('text-anchor', 'center');
