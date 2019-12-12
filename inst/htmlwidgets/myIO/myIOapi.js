@@ -270,6 +270,7 @@ chart.prototype.addAxes = function(){
 	if(this.options.categoricalScale == true & this.options.flipAxis == true){
 		if(this.options.yAxisFormat){
 			var xFormat = this.options.yAxisFormat == "yearMon" ? "s" : this.options.yAxisFormat ;
+			console.log(xFormat);
 		} else {
 			var xFormat = "s";
 		}
@@ -278,7 +279,7 @@ chart.prototype.addAxes = function(){
 			.attr("class", "x axis")
 			.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
 			.call(d3.axisBottom(this.xScale)
-					.ticks(null,xFormat)
+					.ticks(null,d3.format(xFormat))
 					.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
 				.selectAll("text")
 					.attr('dy', '.35em')
