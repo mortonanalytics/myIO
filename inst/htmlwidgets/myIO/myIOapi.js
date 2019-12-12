@@ -268,8 +268,8 @@ chart.prototype.addAxes = function(){
 		
 	//create and append axes
 	if(this.options.categoricalScale == true & this.options.flipAxis == true){
-		if(this.options.xAxisFormat){
-			var xFormat = this.options.xAxisFormat == "yearMon" ? "s" : this.options.xAxisFormat ;
+		if(this.options.yAxisFormat){
+			var xFormat = this.options.yAxisFormat == "yearMon" ? "s" : this.options.yAxisFormat ;
 		} else {
 			var xFormat = "s";
 		}
