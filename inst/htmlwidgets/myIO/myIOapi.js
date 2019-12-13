@@ -160,6 +160,7 @@ chart.prototype.processScales = function(lys){
 	
 	var x_extents = [];
 	var y_extents = [];
+	var x_bands = [];
 	var y_bands = [];
 	
 	lys.forEach(function(d){
@@ -173,10 +174,12 @@ chart.prototype.processScales = function(lys){
 
 		var x = d3.extent( d.data, function(e) { return +e[x_var]; });
 		var y = d3.extent( d.data, function(e) { return +e[y_var]; });
+		var x_cat = d.data.map(function(e) { return e[x_var]; });
 		var y_cat = d.data.map(function(e) { return e[y_var]; });
 
 		x_extents.push(x);
 		y_extents.push(y);
+		x_bands.push(x_cat);
 		y_bands.push(y_cat);
 	})
 
@@ -229,6 +232,16 @@ chart.prototype.processScales = function(lys){
 		return self.indexOf(value) === index;
 	}
 	
+	this.x_banded = [].concat.apply([], x_bands).map(function(d){
+		try {
+			return d[0];
+		}
+		
+		catch(err) {
+			console.log(err.message);
+		}
+	}).filter(onlyUnique);
+	
 	this.y_banded = [].concat.apply([], y_bands).map(function(d){
 		try {
 			return d[0];
@@ -255,18 +268,20 @@ chart.prototype.addAxes = function(){
 		
 	//create and append axes
 	if(this.options.categoricalScale == true & this.options.flipAxis == true){
-		if(this.options.xAxisFormat){
-			var xFormat = this.options.xAxisFormat == "yearMon" ? "s" : this.options.xAxisFormat ;
+		if(this.options.yAxisFormat){
+			var xFormat = this.options.yAxisFormat == "yearMon" ? "s" : this.options.yAxisFormat ;
+			console.log(xFormat);
 		} else {
 			var xFormat = "s";
 		}
+		var finalFormat = d3.format(xFormat);
 		
 		this.plot.append('g')
 			.attr("class", "x axis")
 			.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
 			.call(d3.axisBottom(this.xScale)
-					.ticks(null,xFormat)
-					.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
+					.ticks(null,finalFormat))
+					//.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
 				.selectAll("text")
 					.attr('dy', '.35em')
 					.attr('text-anchor', 'center');
@@ -367,19 +382,21 @@ chart.prototype.updateAxes = function() {
 		
 	//update axes
 	if(this.options.categoricalScale == true & this.options.flipAxis == true){
-		if(this.options.xAxisFormat){
-			var xFormat = this.options.xAxisFormat == "yearMon" ? "s" : this.options.xAxisFormat ;
+		if(this.options.yAxisFormat){
+			var xFormat = this.options.yAxisFormat == "yearMon" ? "s" : this.options.yAxisFormat ;
+			console.log(xFormat);
 		} else {
 			var xFormat = "s";
 		}
+		var finalFormat = d3.format(xFormat);
 		
 		this.svg.selectAll('.x.axis')
 			.transition().ease(d3.easeQuad)
 			.duration(500)
 			.attr("transform", "translate(0," + (that.height-(m.top+m.bottom)) + ")")
 			.call(d3.axisBottom(this.xScale)
-					.ticks(null,xFormat)
-					.tickFormat(function(e){ if(Math.floor(e) != e){return;} return e;}))
+					.ticks(null,finalFormat))
+					//.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
 				.selectAll("text")
 					.attr('dy', '.35em')
 					.style('text-anchor', 'center');
@@ -510,6 +527,9 @@ chart.prototype.addBars = function(ly){
 	if(this.options.categoricalScale == true & this.options.flipAxis == true){
 		var y_scale = this.bandedScale;
 		var bandwidth = (this.height - (m.top + m.bottom)) / that.y_banded.length;
+	} else if(this.options.categoricalScale == true & this.options.flipAxis == false){ 
+		var x_scale = this.bandedScale;
+		var bandwidth = (this.height - (m.top + m.bottom)) / that.x_banded.length;
 	} else {
 		var y_scale = this.yScale;
 		var bandwidth = Math.min(100, (this.width - (m.right + m.left)) / ly.data.length);
@@ -547,6 +567,7 @@ chart.prototype.addBars = function(ly){
 			.attr('width', (barSize * bandwidth)-2)
 			.attr('height', function(d) { return (that.height -( m.top + m.bottom )) - that.yScale(d[ly.mapping.y_var]); });
 	} else {
+		this.chart.selectAll('rect').remove();
 		
 		var bars = this.chart
 			.selectAll('.tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
