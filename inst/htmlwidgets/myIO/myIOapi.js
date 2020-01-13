@@ -348,8 +348,7 @@ chart.prototype.addAxes = function(){
 		this.plot.append('g')
 			.attr("class", "y axis")
 			.call(d3.axisLeft(this.yScale)
-				.ticks(5, yFormat)
-				.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
+				.ticks(5, yFormat))
 			.selectAll("text")
 				.attr("dx", "-.25em");
 	}	
@@ -458,8 +457,7 @@ chart.prototype.updateAxes = function() {
 			.transition().ease(d3.easeQuad)
 			.duration(500)
 			.call(d3.axisLeft(this.yScale)
-				.ticks(5,yFormat)
-				.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
+				.ticks(5,yFormat))
 			.selectAll("text")
 				.attr("dx", "-.25em");
 		
