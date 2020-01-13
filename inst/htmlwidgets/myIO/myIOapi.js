@@ -348,7 +348,8 @@ chart.prototype.addAxes = function(){
 		this.plot.append('g')
 			.attr("class", "y axis")
 			.call(d3.axisLeft(this.yScale)
-				.ticks(null, yFormat))
+				.ticks(null, yFormat)
+				.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
 			.selectAll("text")
 				.attr("dx", "-.25em");
 	}	
