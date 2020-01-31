@@ -634,6 +634,7 @@ chart.prototype.addBars = function(ly){
 					
 				  } else if(ly.mapping.toolTip){
 					  if(ly.options.toolTipOptions.suppressY == true){
+						  console.log("ToolTip format: " +toolTipFormat);
 						 return ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 
 							ly.mapping.toolTip + ": " + toolTipFormat(barData[ly.mapping.toolTip]) 
 					  } else {
