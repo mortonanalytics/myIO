@@ -619,7 +619,7 @@ chart.prototype.addBars = function(ly){
 
 					  console.log(ly.options);
 				  }
-				  
+				  console.log(ly);
 				  if(ly.mapping.toolTip2){
 					  if(ly.options.toolTipOptions.suppressY == true){
 						  return ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 
