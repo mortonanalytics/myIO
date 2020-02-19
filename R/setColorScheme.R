@@ -12,7 +12,7 @@
 
 setColorScheme <- function(myIO, colorShceme, setCategories = NULL){
 
-  final <- list(colorShceme, setCategories)
+  final <- list(colorShceme, setCategories, c("on"))
 
   myIO$x$options$colorScheme <- final
   return(myIO)

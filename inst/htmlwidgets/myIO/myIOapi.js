@@ -253,8 +253,8 @@ chart.prototype.processScales = function(lys){
 	}).filter(onlyUnique);
 		
 	this.bandedScale = d3.scaleBand()
-		.range([this.height - (m.top + m.bottom), 0])
-		.domain(this.y_banded);
+		.range(this.options.flipAxis == true ? [this.height - (m.top + m.bottom), 0] : [0, this.width - (m.left + m.right)])
+		.domain( this.options.flipAxis == true ? this.y_banded : this.x_banded );
 	
 	this.colorScheme = d3.scaleOrdinal()
 		.range( this.options.colorScheme[0] )
@@ -306,6 +306,22 @@ chart.prototype.addAxes = function(){
 			.attr("class", "y axis")
 			.call(d3.axisLeft(this.bandedScale))
 				.selectAll("text")
+				.attr("dx", "-.25em");
+		
+	} else if(this.options.categoricalScale == true & this.options.flipAxis == false){
+		this.plot.append('g')
+			.attr("class", "x axis")
+			.attr("transform", "translate(0," + (that.height-(m.top+m.bottom)) + ")")
+			.call(d3.axisBottom(this.bandedScale))
+				.selectAll("text")
+				.attr("dx", "-.25em");
+					
+		var yFormat = this.options.yAxisFormat ? this.options.yAxisFormat : "s";
+		this.plot.append('g')
+			.attr("class", "y axis")
+			.call(d3.axisLeft(this.yScale)
+				.ticks(5, yFormat))
+			.selectAll("text")
 				.attr("dx", "-.25em");
 		
 	} else {
@@ -423,7 +439,26 @@ chart.prototype.updateAxes = function() {
 			.call(d3.axisLeft(this.bandedScale))
 				.selectAll("text")
 					.attr("dx", "-.25em");
-	} else {
+	} else if(this.options.categoricalScale == true & this.options.flipAxis == false){
+		
+		this.svg.selectAll('.x.axis')
+			.attr("transform", "translate(0," + (that.height-(m.top+m.bottom)) + ")")
+			.transition().ease(d3.easeQuad)
+			.duration(500)
+			.call(d3.axisBottom(this.bandedScale))
+				.selectAll("text")
+					.attr("dx", "-.25em");
+					
+		var yFormat = this.options.yAxisFormat ? this.options.yAxisFormat : "s";
+		this.svg.selectAll('.y.axis')
+			.transition().ease(d3.easeQuad)
+			.duration(500)
+			.call(d3.axisLeft(this.yScale)
+				.ticks(5,yFormat))
+			.selectAll("text")
+				.attr("dx", "-.25em");
+		
+	}else {
 		
 		if(this.options.xAxisFormat){
 			var xFormat = this.options.xAxisFormat == "yearMon" ? "s" : this.options.xAxisFormat ;
@@ -562,12 +597,17 @@ chart.prototype.addBars = function(ly){
 	var barSize = ly.options.barSize == "small" ? 0.5 : 1;
 	
 	if(this.options.categoricalScale == true & this.options.flipAxis == true){
+		var x_scale = this.xScale;
 		var y_scale = this.bandedScale;
 		var bandwidth = (this.height - (m.top + m.bottom)) / that.y_banded.length;
+		console.log("CatInverted: " + bandwidth); 
 	} else if(this.options.categoricalScale == true & this.options.flipAxis == false){ 
 		var x_scale = this.bandedScale;
-		var bandwidth = (this.height - (m.top + m.bottom)) / that.x_banded.length;
+		var y_scale = this.yScale;
+		var bandwidth = (this.width - (m.left + m.right)) / that.x_banded.length;
+		console.log("CatNormal: " + bandwidth);
 	} else {
+		var x_scale = this.xScale;
 		var y_scale = this.yScale;
 		var bandwidth = Math.min(100, (this.width - (m.right + m.left)) / ly.data.length);
 	}
@@ -586,9 +626,18 @@ chart.prototype.addBars = function(ly){
 			.append('rect')
 			.attr('class', 'tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
 			.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
-			.style('fill', ly.color)
-			.attr('x', function(d) { return barSize == 1 ? that.xScale(d[ly.mapping.x_var]) - (bandwidth/2) : that.xScale(d[ly.mapping.x_var]) - (bandwidth/4); })
-			.attr('y', this.yScale(0))
+			.style('fill', function(d){
+				return that.options.colorScheme[2] == "on" ? that.colorScheme(d[ly.mapping.x_var]) : ly.color; 
+				})
+			.attr('x', function(d) { 
+				if(that.options.categoricalScale == true){
+					return x_scale(d[ly.mapping.x_var]);
+				} else {
+					return barSize == 1 ? x_scale(d[ly.mapping.x_var]) - (bandwidth/2) : x_scale(d[ly.mapping.x_var]) - (bandwidth/4); 
+				}
+				 
+				})
+			.attr('y', y_scale(0))
 			.attr('width', (barSize * bandwidth)-2)
 			.attr('height', that.height -( m.top + m.bottom ))
 			.on('mouseover', hoverTip)
@@ -599,8 +648,15 @@ chart.prototype.addBars = function(ly){
 			.transition()
 			.ease(d3.easeQuad)
 			.duration(1000)
-			.attr('x', function(d) { return barSize == 1 ? that.xScale(d[ly.mapping.x_var]) - (bandwidth/2) : that.xScale(d[ly.mapping.x_var]) - (bandwidth/4); })
-			.attr('y', function(d) { return that.yScale(d[ly.mapping.y_var]); })
+			.attr('x', function(d) { 
+				if(that.options.categoricalScale == true){
+					return x_scale(d[ly.mapping.x_var]);
+				} else {
+					return barSize == 1 ? x_scale(d[ly.mapping.x_var]) - (bandwidth/2) : x_scale(d[ly.mapping.x_var]) - (bandwidth/4); 
+				}
+				 
+				})
+			.attr('y', function(d) { return y_scale(d[ly.mapping.y_var]); })
 			.attr('width', (barSize * bandwidth)-2)
 			.attr('height', function(d) { return (that.height -( m.top + m.bottom )) - that.yScale(d[ly.mapping.y_var]); });
 	} else {
@@ -619,9 +675,13 @@ chart.prototype.addBars = function(ly){
 			.append('rect')
 			.attr('class', 'tag-bar-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
 			.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
-			.style('fill', ly.color)
+			.style('fill', function(d){
+				console.log(that.colorScheme(d[ly.mapping.x_var]));
+				
+				return that.options.colorScheme[2] == "on" ? that.colorScheme(d[ly.mapping.x_var]) : ly.color; 
+				})
 			.attr('y', function(d) { return barSize == 1? y_scale(d[ly.mapping.x_var]) : y_scale(d[ly.mapping.x_var]) + bandwidth/4 ;})
-			.attr('x', function(d) { return that.xScale(Math.min(0, d[ly.mapping.y_var])); })
+			.attr('x', function(d) { return x_scale(Math.min(0, d[ly.mapping.y_var])); })
 			.attr('height', (barSize * bandwidth)-2)
 			.attr('width', 0)
 			.on('mouseover', hoverTip)
@@ -633,7 +693,7 @@ chart.prototype.addBars = function(ly){
 			.ease(d3.easeQuad)
 			.duration(1000)
 			.attr('y', function(d) { return barSize == 1? y_scale(d[ly.mapping.x_var]) : y_scale(d[ly.mapping.x_var]) + bandwidth/4 ;})
-			.attr('x', function(d) { return that.xScale(Math.min(0, d[ly.mapping.y_var])); })
+			.attr('x', function(d) { return x_scale(Math.min(0, d[ly.mapping.y_var])); })
 			.attr('height', (barSize * bandwidth)-2)
 			.attr('width', function(d) { return Math.abs(that.xScale(d[ly.mapping.y_var]) - that.xScale(0)); });
 	}	
@@ -657,8 +717,7 @@ chart.prototype.addBars = function(ly){
 
 					  console.log(ly.options);
 				  }
-				  console.log(ly);
-				  console.log(that.options);
+
 				  if(ly.mapping.toolTip2){
 					  if(ly.options.toolTipOptions.suppressY == true){
 						  return ly.mapping.x_var + ": " + xFormat(barData[ly.mapping.x_var]) + '<br>' + 

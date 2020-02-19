@@ -8,7 +8,7 @@ df <- datasets::airquality %>%
 colors <- substr(viridis(5), 1, 7)
 
 myIO()%>%
-  addIoLayer(type = "line",
+  addIoLayer(type = "point",
              color = colors,
              label = "Month",
              data = df,
@@ -18,3 +18,19 @@ myIO()%>%
                group = "Month"
              ))
 
+
+myIO() %>%
+  addIoLayer(type = "bar",
+             color = colors[1],
+             label = "Temp",
+             data = df %>%
+               filter(Day == 5),
+             mapping = list(
+               x_var = "Month",
+               y_var = "Temp"
+             )) %>%
+  #flipAxis() %>%
+  defineCategoricalAxis() %>%
+  setColorScheme(colorShceme = colors, setCategories = unique(df$Month)) %>%
+  setAxisFormat(xAxis = "text") %>%
+  suppressLegend()
