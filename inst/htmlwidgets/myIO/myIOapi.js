@@ -86,7 +86,7 @@ chart.prototype.initialize = function(){
 	   this.plotLayers[0].type != "gauge" &
 	   this.plotLayers[0].type != "donut" &
 	   this.plotLayers[0].type != "point") {
-		   this.addToolTip();
+		   this.addToolTip(this.plotLayers);
 	   } else { 
 			this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
 			}
@@ -256,9 +256,11 @@ chart.prototype.processScales = function(lys){
 		.range([this.height - (m.top + m.bottom), 0])
 		.domain(this.y_banded);
 	
+	this.colorScheme = d3.scaleOrdinal()
+		.range( this.options.colorScheme[0] )
+		.domain( this.options.colorScheme[1] );
+	
 	//assess if there's any data
-	console.log('check1: '+ x_check1);
-	console.log('check2: '+ x_check2);
 	this.x_check = (x_check1 == 0 & x_check2 == 0) == 1;
 }
 
@@ -470,6 +472,42 @@ chart.prototype.routeLayers = function() {
 	this.layerIndex = this.plotLayers.map(function(d) {return d.label; });
 	
 	this.plotLayers.forEach(function(d){
+		
+		var layerType = d.type;
+
+		if(layerType == "line") {
+			if(d.mapping.low_y) {that.addArea(d);}
+			that.addLine(d);
+			that.addPoints(d);
+		} else if(layerType == "point") {
+			if(d.mapping.low_y) { that.addCrosshairsY(d); }
+			if(d.mapping.low_x) { that.addCrosshairsX(d); }
+			that.addPoints(d);
+		} else if(layerType == "stat_line") {
+			that.addLine(d);
+		} else if(layerType == "hexbin"){
+			that.addHexBin(d);
+			//that.addHexPoints(d);
+		} else if(layerType == "treemap"){
+			that.addTreemap(d);
+		} else if(layerType == "bar"){
+			that.addBars(d);
+		} else if(layerType == "gauge"){
+			that.makeGauge(d);
+		} else if(layerType == "donut"){
+			that.makeDonut(d);
+		} else {alert("Wrong Layer Type! Can be: line, point, stat_line")}
+		
+	})
+	
+}
+
+chart.prototype.routeFilteredLayers = function(lys) {
+	var that = this;
+	
+	this.layerIndex = this.plotLayers.map(function(d) {return d.label; });
+	
+	lys.forEach(function(d){
 		
 		var layerType = d.type;
 
@@ -1271,15 +1309,17 @@ chart.prototype.addLegend = function() {
 			.attr("transform", function(d) { return "translate(0," +  labelIndex.indexOf(d)* 20 + ")"; })
 			.attr("font-family", "sans-serif")
 			.attr("font-size", 10)
-			.attr("text-anchor", "end");
+			.attr("text-anchor", "end")
+			.on('click', d.type == 'line' ? toggleLine : function(){ return ;});
 			
 		if(d.type == 'line'){
 			legendElement.append("rect")
 				.attr("x", that.width - 12)
 				.attr('y', 5)
 				.attr("width", 12)
-				.attr("height", 3)
-				.attr("fill", d.color);
+				.attr("height", 12)
+				.attr("fill", d.color)
+				.attr("stroke", d.color);
 		} else if(d.type == 'point'){
 			legendElement.append("circle")
 				.attr("cx", that.width - 5)
@@ -1297,11 +1337,68 @@ chart.prototype.addLegend = function() {
 		legendElement.append("text")
 			.attr("x", that.width - 15)
 			.attr("y", 9.5)
-			.attr("dy", "0.15em")
+			.attr("dy", "0.35em")
+			.attr('font-size', 12)
 			.text(function(d) { return d; });
 			
 	})
 	
+	var filteredElements = [];
+		
+	function toggleLine(){
+		var selectedData = d3.select(this).data();
+		
+		//toggle elements in and out of filteredElements
+		if(filteredElements.length < 1) {
+			
+			filteredElements.push(selectedData[0]);
+			
+			d3.select(this)
+				.style('opacity', 0.5);
+				
+			d3.select(this).select('rect')
+				.attr('fill-opacity', 0);
+			
+		} else if ( !filteredElements.includes(selectedData[0]) ){
+			
+			filteredElements.push(selectedData[0]);
+			
+			d3.select(this)
+				.style('opacity', 0.5);
+				
+			d3.select(this).select('rect')
+				.attr('fill-opacity', 0);
+		} else if ( filteredElements.includes(selectedData[0]) ){
+			
+			filteredElements = filteredElements.filter(function(d){
+				return d != selectedData[0];
+			});
+			d3.select(this).style('opacity', 1);
+			
+			d3.select(this).select('rect')
+				.attr('fill-opacity', 1);
+		}
+		
+		console.log(filteredElements);
+		var filteredLayers = that.plotLayers.filter(function(d){
+			return filteredElements.indexOf(d.label) === -1;
+		});
+		
+		console.log(filteredLayers);
+		
+		that.chart
+			.selectAll( '.tag-line-' + that.element.id + '-'  + selectedData[0].replace(/\s+/g, '') )
+			.remove();
+			
+		that.chart
+			.selectAll( '.tag-point-' + that.element.id + '-'  + selectedData[0].replace(/\s+/g, '') )
+			.remove();
+		that.processScales(filteredLayers);
+		that.routeFilteredLayers(filteredLayers);
+		that.updateAxes();
+		that.addToolTip(filteredLayers);
+		
+	}
 }
 
 chart.prototype.updateLegend = function() {
@@ -1310,9 +1407,13 @@ chart.prototype.updateLegend = function() {
 	this.addLegend();
 }
 
-chart.prototype.addToolTip = function() {
+chart.prototype.addToolTip = function(lys) {
 	var that = this;
 	//add tooltip to body
+	d3.select(this.element).select('.toolTip').remove();
+	this.chart.select('.toolLine').remove();
+	this.svg.select('.toolTipBox').remove();
+	
 	var tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
 	var toolLine =  this.chart.append('line').attr('class', 'toolLine');
 	var format1d = d3.format('.0f');
@@ -1337,7 +1438,7 @@ chart.prototype.addToolTip = function() {
 			var mouse = d3.mouse(this);
 			
 			//line tool tip text
-			that.plotLayers.forEach(function(d,i) {	
+			lys.forEach(function(d,i) {	
 				console.log(d);
 				var key = d.label;
 				var color = d.color;

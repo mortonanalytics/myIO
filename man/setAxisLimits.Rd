@@ -4,8 +4,11 @@
 \alias{setAxisLimits}
 \title{setAxisLimits()}
 \usage{
-setAxisLimits(myIO, xlim = list(min = NULL, max = NULL),
-  ylim = list(min = NULL, max = NULL))
+setAxisLimits(
+  myIO,
+  xlim = list(min = NULL, max = NULL),
+  ylim = list(min = NULL, max = NULL)
+)
 }
 \arguments{
 \item{myIO}{an htmlwidget object created by the myIO() function}

@@ -4,8 +4,14 @@
 \alias{setAxisFormat}
 \title{setAxisFormat()}
 \usage{
-setAxisFormat(myIO, xAxis = NULL, yAxis = NULL, toolTip = NULL,
-  xLabel = NULL, yLabel = NULL)
+setAxisFormat(
+  myIO,
+  xAxis = NULL,
+  yAxis = NULL,
+  toolTip = NULL,
+  xLabel = NULL,
+  yLabel = NULL
+)
 }
 \arguments{
 \item{myIO}{an htmlwidget object created by the myIO() function}

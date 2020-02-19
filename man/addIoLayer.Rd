@@ -4,9 +4,15 @@
 \alias{addIoLayer}
 \title{addLayer()}
 \usage{
-addIoLayer(myIO, type, color = NULL, label, data = NULL, mapping,
-  options = list(barSize = "large", toolTipOptions = list(suppressY =
-  FALSE)))
+addIoLayer(
+  myIO,
+  type,
+  color = NULL,
+  label,
+  data = NULL,
+  mapping,
+  options = list(barSize = "large", toolTipOptions = list(suppressY = FALSE))
+)
 }
 \arguments{
 \item{myIO}{an htmlwidget object created by the myIO() function}

@@ -30,6 +30,7 @@ myIO <- function(data = NULL, width = NULL, height = NULL, elementId = NULL) {
                    xAxisLabel = NULL,
                    yAxisLabel = NULL,
                    suppressLegend = FALSE,
+                   colorScheme = list(c("steelblue", "orange"), c("none")),
                    toolTipOptions = list(suppressY = FALSE),
                    suppressAxis = list(xAxis = FALSE, yAxis = FALSE)
                    )
