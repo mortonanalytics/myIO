@@ -870,7 +870,7 @@ chart.prototype.addPoints = function(ly) {
 	  .transition()
 		.ease(d3.easeQuad)
 		.duration(1500)
-		.style('opacity', 0.7);
+		.style('opacity', 1);
 
 	if(this.options.dragPoints == true) { this.dragPoints(ly); }	
 }
@@ -1369,7 +1369,7 @@ chart.prototype.addLegend = function() {
 			.attr("font-family", "sans-serif")
 			.attr("font-size", 10)
 			.attr("text-anchor", "end")
-			.on('click', d.type == 'line' ? toggleLine : function(){ return ;});
+			.on('click', toggleLine);
 			
 		if(d.type == 'line'){
 			legendElement.append("rect")
@@ -1383,7 +1383,7 @@ chart.prototype.addLegend = function() {
 			legendElement.append("circle")
 				.attr("cx", that.width - 5)
 				.attr('cy', 6)
-				.attr('r', 3)
+				.attr('r', 5)
 				.attr("fill", d.color);
 		} else {
 			legendElement.append("rect")
@@ -1443,8 +1443,14 @@ chart.prototype.addLegend = function() {
 			return filteredElements.indexOf(d.label) === -1;
 		});
 		
-		console.log(filteredLayers);
+		var removedLayers = that.plotLayers
+			.filter(function(d){
+				return filteredElements.indexOf(d.label) > -1;
+			})
+			.map(function(d) { return d.label; });;
 		
+		console.log(removedLayers);
+		/*
 		that.chart
 			.selectAll( '.tag-line-' + that.element.id + '-'  + selectedData[0].replace(/\s+/g, '') )
 			.remove();
@@ -1452,8 +1458,10 @@ chart.prototype.addLegend = function() {
 		that.chart
 			.selectAll( '.tag-point-' + that.element.id + '-'  + selectedData[0].replace(/\s+/g, '') )
 			.remove();
+			*/
 		that.processScales(filteredLayers);
 		that.routeFilteredLayers(filteredLayers);
+		that.removeLayers(removedLayers);
 		that.updateAxes();
 		that.addToolTip(filteredLayers);
 		
