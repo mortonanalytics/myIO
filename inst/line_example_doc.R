@@ -8,7 +8,7 @@ df <- datasets::airquality %>%
 colors <- substr(viridis(5), 1, 7)
 
 myIO()%>%
-  addIoLayer(type = "line",
+  addIoLayer(type = "point",
              color = colors,
              label = "Month",
              data = df,

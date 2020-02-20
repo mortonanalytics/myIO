@@ -1384,13 +1384,15 @@ chart.prototype.addLegend = function() {
 				.attr("cx", that.width - 5)
 				.attr('cy', 6)
 				.attr('r', 5)
-				.attr("fill", d.color);
+				.attr("fill", d.color)
+				.attr("stroke", d.color);
 		} else {
 			legendElement.append("rect")
 				.attr("x", that.width - 12)
 				.attr("width", 12)
 				.attr("height", 12)
-				.attr("fill", d.color);
+				.attr("fill", d.color)
+				.attr("stroke", d.color);
 		}
 		
 		legendElement.append("text")
@@ -1417,6 +1419,9 @@ chart.prototype.addLegend = function() {
 				
 			d3.select(this).select('rect')
 				.attr('fill-opacity', 0);
+				
+			d3.select(this).select('circle')
+				.attr('fill-opacity', 0);	
 			
 		} else if ( !filteredElements.includes(selectedData[0]) ){
 			
@@ -1427,6 +1432,10 @@ chart.prototype.addLegend = function() {
 				
 			d3.select(this).select('rect')
 				.attr('fill-opacity', 0);
+				
+			d3.select(this).select('circle')
+				.attr('fill-opacity', 0);
+				
 		} else if ( filteredElements.includes(selectedData[0]) ){
 			
 			filteredElements = filteredElements.filter(function(d){
@@ -1435,6 +1444,9 @@ chart.prototype.addLegend = function() {
 			d3.select(this).style('opacity', 1);
 			
 			d3.select(this).select('rect')
+				.attr('fill-opacity', 1);
+			
+			d3.select(this).select('circle')
 				.attr('fill-opacity', 1);
 		}
 		
