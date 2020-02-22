@@ -5,6 +5,10 @@ library(viridis)
 df <- datasets::airquality %>%
   mutate(Month = paste0("M", Month))
 
+for(i in 1:ncol(df)){
+  df[is.na(df[,i]), i] <- mean(df[,i], na.rm = TRUE)
+}
+
 colors <- substr(viridis(5), 1, 7)
 
 myIO()%>%

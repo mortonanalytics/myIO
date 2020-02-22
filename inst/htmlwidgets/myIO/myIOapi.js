@@ -1568,7 +1568,7 @@ chart.prototype.addToolTip = function(lys) {
 	tooltip
 		.style('display', 'inline-block')
 		.style('opacity', 0.9)
-		.style("left", (d3.mouse(this)[0]) + 'px')
+		.style("left", (that.xScale(tipText[0].values[tipText[0].x_var]) + that.margin.left) + 'px')
 		.style("top", 0 + 'px')
 		.html(function() { 
 			if(tipText[0].toolTip_var){			
@@ -2018,7 +2018,7 @@ chart.prototype.addButtons = function(){
 	var buttonDiv = d3.select(this.element).append("div")
 		.attr("class", "buttonDiv")
 		.style('opacity', 0)
-		.style("left", '0px')
+		.style("left", ( that.width - (.15 * that.width) ) + 'px')
 		.style("top", '0px')
 		.on("mouseover", function() { 
 					 
@@ -2152,7 +2152,7 @@ function getSVGString( svgNode ) {
 			}
 		}
 		
-
+		console.log(extractedCSSText);
 		return extractedCSSText;
 
 		function contains(str,arr) {
