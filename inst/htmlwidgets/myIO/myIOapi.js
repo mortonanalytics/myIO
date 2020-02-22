@@ -31,6 +31,7 @@ chart.prototype.draw = function() {
 	this.svg.attr('width', this.width);
 	this.svg.attr('height', this.height);
 	
+	
 	//create g element
 	if(this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut"){
 		this.plot = this.svg.append('g')
@@ -49,6 +50,8 @@ chart.prototype.draw = function() {
 }
 
 chart.prototype.initialize = function(){
+	
+	this.addButtons();
 	
 	if(this.plotLayers[0].type != "gauge"& 
 	   this.plotLayers[0].type != "donut")this.setClipPath();
@@ -90,6 +93,8 @@ chart.prototype.initialize = function(){
 	   } else { 
 			this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
 			}
+			
+	
 }
 
 chart.prototype.setClipPath = function(){
@@ -1476,6 +1481,7 @@ chart.prototype.addLegend = function() {
 		that.removeLayers(removedLayers);
 		that.updateAxes();
 		that.addToolTip(filteredLayers);
+		that.addButtons();
 		
 	}
 }
@@ -1507,8 +1513,12 @@ chart.prototype.addToolTip = function(lys) {
 			.attr("width", that.width - (that.margin.left + that.margin.right))
 			.attr("height", that.height - ( that.margin.top + that.margin.bottom))
 			.attr("transform", "translate(" + that.margin.left + "," + that.margin.top + ")")
-			.on("mouseover", function() { tooltip.style("display", null); toolLine.style("stroke", null); })
-			.on("mouseout", function() { tooltip.style("display", "none"); toolLine.style("stroke", "none"); })
+			.on("mouseover", function() { 
+					tooltip.style("display", null); toolLine.style("stroke", null); 
+				})
+			.on("mouseout", function() { 
+				tooltip.style("display", "none"); toolLine.style("stroke", "none"); 
+				})
 			.on("mousemove", scalePointPosition);
 			
 	function scalePointPosition() {
@@ -1995,6 +2005,66 @@ chart.prototype.resize = function(){
 	}
 }
 
+chart.prototype.addButtons = function(){
+	var that = this;
+	
+	var data = [
+			{label: "\uf019 \uf201",     x: 0, y: this.height, callback: 'png'},
+            {label: "\uf019 \uf201", x: 15, y: this.height , callback: 'csv'}
+			];
+			
+	var tempData = ["\uf019 \uf080", "\uf019 \uf0ce"];
+
+	var buttonDiv = d3.select(this.element).append("div")
+		.attr("class", "buttonDiv")
+		.style('opacity', 0)
+		.style("left", '0px')
+		.style("top", '0px')
+		.on("mouseover", function() { 
+					 
+					d3.select(that.element).select(".buttonDiv")
+						.style('opacity', 1);
+				})
+			.on("mouseout", function() { 
+				
+				d3.select(that.element).select(".buttonDiv")
+					.style('opacity', 0);
+				})
+			.on("mousemove", function(){
+				d3.select(that.element).select(".buttonDiv")
+					.style('opacity', 1);
+			});
+	
+	
+	var buttons = buttonDiv.selectAll('.button')
+		.data(tempData)
+	  .enter()
+		.append('input')
+		.attr('class', 'button')		
+		//.attr("transform", function(d) { return "translate(" +  tempData.indexOf(d)* 20 + ", 0)"; })
+		.attr('value', function(d){ console.log(d); return d; })
+		.on('click', function(d){
+			console.log(d + " Clicked!");
+			if(d == "\uf019 \uf080"){
+				var svgString = getSVGString(that.svg.node());
+				svgString2Image( svgString, 2*that.width, 2*that.height, 'png', save ); // passes Blob and filesize String to the callback
+
+				function save( dataBlob, filesize ){
+					saveAs( dataBlob, that.element.id + '.png' ); // FileSaver.js function
+				}
+			} else if(d == "\uf019 \uf0ce")
+				var csvData =  [];
+			
+				that.plotLayers.forEach(function(d){
+						csvData.push(d.data);
+					});
+					
+				var finalCSVData = [].concat.apply([], csvData);
+				
+				exportToCsv(that.element.id + '_data.csv', finalCSVData)
+			});
+	
+}
 /////////////////////
 ///General Functions
 /////////////////////
@@ -2027,4 +2097,151 @@ function linearRegression(data,y_var,x_var){
 		return lr;
 }
 
+// Below are the functions that handle actual exporting:
+// getSVGString ( svgNode ) and svgString2Image( svgString, width, height, format, callback )
+function getSVGString( svgNode ) {
+	svgNode.setAttribute('xlink', 'http://www.w3.org/1999/xlink');
+	var cssStyleText = getCSSStyles( svgNode );
+	appendCSS( cssStyleText, svgNode );
 
+	var serializer = new XMLSerializer();
+	var svgString = serializer.serializeToString(svgNode);
+	svgString = svgString.replace(/(\w+)?:?xlink=/g, 'xmlns:xlink='); // Fix root xlink without namespace
+	svgString = svgString.replace(/NS\d+:href/g, 'xlink:href'); // Safari NS namespace fix
+
+	return svgString;
+
+	function getCSSStyles( parentElement ) {
+		var selectorTextArr = [];
+
+		// Add Parent element Id and Classes to the list
+		selectorTextArr.push( '#'+parentElement.id );
+		for (var c = 0; c < parentElement.classList.length; c++)
+				if ( !contains('.'+parentElement.classList[c], selectorTextArr) )
+					selectorTextArr.push( '.'+parentElement.classList[c] );
+
+		// Add Children element Ids and Classes to the list
+		var nodes = parentElement.getElementsByTagName("*");
+		for (var i = 0; i < nodes.length; i++) {
+			var id = nodes[i].id;
+			if ( !contains('#'+id, selectorTextArr) )
+				selectorTextArr.push( '#'+id );
+
+			var classes = nodes[i].classList;
+			for (var c = 0; c < classes.length; c++)
+				if ( !contains('.'+classes[c], selectorTextArr) )
+					selectorTextArr.push( '.'+classes[c] );
+		}
+
+		// Extract CSS Rules
+		var extractedCSSText = "";
+		for (var i = 0; i < document.styleSheets.length; i++) {
+			var s = document.styleSheets[i];
+			
+			try {
+			    if(!s.cssRules) continue;
+			} catch( e ) {
+		    		if(e.name !== 'SecurityError') throw e; // for Firefox
+		    		continue;
+		    	}
+
+			var cssRules = s.cssRules;
+			for (var r = 0; r < cssRules.length; r++) {
+				if ( contains( cssRules[r].selectorText, selectorTextArr ) )
+					extractedCSSText += cssRules[r].cssText;
+			}
+		}
+		
+
+		return extractedCSSText;
+
+		function contains(str,arr) {
+			return arr.indexOf( str ) === -1 ? false : true;
+		}
+
+	}
+
+	function appendCSS( cssText, element ) {
+		var styleElement = document.createElement("style");
+		styleElement.setAttribute("type","text/css"); 
+		styleElement.innerHTML = cssText;
+		var refNode = element.hasChildNodes() ? element.children[0] : null;
+		element.insertBefore( styleElement, refNode );
+	}
+}
+
+
+function svgString2Image( svgString, width, height, format, callback ) {
+	var format = format ? format : 'png';
+
+	var imgsrc = 'data:image/svg+xml;base64,'+ btoa( unescape( encodeURIComponent( svgString ) ) ); // Convert SVG string to data URL
+
+	var canvas = document.createElement("canvas");
+	var context = canvas.getContext("2d");
+
+	canvas.width = width;
+	canvas.height = height;
+
+	var image = new Image();
+	image.onload = function() {
+		context.clearRect ( 0, 0, width, height );
+		context.drawImage(image, 0, 0, width, height);
+
+		canvas.toBlob( function(blob) {
+			var filesize = Math.round( blob.length/1024 ) + ' KB';
+			if ( callback ) callback( blob, filesize );
+		});
+
+		
+	};
+
+	image.src = imgsrc;
+}
+
+function exportToCsv(filename, rows) {
+	
+	var jsonObject = JSON.stringify(rows);
+	
+    function ConvertToCSV(objArray) {
+            var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
+			
+			var names = Object.keys(array[0]).toString();
+						
+            var str = names + '\r\n';
+
+            for (var i = 0; i < array.length; i++) {
+                var line = '';
+                for (var index in array[i]) {
+                    if (line != '') line += ','
+
+                    line += array[i][index];
+                }
+
+                str += line + '\r\n';
+            }
+
+            return str;
+        }
+
+    var csvFile = ConvertToCSV(jsonObject);
+
+    var blob = new Blob([csvFile], { type: 'text/csv;charset=utf-8;' });
+    if (navigator.msSaveBlob) { // IE 10+
+        navigator.msSaveBlob(blob, filename);
+    } else {
+        var link = document.createElement("a");
+        if (link.download !== undefined) { // feature detection
+            // Browsers that support HTML5 download attribute
+            var url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    }
+}
+
+/*! @source http://purl.eligrey.com/github/FileSaver.js/blob/master/FileSaver.js */
+var saveAs=saveAs||function(e){"use strict";if("undefined"==typeof navigator||!/MSIE [1-9]\./.test(navigator.userAgent)){var t=e.document,n=function(){return e.URL||e.webkitURL||e},o=t.createElementNS("http://www.w3.org/1999/xhtml","a"),r="download"in o,i=function(e){var t=new MouseEvent("click");e.dispatchEvent(t)},a=/Version\/[\d\.]+.*Safari/.test(navigator.userAgent),c=e.webkitRequestFileSystem,d=e.requestFileSystem||c||e.mozRequestFileSystem,u=function(t){(e.setImmediate||e.setTimeout)(function(){throw t},0)},s="application/octet-stream",f=0,l=4e4,v=function(e){var t=function(){"string"==typeof e?n().revokeObjectURL(e):e.remove()};setTimeout(t,l)},p=function(e,t,n){t=[].concat(t);for(var o=t.length;o--;){var r=e["on"+t[o]];if("function"==typeof r)try{r.call(e,n||e)}catch(i){u(i)}}},w=function(e){return/^\s*(?:text\/\S*|application\/xml|\S*\/\S*\+xml)\s*;.*charset\s*=\s*utf-8/i.test(e.type)?new Blob(["\uFEFF",e],{type:e.type}):e},y=function(t,u,l){l||(t=w(t));var y,m,S,h=this,R=t.type,O=!1,g=function(){p(h,"writestart progress write writeend".split(" "))},b=function(){if(m&&a&&"undefined"!=typeof FileReader){var o=new FileReader;return o.onloadend=function(){var e=o.result;m.location.href="data:attachment/file"+e.slice(e.search(/[,;]/)),h.readyState=h.DONE,g()},o.readAsDataURL(t),void(h.readyState=h.INIT)}if((O||!y)&&(y=n().createObjectURL(t)),m)m.location.href=y;else{var r=e.open(y,"_blank");void 0===r&&a&&(e.location.href=y)}h.readyState=h.DONE,g(),v(y)},E=function(e){return function(){return h.readyState!==h.DONE?e.apply(this,arguments):void 0}},N={create:!0,exclusive:!1};return h.readyState=h.INIT,u||(u="download"),r?(y=n().createObjectURL(t),void setTimeout(function(){o.href=y,o.download=u,i(o),g(),v(y),h.readyState=h.DONE})):(e.chrome&&R&&R!==s&&(S=t.slice||t.webkitSlice,t=S.call(t,0,t.size,s),O=!0),c&&"download"!==u&&(u+=".download"),(R===s||c)&&(m=e),d?(f+=t.size,void d(e.TEMPORARY,f,E(function(e){e.root.getDirectory("saved",N,E(function(e){var n=function(){e.getFile(u,N,E(function(e){e.createWriter(E(function(n){n.onwriteend=function(t){m.location.href=e.toURL(),h.readyState=h.DONE,p(h,"writeend",t),v(e)},n.onerror=function(){var e=n.error;e.code!==e.ABORT_ERR&&b()},"writestart progress write abort".split(" ").forEach(function(e){n["on"+e]=h["on"+e]}),n.write(t),h.abort=function(){n.abort(),h.readyState=h.DONE},h.readyState=h.WRITING}),b)}),b)};e.getFile(u,{create:!1},E(function(e){e.remove(),n()}),E(function(e){e.code===e.NOT_FOUND_ERR?n():b()}))}),b)}),b)):void b())},m=y.prototype,S=function(e,t,n){return new y(e,t,n)};return"undefined"!=typeof navigator&&navigator.msSaveOrOpenBlob?function(e,t,n){return n||(e=w(e)),navigator.msSaveOrOpenBlob(e,t||"download")}:(m.abort=function(){var e=this;e.readyState=e.DONE,p(e,"abort")},m.readyState=m.INIT=0,m.WRITING=1,m.DONE=2,m.error=m.onwritestart=m.onprogress=m.onwrite=m.onabort=m.onerror=m.onwriteend=null,S)}}("undefined"!=typeof self&&self||"undefined"!=typeof window&&window||this.content);"undefined"!=typeof module&&module.exports?module.exports.saveAs=saveAs:"undefined"!=typeof define&&null!==define&&null!==define.amd&&define([],function(){return saveAs});
