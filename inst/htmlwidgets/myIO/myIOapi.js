@@ -261,9 +261,12 @@ chart.prototype.processScales = function(lys){
 		.range(this.options.flipAxis == true ? [this.height - (m.top + m.bottom), 0] : [0, this.width - (m.left + m.right)])
 		.domain( this.options.flipAxis == true ? this.y_banded : this.x_banded );
 	
-	this.colorScheme = d3.scaleOrdinal()
+	if(this.options.colorScheme){
+		this.colorScheme = d3.scaleOrdinal()
 		.range( this.options.colorScheme[0] )
 		.domain( this.options.colorScheme[1] );
+	}
+	
 	
 	//assess if there's any data
 	this.x_check = (x_check1 == 0 & x_check2 == 0) == 1;
@@ -2007,11 +2010,6 @@ chart.prototype.resize = function(){
 
 chart.prototype.addButtons = function(){
 	var that = this;
-	
-	var data = [
-			{label: "\uf019 \uf201",     x: 0, y: this.height, callback: 'png'},
-            {label: "\uf019 \uf201", x: 15, y: this.height , callback: 'csv'}
-			];
 			
 	var tempData = ["\uf019 \uf080", "\uf019 \uf0ce"];
 

@@ -11,7 +11,7 @@ for(i in 1:ncol(df)){
 
 colors <- substr(viridis(5), 1, 7)
 
-myIO()%>%
+myIO(elementId = "tester")%>%
   addIoLayer(type = "line",
              color = colors,
              label = "Month",
