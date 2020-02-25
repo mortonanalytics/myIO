@@ -788,7 +788,9 @@ chart.prototype.addLine = function(ly) {
 	var newLinePath = linePath.enter().append("path")
 		.attr("fill", "none")
 		.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
-		.style("stroke", ly.color)
+		.style('fill', function(d){
+				return that.options.colorScheme[2] == "on" ? that.colorScheme(d[ly.mapping.x_var]) : ly.color; 
+				})
 		.style("stroke-width", 3)
 		.style('opacity', 0)
 		.attr("class", 'tag-line-' + that.element.id + '-'  + key.replace(/\s+/g, '') );
@@ -799,7 +801,9 @@ chart.prototype.addLine = function(ly) {
 	  .ease(d3.easeQuad)
 	  .duration(1500)
 		.style('opacity', 1)
-		.style("stroke", ly.color)
+		.style('fill', function(d){
+				return that.options.colorScheme[2] == "on" ? that.colorScheme(d[ly.mapping.x_var]) : ly.color; 
+				})
 		.attr("d", valueLine);
 
 }
@@ -829,7 +833,9 @@ chart.prototype.addArea = function(ly) {
 	//ENTER new elements present in new data
 	var newLinePath = linePath.enter().append("path")
 		.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
-		.attr("fill", ly.color)
+		.style('fill', function(d){
+				return that.options.colorScheme[2] == "on" ? that.colorScheme(d[ly.mapping.x_var]) : ly.color; 
+				})
 		.style('opacity', 0)
 		.attr("class", 'tag-area-' + that.element.id + '-'  + key.replace(/\s+/g, '') );
 		
@@ -843,6 +849,9 @@ chart.prototype.addArea = function(ly) {
 	  .transition()
 		.ease(d3.easeQuad)
 		.duration(1500)
+		.style('fill', function(d){
+				return that.options.colorScheme[2] == "on" ? that.colorScheme(d[ly.mapping.x_var]) : ly.color; 
+				})
 		.style('opacity', 0.4);
 }
 
@@ -862,14 +871,18 @@ chart.prototype.addPoints = function(ly) {
 	  .transition()
 	  .ease(d3.easeQuad)
 	  .duration(1500)
-		.style('fill',  ly.color )
+		.style('fill', function(d){
+				return that.options.colorScheme[2] == "on" ? that.colorScheme(d[ly.mapping.x_var]) : ly.color; 
+				})
 		.attr('cx', function(e) { return that.xScale( e[ly.mapping.x_var] ); })
 		.attr('cy', function(e) { return that.yScale( e[ly.mapping.y_var] ); })
 	
 	points.enter()
 		.append('circle')
 		.attr('r', 3)
-		.style('fill',  ly.color )
+		.style('fill', function(d){
+				return that.options.colorScheme[2] == "on" ? that.colorScheme(d[ly.mapping.x_var]) : ly.color; 
+				})
 		.style('opacity', 0)
 		.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
 		.attr('cx', function(e) {return that.xScale( e[ly.mapping.x_var] ); })
