@@ -788,8 +788,8 @@ chart.prototype.addLine = function(ly) {
 	var newLinePath = linePath.enter().append("path")
 		.attr("fill", "none")
 		.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
-		.style('fill', function(d){
-				return that.options.colorScheme[2] == "on" ? that.colorScheme(d[ly.mapping.x_var]) : ly.color; 
+		.style('stroke', function(d){
+				return that.options.colorScheme[2] == "on" ? that.colorScheme(d[ly.mapping.group]) : ly.color; 
 				})
 		.style("stroke-width", 3)
 		.style('opacity', 0)
@@ -801,8 +801,8 @@ chart.prototype.addLine = function(ly) {
 	  .ease(d3.easeQuad)
 	  .duration(1500)
 		.style('opacity', 1)
-		.style('fill', function(d){
-				return that.options.colorScheme[2] == "on" ? that.colorScheme(d[ly.mapping.x_var]) : ly.color; 
+		.style('stroke', function(d){
+				return that.options.colorScheme[2] == "on" ? that.colorScheme(d[0][ly.mapping.group]) : ly.color; 
 				})
 		.attr("d", valueLine);
 
@@ -834,7 +834,7 @@ chart.prototype.addArea = function(ly) {
 	var newLinePath = linePath.enter().append("path")
 		.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
 		.style('fill', function(d){
-				return that.options.colorScheme[2] == "on" ? that.colorScheme(d[ly.mapping.x_var]) : ly.color; 
+				return that.options.colorScheme[2] == "on" ? that.colorScheme(d[0][ly.mapping.group]) : ly.color; 
 				})
 		.style('opacity', 0)
 		.attr("class", 'tag-area-' + that.element.id + '-'  + key.replace(/\s+/g, '') );
@@ -849,9 +849,6 @@ chart.prototype.addArea = function(ly) {
 	  .transition()
 		.ease(d3.easeQuad)
 		.duration(1500)
-		.style('fill', function(d){
-				return that.options.colorScheme[2] == "on" ? that.colorScheme(d[ly.mapping.x_var]) : ly.color; 
-				})
 		.style('opacity', 0.4);
 }
 
@@ -872,7 +869,7 @@ chart.prototype.addPoints = function(ly) {
 	  .ease(d3.easeQuad)
 	  .duration(1500)
 		.style('fill', function(d){
-				return that.options.colorScheme[2] == "on" ? that.colorScheme(d[ly.mapping.x_var]) : ly.color; 
+				return that.options.colorScheme[2] == "on" ? that.colorScheme(d[ly.mapping.group]) : ly.color; 
 				})
 		.attr('cx', function(e) { return that.xScale( e[ly.mapping.x_var] ); })
 		.attr('cy', function(e) { return that.yScale( e[ly.mapping.y_var] ); })
@@ -881,7 +878,7 @@ chart.prototype.addPoints = function(ly) {
 		.append('circle')
 		.attr('r', 3)
 		.style('fill', function(d){
-				return that.options.colorScheme[2] == "on" ? that.colorScheme(d[ly.mapping.x_var]) : ly.color; 
+				return that.options.colorScheme[2] == "on" ? that.colorScheme(d[ly.mapping.group]) : ly.color; 
 				})
 		.style('opacity', 0)
 		.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')

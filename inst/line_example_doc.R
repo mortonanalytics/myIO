@@ -24,17 +24,13 @@ myIO(elementId = "tester")%>%
 
 
 myIO() %>%
-  addIoLayer(type = "bar",
-             color = colors[1],
+  addIoLayer(type = "line",
+             color = colors,
              label = "Temp",
-             data = df %>%
-               filter(Day == 5),
+             data = df,
              mapping = list(
-               x_var = "Month",
-               y_var = "Temp"
+               x_var = "Day",
+               y_var = "Temp",
+               group = "Month"
              )) %>%
-  flipAxis() %>%
-  defineCategoricalAxis() %>%
-  setColorScheme(colorShceme = colors, setCategories = unique(df$Month)) %>%
-  setAxisFormat(xAxis = "text") %>%
-  suppressLegend()
+  setColorScheme(colorShceme = colors, setCategories = unique(df$Month))
