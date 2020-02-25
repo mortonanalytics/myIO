@@ -1935,6 +1935,7 @@ chart.prototype.update = function(x){
 	
 	//update all the other stuff
 	this.options = x.options;
+	console.log(this.options);
 	this.options.referenceLine = x.options.referenceLine;
 	if(this.plotLayers[0].type == "gauge")this.draw();
 	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut")this.processScales(this.plotLayers);
