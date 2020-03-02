@@ -168,13 +168,16 @@ chart.prototype.processScales = function(lys){
 	var x_bands = [];
 	var y_bands = [];
 	
+	
 	lys.forEach(function(d){
+		var currentY = that.newY ? that.newY : d.mapping.y_var;
+		
 		if(that.options.flipAxis == false){
 			var x_var = d.mapping.x_var; 
-			var y_var = d.mapping.y_var;
+			var y_var = currentY;
 		} else {
 			var y_var = d.mapping.x_var; 
-			var x_var = d.mapping.y_var;
+			var x_var = currentY;
 		}		
 
 		var x = d3.extent( d.data, function(e) { return +e[x_var]; });
@@ -279,8 +282,9 @@ chart.prototype.addAxes = function(){
 	//create and append axes
 	if(this.options.categoricalScale == true & this.options.flipAxis == true){
 		if(this.options.yAxisFormat){
+			
 			var xFormat = this.options.yAxisFormat == "yearMon" ? "s" : this.options.yAxisFormat ;
-			console.log(xFormat);
+			
 		} else {
 			var xFormat = "s";
 		}
@@ -371,10 +375,11 @@ chart.prototype.addAxes = function(){
 		}
 					
 		var yFormat = this.options.yAxisFormat ? this.options.yAxisFormat : "s";
+		var currentFormatY = this.newScaleY ? this.newScaleY : yFormat;
 		this.plot.append('g')
 			.attr("class", "y axis")
 			.call(d3.axisLeft(this.yScale)
-				.ticks(5, yFormat))
+				.ticks(5, currentFormatY))
 			.selectAll("text")
 				.attr("dx", "-.25em");
 	}	
@@ -498,11 +503,13 @@ chart.prototype.updateAxes = function() {
 		}
 		
 		var yFormat = this.options.yAxisFormat ? this.options.yAxisFormat : "s";
+		var currentFormatY = this.newScaleY ? this.newScaleY : yFormat;
+		
 		this.svg.selectAll('.y.axis')
 			.transition().ease(d3.easeQuad)
 			.duration(500)
 			.call(d3.axisLeft(this.yScale)
-				.ticks(5,yFormat))
+				.ticks(5,currentFormatY))
 			.selectAll("text")
 				.attr("dx", "-.25em");
 		
@@ -770,10 +777,13 @@ chart.prototype.addLine = function(ly) {
 	var data = ly.data;
 	var key = ly.label;
 	
+	var currentY = that.newY ? that.newY : ly.mapping.y_var;
+	console.log(currentY)
+	
 	var valueLine = d3.line()
 		.curve(d3.curveMonotoneX)
 		.x(function( d ) { return that.xScale( d[ly.mapping.x_var] ); })
-		.y(function( d ) { return that.yScale( d[ly.mapping.y_var] ); });
+		.y(function( d ) { return that.yScale( d[ currentY ] ); });
 	
 	var linePath = this.chart
 		.selectAll( '.tag-line-' + that.element.id + '-'  + key.replace(/\s+/g, '')) 
@@ -872,7 +882,7 @@ chart.prototype.addPoints = function(ly) {
 				return that.options.colorScheme[2] == "on" ? that.colorScheme(d[ly.mapping.group]) : ly.color; 
 				})
 		.attr('cx', function(e) { return that.xScale( e[ly.mapping.x_var] ); })
-		.attr('cy', function(e) { return that.yScale( e[ly.mapping.y_var] ); })
+		.attr('cy', function(e) { return that.yScale( e[ that.newY ? that.newY : ly.mapping.y_var ] ); })
 	
 	points.enter()
 		.append('circle')
@@ -883,7 +893,7 @@ chart.prototype.addPoints = function(ly) {
 		.style('opacity', 0)
 		.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
 		.attr('cx', function(e) {return that.xScale( e[ly.mapping.x_var] ); })
-		.attr('cy', function(e) { return that.yScale( e[ly.mapping.y_var] ); })
+		.attr('cy', function(e) { return that.yScale( e[ that.newY ? that.newY : ly.mapping.y_var ] ); })
 		.attr("class", 'tag-point-' + that.element.id + '-' + ly.label.replace(/\s+/g, '')  )
 	  .transition()
 		.ease(d3.easeQuad)
@@ -1516,8 +1526,12 @@ chart.prototype.addToolTip = function(lys) {
 	var toolLine =  this.chart.append('line').attr('class', 'toolLine');
 	var format1d = d3.format('.0f');
 	var exclusions = ["text", "yearMon"];
+	
 	var xFormat = !(exclusions.indexOf(that.options.xAxisFormat) in exclusions) ? d3.format(that.options.xAxisFormat ? that.options.xAxisFormat : "d") : function(x) {return x;} ;
+	
 	var yFormat = d3.format(this.options.yAxisFormat ? this.options.yAxisFormat : "d");
+	var currentFormatY = this.newScaleY ? d3.format(this.newScaleY) : yFormat;
+	
 	var toolTipFormat = !(exclusions.indexOf(that.options.xAxisFormat) in exclusions) ?  d3.format(that.options.toolTipFormat ? that.options.toolTipFormat : "d"): function(x) {return x;} ;
 	
 	var tipBox = this.svg.append("rect")
@@ -1541,13 +1555,17 @@ chart.prototype.addToolTip = function(lys) {
 			
 			//line tool tip text
 			lys.forEach(function(d,i) {	
+				
 				console.log(d);
 				var key = d.label;
 				var color = d.color;
 				var values = d.data;
 				
 				var x_var = d.mapping.x_var;
-				var y_var = d.mapping.y_var;
+				
+				var currentY = that.newY ? that.newY : d.mapping.y_var;
+				var y_var = currentY;
+				
 				var toolTip_var = d.mapping.toolTip;
 				
 				var xPos =  that.xScale.invert(mouse[0]);
@@ -1591,7 +1609,7 @@ chart.prototype.addToolTip = function(lys) {
 			  } else {
 				  var y_text = []
 				  tipText.forEach(function(d){
-					y_text.push('<font color="' + d.color + '">' + d.label + '</font>' + ": " + yFormat(d.values[d.y_var]) + '<br>' );
+					y_text.push('<font color="' + d.color + '">' + d.label + '</font>' + ": " + currentFormatY(d.values[d.y_var]) + '<br>' );
 				});
 				console.log(y_text.join(' '));
 				return tipText[0].x_var + ": " + xFormat(tipText[0].values[tipText[0].x_var]) + '<br>' + y_text.join(' ');
@@ -1935,7 +1953,7 @@ chart.prototype.update = function(x){
 	
 	//update all the other stuff
 	this.options = x.options;
-	console.log(this.options);
+	
 	this.options.referenceLine = x.options.referenceLine;
 	if(this.plotLayers[0].type == "gauge")this.draw();
 	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut")this.processScales(this.plotLayers);
@@ -2022,13 +2040,21 @@ chart.prototype.resize = function(){
 
 chart.prototype.addButtons = function(){
 	var that = this;
+	
+	if(this.options.toggleY){
+		var tempData = ["\uf019 \uf080", "\uf019 \uf0ce", "\uf0b2"];
+		var divLength = 0.2;
+	} else {
+		var tempData = ["\uf019 \uf080", "\uf019 \uf0ce"];
+		var divLength = 0.15;
+	}
 			
-	var tempData = ["\uf019 \uf080", "\uf019 \uf0ce"];
+	
 
 	var buttonDiv = d3.select(this.element).append("div")
 		.attr("class", "buttonDiv")
 		.style('opacity', 0)
-		.style("left", ( that.width - (.15 * that.width) ) + 'px')
+		.style("left", ( that.width - (divLength * that.width) ) + 'px')
 		.style("top", '0px')
 		.on("mouseover", function() { 
 					 
@@ -2062,7 +2088,7 @@ chart.prototype.addButtons = function(){
 				function save( dataBlob, filesize ){
 					saveAs( dataBlob, that.element.id + '.png' ); // FileSaver.js function
 				}
-			} else if(d == "\uf019 \uf0ce")
+			} else if(d == "\uf019 \uf0ce"){
 				var csvData =  [];
 			
 				that.plotLayers.forEach(function(d){
@@ -2072,8 +2098,40 @@ chart.prototype.addButtons = function(){
 				var finalCSVData = [].concat.apply([], csvData);
 				
 				exportToCsv(that.element.id + '_data.csv', finalCSVData)
+			} else if(d == "\uf0b2"){
+				
+				if(that.toggleY){
+				
+					if(that.toggleY[0] == that.options.toggleY[0]){
+						
+						that.toggleY = [that.plotLayers[0].mapping.y_var, '.0f'];
+						
+					} else if(that.toggleY[0] == that.plotLayers[0].mapping.y_var){
+						
+						that.toggleY = that.options.toggleY;
+						
+					}
+					
+				} else {
+					that.toggleY = that.options.toggleY;
+				}
+				
+				that.toggleVarY(that.toggleY);
+			}
+				
 			});
 	
+}
+
+chart.prototype.toggleVarY = function(newY){
+	
+	this.newY = newY[0];
+	this.newScaleY = newY[1]
+	this.processScales(this.plotLayers);
+	this.updateAxes();
+	this.routeLayers();
+	this.addToolTip(this.plotLayers);
+	this.updateLegend();
 }
 /////////////////////
 ///General Functions

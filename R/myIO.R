@@ -19,7 +19,7 @@ myIO <- function(data = NULL, width = NULL, height = NULL, elementId = NULL) {
     data = data,
     options = list(referenceLine = list(x = 0, y = 0),
                    flipAxis = FALSE,
-                   margin = list(top = 20,
+                   margin = list(top = 30,
                                  bottom = 60,
                                  left = 50,
                                  right = 50),

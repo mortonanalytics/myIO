@@ -3,7 +3,11 @@ library(myIO)
 library(viridis)
 
 df <- datasets::airquality %>%
-  mutate(Month = paste0("M", Month))
+  mutate(Month = paste0("M", Month)) %>%
+  group_by(Day) %>%
+  mutate(Percent = Temp/sum(Temp)) %>%
+  ungroup() %>%
+  filter(Day != 31)
 
 for(i in 1:ncol(df)){
   df[is.na(df[,i]), i] <- mean(df[,i], na.rm = TRUE)
@@ -20,7 +24,8 @@ myIO(elementId = "tester")%>%
                x_var = "Day",
                y_var = "Temp",
                group = "Month"
-             ))
+             )) %>%
+  setToggle(newY = "Percent", newScaleY = ".0%")
 
 
 myIO() %>%
