@@ -1979,7 +1979,7 @@ chart.prototype.update = function(x){
 	this.removeLayers(oldLayers);
 	}
 	
-	
+	this.addButtons()
 	
 	
 }
@@ -2039,6 +2039,8 @@ chart.prototype.resize = function(){
 			.selectAll( '.tag-regression-line-' + that.element.id)
 			.attr('d', function(d) {return valueLine(d.datapoints); });
 	}
+	
+	this.addButtons();
 }
 
 chart.prototype.addButtons = function(){
@@ -2052,7 +2054,7 @@ chart.prototype.addButtons = function(){
 		var divLength = 0.15;
 	}
 			
-	
+	d3.select('.buttonDiv').remove();
 
 	var buttonDiv = d3.select(this.element).append("div")
 		.attr("class", "buttonDiv")
