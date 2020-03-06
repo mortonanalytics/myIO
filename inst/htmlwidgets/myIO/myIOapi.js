@@ -1958,6 +1958,8 @@ chart.prototype.update = function(x){
 	//update all the other stuff
 	this.options = x.options;
 	
+	this.addButtons();
+	
 	this.options.referenceLine = x.options.referenceLine;
 	if(this.plotLayers[0].type == "gauge")this.draw();
 	if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut")this.processScales(this.plotLayers);
@@ -1980,7 +1982,7 @@ chart.prototype.update = function(x){
 	this.removeLayers(oldLayers);
 	}
 	
-	this.addButtons()
+	
 	
 	
 }
@@ -1990,6 +1992,8 @@ chart.prototype.resize = function(){
 	
 	this.width = this.element.offsetWidth;
 	this.height = this.element.offsetHeight;
+	
+	this.addButtons();
 	
 	this.svg
 		.attr('width', this.width)
@@ -2041,7 +2045,7 @@ chart.prototype.resize = function(){
 			.attr('d', function(d) {return valueLine(d.datapoints); });
 	}
 	
-	this.addButtons();
+	
 }
 
 chart.prototype.addButtons = function(){
@@ -2049,7 +2053,7 @@ chart.prototype.addButtons = function(){
 	
 	if(this.options.toggleY){
 		var tempData = ["\uf019 \uf080", "\uf019 \uf0ce", "\uf0b2"];
-		var divLength = 0.2;
+		var divLength = 0.18;
 	} else {
 		var tempData = ["\uf019 \uf080", "\uf019 \uf0ce"];
 		var divLength = 0.15;
