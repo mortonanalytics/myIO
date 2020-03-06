@@ -1383,7 +1383,7 @@ chart.prototype.addLegend = function() {
 	var legendBox = svg.append('rect')
 		.attr('class', 'legend-box')
 		.attr("x", this.width - 70)
-		.attr("y", 35)
+		//.attr("y", 35)
 		.attr('width', '150px')
 		.attr('height', (this.plotLayers.length * 20) + 'px')
 		.style('fill', 'white')
