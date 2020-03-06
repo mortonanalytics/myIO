@@ -1958,11 +1958,8 @@ chart.prototype.update = function(x){
 	this.options = x.options;
 	
 	this.addButtons();
-	
-	if(this.options.suppressLegend == true){
-		this.svg.select('.legend-box').remove();
-		this.svg.selectAll('.legendElement').remove();
-	}
+	this.svg.select('.legend-box').remove();
+	this.svg.selectAll('.legendElement').remove();
 	
 	this.options.referenceLine = x.options.referenceLine;
 	if(this.plotLayers[0].type == "gauge")this.draw();
