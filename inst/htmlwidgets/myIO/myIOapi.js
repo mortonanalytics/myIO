@@ -1396,7 +1396,7 @@ chart.prototype.addLegend = function() {
 			.enter()
 			.append('g')
 			.attr('class', 'legendElement')
-			.attr("transform", function(d) { return "translate(0," +  (15 + labelIndex.indexOf(d)* 20) + ")"; })
+			.attr("transform", function(d) { return "translate(0," +  (25 + labelIndex.indexOf(d)* 20) + ")"; })
 			.attr("font-family", "sans-serif")
 			.attr("font-size", 10)
 			.attr("text-anchor", "end")
