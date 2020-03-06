@@ -2114,7 +2114,7 @@ chart.prototype.addButtons = function(){
 				
 					if(that.toggleY[0] == that.options.toggleY[0]){
 						
-						that.toggleY = [that.plotLayers[0].mapping.y_var, '.0f'];
+						that.toggleY = [that.plotLayers[0].mapping.y_var, that.options.yAxisFormat];
 						
 					} else if(that.toggleY[0] == that.plotLayers[0].mapping.y_var){
 						

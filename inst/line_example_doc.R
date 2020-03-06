@@ -25,7 +25,8 @@ myIO(elementId = "tester")%>%
                y_var = "Temp",
                group = "Month"
              )) %>%
-  setToggle(newY = "Percent", newScaleY = ".0%")
+  setToggle(newY = "Percent", newScaleY = ".0%") %>%
+  setAxisFormat(yAxis = ".0f")
 
 
 myIO() %>%
