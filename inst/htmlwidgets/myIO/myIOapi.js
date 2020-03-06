@@ -2055,7 +2055,7 @@ chart.prototype.addButtons = function(){
 		var divLength = 0.15;
 	}
 			
-	d3.select('.buttonDiv').remove();
+	 d3.select(this.element).select('.buttonDiv').remove();
 
 	var buttonDiv = d3.select(this.element).append("div")
 		.attr("class", "buttonDiv")
