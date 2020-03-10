@@ -1592,7 +1592,7 @@ chart.prototype.addToolTip = function(lys) {
 				}
 				tipText.push(finalObject);
 			});
-		console.log(tipText);	
+			
 	toolLine
 		.style('stroke', 'darkgray')
 		.style('stroke-dasharray', '3,3')
@@ -1607,6 +1607,7 @@ chart.prototype.addToolTip = function(lys) {
 		.style("left", (that.xScale(tipText[0].values[tipText[0].x_var]) + that.margin.left) + 'px')
 		.style("top", 0 + 'px')
 		.html(function() { 
+			console.log(tipText[0]);
 			if(tipText[0].toolTip_var){			
 				return tipText[0].x_var + ": " + xFormat(tipText[0].values[tipText[0].x_var]) + '<br>' + 
 				tipText[0].y_var + ": " + yFormat(tipText[0].values[tipText[0].y_var]) + '<br>' +
