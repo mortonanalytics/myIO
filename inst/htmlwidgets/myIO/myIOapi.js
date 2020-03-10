@@ -1938,7 +1938,7 @@ chart.prototype.update = function(x){
 	//update dimensions
 	this.width = this.element.offsetWidth;
 	this.height = this.element.offsetHeight;
-	
+	this.options = x.options;
 	this.svg
 		.attr('width', this.width)
 		.attr('height', this.height);
