@@ -1375,6 +1375,9 @@ chart.prototype.addLegend = function() {
 	var that = this;
 	var m = this.margin;
 	
+	d3.select('.legend-box').remove();
+	d3.selectAll('.legendElement').remove();
+	
 	var svg = d3.select(this.element).select('svg');
 	
 	var labelIndex = this.plotLayers.map(function(d) { return d.label; });
@@ -1383,6 +1386,7 @@ chart.prototype.addLegend = function() {
 	var legendBox = svg.append('rect')
 		.attr('class', 'legend-box')
 		.attr("x", this.width - 70)
+		.attr("transform", function(d) { return "translate(0,40)";})
 		//.attr("y", 35)
 		.attr('width', '150px')
 		.attr('height', (this.plotLayers.length * 20) + 'px')
@@ -1397,7 +1401,7 @@ chart.prototype.addLegend = function() {
 			.enter()
 			.append('g')
 			.attr('class', 'legendElement')
-			.attr("transform", function(d) { return "translate(0," +  (35 + labelIndex.indexOf(d)* 20) + ")"; })
+			.attr("transform", function(d) { return "translate(0," +  (40 + labelIndex.indexOf(d)* 20) + ")"; })
 			.attr("font-family", "sans-serif")
 			.attr("font-size", 10)
 			.attr("text-anchor", "end")
@@ -1482,7 +1486,6 @@ chart.prototype.addLegend = function() {
 				.attr('fill-opacity', 1);
 		}
 		
-		console.log(filteredElements);
 		var filteredLayers = that.plotLayers.filter(function(d){
 			return filteredElements.indexOf(d.label) === -1;
 		});
@@ -1492,8 +1495,7 @@ chart.prototype.addLegend = function() {
 				return filteredElements.indexOf(d.label) > -1;
 			})
 			.map(function(d) { return d.label; });;
-		
-		console.log(removedLayers);
+	
 		/*
 		that.chart
 			.selectAll( '.tag-line-' + that.element.id + '-'  + selectedData[0].replace(/\s+/g, '') )
@@ -2064,9 +2066,10 @@ chart.prototype.addButtons = function(){
 
 	var buttonDiv = d3.select(this.element).append("div")
 		.attr("class", "buttonDiv")
-		.style('opacity', 0)
+		.style('opacity', 1)
 		.style("left", ( that.width - (divLength * that.width) ) + 'px')
-		.style("top", '0px')
+		.style("top", '0px');
+		/*
 		.on("mouseover", function() { 
 					 
 					d3.select(that.element).select(".buttonDiv")
@@ -2081,7 +2084,7 @@ chart.prototype.addButtons = function(){
 				d3.select(that.element).select(".buttonDiv")
 					.style('opacity', 1);
 			});
-	
+		*/
 	
 	var buttons = buttonDiv.selectAll('.button')
 		.data(tempData)
