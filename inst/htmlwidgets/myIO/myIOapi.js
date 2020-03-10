@@ -1523,11 +1523,11 @@ chart.prototype.updateLegend = function() {
 chart.prototype.addToolTip = function(lys) {
 	var that = this;
 	//add tooltip to body
-	/*
+
 	d3.select(this.element).select('.toolTip').remove();
 	this.chart.select('.toolLine').remove();
 	this.svg.select('.toolTipBox').remove();
-	*/
+	
 	var tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
 	var toolLine =  this.chart.append('line').attr('class', 'toolLine');
 	var format1d = d3.format('.0f');
@@ -1977,13 +1977,14 @@ chart.prototype.update = function(x){
 		   this.plotLayers[0].type != "gauge" &
 		   this.plotLayers[0].type != "donut"){
 			this.updateLegend();
+			
 		}		
 	} 
 	if(this.plotLayers[0].type != "hexbin" & 
 	   this.plotLayers[0].type != "treemap"&
        this.plotLayers[0].type != "gauge" &	  
 		this.plotLayers[0].type != "donut" &
-	   this.plotLayers[0].type != "bar" )this.updateToolTip();
+	   this.plotLayers[0].type != "bar" )this.addToolTip(this.plotLayers);
 	this.removeLayers(oldLayers);
 	}
 	
