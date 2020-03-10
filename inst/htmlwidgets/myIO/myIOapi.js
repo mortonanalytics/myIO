@@ -1523,10 +1523,11 @@ chart.prototype.updateLegend = function() {
 chart.prototype.addToolTip = function(lys) {
 	var that = this;
 	//add tooltip to body
+	/*
 	d3.select(this.element).select('.toolTip').remove();
 	this.chart.select('.toolLine').remove();
 	this.svg.select('.toolTipBox').remove();
-	
+	*/
 	var tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
 	var toolLine =  this.chart.append('line').attr('class', 'toolLine');
 	var format1d = d3.format('.0f');
