@@ -1592,7 +1592,7 @@ chart.prototype.addToolTip = function(lys) {
 				}
 				tipText.push(finalObject);
 			});
-			
+		console.log(tipText);	
 	toolLine
 		.style('stroke', 'darkgray')
 		.style('stroke-dasharray', '3,3')
