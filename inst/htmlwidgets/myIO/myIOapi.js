@@ -2209,7 +2209,7 @@ myIOchart.prototype.toggleVarY = function(newY){
 	this.updateAxes();
 	this.routeLayers();
 	this.addToolTip(this.plotLayers);
-	this.updateLegend();
+	if(this.options.suppressLegend == false) this.updateLegend();
 }
 /////////////////////
 ///General Functions
