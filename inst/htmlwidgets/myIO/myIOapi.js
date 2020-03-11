@@ -1437,8 +1437,8 @@ myIOchart.prototype.addLegend = function() {
 	var that = this;
 	var m = this.margin;
 	
-	d3.select('.legend-box').remove();
-	d3.selectAll('.legendElement').remove();
+	d3.select(this.element).select('.legend-box').remove();
+	d3.select(this.element).selectAll('.legendElement').remove();
 	
 	var svg = d3.select(this.element).select('svg');
 	
