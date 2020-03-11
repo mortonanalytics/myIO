@@ -5,7 +5,7 @@
 ////General Chart
 ////////////////////////////////////////////////////////////
 
-var chart = function(opts) {
+var myIOchart = function(opts) {
 	
 	//pass chart elements
 	this.element = opts.element;
@@ -18,7 +18,7 @@ var chart = function(opts) {
 		
 }
 
-chart.prototype.draw = function() {
+myIOchart.prototype.draw = function() {
 	
 	//define dimensions
 	this.width = this.element.offsetWidth;
@@ -49,12 +49,13 @@ chart.prototype.draw = function() {
 	
 }
 
-chart.prototype.initialize = function(){
+myIOchart.prototype.initialize = function(){
 	
 	this.addButtons();
 	
 	if(this.plotLayers[0].type != "gauge"& 
 	   this.plotLayers[0].type != "donut")this.setClipPath();
+	   
 	//this.setZoom();
 	///SCALES
 	if(this.plotLayers[0].type != "treemap" & 
@@ -97,9 +98,9 @@ chart.prototype.initialize = function(){
 	
 }
 
-chart.prototype.setClipPath = function(){
+myIOchart.prototype.setClipPath = function(){
 	
-	this.clipPath = this.plot.append('defs').append('svg:clipPath')
+	this.clipPath = this.chart.append('defs').append('svg:clipPath')
 		.attr('id', this.element.id + 'clip')
 	  .append('svg:rect')
 		.attr('x', 0)
@@ -110,7 +111,7 @@ chart.prototype.setClipPath = function(){
 	this.chart.attr('clip-path', 'url(#' + this.element.id + 'clip'+ ')')
 }
 
-chart.prototype.setZoom = function() {
+myIOchart.prototype.setZoom = function() {
 	var that = this;
 	var m = this.margin;
 	
@@ -159,7 +160,7 @@ chart.prototype.setZoom = function() {
 	
 }
 
-chart.prototype.processScales = function(lys){
+myIOchart.prototype.processScales = function(lys){
 	var that = this;
 	var m = this.margin;
 	
@@ -275,7 +276,7 @@ chart.prototype.processScales = function(lys){
 	this.x_check = (x_check1 == 0 & x_check2 == 0) == 1;
 }
 
-chart.prototype.addAxes = function(){
+myIOchart.prototype.addAxes = function(){
 	var that = this;
 	var m = this.margin;
 		
@@ -409,10 +410,12 @@ chart.prototype.addAxes = function(){
 	// }
 }
 
-chart.prototype.updateAxes = function() {
+myIOchart.prototype.updateAxes = function() {
 	
 	var that = this;
 	var m = this.margin;
+	
+	console.log(this.width)
 		
 	//update axes
 	if(this.options.categoricalScale == true & this.options.flipAxis == true){
@@ -424,16 +427,32 @@ chart.prototype.updateAxes = function() {
 		}
 		var finalFormat = d3.format(xFormat);
 		
-		this.svg.selectAll('.x.axis')
-			.transition().ease(d3.easeQuad)
-			.duration(500)
-			.attr("transform", "translate(0," + (that.height-(m.top+m.bottom)) + ")")
-			.call(d3.axisBottom(this.xScale)
-					.ticks(null,finalFormat))
-					//.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
-				.selectAll("text")
-					.attr('dy', '.35em')
-					.style('text-anchor', 'center');
+		if(this.width < 600){
+			this.svg.selectAll('.x.axis')
+				.transition().ease(d3.easeQuad)
+				.duration(500)
+				.attr("transform", "translate(0," + (that.height-(m.top+m.bottom)) + ")")
+				.call(d3.axisBottom(this.xScale)
+						.ticks(null,finalFormat))
+						//.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
+					.selectAll("text")
+						.attr('dy', '.35em')
+						.style('text-anchor', 'end')
+						.attr("transform", "rotate(-65)");
+		} else {
+			this.svg.selectAll('.x.axis')
+				.transition().ease(d3.easeQuad)
+				.duration(500)
+				.attr("transform", "translate(0," + (that.height-(m.top+m.bottom)) + ")")
+				.call(d3.axisBottom(this.xScale)
+						.ticks(null,finalFormat))
+						//.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
+					.selectAll("text")
+						.attr('dy', '.35em')
+						.attr("transform", "rotate(0)")
+						.style('text-anchor', 'center');			
+		}			
+
 		
 		if(this.options.xAxisFormat == "yearMon"){
 			
@@ -457,13 +476,31 @@ chart.prototype.updateAxes = function() {
 					.attr("dx", "-.25em");
 	} else if(this.options.categoricalScale == true & this.options.flipAxis == false){
 		
-		this.svg.selectAll('.x.axis')
+		if(this.width < 600){
+			
+			this.svg.selectAll('.x.axis')
 			.attr("transform", "translate(0," + (that.height-(m.top+m.bottom)) + ")")
 			.transition().ease(d3.easeQuad)
 			.duration(500)
 			.call(d3.axisBottom(this.bandedScale))
 				.selectAll("text")
-					.attr("dx", "-.25em");
+					.attr("dx", "-.25em")
+					.style('text-anchor', 'end')
+					.attr("transform", "rotate(-65)");
+		} else {
+			this.svg.selectAll('.x.axis')
+				.attr("transform", "translate(0," + (that.height-(m.top+m.bottom)) + ")")
+				.transition().ease(d3.easeQuad)
+				.duration(500)
+				.call(d3.axisBottom(this.bandedScale))
+					.selectAll("text")
+						.attr("dx", "-.25em")
+						.style('text-anchor', 'center')
+						.attr("transform", "rotate(0)");
+		}
+		
+					
+		
 					
 		var yFormat = this.options.yAxisFormat ? this.options.yAxisFormat : "s";
 		this.svg.selectAll('.y.axis')
@@ -481,16 +518,34 @@ chart.prototype.updateAxes = function() {
 		} else {
 			var xFormat = "s";
 		}
-		this.svg.selectAll('.x.axis')
-			.transition().ease(d3.easeQuad)
-			.duration(500)
-			.attr("transform", "translate(0," + (that.height-(m.top+m.bottom)) + ")")
-			.call(d3.axisBottom(this.xScale)
-					.ticks(null,xFormat)
-					.tickFormat(function(e){ if(Math.floor(e) != e){return;} return e;}))
-				.selectAll("text")
-					.attr('dy', '.35em')
-					.style('text-anchor', 'center');
+		
+		if(this.width < 600){
+			
+			this.svg.selectAll('.x.axis')
+					.transition().ease(d3.easeQuad)
+					.duration(500)
+					.attr("transform", "translate(0," + (that.height-(m.top+m.bottom)) + ")")
+					.call(d3.axisBottom(this.xScale)
+							.ticks(null,xFormat)
+							.tickFormat(function(e){ if(Math.floor(e) != e){return;} return e;}))
+						.selectAll("text")
+							.attr('dy', '.35em')
+						.style('text-anchor', 'end')
+						.attr("transform", "rotate(-65)");
+		} else{
+			this.svg.selectAll('.x.axis')
+				.transition().ease(d3.easeQuad)
+				.duration(500)
+				.attr("transform", "translate(0," + (that.height-(m.top+m.bottom)) + ")")
+				.call(d3.axisBottom(this.xScale)
+						.ticks(null,xFormat)
+						.tickFormat(function(e){ if(Math.floor(e) != e){return;} return e;}))
+					.selectAll("text")
+						.attr('dy', '.35em')
+						.style('text-anchor', 'center')
+						.attr("transform", "rotate(0)");
+			}
+		
 					
 		if(this.options.xAxisFormat == "yearMon"){
 			
@@ -503,7 +558,11 @@ chart.prototype.updateAxes = function() {
 						return e.slice(0,4) + "-" + e.slice(4,6) 
 					}
 					});
+					
+		
 		}
+		
+		
 		
 		var yFormat = this.options.yAxisFormat ? this.options.yAxisFormat : "s";
 		var currentFormatY = this.newScaleY ? this.newScaleY : yFormat;
@@ -517,9 +576,11 @@ chart.prototype.updateAxes = function() {
 				.attr("dx", "-.25em");
 		
 	}
+	
+	
 }
 
-chart.prototype.routeLayers = function() {
+myIOchart.prototype.routeLayers = function() {
 	var that = this;
 	
 	this.layerIndex = this.plotLayers.map(function(d) {return d.label; });
@@ -555,7 +616,7 @@ chart.prototype.routeLayers = function() {
 	
 }
 
-chart.prototype.routeFilteredLayers = function(lys) {
+myIOchart.prototype.routeFilteredLayers = function(lys) {
 	var that = this;
 	
 	this.layerIndex = this.plotLayers.map(function(d) {return d.label; });
@@ -591,7 +652,7 @@ chart.prototype.routeFilteredLayers = function(lys) {
 	
 }
 
-chart.prototype.removeLayers = function(lys){
+myIOchart.prototype.removeLayers = function(lys){
 	//removes garbage if the layer no longer exists and isn't otherwise updated
 	var that = this;
 	
@@ -607,7 +668,7 @@ chart.prototype.removeLayers = function(lys){
 	})
 }
 
-chart.prototype.addBars = function(ly){
+myIOchart.prototype.addBars = function(ly){
 	var that = this;
 	var m = this.margin;
 	var data = ly.data;
@@ -773,7 +834,7 @@ chart.prototype.addBars = function(ly){
 	
 }
 
-chart.prototype.addLine = function(ly) {
+myIOchart.prototype.addLine = function(ly) {
 	
 	var that = this;
 	
@@ -821,7 +882,7 @@ chart.prototype.addLine = function(ly) {
 
 }
 
-chart.prototype.addArea = function(ly) {
+myIOchart.prototype.addArea = function(ly) {
 
 	var that = this;
 	
@@ -865,7 +926,7 @@ chart.prototype.addArea = function(ly) {
 		.style('opacity', 0.4);
 }
 
-chart.prototype.addPoints = function(ly) {
+myIOchart.prototype.addPoints = function(ly) {
 	
 	var that = this;
 
@@ -906,7 +967,7 @@ chart.prototype.addPoints = function(ly) {
 	if(this.options.dragPoints == true) { this.dragPoints(ly); }	
 }
 
-chart.prototype.dragPoints = function(ly){
+myIOchart.prototype.dragPoints = function(ly){
 	var that = this;
 	
 	var drag = d3.drag()
@@ -970,7 +1031,7 @@ chart.prototype.dragPoints = function(ly){
 	that.updateRegression(points);
 }
 
-chart.prototype.updateRegression = function(points){
+myIOchart.prototype.updateRegression = function(points){
 	
 	var that = this;
 	//define line function
@@ -1020,7 +1081,7 @@ chart.prototype.updateRegression = function(points){
 	
 }
 
-chart.prototype.addHexPoints = function(ly) {
+myIOchart.prototype.addHexPoints = function(ly) {
 	
 	var that = this;
 	console.log(ly);
@@ -1052,7 +1113,7 @@ chart.prototype.addHexPoints = function(ly) {
 		.style('opacity', 0);
 }
 
-chart.prototype.addHexBin = function(ly){
+myIOchart.prototype.addHexBin = function(ly){
 	var that = this;
 	
 	//create points	
@@ -1101,7 +1162,7 @@ chart.prototype.addHexBin = function(ly){
 		.attr('fill', function(d) { return color(d.length); });
 }
 
-chart.prototype.addTreemap = function(ly) {
+myIOchart.prototype.addTreemap = function(ly) {
 	
 	var that = this;
 	var m = this.margin;
@@ -1225,7 +1286,7 @@ chart.prototype.addTreemap = function(ly) {
 	
 }
 
-chart.prototype.addCrosshairsY = function(ly) {
+myIOchart.prototype.addCrosshairsY = function(ly) {
 	var that = this;
 	
 	var crosshairsY = this.chart
@@ -1257,7 +1318,7 @@ chart.prototype.addCrosshairsY = function(ly) {
 		.attr("class", 'tag-crosshairY-' + that.element.id + '-' + ly.label.replace(/\s+/g, '')  );
 }
 
-chart.prototype.addCrosshairsX = function(ly) {
+myIOchart.prototype.addCrosshairsX = function(ly) {
 	var that = this;
 	
 	var crosshairsX = this.chart
@@ -1289,7 +1350,7 @@ chart.prototype.addCrosshairsX = function(ly) {
 		.attr("class", 'tag-crosshairX-' + that.element.id + '-' + ly.label.replace(/\s+/g, '')  );
 }
 
-chart.prototype.addReferenceLines = function() {
+myIOchart.prototype.addReferenceLines = function() {
 	
 	var that = this;
 	var m =  this.margin;
@@ -1370,7 +1431,7 @@ chart.prototype.addReferenceLines = function() {
 		
 }
 
-chart.prototype.addLegend = function() {
+myIOchart.prototype.addLegend = function() {
 	
 	var that = this;
 	var m = this.margin;
@@ -1401,7 +1462,7 @@ chart.prototype.addLegend = function() {
 			.enter()
 			.append('g')
 			.attr('class', 'legendElement')
-			.attr("transform", function(d) { return "translate(0," +  (40 + labelIndex.indexOf(d)* 20) + ")"; })
+			.attr("transform", function(d) { return "translate(0," +  (75 + labelIndex.indexOf(d)* 20) + ")"; })
 			.attr("font-family", "sans-serif")
 			.attr("font-size", 10)
 			.attr("text-anchor", "end")
@@ -1515,12 +1576,12 @@ chart.prototype.addLegend = function() {
 	}
 }
 
-chart.prototype.updateLegend = function() {
+myIOchart.prototype.updateLegend = function() {
 	
 	this.addLegend();
 }
 
-chart.prototype.addToolTip = function(lys) {
+myIOchart.prototype.addToolTip = function(lys) {
 	var that = this;
 	//add tooltip to body
 
@@ -1628,7 +1689,7 @@ chart.prototype.addToolTip = function(lys) {
 	}
 }
 
-chart.prototype.updateToolTip = function() {
+myIOchart.prototype.updateToolTip = function() {
 	
 	var that = this;
 	
@@ -1638,7 +1699,7 @@ chart.prototype.updateToolTip = function() {
 			.attr("transform", "translate(" + that.margin.left + "," + that.margin.top + ")");
 }
 
-chart.prototype.makeDonut = function(ly) {
+myIOchart.prototype.makeDonut = function(ly) {
 	var that = this;
 	var m = this.margin;
 
@@ -1844,7 +1905,7 @@ chart.prototype.makeDonut = function(ly) {
 	}
 }
 
-chart.prototype.makeGauge = function(ly){
+myIOchart.prototype.makeGauge = function(ly){
 	var that = this;
 	var m = this.margin;
 	
@@ -1922,7 +1983,7 @@ chart.prototype.makeGauge = function(ly){
 	
 }
 
-chart.prototype.update = function(x){
+myIOchart.prototype.update = function(x){
 	var that = this;
 	var m = this.margin;
 	
@@ -1993,7 +2054,7 @@ chart.prototype.update = function(x){
 	
 }
 
-chart.prototype.resize = function(){
+myIOchart.prototype.resize = function(){
 	var that = this;
 	
 	this.width = this.element.offsetWidth;
@@ -2054,12 +2115,12 @@ chart.prototype.resize = function(){
 	
 }
 
-chart.prototype.addButtons = function(){
+myIOchart.prototype.addButtons = function(){
 	var that = this;
 	
 	if(this.options.toggleY){
 		var tempData = ["\uf019 \uf080", "\uf019 \uf0ce", "\uf0b2"];
-		var divLength = 0.18;
+		var divLength = 0.25;
 	} else {
 		var tempData = ["\uf019 \uf080", "\uf019 \uf0ce"];
 		var divLength = 0.15;
@@ -2071,7 +2132,7 @@ chart.prototype.addButtons = function(){
 		.attr("class", "buttonDiv")
 		.style('opacity', 1)
 		.style("left", ( that.width - (divLength * that.width) ) + 'px')
-		.style("top", '0px');
+		.style("top", '35px');
 		/*
 		.on("mouseover", function() { 
 					 
@@ -2140,7 +2201,7 @@ chart.prototype.addButtons = function(){
 	
 }
 
-chart.prototype.toggleVarY = function(newY){
+myIOchart.prototype.toggleVarY = function(newY){
 	
 	this.newY = newY[0];
 	this.newScaleY = newY[1]

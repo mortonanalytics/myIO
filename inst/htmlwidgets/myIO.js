@@ -17,7 +17,7 @@ HTMLWidgets.widget({
 				this.chart.update(x);
 			} else {
 				console.log(x);
-				this.chart = new chart({
+				this.chart = new myIOchart({
 					element: document.getElementById(el.id),
 					plotLayers: x.layers,
 					options: x.options
