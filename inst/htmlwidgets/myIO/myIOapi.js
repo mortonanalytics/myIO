@@ -2067,7 +2067,7 @@ myIOchart.prototype.resize = function(){
 		.attr('width', this.width)
 		.attr('height', this.height);
 	
-	if(this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "bar"& this.plotLayers[0].type != "donut"){
+	if(this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut"){
 		this.plot 
 			.attr('transform','translate('+this.margin.left+','+this.margin.top+')');
 		this.clipPath
