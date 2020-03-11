@@ -54,6 +54,7 @@ myIOchart.prototype.initialize = function(){
 	this.addButtons();
 	
 	if(this.plotLayers[0].type != "gauge"& 
+	this.plotLayers[0].type != "bar"& 
 	   this.plotLayers[0].type != "donut")this.setClipPath();
 	   
 	//this.setZoom();
@@ -774,7 +775,7 @@ myIOchart.prototype.addBars = function(ly){
 			.attr('y', function(d) { return barSize == 1? y_scale(d[ly.mapping.x_var]) : y_scale(d[ly.mapping.x_var]) + bandwidth/4 ;})
 			.attr('x', function(d) { return x_scale(Math.min(0, d[ly.mapping.y_var])); })
 			.attr('height', (barSize * bandwidth)-2)
-			.attr('width', function(d) { return Math.abs(that.xScale(d[ly.mapping.y_var]) - that.xScale(0)); });
+			.attr('width', function(d) { return Math.abs(x_scale(d[ly.mapping.y_var]) - x_scale(0)); });
 	}	
 	
 	function hoverTip(){
@@ -2066,7 +2067,7 @@ myIOchart.prototype.resize = function(){
 		.attr('width', this.width)
 		.attr('height', this.height);
 	
-	if(this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut"){
+	if(this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "bar"& this.plotLayers[0].type != "donut"){
 		this.plot 
 			.attr('transform','translate('+this.margin.left+','+this.margin.top+')');
 		this.clipPath
@@ -2106,7 +2107,6 @@ myIOchart.prototype.resize = function(){
 			.x(function(d){ return that.xScale(d.x_var); })
 			.y(function(d){ return that.yScale(d.y_est); });
 		
-		console.log(this.chart.selectAll( '.tag-regression-line-' + that.element.id));
 		this.chart
 			.selectAll( '.tag-regression-line-' + that.element.id)
 			.attr('d', function(d) {return valueLine(d.datapoints); });
