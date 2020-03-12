@@ -2158,7 +2158,6 @@ myIOchart.prototype.addButtons = function(){
 		//.attr("transform", function(d) { return "translate(" +  tempData.indexOf(d)* 20 + ", 0)"; })
 		.attr('value', function(d){ console.log(d); return d; })
 		.on('click', function(d){
-			console.log(d + " Clicked!");
 			if(d == "\uf019 \uf080"){
 				var svgString = getSVGString(that.svg.node());
 				svgString2Image( svgString, 2*that.width, 2*that.height, 'png', save ); // passes Blob and filesize String to the callback
