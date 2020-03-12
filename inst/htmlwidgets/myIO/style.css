@@ -90,4 +90,5 @@
   width: 40px;
   height: 25px;
   font-family: FontAwesome;
+  text-rendering: optimizeLegibility;
 }
