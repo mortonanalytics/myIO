@@ -12,7 +12,7 @@
 #' @return the same myIO object with options set for the tooltip formats
 #'
 #' @export
-setAxisFormat <- function(myIO, xAxis = NULL, yAxis = NULL, toolTip = NULL, xLabel = NULL, yLabel = NULL){
+setAxisFormat <- function(myIO, xAxis = "s", yAxis = "s", toolTip = "s", xLabel = NULL, yLabel = NULL){
 
   myIO$x$options$xAxisFormat <- xAxis
   myIO$x$options$yAxisFormat <- yAxis

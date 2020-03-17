@@ -18,7 +18,7 @@ myIO <- function(data = NULL, width = NULL, height = NULL, elementId = NULL) {
   x = list(
     data = data,
     options = list(referenceLine = list(x = 0, y = 0),
-                   flipAxis = FALSE,
+                   transition = list(speed = 200),
                    margin = list(top = 30,
                                  bottom = 60,
                                  left = 50,
@@ -29,12 +29,16 @@ myIO <- function(data = NULL, width = NULL, height = NULL, elementId = NULL) {
                                 max = NULL),
                    xAxisLabel = NULL,
                    yAxisLabel = NULL,
+                   xAxisFormat = "s",
+                   yAxisFormat = "s",
+                   categoricalScale = list(xAxis = FALSE, yAxis = FALSE),
                    suppressLegend = FALSE,
                    colorScheme = list(c("steelblue", "orange"), c("none"), c("off")),
                    toolTipOptions = list(suppressY = FALSE),
                    suppressAxis = list(xAxis = FALSE, yAxis = FALSE)
                    )
   )
+
 
   # create widget
   htmlwidgets::createWidget(

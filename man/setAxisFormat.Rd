@@ -6,9 +6,9 @@
 \usage{
 setAxisFormat(
   myIO,
-  xAxis = NULL,
-  yAxis = NULL,
-  toolTip = NULL,
+  xAxis = "s",
+  yAxis = "s",
+  toolTip = "s",
   xLabel = NULL,
   yLabel = NULL
 )

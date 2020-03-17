@@ -4,12 +4,14 @@
 \alias{defineCategoricalAxis}
 \title{defineCategoricalAxis()}
 \usage{
-defineCategoricalAxis(myIO, categoricalScale = TRUE)
+defineCategoricalAxis(myIO, xAxis = TRUE, yAxis = FALSE)
 }
 \arguments{
 \item{myIO}{an htmlwidget object created by the myIO() function}
 
-\item{categoricalScale}{a logical argument (TRUE) for defining the x as categrocial}
+\item{xAxis}{a logical argument (TRUE) for defining the x axis as categrocial}
+
+\item{yAxis}{a logical argument (TRUE) for defining the y axis as categrocial}
 }
 \value{
 the same myIO object

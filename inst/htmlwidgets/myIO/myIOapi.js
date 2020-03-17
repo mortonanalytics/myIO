@@ -276,10 +276,112 @@ class myIOchart {
 	}
 	
 	addAxes(){
+		var that = this;
+		var m = this.margin;
 		
+		switch (this.options.xAxisFormat){
+			case "yearMon":
+				var xFormat = d3.format("s");
+				break;
+			
+			default:
+				var xFormat = d3.format(this.options.xAxisFormat);
+			
+		}
+		
+		var yFormat = d3.format(this.options.yAxisFormat);
+		
+		switch (this.options.categoricalScale.xAxis){
+			case true:
+			this.plot.append('g')
+				.attr("class", "x axis")
+				.attr("transform", "translate(0," + (that.height-(m.top+m.bottom)) + ")")
+				.call(d3.axisBottom(this.xScale))
+					.selectAll("text")
+					.attr("dx", "-.25em")
+					.attr('text-anchor', this.width < 550 ? 'end' : 'center')
+					.attr("transform", this.width < 550 ? "rotate(-65)" : "rotate(-0)");
+			break;
+			
+			case false:
+				this.plot.append('g')
+					.attr("class", "x axis")
+					.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
+					.call(d3.axisBottom(this.xScale)
+							.ticks(null,xFormat)
+							.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
+						.selectAll("text")
+							.attr('dy', '.35em')
+							.attr('text-anchor', this.width < 550 ? 'end' : 'center')
+							.attr("transform", this.width < 550 ? "rotate(-65)" : "rotate(-0)");
+			
+		}
+		
+		var currentFormatY = this.newScaleY ? this.newScaleY : yFormat;
+		
+		this.plot.append('g')
+			.attr("class", "y axis")
+			.call(d3.axisLeft(this.yScale)
+				.ticks(5, currentFormatY))
+			.selectAll("text")
+				.attr("dx", "-.25em");
 	}
 	
 	updateAxes(){
+		var that = this;
+		var m = this.margin;
+		
+		var transitionSpeed = this.options.transition.speed;
+		
+		switch (this.options.xAxisFormat){
+			case "yearMon":
+				var xFormat = d3.format("s");
+				break;
+			
+			default:
+				var xFormat = d3.format(this.options.xAxisFormat);
+			
+		}
+		
+		var yFormat = d3.format(this.options.yAxisFormat);
+		
+		switch (this.options.categoricalScale.xAxis){
+			case true:
+				this.svg.selectAll('.x.axis')
+					.transition().ease(d3.easeQuad)
+					.duration(transitionSpeed)
+					.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
+					.call(d3.axisBottom(this.xScale))
+						.selectAll("text")
+						.attr("dx", "-.25em")
+						.attr('text-anchor', this.width < 550 ? 'end' : 'center')
+						.attr("transform", this.width < 550 ? "rotate(-65)" : "rotate(-0)");
+			break;
+			
+			case false:
+				this.svg.selectAll('.x.axis')
+					.transition().ease(d3.easeQuad)
+					.duration(transitionSpeed)
+					.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
+						.call(d3.axisBottom(this.xScale)
+								.ticks(null,xFormat)
+								.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
+							.selectAll("text")
+								.attr('dy', '.35em')
+								.attr('text-anchor', this.width < 550 ? 'end' : 'center')
+								.attr("transform", this.width < 550 ? "rotate(-65)" : "rotate(-0)");
+			
+		}
+		
+		var currentFormatY = this.newScaleY ? this.newScaleY : yFormat;
+		
+		this.svg.selectAll('.y.axis')
+			.transition().ease(d3.easeQuad)
+			.duration(transitionSpeed)
+			.call(d3.axisLeft(this.yScale)
+				.ticks(5, currentFormatY))
+			.selectAll("text")
+				.attr("dx", "-.25em");
 		
 	}
 	
@@ -297,6 +399,30 @@ class myIOchart {
 	
 	updateRollover(lys){
 		
+	}
+	
+	resize(){
+		
+		this.width = this.element.offsetWidth;
+		this.height = this.element.offsetHeight;
+		
+		
+		this.svg
+			.attr('width', this.width)
+			.attr('height', this.height);
+			
+		this.plot 
+			.attr('transform','translate('+this.margin.left+','+this.margin.top+')');
+		
+		this.clipPath
+			.attr('x', 0)
+			.attr('y', 0)
+			.attr('width', this.width - (this.margin.left + this.margin.right))
+			.attr('height', this.height - (this.margin.top + this.margin.bottom));
+		
+		this.processScales(this.plotLayers);	
+		
+		this.updateAxes();
 	}
 }
 

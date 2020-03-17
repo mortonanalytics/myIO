@@ -13,11 +13,11 @@ HTMLWidgets.widget({
       renderValue: function(x) {
         // general chart with layers
 		if(x.layers) {
-			if(this.chart){
-				this.chart.update(x);
+			if(this.myIOchart){
+				this.myIOchart.update(x);
 			} else {
 				console.log(x);
-				this.chart = new myIOchart({
+				this.myIOchart = new myIOchart({
 					element: document.getElementById(el.id),
 					plotLayers: x.layers,
 					options: x.options
@@ -29,8 +29,8 @@ HTMLWidgets.widget({
 
       resize: function(width, height) {
 		//chart will use its own resize method
-        if(this.chart) {
-			//this.chart.resize();
+        if(this.myIOchart) {
+			this.myIOchart.resize(width, height);
 		}
 
       }
