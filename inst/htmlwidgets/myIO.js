@@ -30,7 +30,7 @@ HTMLWidgets.widget({
       resize: function(width, height) {
 		//chart will use its own resize method
         if(this.chart) {
-			this.chart.resize();
+			//this.chart.resize();
 		}
 
       }
