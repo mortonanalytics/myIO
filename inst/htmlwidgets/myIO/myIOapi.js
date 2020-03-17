@@ -308,7 +308,7 @@ class myIOchart {
 					.attr("class", "x axis")
 					.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
 					.call(d3.axisBottom(this.xScale)
-							.ticks(null,xFormat)
+							.ticks(this.width < 550 ? 5 : 10, xFormat)
 							.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
 						.selectAll("text")
 							.attr('dy', '.35em')
@@ -322,7 +322,7 @@ class myIOchart {
 		this.plot.append('g')
 			.attr("class", "y axis")
 			.call(d3.axisLeft(this.yScale)
-				.ticks(5, currentFormatY))
+				.ticks(this.height < 450 ? 5 : 10, currentFormatY))
 			.selectAll("text")
 				.attr("dx", "-.25em");
 	}
@@ -364,7 +364,7 @@ class myIOchart {
 					.duration(transitionSpeed)
 					.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
 						.call(d3.axisBottom(this.xScale)
-								.ticks(null,xFormat)
+								.ticks(this.width < 550 ? 5 : 10, xFormat)
 								.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
 							.selectAll("text")
 								.attr('dy', '.35em')
@@ -379,7 +379,7 @@ class myIOchart {
 			.transition().ease(d3.easeQuad)
 			.duration(transitionSpeed)
 			.call(d3.axisLeft(this.yScale)
-				.ticks(5, currentFormatY))
+				.ticks(this.height < 450 ? 5 : 10, currentFormatY))
 			.selectAll("text")
 				.attr("dx", "-.25em");
 		
