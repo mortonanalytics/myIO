@@ -7,6 +7,14 @@ class myIOchart {
 		this.draw();
     }
 	
+	get opts(){
+		return this.options;
+	}
+	
+	set opts(x){
+		this.options = x ;
+	}
+	
 	draw(){
 		
 		//define dimensions
@@ -140,7 +148,131 @@ class myIOchart {
 	}
 	
 	processScales(lys){
+		var that = this;
+		var m = this.margin;
 		
+		var x_extents = [];
+		var y_extents = [];
+		var x_bands = [];
+		var y_bands = [];
+		
+		
+		lys.forEach(function(d){
+			var currentY = that.newY ? that.newY : d.mapping.y_var;
+			
+			var x_var = d.mapping.x_var; 
+			var y_var = currentY;
+		
+			var x = d3.extent( d.data, function(e) { return +e[x_var]; });
+			var y = d3.extent( d.data, function(e) { return +e[y_var]; });
+			var x_cat = d.data.map(function(e) { return e[x_var]; });
+			var y_cat = d.data.map(function(e) { return e[y_var]; });
+
+			x_extents.push(x);
+			y_extents.push(y);
+			x_bands.push(x_cat);
+			y_bands.push(y_cat);
+		})
+
+		//find min and max - X axis
+		var x_min = d3.min(x_extents, function(d,i) {return d[0]; });
+		var x_max = d3.max(x_extents, function(d,i) {return d[1]; });
+		
+		//assess if there's any data
+		var x_check1 = d3.min(x_extents, function(d,i) {return d[0]; });
+		var x_check2 = d3.max(x_extents, function(d,i) {return d[1]; });
+		this.x_check = (x_check1 == 0 & x_check2 == 0) == 1;
+		
+		//prevent single tick on axis
+		if(x_min == x_max) { x_min = x_min-1; x_max = x_max+1;}
+		
+		//calculate buffer
+		var x_buffer = Math.max(Math.abs(x_max - x_min) * .05, 0.5) ;
+	
+		var final_x_min = this.options.xlim.min ? this.options.xlim.min : (x_min+ x_buffer) ;
+		var final_x_max = this.options.xlim.max ? this.options.xlim.max : (x_max+ x_buffer) ;
+		var xExtent = [final_x_min, 
+					   final_x_max ];
+					   
+		this.x_banded = [].concat.apply([], x_bands).map(function(d){
+			try {
+				return d[0];
+			}
+			
+			catch(err) {
+				console.log(err.message);
+			}
+		}).filter(onlyUnique);
+					   
+		//find min and max - Y axis
+		var y_min = d3.min(y_extents, function(d,i) {return d[0]; });
+		var y_max = d3.max(y_extents, function(d,i) {return d[1]; });
+		
+		//prevent single tick on axis
+		if(y_min == y_max) { y_min = y_min-1; y_max = y_max+1;}
+		
+		//calculate buffer
+		var y_buffer = Math.abs(y_max - y_min) * .15 ;
+		
+		//user inputs if available
+		var final_y_min = this.options.ylim.min ? this.options.ylim.min : (y_min-y_buffer) ;
+		var final_y_max = this.options.ylim.max ? this.options.ylim.max : (y_max+y_buffer) ;
+		var yExtent = [(final_y_min), 
+					   (final_y_max)];
+					   
+		this.y_banded = [].concat.apply([], y_bands).map(function(d){
+			try {
+				return d[0];
+			}
+			
+			catch(err) {
+				console.log(err.message);
+			}
+		}).filter(onlyUnique);
+					   
+		// create x scale
+		switch (this.options.categoricalScale.xAxis){
+			case true:
+				this.xScale = d3.scaleBand()
+					.range([0, this.width - (m.left + m.right)])
+					.domain(this.x_banded );
+				break;
+				
+			case false:
+				this.xScale = d3.scaleLinear()
+					.range([0, this.width - (m.right + m.left)])
+					.domain(xExtent);
+		}
+		
+		// create y scale
+		switch (this.options.categoricalScale.yAxis){
+			case true:
+				this.yScale = d3.scaleBand()
+					.range([this.height - (m.top + m.bottom), 0])
+					.domain(this.y_banded );
+				break;
+				
+			case false:
+				this.yScale = d3.scaleLinear()
+					.range([this.height - (m.top + m.bottom), 0])
+					.domain(yExtent);
+		}
+		
+		// if there is a color scheme defined
+		if(this.options.colorScheme){
+			this.colorDiscrete = d3.scaleOrdinal()
+				.range( this.options.colorScheme[0] )
+				.domain( this.options.colorScheme[1] );
+			
+			this.colorContinuous = d3.scaleLinear()
+				.range( this.options.colorScheme[0] )
+				.domain( this.options.colorScheme[1] );
+		}
+		
+		//helper function(s)
+		function onlyUnique(value, index, self) { 
+			return self.indexOf(value) === index;
+		}
 	}
 	
 	addAxes(){
