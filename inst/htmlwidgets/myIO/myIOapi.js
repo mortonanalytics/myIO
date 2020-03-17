@@ -62,17 +62,17 @@ class myIOchart {
 		
 		switch ( this.plotLayers[0].type ) {
 			case "gauge":
-				this.routeLayers();
+				this.routeLayers(this.plotLayers);
 				this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
 				break;
 				
 			case "donut":
-				this.routeLayers();
+				this.routeLayers(this.plotLayers);
 				this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
 				break;
 				
 			case "treemap":
-				this.routeLayers();
+				this.routeLayers(this.plotLayers);
 				this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
 				break;
 				
@@ -80,7 +80,7 @@ class myIOchart {
 				this.setZoom();
 				this.processScales(this.plotLayers);
 				this.addAxes();
-				this.routeLayers();
+				this.routeLayers(this.plotLayers);
 				this.updateReferenceLines();
 				this.updateLegend();
 				this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
@@ -90,7 +90,7 @@ class myIOchart {
 				this.setZoom();
 				this.processScales(this.plotLayers);
 				this.addAxes();
-				this.routeLayers();
+				this.routeLayers(this.plotLayers);
 				this.updateReferenceLines();
 				this.updateLegend();
 				this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
@@ -100,7 +100,7 @@ class myIOchart {
 				this.setZoom();
 				this.processScales(this.plotLayers);
 				this.addAxes();
-				this.routeLayers();
+				this.routeLayers(this.plotLayers);
 				this.updateReferenceLines();
 				this.updateLegend();
 				this.updateRollover(this.plotLayers);
@@ -110,7 +110,7 @@ class myIOchart {
 				this.setZoom();
 				this.processScales(this.plotLayers);
 				this.addAxes();
-				this.routeLayers();
+				this.routeLayers(this.plotLayers);
 				this.updateReferenceLines();
 				this.updateLegend();
 				this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
@@ -120,7 +120,7 @@ class myIOchart {
 				this.setZoom();
 				this.processScales(this.plotLayers);
 				this.addAxes();
-				this.routeLayers();
+				this.routeLayers(this.plotLayers);
 				this.updateReferenceLines();
 				this.updateLegend();
 				this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
@@ -189,7 +189,7 @@ class myIOchart {
 		//calculate buffer
 		var x_buffer = Math.max(Math.abs(x_max - x_min) * .05, 0.5) ;
 	
-		var final_x_min = this.options.xlim.min ? this.options.xlim.min : (x_min+ x_buffer) ;
+		var final_x_min = this.options.xlim.min ? this.options.xlim.min : (x_min- x_buffer) ;
 		var final_x_max = this.options.xlim.max ? this.options.xlim.max : (x_max+ x_buffer) ;
 		var xExtent = [final_x_min, 
 					   final_x_max ];
@@ -295,7 +295,7 @@ class myIOchart {
 			case true:
 			this.plot.append('g')
 				.attr("class", "x axis")
-				.attr("transform", "translate(0," + (that.height-(m.top+m.bottom)) + ")")
+				.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
 				.call(d3.axisBottom(this.xScale))
 					.selectAll("text")
 					.attr("dx", "-.25em")
@@ -386,7 +386,103 @@ class myIOchart {
 	}
 	
 	routeLayers(lys){
+		var that = this;
+	
+		this.layerIndex = this.plotLayers.map(function(d) {return d.label; });
 		
+		lys.forEach(function(d){
+			
+			var layerType = d.type;
+			
+			switch (layerType){
+				case "line":
+					that.addLine(d);
+					that.addPoints(d);
+					break;
+				default:
+				
+			}
+			
+		});
+	}
+	
+	addLine(ly){
+		var that = this;
+		console.log(ly);
+		
+		var data = ly.data;
+		var key = ly.label;
+		
+		var currentY = this.newY ? this.newY : ly.mapping.y_var;
+		
+		var transitionSpeed = this.options.transition.speed;
+		
+		var valueLine = d3.line()
+			.curve(d3.curveMonotoneX)
+			.x(d => this.xScale( d[ly.mapping.x_var] ) )
+			.y(d => this.yScale( d[ currentY ] ) );
+	
+		var linePath = this.chart
+			.selectAll( '.tag-line-' + this.element.id + '-'  + key.replace(/\s+/g, '')) 
+			.data([data]);
+		
+		//EXIT old elements not present in new data
+		linePath.exit()
+		  .transition().duration(transitionSpeed).style('opacity', 0)
+			.remove();
+		
+		//ENTER new elements present in new data
+		var newLinePath = linePath.enter().append("path")
+			.attr("fill", "none")
+			.attr('clip-path', 'url(#' + this.element.id + 'clip'+ ')')
+			.style('stroke', d => this.options.colorScheme[2] == "on" ? this.colorScheme(d[ly.mapping.group]) : ly.color )
+			.style("stroke-width", 3)
+			.style('opacity', 0)
+			.attr("class", 'tag-line-' + this.element.id + '-'  + key.replace(/\s+/g, '') );
+			
+		//UPDATE old elements present in new data
+		linePath.merge(newLinePath)	
+		  .transition()
+		  .ease(d3.easeQuad)
+		  .duration(transitionSpeed)
+			.style('opacity', 1)
+			.style('stroke',d => this.options.colorScheme[2] == "on" ? this.colorScheme(d[0][ly.mapping.group]) : ly.color )
+			.attr("d", valueLine);
+	}
+	
+	addPoints(ly){
+		
+		var transitionSpeed = this.options.transition.speed;
+		
+		//join data to points
+		var points = this.chart
+			.selectAll( '.tag-point-' + this.element.id + '-'  +ly.label.replace(/\s+/g, '')) 
+			.data(ly.data);
+
+		points.exit()
+		  .transition().remove();
+		
+		points
+		  .transition()
+		  .ease(d3.easeQuad)
+		  .duration(transitionSpeed)
+			.style('fill', d => this.options.colorScheme[2] == "on" ? this.colorScheme(d[ly.mapping.group]) : ly.color )
+			.attr('cx', e => this.xScale( e[ly.mapping.x_var] ) )
+			.attr('cy', e => this.yScale( e[ this.newY ? this.newY : ly.mapping.y_var ] ) );
+		
+		points.enter()
+			.append('circle')
+			.attr('r', 3)
+			.style('fill', d => this.options.colorScheme[2] == "on" ? this.colorScheme(d[ly.mapping.group]) : ly.color )
+			.style('opacity', 0)
+			.attr('clip-path', 'url(#' + this.element.id + 'clip'+ ')')
+			.attr('cx', e => this.xScale( e[ly.mapping.x_var] ) )
+			.attr('cy', e => this.yScale( e[ this.newY ? this.newY : ly.mapping.y_var ] ) )
+			.attr("class", 'tag-point-' + this.element.id + '-' + ly.label.replace(/\s+/g, '')  )
+		  .transition()
+			.ease(d3.easeQuad)
+			.duration(transitionSpeed)
+			.style('opacity', 1);
 	}
 	
 	updateReferenceLines(){
@@ -423,6 +519,7 @@ class myIOchart {
 		this.processScales(this.plotLayers);	
 		
 		this.updateAxes();
+		this.routeLayers(this.plotLayers);
 	}
 }
 
