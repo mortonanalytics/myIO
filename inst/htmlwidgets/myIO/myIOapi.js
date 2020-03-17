@@ -385,6 +385,20 @@ myIOchart.prototype.addAxes = function(){
 			.selectAll("text")
 				.attr("dx", "-.25em");
 	}	
+	
+	if(this.width < 600){
+			this.svg.selectAll('.x.axis')
+				.transition().ease(d3.easeQuad)
+				.duration(500)
+				.attr("transform", "translate(0," + (that.height-(m.top+m.bottom)) + ")")
+				.call(d3.axisBottom(this.xScale)
+						.ticks(null,finalFormat))
+						//.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
+					.selectAll("text")
+						.attr('dy', '.35em')
+						.style('text-anchor', 'end')
+						.attr("transform", "rotate(-65)");
+	}
 	if(this.options.suppressAxis.xAxis == true){this.svg.selectAll('.x.axis').remove();}
 	if(this.options.suppressAxis.yAxis == true) {this.svg.selectAll('.y.axis').remove(); }
 	//TO DO: find a different solution
@@ -2119,7 +2133,7 @@ myIOchart.prototype.addButtons = function(){
 	var that = this;
 	
 	if(this.options.toggleY){
-		var tempData = ["\uf019 \uf080", "\uf019 \uf0ce", "\uf0b2"];
+		var tempData = ["\uf019 \uf080", "\uf019 \uf0ce", "%"];
 		var divLength = 0.25;
 	} else {
 		var tempData = ["\uf019 \uf080", "\uf019 \uf0ce"];
@@ -2175,7 +2189,7 @@ myIOchart.prototype.addButtons = function(){
 				var finalCSVData = [].concat.apply([], csvData);
 				
 				exportToCsv(that.element.id + '_data.csv', finalCSVData)
-			} else if(d == "\uf0b2"){
+			} else if(d == "%"){
 				
 				if(that.toggleY){
 				
