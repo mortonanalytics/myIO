@@ -345,15 +345,30 @@ myIOchart.prototype.addAxes = function(){
 			var xFormat = "s";
 		}
 		
-		this.plot.append('g')
-			.attr("class", "x axis")
-			.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
-			.call(d3.axisBottom(this.xScale)
-					.ticks(null,xFormat)
-					.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
-				.selectAll("text")
-					.attr('dy', '.35em')
-					.attr('text-anchor', 'center');
+		if(this.width < 600){
+			this.plot.append('g')
+				.attr("class", "x axis")
+				.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
+				.call(d3.axisBottom(this.xScale)
+						.ticks(null,xFormat))
+						//.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
+					.selectAll("text")
+						.attr('dy', '.35em')
+						.style('text-anchor', 'end')
+						.attr("transform", "rotate(-65)");
+		} else {
+			this.plot.append('g')
+				.attr("class", "x axis")
+				.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
+				.call(d3.axisBottom(this.xScale)
+						.ticks(null,xFormat)
+						.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
+					.selectAll("text")
+						.attr('dy', '.35em')
+						.attr('text-anchor', 'center');
+		}
+		
+		
 					
 		if(this.options.xAxisFormat == "yearMon"){
 			
@@ -386,19 +401,7 @@ myIOchart.prototype.addAxes = function(){
 				.attr("dx", "-.25em");
 	}	
 	
-	if(this.width < 600){
-			this.svg.selectAll('.x.axis')
-				.transition().ease(d3.easeQuad)
-				.duration(500)
-				.attr("transform", "translate(0," + (that.height-(m.top+m.bottom)) + ")")
-				.call(d3.axisBottom(this.xScale)
-						.ticks(null,xFormat))
-						//.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
-					.selectAll("text")
-						.attr('dy', '.35em')
-						.style('text-anchor', 'end')
-						.attr("transform", "rotate(-65)");
-	}
+	
 	if(this.options.suppressAxis.xAxis == true){this.svg.selectAll('.x.axis').remove();}
 	if(this.options.suppressAxis.yAxis == true) {this.svg.selectAll('.y.axis').remove(); }
 	//TO DO: find a different solution
