@@ -2231,7 +2231,7 @@ myIOchart.prototype.addButtons = function(){
 			}
 				
 			});
-			
+		/*	
 		buttons.append('rect')
 			.attr('width', "100%")
 			.attr('height', "100%")
@@ -2242,6 +2242,7 @@ myIOchart.prototype.addButtons = function(){
 			.style('stroke', 'gray')
 			.style('stroke-opacity', 0.2)
 			.style('stroke-width', '2px');
+			*/
 	
 }
 
