@@ -189,8 +189,8 @@ class myIOchart {
 		//calculate buffer
 		var x_buffer = Math.max(Math.abs(x_max - x_min) * .05, 0.5) ;
 	
-		var final_x_min = this.options.xlim.min ? this.options.xlim.min : (x_min- x_buffer) ;
-		var final_x_max = this.options.xlim.max ? this.options.xlim.max : (x_max+ x_buffer) ;
+		var final_x_min = this.options.xlim.min ? this.options.xlim.min : (x_min - x_buffer) ;
+		var final_x_max = this.options.xlim.max ? this.options.xlim.max : (x_max + x_buffer) ;
 		var xExtent = [final_x_min, 
 					   final_x_max ];
 					   
@@ -215,8 +215,8 @@ class myIOchart {
 		var y_buffer = Math.abs(y_max - y_min) * .15 ;
 		
 		//user inputs if available
-		var final_y_min = this.options.ylim.min ? this.options.ylim.min : (y_min-y_buffer) ;
-		var final_y_max = this.options.ylim.max ? this.options.ylim.max : (y_max+y_buffer) ;
+		var final_y_min = this.options.ylim.min ? this.options.ylim.min : (y_min - y_buffer) ;
+		var final_y_max = this.options.ylim.max ? this.options.ylim.max : (y_max + y_buffer) ;
 		var yExtent = [(final_y_min), 
 					   (final_y_max)];
 					   
