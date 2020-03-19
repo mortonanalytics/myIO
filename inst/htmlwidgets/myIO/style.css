@@ -78,18 +78,9 @@
 }
 
 .button {
-  color: rgba(0,0,0,0.30);
-  border-color: rgba(0,0,0,0.30);
-  border-radius: 5px;
-  padding: 3px;
-  margin: 3px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 14px;
-  width: 40px;
+  fill: rgba(0,0,0,0.30);
+  padding: 1px;
+  margin: 1px;
+  width: 25px;
   height: 25px;
-  font-family: FontAwesome;
-  font-weight:600;
-  text-rendering: optimizeLegibility;
 }
