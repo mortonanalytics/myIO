@@ -22,8 +22,8 @@
 
 .x.axis line {
   stroke: gray;
-  opacity:0.2;
-  stroke-dasharray: 5,5;
+  opacity:0.4;
+  stroke-dasharray: 3,3;
 }
 
 .x.axis .minor {
@@ -36,7 +36,7 @@
 
 .y.axis line{
   stroke: gray;
-  opacity:0.2;
+  opacity:0.4;
   stroke-dasharray: 3,3;
 }
 

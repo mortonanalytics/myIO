@@ -309,9 +309,11 @@ class myIOchart {
 					.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
 					.call(d3.axisBottom(this.xScale)
 							.ticks(this.width < 550 ? 5 : 10, xFormat)
-							.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
+							//.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;})
+							.tickSize( -(this.height-(m.top+m.bottom)) )
+								)
 						.selectAll("text")
-							.attr('dy', '.35em')
+							.attr('dy', '1.25em')
 							.attr('text-anchor', this.width < 550 ? 'end' : 'center')
 							.attr("transform", this.width < 550 ? "rotate(-65)" : "rotate(-0)");
 			
@@ -322,7 +324,9 @@ class myIOchart {
 		this.plot.append('g')
 			.attr("class", "y axis")
 			.call(d3.axisLeft(this.yScale)
-				.ticks(this.height < 450 ? 5 : 10, currentFormatY))
+				.ticks(this.height < 450 ? 5 : 10, currentFormatY)
+				.tickSize( -this.width-(m.right+m.left) )
+				)
 			.selectAll("text")
 				.attr("dx", "-.25em");
 	}
@@ -365,9 +369,11 @@ class myIOchart {
 					.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
 						.call(d3.axisBottom(this.xScale)
 								.ticks(this.width < 550 ? 5 : 10, xFormat)
-								.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;}))
+								.tickSize( -(this.height-(m.top+m.bottom)) )
+								//.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;})
+									)
 							.selectAll("text")
-								.attr('dy', '.35em')
+								.attr('dy', '1.25em')
 								.attr('text-anchor', this.width < 550 ? 'end' : 'center')
 								.attr("transform", this.width < 550 ? "rotate(-65)" : "rotate(-0)");
 			
@@ -379,7 +385,9 @@ class myIOchart {
 			.transition().ease(d3.easeQuad)
 			.duration(transitionSpeed)
 			.call(d3.axisLeft(this.yScale)
-				.ticks(this.height < 450 ? 5 : 10, currentFormatY))
+				.ticks(this.height < 450 ? 5 : 10, currentFormatY)
+				.tickSize( -(this.width-(m.right+m.left)) )
+				)				
 			.selectAll("text")
 				.attr("dx", "-.25em");
 		
@@ -404,6 +412,21 @@ class myIOchart {
 			}
 			
 		});
+	}
+	
+	removeLayers(lys){
+		var that = this;
+	
+		lys.forEach(function(d) {
+			
+			d3.selectAll( '.tag-line-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
+			d3.selectAll( '.tag-bar-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
+			d3.selectAll( '.tag-point-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
+			d3.selectAll( '.tag-hexbin-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
+			d3.selectAll( '.tag-area-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
+			d3.selectAll( '.tag-crosshairY-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
+			d3.selectAll( '.tag-crosshairX-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
+		})
 	}
 	
 	addLine(ly){
@@ -490,7 +513,138 @@ class myIOchart {
 	}
 	
 	updateLegend(){
+		var that = this;
+		var m = this.margin;
 		
+		d3.select(this.element).select('.legend-box').remove();
+		d3.select(this.element).selectAll('.legendElement').remove();
+		
+		var svg = d3.select(this.element).select('svg');
+		
+		var labelIndex = this.plotLayers.map(function(d) { return d.label; });
+		
+		//create legend	box (exists in the background)
+		var legendBox = svg.append('rect')
+			.attr('class', 'legend-box')
+			.attr("x", this.width - 70)
+			.attr("transform", function(d) { return "translate(0,40)";})
+			//.attr("y", 35)
+			.attr('width', '150px')
+			.attr('height', (this.plotLayers.length * 20) + 'px')
+			.style('fill', 'white')
+			.style('opacity', 0.75);
+			
+		this.plotLayers.forEach(function(d){
+		
+		var legendElement = svg.append('g')
+			.selectAll('.legendElement')
+			.data([d.label])
+			.enter()
+			.append('g')
+			.attr('class', 'legendElement')
+			.attr("transform", function(d) { return "translate(0," +  (75 + labelIndex.indexOf(d)* 20) + ")"; })
+			.attr("font-family", "sans-serif")
+			.attr("font-size", 10)
+			.attr("text-anchor", "end")
+			.on('click', toggleLine);
+			
+		if(d.type == 'line'){
+			legendElement.append("rect")
+				.attr("x", that.width - 12)
+				.attr('y', 5)
+				.attr("width", 12)
+				.attr("height", 12)
+				.attr("fill", d.color)
+				.attr("stroke", d.color);
+		} else if(d.type == 'point'){
+			legendElement.append("circle")
+				.attr("cx", that.width - 5)
+				.attr('cy', 6)
+				.attr('r', 5)
+				.attr("fill", d.color)
+				.attr("stroke", d.color);
+		} else {
+			legendElement.append("rect")
+				.attr("x", that.width - 12)
+				.attr("width", 12)
+				.attr("height", 12)
+				.attr("fill", d.color)
+				.attr("stroke", d.color);
+		}
+		
+		legendElement.append("text")
+			.attr("x", that.width - 15)
+			.attr("y", 9.5)
+			.attr("dy", "0.35em")
+			.attr('font-size', 12)
+			.text(function(d) { return d; });
+			
+		})
+		
+		var filteredElements = [];
+			
+		function toggleLine(){
+			var selectedData = d3.select(this).data();
+			
+			//toggle elements in and out of filteredElements
+			if(filteredElements.length < 1) {
+				
+				filteredElements.push(selectedData[0]);
+				
+				d3.select(this)
+					.style('opacity', 0.5);
+					
+				d3.select(this).select('rect')
+					.attr('fill-opacity', 0);
+					
+				d3.select(this).select('circle')
+					.attr('fill-opacity', 0);	
+				
+			} else if ( !filteredElements.includes(selectedData[0]) ){
+				
+				filteredElements.push(selectedData[0]);
+				
+				d3.select(this)
+					.style('opacity', 0.5);
+					
+				d3.select(this).select('rect')
+					.attr('fill-opacity', 0);
+					
+				d3.select(this).select('circle')
+					.attr('fill-opacity', 0);
+					
+			} else if ( filteredElements.includes(selectedData[0]) ){
+				
+				filteredElements = filteredElements.filter(function(d){
+					return d != selectedData[0];
+				});
+				d3.select(this).style('opacity', 1);
+				
+				d3.select(this).select('rect')
+					.attr('fill-opacity', 1);
+				
+				d3.select(this).select('circle')
+					.attr('fill-opacity', 1);
+			}
+			
+			var filteredLayers = that.plotLayers.filter(function(d){
+				return filteredElements.indexOf(d.label) === -1;
+			});
+			
+			var removedLayers = that.plotLayers
+				.filter(function(d){
+					return filteredElements.indexOf(d.label) > -1;
+				})
+				.map(function(d) { return d.label; });;
+		
+			that.processScales(filteredLayers);
+			that.routeLayers(filteredLayers);
+			that.removeLayers(removedLayers);
+			that.updateAxes();
+			//that.addToolTip(filteredLayers);
+			//that.addButtons();
+		
+		}
 	}
 	
 	updateRollover(lys){
@@ -520,6 +674,7 @@ class myIOchart {
 		
 		this.updateAxes();
 		this.routeLayers(this.plotLayers);
+		this.updateLegend();
 	}
 }
 
