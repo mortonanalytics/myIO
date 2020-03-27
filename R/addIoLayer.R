@@ -28,7 +28,7 @@ addIoLayer <- function(myIO,
   #stopifnot(is.character(color))
   stopifnot(is.character(label))
   stopifnot(is.list(mapping))
-  stopifnot(type %in% c("line", "point", "treemap", "bar", "hexbin", "gauge", "donut"))
+  stopifnot(type %in% c("line", "point", "treemap", "bar", "hexbin", "gauge", "donut", "area"))
 
   presets <-list(barSize = "large",
                  toolTipOptions = list(suppressY = FALSE))
@@ -81,7 +81,7 @@ addIoLayer <- function(myIO,
     }
 
     ## build layer
-    myIO$x$layers <- lapply(groupList, buildLayers,
+    newLayers <- lapply(groupList, buildLayers,
                             group = mapping$group,
                             grouping = groupList,
                             color = color,
@@ -89,6 +89,12 @@ addIoLayer <- function(myIO,
                             type = type,
                             mapping = mapping,
                             options = options)
+
+    if(length(myIO$x$layers) > 0){
+      myIO$x$layers <- c(myIO$x$layers, newLayers)
+    } else {
+      myIO$x$layers <- newLayers
+    }
   }
 
   return(myIO)

@@ -3,11 +3,12 @@ library(myIO)
 library(viridis)
 
 df <- datasets::airquality %>%
-  mutate(Month = paste0("M", Month)) %>%
+  mutate(Month = paste0("M", Month),
+         Temp_low = Temp * c(0.8,0.9,0.75),
+         Temp_high = Temp * c(1.2,1.1,1.3)) %>%
   group_by(Day) %>%
   mutate(Percent = Temp/sum(Temp)) %>%
-  ungroup() %>%
-  filter(Day != 31)
+  ungroup()
 
 for(i in 1:ncol(df)){
   df[is.na(df[,i]), i] <- mean(df[,i], na.rm = TRUE)
@@ -19,10 +20,12 @@ myIO(elementId = "tester")%>%
   addIoLayer(type = "line",
              color = colors,
              label = "Month",
-             data = df,
+             data = df ,
              mapping = list(
                x_var = "Day",
                y_var = "Temp",
+               #low_y = "Temp_low",
+               #high_y = "Temp_high",
                group = "Month"
              )) %>%
   #setAxisLimits(xlim = list(min = "1"))%>%

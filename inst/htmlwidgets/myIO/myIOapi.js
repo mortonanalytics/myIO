@@ -115,6 +115,16 @@ class myIOchart {
 				this.updateLegend();
 				this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
 				break;
+			
+			case "area":
+				this.setZoom();
+				this.processScales(this.plotLayers);
+				this.addAxes();
+				this.routeLayers(this.plotLayers);
+				this.updateReferenceLines();
+				this.updateLegend();
+				this.updateRollover(this.plotLayers);
+				break;
 				
 			case "stat_line":
 				this.setZoom();
@@ -162,14 +172,24 @@ class myIOchart {
 			
 			var x_var = d.mapping.x_var; 
 			var y_var = currentY;
+			var low_y = d.mapping.low_y;
+			var high_y = d.mapping.high_y;
 		
 			var x = d3.extent( d.data, function(e) { return +e[x_var]; });
 			var y = d3.extent( d.data, function(e) { return +e[y_var]; });
+			var y1 = d3.extent( d.data, function(e) { return +e[low_y]; });
+			var y2 = d3.extent( d.data, function(e) { return +e[high_y]; });
+			console.log(y);
+			var final_y_low = d3.min([ y[0], y1[0], y2[0] ]);
+			var final_y_high = d3.max([ y[1], y1[1], y2[1] ]);
+			var final_y_extent = [final_y_low, final_y_high];
+			console.log(final_y_extent);
+			
 			var x_cat = d.data.map(function(e) { return e[x_var]; });
 			var y_cat = d.data.map(function(e) { return e[y_var]; });
 
 			x_extents.push(x);
-			y_extents.push(y);
+			y_extents.push(final_y_extent);
 			x_bands.push(x_cat);
 			y_bands.push(y_cat);
 		})
@@ -407,6 +427,15 @@ class myIOchart {
 					that.addLine(d);
 					that.addPoints(d);
 					break;
+				
+				case "point":
+					that.addPoints(d);
+					break;
+				
+				case "area":
+					that.addArea(d);
+					break;
+					
 				default:
 				
 			}
@@ -506,6 +535,45 @@ class myIOchart {
 			.ease(d3.easeQuad)
 			.duration(transitionSpeed)
 			.style('opacity', 1);
+	}
+	
+	addArea(ly){
+		var that = this;
+	
+		var data = ly.data;
+		var key = ly.label;
+		var transitionSpeed = this.options.transition.speed;
+		
+		var valueArea = d3.area()
+			.curve(d3.curveMonotoneX)
+			.x(d => this.xScale( d[ ly.mapping.x_var ] ) )
+			.y0(d => this.yScale( d[ ly.mapping.low_y ] ) )
+			.y1(d => this.yScale( d[ ly.mapping.high_y ] ) );
+			
+		var linePath = this.chart
+			.selectAll( '.tag-area-' + this.element.id + '-'  + key.replace(/\s+/g, '')) 
+			.data([data]);
+		
+		//EXIT old elements not present in new data
+		linePath.exit()
+		  .transition().duration(transitionSpeed).style('opacity', 0)
+			.remove();
+		
+		//ENTER new elements present in new data
+		var newLinePath = linePath.enter().append("path")
+			.attr('clip-path', 'url(#' + this.element.id + 'clip'+ ')')
+			.style('fill', d => this.options.colorScheme[2] == "on" ? this.colorScheme(d[0][ly.mapping.group]) : ly.color )
+			.style('opacity', 0)
+			.attr("class", 'tag-area-' + this.element.id + '-'  + key.replace(/\s+/g, '') );
+			
+		//UPDATE old elements present in new data
+		linePath.merge(newLinePath)
+			.attr('clip-path', 'url(#' + this.element.id + 'clip' + ')')
+		  .transition()
+			.ease(d3.easeQuad)
+			.duration(transitionSpeed)
+			.attr("d", valueArea)
+			.style('opacity', 0.4);
 	}
 	
 	updateReferenceLines(){
