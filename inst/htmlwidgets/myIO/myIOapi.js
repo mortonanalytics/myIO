@@ -436,6 +436,10 @@ class myIOchart {
 					that.addArea(d);
 					break;
 					
+				case "bar":
+					that.addVerticalBar(d);
+					break;
+					
 				default:
 				
 			}
@@ -575,7 +579,64 @@ class myIOchart {
 			.attr("d", valueArea)
 			.style('opacity', 0.4);
 	}
-	
+
+	addVerticalBar(ly){
+		var that = this;
+		var m = this.margin;
+		var data = ly.data;
+		var key = ly.label;
+		var barSize = ly.options.barSize == "small" ? 0.5 : 1;
+		var bandwidth = this.options.categoricalScale.xAxis == true ? (this.width - (m.left + m.right)) / that.x_banded.length : Math.min(100, (that.width - (that.margin.right + that.margin.left)) / ly.data.length);
+		
+		var bars = this.chart
+			.selectAll('.tag-bar-' + this.element.id + '-'  + key.replace(/\s+/g, ''))
+			//.selectAll('rect')
+			.data(data);
+		
+		bars.exit()
+			.transition().duration(500).attr('y', this.yScale(0))
+			.remove();
+		
+		var newBars = bars.enter()
+			.append('rect')
+			.attr('class', 'tag-bar-' + this.element.id + '-'  + key.replace(/\s+/g, ''))
+			.attr('clip-path', 'url(#' + this.element.id + 'clip'+ ')')
+			.style('fill', d => this.options.colorScheme[2] == "on" ? this.colorScheme(d[ly.mapping.x_var]) : ly.color )
+			.attr('x', d => defineScale(d,ly,bandwidth, barSize, this.options.categoricalScale.xAxis) )
+			.attr('y', this.yScale(0))
+			.attr('width', (barSize * bandwidth)-2)
+			.attr('height', this.height -( m.top + m.bottom ))
+			.on('mouseover', hoverTip)
+			.on('mousemove', hoverTip)
+			.on('mouseout', hoverTipHide);
+			
+		bars.merge(newBars)
+			.transition()
+			.ease(d3.easeQuad)
+			.duration(1000)
+			.attr('x', d => defineScale(d, ly, bandwidth, barSize, this.options.categoricalScale.xAxis) )
+			.attr('y', d => this.yScale(d[ly.mapping.y_var]) )
+			.attr('width', (barSize * bandwidth)-2)
+			.attr('height', d => (this.height -( m.top + m.bottom )) - this.yScale(d[ly.mapping.y_var]) );
+			
+		function hoverTip(){
+			
+		}
+		
+		function hoverTipHide(){
+			
+		}
+		
+		function defineScale(d,ly, bandwidth, barSize, scale){
+			switch (scale){
+				case true:
+					return barSize == 1 ? that.xScale(d[ly.mapping.x_var]) : that.xScale(d[ly.mapping.x_var]) + (bandwidth/4) ;
+					break;
+				default:
+					return barSize == 1 ? that.xScale(d[ly.mapping.x_var]) - (bandwidth/2) : that.xScale(d[ly.mapping.x_var]) - (bandwidth/4);
+			}
+		}
+	}
 	updateReferenceLines(){
 		
 	}
