@@ -610,29 +610,33 @@ class myIOchart {
 			.enter()
 			.append('g')
 			.attr('class', 'legendElement')
-			.attr("transform", function(d) { return "translate(0," +  (75 + labelIndex.indexOf(d)* 20) + ")"; })
+			.attr("transform", d => "translate(0," +  (75 + labelIndex.indexOf(d)* 20) + ")" )
 			.attr("font-family", "sans-serif")
 			.attr("font-size", 10)
 			.attr("text-anchor", "end")
 			.on('click', toggleLine);
+		
+		switch (d.type){
+			case "line":
+				legendElement.append("rect")
+					.attr("x", that.width - 12)
+					.attr('y', 5)
+					.attr("width", 12)
+					.attr("height", 12)
+					.attr("fill", d.color)
+					.attr("stroke", d.color);
+				break;
+			case "point":
+				legendElement.append("circle")
+					.attr("cx", that.width - 5)
+					.attr('cy', 6)
+					.attr('r', 5)
+					.attr("fill", d.color)
+					.attr("stroke", d.color);
+				break;
 			
-		if(d.type == 'line'){
-			legendElement.append("rect")
-				.attr("x", that.width - 12)
-				.attr('y', 5)
-				.attr("width", 12)
-				.attr("height", 12)
-				.attr("fill", d.color)
-				.attr("stroke", d.color);
-		} else if(d.type == 'point'){
-			legendElement.append("circle")
-				.attr("cx", that.width - 5)
-				.attr('cy', 6)
-				.attr('r', 5)
-				.attr("fill", d.color)
-				.attr("stroke", d.color);
-		} else {
-			legendElement.append("rect")
+			default:
+				legendElement.append("rect")
 				.attr("x", that.width - 12)
 				.attr("width", 12)
 				.attr("height", 12)
@@ -645,7 +649,7 @@ class myIOchart {
 			.attr("y", 9.5)
 			.attr("dy", "0.35em")
 			.attr('font-size', 12)
-			.text(function(d) { return d; });
+			.text( d => d );
 			
 		})
 		
