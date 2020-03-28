@@ -255,13 +255,13 @@ class myIOchart {
 			case true:
 				this.xScale = d3.scaleBand()
 					.range([0, this.width - (m.left + m.right)])
-					.domain(this.x_banded );
+					.domain(that.options.flipAxis == true ? this.y_banded : this.x_banded );
 				break;
 				
 			case false:
 				this.xScale = d3.scaleLinear()
 					.range([0, this.width - (m.right + m.left)])
-					.domain(xExtent);
+					.domain(that.options.flipAxis == true ? yExtent : xExtent);
 		}
 		
 		// create y scale
@@ -269,13 +269,13 @@ class myIOchart {
 			case true:
 				this.yScale = d3.scaleBand()
 					.range([this.height - (m.top + m.bottom), 0])
-					.domain(this.y_banded );
+					.domain(that.options.flipAxis == true ? this.x_banded : this.y_banded );
 				break;
 				
 			case false:
 				this.yScale = d3.scaleLinear()
 					.range([this.height - (m.top + m.bottom), 0])
-					.domain(yExtent);
+					.domain(that.options.flipAxis == true ? xExtent : yExtent);
 		}
 		
 		// if there is a color scheme defined
@@ -437,7 +437,7 @@ class myIOchart {
 					break;
 					
 				case "bar":
-					that.addVerticalBar(d);
+					that.options.flipAxis == true ? that.addHorizontalBars(d): that.addVerticalBars(d);
 					break;
 					
 				default:
@@ -580,7 +580,7 @@ class myIOchart {
 			.style('opacity', 0.4);
 	}
 
-	addVerticalBar(ly){
+	addVerticalBars(ly){
 		var that = this;
 		var m = this.margin;
 		var data = ly.data;
@@ -634,6 +634,65 @@ class myIOchart {
 					break;
 				default:
 					return barSize == 1 ? that.xScale(d[ly.mapping.x_var]) - (bandwidth/2) : that.xScale(d[ly.mapping.x_var]) - (bandwidth/4);
+			}
+		}
+	}
+	
+	addHorizontalBars(ly){
+		
+		var that = this;
+		var m = this.margin;
+		var data = ly.data;
+		var key = ly.label;
+		var barSize = ly.options.barSize == "small" ? 0.5 : 1;
+		var bandwidth = this.options.categoricalScale.yAxis == true ? (this.height - (m.top + m.bottom)) / ly.data.length : Math.min(100, (this.height - (this.margin.top + this.margin.bottom)) / ly.data.length);
+		
+		var bars = this.chart
+			.selectAll('.tag-bar-' + this.element.id + '-'  + key.replace(/\s+/g, ''))
+			//.selectAll('rect')
+			.data(data);
+		
+		bars.exit()
+			.transition().duration(500).attr('width', 0)
+			.remove();
+		
+		var newBars = bars.enter()
+			.append('rect')
+			.attr('class', 'tag-bar-' + this.element.id + '-'  + key.replace(/\s+/g, ''))
+			.attr('clip-path', 'url(#' + this.element.id + 'clip'+ ')')
+			.style('fill', d => this.options.colorScheme[2] == "on" ? this.colorScheme(d[ly.mapping.x_var]) : ly.color )
+			.attr('y', d => barSize == 1 ? this.yScale(d[ly.mapping.x_var]) : this.yScale(d[ly.mapping.x_var]) + bandwidth/4 )
+			.attr('x', d => this.xScale(Math.min(0, d[ly.mapping.y_var])) )
+			.attr('height', (barSize * bandwidth)-2)
+			.attr('width', 0)
+			.on('mouseover', hoverTip)
+			.on('mousemove', hoverTip)
+			.on('mouseout', hoverTipHide);
+			
+		bars.merge(newBars)
+			.transition()
+			.ease(d3.easeQuad)
+			.duration(1000)
+			.attr('y', d => barSize == 1 ? this.yScale(d[ly.mapping.x_var]) : this.yScale(d[ly.mapping.x_var]) + bandwidth/4 )
+			.attr('x', d => this.xScale(Math.min(0, d[ly.mapping.y_var])) )
+			.attr('height', (barSize * bandwidth)-2)
+			.attr('width', d => Math.abs(this.xScale(d[ly.mapping.y_var]) - this.xScale(0)) );
+			
+		function hoverTip(){
+			
+		}
+		
+		function hoverTipHide(){
+			
+		}
+		
+		function defineScale(d,ly, bandwidth, barSize, scale){
+			switch (scale){
+				case true:
+					return barSize == 1 ? that.yScale(d[ly.mapping.y_var]) : that.yScale(d[ly.mapping.y_var]) + (bandwidth/4) ;
+					break;
+				default:
+					return barSize == 1 ? that.yScale(d[ly.mapping.y_var]) - (bandwidth/2) : that.yScale(d[ly.mapping.y_var]) - (bandwidth/4);
 			}
 		}
 	}

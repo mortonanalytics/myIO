@@ -45,14 +45,13 @@ myIO() %>%
   addIoLayer(type = "bar",
              color = colors[2],
              label = "M6",
-             data = df %>% filter(Month == "M6"),
+             data = df %>% filter(Month == "M7"),
              mapping = list(
                x_var = "Day",
                y_var = "Temp"
              ),
              options = list(barSize = "small")
              )%>%
-  defineCategoricalAxis()
-
-%>%
+  setAxisLimits(ylim = list(min = "0")) %>%
+  defineCategoricalAxis(xAxis = TRUE, yAxis = FALSE) %>%
   flipAxis()
