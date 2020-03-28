@@ -81,8 +81,6 @@ class myIOchart {
 				this.processScales(this.plotLayers);
 				this.addAxes();
 				this.routeLayers(this.plotLayers);
-				this.updateReferenceLines();
-				this.updateLegend();
 				this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
 				break;
 				
@@ -440,6 +438,10 @@ class myIOchart {
 					that.options.flipAxis == true ? that.addHorizontalBars(d): that.addVerticalBars(d);
 					break;
 					
+				case "hexbin":
+					that.addHexBins(d);
+					break;
+					
 				default:
 				
 			}
@@ -587,6 +589,7 @@ class myIOchart {
 		var key = ly.label;
 		var barSize = ly.options.barSize == "small" ? 0.5 : 1;
 		var bandwidth = this.options.categoricalScale.xAxis == true ? (this.width - (m.left + m.right)) / that.x_banded.length : Math.min(100, (that.width - (that.margin.right + that.margin.left)) / ly.data.length);
+		var transitionSpeed = this.options.transition.speed;
 		
 		var bars = this.chart
 			.selectAll('.tag-bar-' + this.element.id + '-'  + key.replace(/\s+/g, ''))
@@ -594,7 +597,7 @@ class myIOchart {
 			.data(data);
 		
 		bars.exit()
-			.transition().duration(500).attr('y', this.yScale(0))
+			.transition().duration(transitionSpeed).attr('y', this.yScale(0))
 			.remove();
 		
 		var newBars = bars.enter()
@@ -613,7 +616,7 @@ class myIOchart {
 		bars.merge(newBars)
 			.transition()
 			.ease(d3.easeQuad)
-			.duration(1000)
+			.duration(transitionSpeed)
 			.attr('x', d => defineScale(d, ly, bandwidth, barSize, this.options.categoricalScale.xAxis) )
 			.attr('y', d => this.yScale(d[ly.mapping.y_var]) )
 			.attr('width', (barSize * bandwidth)-2)
@@ -646,6 +649,7 @@ class myIOchart {
 		var key = ly.label;
 		var barSize = ly.options.barSize == "small" ? 0.5 : 1;
 		var bandwidth = this.options.categoricalScale.yAxis == true ? (this.height - (m.top + m.bottom)) / ly.data.length : Math.min(100, (this.height - (this.margin.top + this.margin.bottom)) / ly.data.length);
+		var transitionSpeed = this.options.transition.speed;
 		
 		var bars = this.chart
 			.selectAll('.tag-bar-' + this.element.id + '-'  + key.replace(/\s+/g, ''))
@@ -653,7 +657,7 @@ class myIOchart {
 			.data(data);
 		
 		bars.exit()
-			.transition().duration(500).attr('width', 0)
+			.transition().duration(transitionSpeed).attr('width', 0)
 			.remove();
 		
 		var newBars = bars.enter()
@@ -672,7 +676,7 @@ class myIOchart {
 		bars.merge(newBars)
 			.transition()
 			.ease(d3.easeQuad)
-			.duration(1000)
+			.duration(transitionSpeed)
 			.attr('y', d => barSize == 1 ? this.yScale(d[ly.mapping.x_var]) : this.yScale(d[ly.mapping.x_var]) + bandwidth/4 )
 			.attr('x', d => this.xScale(Math.min(0, d[ly.mapping.y_var])) )
 			.attr('height', (barSize * bandwidth)-2)
@@ -696,6 +700,61 @@ class myIOchart {
 			}
 		}
 	}
+	
+	addHexBins(ly){
+		var that = this;
+		var transitionSpeed = this.options.transition.speed;
+		//create points	
+		//create points	
+	var points = ly.data.map(function(d) { return  { 0: that.xScale(+d[ly.mapping.x_var]), 1: that.yScale(+d[ly.mapping.y_var]) } ; });
+	points = points.sort(function(d) { return d3.ascending(d.index); });
+	var x_extent = d3.extent(ly.data, function(d) { return +d[ly.mapping.x_var]; })
+	var y_extent = d3.extent(ly.data, function(d) { return +d[ly.mapping.y_var]; })
+		
+	//hexbin function
+	var hexbin = d3.hexbin()
+		.radius(ly.mapping.radius * (Math.min(this.width, this.height) / 1000 ))
+		.extent([
+			[x_extent[0], y_extent[0]],
+			[x_extent[1], y_extent[1]]
+		]);
+		
+	var binnedData = hexbin(points);
+	
+	//color scale
+	var color = d3.scaleSequential(d3.interpolateBuPu)
+     .domain([0, d3.max(binnedData, d => d.length) / 2])
+			
+	//data join
+	var bins = this.chart
+		.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
+		.selectAll( '.tag-hexbin-' + that.element.id + '-'  +ly.label.replace(/\s+/g, '')) 
+		.data(binnedData);
+	
+	//EXIT
+	bins.exit()
+	  .transition()
+		.duration(transitionSpeed)
+		.remove();
+	  
+	//ENTER
+	var newbins = bins.enter()
+		.append('path')
+		.attr("class", 'tag-hexbin-' + that.element.id + '-' + ly.label.replace(/\s+/g, '')  )
+		.attr('d', hexbin.hexagon())
+		.attr('transform', function(d) { return "translate(" + d.x + "," + d.y + ")"; })	
+		.attr('fill', 'white');
+		
+	//UPDATE
+	bins.merge(newbins)
+		.transition()
+			.ease(d3.easeQuad)
+			.duration(transitionSpeed)
+		.attr('d', hexbin.hexagon())
+		.attr('transform', function(d) { return "translate(" + d.x + "," + d.y + ")"; })
+		.attr('fill', function(d) { return color(d.length); });
+	}
+	
 	updateReferenceLines(){
 		
 	}
@@ -866,7 +925,8 @@ class myIOchart {
 		
 		this.updateAxes();
 		this.routeLayers(this.plotLayers);
-		this.updateLegend();
+		console.log(this.svg.selectAll('.legendElement').data().length)
+		if(this.svg.selectAll('.legendElement').data().length > 0) this.updateLegend();
 	}
 }
 
