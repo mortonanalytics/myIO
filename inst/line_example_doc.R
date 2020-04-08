@@ -17,7 +17,7 @@ for(i in 1:ncol(df)){
 colors <- substr(viridis(5), 1, 7)
 
 myIO(elementId = "tester")%>%
-  addIoLayer(type = "line",
+  addIoLayer(type = "point",
              color = colors,
              label = "Month",
              data = df ,
@@ -30,7 +30,8 @@ myIO(elementId = "tester")%>%
              )) %>%
   #setAxisLimits(xlim = list(min = "1"))%>%
   setToggle(newY = "Percent", newScaleY = ".0%") %>%
-  setAxisFormat(yAxis = ".0f")
+  setAxisFormat(yAxis = ".0f") %>%
+  dragPoints()
 
 
 myIO() %>%

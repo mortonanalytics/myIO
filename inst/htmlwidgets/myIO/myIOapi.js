@@ -177,11 +177,11 @@ class myIOchart {
 			var y = d3.extent( d.data, function(e) { return +e[y_var]; });
 			var y1 = d3.extent( d.data, function(e) { return +e[low_y]; });
 			var y2 = d3.extent( d.data, function(e) { return +e[high_y]; });
-			console.log(y);
+			
 			var final_y_low = d3.min([ y[0], y1[0], y2[0] ]);
 			var final_y_high = d3.max([ y[1], y1[1], y2[1] ]);
 			var final_y_extent = [final_y_low, final_y_high];
-			console.log(final_y_extent);
+			
 			
 			var x_cat = d.data.map(function(e) { return e[x_var]; });
 			var y_cat = d.data.map(function(e) { return e[y_var]; });
@@ -457,6 +457,7 @@ class myIOchart {
 			d3.selectAll( '.tag-line-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
 			d3.selectAll( '.tag-bar-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
 			d3.selectAll( '.tag-point-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
+			d3.selectAll( '.tag-regression-line-' + that.element.id + '-'  + d.replace(/\s+/g, '') ).transition().duration(500).style('opacity', 0).remove() ;
 			d3.selectAll( '.tag-hexbin-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
 			d3.selectAll( '.tag-area-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
 			d3.selectAll( '.tag-crosshairY-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
@@ -466,7 +467,6 @@ class myIOchart {
 	
 	addLine(ly){
 		var that = this;
-		console.log(ly);
 		
 		var data = ly.data;
 		var key = ly.label;
@@ -530,7 +530,7 @@ class myIOchart {
 		
 		points.enter()
 			.append('circle')
-			.attr('r', 3)
+			.attr('r', 5)
 			.style('fill', d => this.options.colorScheme[2] == "on" ? this.colorScheme(d[ly.mapping.group]) : ly.color )
 			.style('opacity', 0)
 			.attr('clip-path', 'url(#' + this.element.id + 'clip'+ ')')
@@ -541,6 +541,12 @@ class myIOchart {
 			.ease(d3.easeQuad)
 			.duration(transitionSpeed)
 			.style('opacity', 1);
+		
+		if(this.options.dragPoints == true) { 
+			this.dragPoints(ly); 
+			var color = this.options.colorScheme[2] == "on" ? this.colorScheme(ly.data[ly.mapping.group]) : ly.color; 
+			setTimeout( () => this.updateRegression(color, ly.label), transitionSpeed );
+		}
 	}
 	
 	addArea(ly){
@@ -704,55 +710,204 @@ class myIOchart {
 	addHexBins(ly){
 		var that = this;
 		var transitionSpeed = this.options.transition.speed;
+
 		//create points	
-		//create points	
-	var points = ly.data.map(function(d) { return  { 0: that.xScale(+d[ly.mapping.x_var]), 1: that.yScale(+d[ly.mapping.y_var]) } ; });
-	points = points.sort(function(d) { return d3.ascending(d.index); });
-	var x_extent = d3.extent(ly.data, function(d) { return +d[ly.mapping.x_var]; })
-	var y_extent = d3.extent(ly.data, function(d) { return +d[ly.mapping.y_var]; })
-		
-	//hexbin function
-	var hexbin = d3.hexbin()
-		.radius(ly.mapping.radius * (Math.min(this.width, this.height) / 1000 ))
-		.extent([
-			[x_extent[0], y_extent[0]],
-			[x_extent[1], y_extent[1]]
-		]);
-		
-	var binnedData = hexbin(points);
-	
-	//color scale
-	var color = d3.scaleSequential(d3.interpolateBuPu)
-     .domain([0, d3.max(binnedData, d => d.length) / 2])
+		var points = ly.data.map(function(d) { return  { 0: that.xScale(+d[ly.mapping.x_var]), 1: that.yScale(+d[ly.mapping.y_var]) } ; });
+		points = points.sort(function(d) { return d3.ascending(d.index); });
+		var x_extent = d3.extent(ly.data, function(d) { return +d[ly.mapping.x_var]; })
+		var y_extent = d3.extent(ly.data, function(d) { return +d[ly.mapping.y_var]; })
 			
-	//data join
-	var bins = this.chart
-		.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
-		.selectAll( '.tag-hexbin-' + that.element.id + '-'  +ly.label.replace(/\s+/g, '')) 
-		.data(binnedData);
-	
-	//EXIT
-	bins.exit()
-	  .transition()
-		.duration(transitionSpeed)
-		.remove();
-	  
-	//ENTER
-	var newbins = bins.enter()
-		.append('path')
-		.attr("class", 'tag-hexbin-' + that.element.id + '-' + ly.label.replace(/\s+/g, '')  )
-		.attr('d', hexbin.hexagon())
-		.attr('transform', function(d) { return "translate(" + d.x + "," + d.y + ")"; })	
-		.attr('fill', 'white');
+		//hexbin function
+		var hexbin = d3.hexbin()
+			.radius(ly.mapping.radius * (Math.min(this.width, this.height) / 1000 ))
+			.extent([
+				[x_extent[0], y_extent[0]],
+				[x_extent[1], y_extent[1]]
+			]);
+			
+		var binnedData = hexbin(points);
 		
-	//UPDATE
-	bins.merge(newbins)
-		.transition()
-			.ease(d3.easeQuad)
+		//color scale
+		var color = d3.scaleSequential(d3.interpolateBuPu)
+		 .domain([0, d3.max(binnedData, d => d.length) / 2])
+				
+		//data join
+		var bins = this.chart
+			.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
+			.selectAll( '.tag-hexbin-' + that.element.id + '-'  +ly.label.replace(/\s+/g, '')) 
+			.data(binnedData);
+		
+		//EXIT
+		bins.exit()
+		  .transition()
 			.duration(transitionSpeed)
-		.attr('d', hexbin.hexagon())
-		.attr('transform', function(d) { return "translate(" + d.x + "," + d.y + ")"; })
-		.attr('fill', function(d) { return color(d.length); });
+			.remove();
+		  
+		//ENTER
+		var newbins = bins.enter()
+			.append('path')
+			.attr("class", 'tag-hexbin-' + that.element.id + '-' + ly.label.replace(/\s+/g, '')  )
+			.attr('d', hexbin.hexagon())
+			.attr('transform', function(d) { return "translate(" + d.x + "," + d.y + ")"; })	
+			.attr('fill', 'white');
+			
+		//UPDATE
+		bins.merge(newbins)
+			.transition()
+				.ease(d3.easeQuad)
+				.duration(transitionSpeed)
+			.attr('d', hexbin.hexagon())
+			.attr('transform', function(d) { return "translate(" + d.x + "," + d.y + ")"; })
+			.attr('fill', function(d) { return color(d.length); });
+	}
+	
+	dragPoints(ly){
+		const that = this;
+		
+		
+	
+		var drag = d3.drag()
+			.on('start', dragStart)
+			.on('drag', dragging)
+			.on('end', dragEnd);
+		
+		this.chart
+			.selectAll('.tag-point-' + that.element.id + '-'  +ly.label.replace(/\s+/g, ''))
+			.call(drag);
+		
+		
+		function dragStart(d) {
+			d3.select(this).raise().classed('active', true);
+		}
+		
+		function dragging(d) {
+			d[0] = that.xScale.invert(d3.event.x);
+			d[1] = that.yScale.invert(d3.event.y);
+			
+			d3.select(this)
+				.attr('cx', that.xScale(d[0]))
+				.attr('cy', that.yScale(d[1]));
+		}
+		
+		function dragEnd(d){
+			d3.select(this).classed('active', false);
+
+			that.updateRegression(color, ly.label);
+			
+			if(HTMLWidgets.shinyMode) {
+				const x = points.map(function(d){return d['x_var']; });
+				const y = points.map(function(d){return d['y_var']; });
+				const est = points.map(function(d){return d['y_est']; });
+			
+				Shiny.onInputChange('myIOpointsX', x);
+				Shiny.onInputChange('myIOpointsY', y);
+				Shiny.onInputChange('myIOpointsEst', est);
+			}
+			
+		}
+
+	}
+	
+	updateRegression(color, label){		
+		var that = this;
+		var transitionSpeed = this.options.transition.speed;
+		
+		//define line function
+		var valueLine = d3.line()
+			.x(d => this.xScale(d.x_var) )
+			.y(d => this.yScale(d.y_est));
+		
+		var points = [];
+		
+		this.chart
+			.selectAll('.tag-point-' + this.element.id + '-'  + label.replace(/\s+/g, ''))
+			.each(function(){
+				var x = that.xScale.invert(this.getAttribute('cx'));
+				var y = that.yScale.invert(this.getAttribute('cy'));	
+				var point = {
+					x_var:x,
+					y_var:y
+				}
+				points.push(point)
+			});
+			
+		//regress points
+		var regression = linearRegression(points, "y_var", "x_var");
+		
+		if(HTMLWidgets.shinyMode) {
+			Shiny.onInputChange('myIOregression', regression);
+		}
+		
+		points.forEach(function(d){
+		 d.y_est = regression.fn(d.x_var);
+		});
+		
+		var finalPoints = points
+			.sort(function(a,b){ return a.x_var - b.x_var; })
+			.filter(function(d, i){
+				return i === 0 || i === (points.length - 1);
+			});
+		
+		//data join regressed points
+		var linePath = this.chart
+			.selectAll( '.tag-regression-line-' + this.element.id + '-'  + label.replace(/\s+/g, '') )
+			.data([finalPoints]);
+		
+		//EXIT old elements not present in new data
+		linePath.exit()
+		  .transition()
+		  .duration(transitionSpeed)
+			.style('opacity', 0)
+			.remove();
+		
+		//ENTER new elements present in new data
+		var newLinePath = linePath
+		  .enter().append("path")
+			.attr("class", 'tag-regression-line-'+ this.element.id + '-'  + label.replace(/\s+/g, '') )
+			.attr('clip-path', 'url(#' + this.element.id + 'clip'+ ')')
+			.style("fill", "none")
+			.style('stroke', color )
+			.style("stroke-width", 3)
+			.style('opacity', 0)
+			;
+			
+		//UPDATE old elements present in new data
+		linePath.merge(newLinePath)	
+		  .transition()
+		  .ease(d3.easeQuad)
+		  .duration(transitionSpeed)
+			.style('opacity', 1)
+			.style('stroke', color )
+			.attr("d", valueLine);
+			
+		function linearRegression(data,y_var,x_var){
+			console.log("regression run");
+			const x = data.map(function(d) { return d[x_var]; });
+			const y = data.map(function(d) { return d[y_var]; });
+			
+			const lr = {};
+			const n = y.length;
+			let sum_x = 0;
+			let sum_y = 0;
+			let sum_xy = 0;
+			let sum_xx = 0;
+			let sum_yy = 0;
+			
+			for (var i = 0; i < y.length; i++) {
+				
+				sum_x += x[i];
+				sum_y += y[i];
+				sum_xy += (x[i]*y[i]);
+				sum_xx += (x[i]*x[i]);
+				sum_yy += (y[i]*y[i]);
+			} 
+			
+			lr['slope'] = (n * sum_xy - sum_x * sum_y) / (n*sum_xx - sum_x * sum_x);
+			lr['intercept'] = (sum_y - lr.slope * sum_x)/n;
+			lr['r2'] = Math.pow((n*sum_xy - sum_x*sum_y)/Math.sqrt((n*sum_xx-sum_x*sum_x)*(n*sum_yy-sum_y*sum_y)),2);
+			lr['fn'] = function (x) { return this.slope * x + this.intercept; };
+			return lr;
+		}
 	}
 	
 	updateReferenceLines(){
@@ -925,7 +1080,7 @@ class myIOchart {
 		
 		this.updateAxes();
 		this.routeLayers(this.plotLayers);
-		console.log(this.svg.selectAll('.legendElement').data().length)
+		
 		if(this.svg.selectAll('.legendElement').data().length > 0) this.updateLegend();
 	}
 }
