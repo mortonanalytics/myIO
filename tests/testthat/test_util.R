@@ -1,8 +1,6 @@
 #test option functions
 context("util_functions")
 
-testthat::source_file('../../R/util.R')
-
 test_util_data <- dplyr::ungroup(dplyr::mutate(dplyr::group_by(dplyr::mutate(datasets::airquality, Month = paste0("M", Month),
                                                                                                  Temp_low = Temp * c(0.8,0.9,0.75),
                                                                                                  Temp_high = Temp * c(1.2,1.1,1.3)), Percent = Temp/sum(Temp), Day)))
