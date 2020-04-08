@@ -765,7 +765,7 @@ class myIOchart {
 	dragPoints(ly){
 		const that = this;
 		
-		
+		var color = this.options.colorScheme[2] == "on" ? this.colorScheme(ly.data[ly.mapping.group]) : ly.color; 
 	
 		var drag = d3.drag()
 			.on('start', dragStart)
