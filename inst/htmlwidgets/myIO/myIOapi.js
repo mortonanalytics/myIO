@@ -544,6 +544,7 @@ class myIOchart {
 		
 		if(this.options.dragPoints == true) { 
 			this.dragPoints(ly); 
+			//regression needs to wait for transition to properly calculate
 			var color = this.options.colorScheme[2] == "on" ? this.colorScheme(ly.data[ly.mapping.group]) : ly.color; 
 			setTimeout( () => this.updateRegression(color, ly.label), transitionSpeed );
 		}
@@ -810,7 +811,7 @@ class myIOchart {
 	
 	updateRegression(color, label){		
 		var that = this;
-		var transitionSpeed = this.options.transition.speed;
+		var transitionSpeed = this.options.transition.speed / 2;
 		
 		//define line function
 		var valueLine = d3.line()
@@ -881,7 +882,7 @@ class myIOchart {
 			.attr("d", valueLine);
 			
 		function linearRegression(data,y_var,x_var){
-			console.log("regression run");
+			
 			const x = data.map(function(d) { return d[x_var]; });
 			const y = data.map(function(d) { return d[y_var]; });
 			
