@@ -65,5 +65,5 @@ myIO(elementId = "tester") %>%
              data = df_hexbin,
              mapping = list(x_var = "x",
                             y_var = "y",
-                            radius = 10))
+                            radius = 20))
 

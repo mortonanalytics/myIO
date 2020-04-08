@@ -14,7 +14,10 @@ test_object_opt <- myIO::addIoLayer(myIO::myIO(),
               myIO::setmargin(top = 100) %>%
               myIO::setAxisLimits(xlim = list(min = 0)) %>%
               myIO::suppressAxis(xAxis = TRUE, yAxis = TRUE) %>%
-              myIO::suppressLegend()
+              myIO::suppressLegend() %>%
+              myIO::setTransitionSpeed(speed = 1500) %>%
+              myIO::setColorScheme(colorShceme = list("red")) %>%
+              myIO::setToolTipOptions(suppressY = TRUE)
 
 testthat::test_that("axis options get set", {
   testthat::equals(test_object_opt$x$options$xAxisFormat, ".0f")
@@ -61,3 +64,17 @@ testthat::test_that("x axis set to user inputs", {
 
 })
 
+testthat::test_that("transition speed set to user inputs", {
+  testthat::equals(test_object_opt$x$options$transition$speed, 1500)
+
+})
+
+testthat::test_that("color scheme set to user inputs", {
+  testthat::equals(test_object_opt$x$options$colorScheme[1], "red")
+
+})
+
+testthat::test_that("tooltipoptions set to user inputs", {
+  testthat::equals(test_object_opt$x$options$toolTipFormat, TRUE)
+
+})
