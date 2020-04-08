@@ -799,9 +799,9 @@ class myIOchart {
 				const y = points.map(function(d){return d['y_var']; });
 				const est = points.map(function(d){return d['y_est']; });
 			
-				Shiny.onInputChange('myIOpointsX', x);
-				Shiny.onInputChange('myIOpointsY', y);
-				Shiny.onInputChange('myIOpointsEst', est);
+				Shiny.onInputChange('myIOpointsX-'  + label.replace(/\s+/g, ''), x);
+				Shiny.onInputChange('myIOpointsY-'  + label.replace(/\s+/g, ''), y);
+				Shiny.onInputChange('myIOpointsEst-'  + label.replace(/\s+/g, ''), est);
 			}
 			
 		}
@@ -835,7 +835,7 @@ class myIOchart {
 		var regression = linearRegression(points, "y_var", "x_var");
 		
 		if(HTMLWidgets.shinyMode) {
-			Shiny.onInputChange('myIOregression', regression);
+			Shiny.onInputChange('myIOregression-'  + label.replace(/\s+/g, ''), regression);
 		}
 		
 		points.forEach(function(d){
