@@ -1,5 +1,8 @@
 # test IO layer
 context("layer_functions")
+library(dplyr)
+library(myIO)
+
 test_object <- myIO::addIoLayer(myIO::myIO(),
                  type = "line",
                  label = "test_line",

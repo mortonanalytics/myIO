@@ -1,5 +1,8 @@
 #test option functions
 context("util_functions")
+library(dplyr)
+library(myIO)
+
 
 test_util_data <- datasets::airquality %>%
   mutate(Month = paste0("M", Month),

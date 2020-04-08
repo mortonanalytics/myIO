@@ -1,7 +1,7 @@
 Package: myIO
 Type: Package
 Title: d3.js Plotting Project
-Version: 0.1.0
+Version: 1.0.0
 Author: Ryan Morton
 Maintainer: Ryan Morton <mortonanalytics@gmail.com>
 Description: Open Source project to demonstrate R + d3.js combination
@@ -13,4 +13,5 @@ Suggests: testthat
 Imports:
   htmlwidgets,
   stats,
-  lazyeval
+  lazyeval,
+  dplyr

@@ -1,5 +1,8 @@
 #test option functions
 context("option_functions")
+library(dplyr)
+library(myIO)
+
 test_object_opt <- myIO::addIoLayer(myIO::myIO(),
                                 type = "point",
                                 label = "test_line",
