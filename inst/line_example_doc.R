@@ -3,21 +3,17 @@ library(myIO)
 library(viridis)
 
 df <- datasets::airquality %>%
-  mutate(Month = paste0("M", Month),
+  mutate(Month = paste0("This Is the Month of ", Month),
          Temp_low = Temp * c(0.8,0.9,0.75),
          Temp_high = Temp * c(1.2,1.1,1.3)) %>%
   group_by(Day) %>%
   mutate(Percent = Temp/sum(Temp)) %>%
   ungroup()
 
-for(i in 1:ncol(df)){
-  df[is.na(df[,i]), i] <- mean(df[,i], na.rm = TRUE)
-}
-
 colors <- substr(viridis(5), 1, 7)
 
-myIO(elementId = "tester")%>%
-  addIoLayer(type = "point",
+myIO()%>%
+  addIoLayer(type = "line",
              color = colors,
              label = "Month",
              data = df ,
@@ -30,8 +26,7 @@ myIO(elementId = "tester")%>%
              )) %>%
   #setAxisLimits(xlim = list(min = "1"))%>%
   setToggle(newY = "Percent", newScaleY = ".0%") %>%
-  setAxisFormat(yAxis = ".0f") %>%
-  dragPoints()
+  setAxisFormat(yAxis = ".0f")
 
 
 myIO() %>%

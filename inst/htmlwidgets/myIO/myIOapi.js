@@ -4,6 +4,10 @@ class myIOchart {
 		this.element = opts.element;
 		this.plotLayers = opts.plotLayers;
 		this.options = opts.options;
+		this.margin = this.options.margin;
+		this.totalWidth = Math.max(opts.width, 280);
+		this.width = this.totalWidth > 600 ? this.totalWidth * 0.8 : this.totalWidth;
+		this.height = opts.height;
 		this.draw();
     }
 	
@@ -15,43 +19,50 @@ class myIOchart {
 		this.options = x ;
 	}
 	
-	draw(){
-		
-		//define dimensions
-		this.width = this.element.offsetWidth;
-		this.height = this.element.offsetHeight;
-		this.margin = this.options.margin
-		
+	draw(){		
 		//set up parent element and SVG
 		this.element.innerHTML = '';
-		this.svg = d3.select(this.element).append('svg').attr('id', this.element.id);
-		this.svg.attr('width', this.width);
-		this.svg.attr('height', this.height);
+		this.svg = d3.select(this.element)
+			.append('svg')
+			.attr('class', 'myIO-svg')
+			.attr('id', 'myIO-svg' + this.element.id)
+			.attr('width', this.totalWidth)
+			.attr('height', this.height);
 		
 		switch ( this.plotLayers[0].type ) {
 
 			case "gauge":
 			this.plot = this.svg.append('g')
-				.attr('transform','translate('+this.width/2+','+this.height/2+')')
-				.attr('class', 'myIOchart-offset');
+				.attr('transform','translate('+this.totalWidth/2+','+this.height/2+')')
+				.attr('class', 'myIO-chart-offset');
 			break;
 			
 			case "donut":
 			this.plot = this.svg.append('g')
-				.attr('transform','translate('+this.width/2+','+this.height/2+')')
-				.attr('class', 'myIOchart-offset');
+				.attr('transform','translate('+this.totalWidth/2+','+this.height/2+')')
+				.attr('class', 'myIO-chart-offset');
 			break;
 			
 			default:
 			this.plot = this.svg.append('g')
 				.attr('transform','translate('+this.margin.left+','+this.margin.top+')')
-				.attr('class', 'myIOchart-offset');	
+				.style('width', this.width - this.margin.right)
+				.attr('class', 'myIO-chart-offset');	
 		
 		}
 		
 		this.chart = this.plot
 			.append('g')
-			.attr('class', 'myIOchart-area');
+			.attr('class', 'myIO-chart-area');
+		
+		this.legendTranslate = this.totalWidth > 600 ? 'translate(' + (this.width) + ',0)' : 'translate(' + this.margin.left + ',' + ( this.height*0.8 ) +')';
+		
+		this.legendArea = this.svg
+			.append('g')
+			.attr('class', 'myIO-legend-area')
+			.attr('transform', this.legendTranslate )
+			.style( 'width', this.totalWidth > 600 ? this.height : this.height * 0.2 )
+			.style( 'width', this.totalWidth > 600 ? this.totalWidth - this.width : this.totalWidth - this.margin.left );
 	
 		this.initialize();
 	}
@@ -140,13 +151,14 @@ class myIOchart {
 	}
 	
 	setClipPath(){
+		var chartHeight = this.totalWidth > 600 ? this.height : this.height * 0.8 ;
 		this.clipPath = this.chart.append('defs').append('svg:clipPath')
 			.attr('id', this.element.id + 'clip')
 		  .append('svg:rect')
 			.attr('x', 0)
 			.attr('y', 0)
 			.attr('width', this.width - (this.margin.left + this.margin.right))
-			.attr('height', this.height - (this.margin.top + this.margin.bottom));
+			.attr('height', chartHeight - (this.margin.top + this.margin.bottom));
 		
 		this.chart.attr('clip-path', 'url(#' + this.element.id + 'clip'+ ')')
 	}
@@ -249,6 +261,7 @@ class myIOchart {
 		}).filter(onlyUnique);
 					   
 		// create x scale
+		var chartHeight = this.totalWidth > 600 ? this.height : this.height * 0.8 ;
 		switch (this.options.categoricalScale.xAxis){
 			case true:
 				this.xScale = d3.scaleBand()
@@ -266,13 +279,13 @@ class myIOchart {
 		switch (this.options.categoricalScale.yAxis){
 			case true:
 				this.yScale = d3.scaleBand()
-					.range([this.height - (m.top + m.bottom), 0])
+					.range([chartHeight - (m.top + m.bottom), 0])
 					.domain(that.options.flipAxis == true ? this.x_banded : this.y_banded );
 				break;
 				
 			case false:
 				this.yScale = d3.scaleLinear()
-					.range([this.height - (m.top + m.bottom), 0])
+					.range([chartHeight - (m.top + m.bottom), 0])
 					.domain(that.options.flipAxis == true ? xExtent : yExtent);
 		}
 		
@@ -296,6 +309,7 @@ class myIOchart {
 	addAxes(){
 		var that = this;
 		var m = this.margin;
+		var chartHeight = this.totalWidth > 600 ? this.height : this.height * 0.8 ;
 		
 		switch (this.options.xAxisFormat){
 			case "yearMon":
@@ -313,7 +327,7 @@ class myIOchart {
 			case true:
 			this.plot.append('g')
 				.attr("class", "x axis")
-				.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
+				.attr("transform", "translate(0," + (chartHeight-(m.top+m.bottom)) + ")")
 				.call(d3.axisBottom(this.xScale))
 					.selectAll("text")
 					.attr("dx", "-.25em")
@@ -324,7 +338,7 @@ class myIOchart {
 			case false:
 				this.plot.append('g')
 					.attr("class", "x axis")
-					.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
+					.attr("transform", "translate(0," + (chartHeight-(m.top+m.bottom)) + ")")
 					.call(d3.axisBottom(this.xScale)
 							.ticks(this.width < 550 ? 5 : 10, xFormat)
 							//.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;})
@@ -338,12 +352,12 @@ class myIOchart {
 		}
 		
 		var currentFormatY = this.newScaleY ? this.newScaleY : yFormat;
-		
+
 		this.plot.append('g')
 			.attr("class", "y axis")
 			.call(d3.axisLeft(this.yScale)
-				.ticks(this.height < 450 ? 5 : 10, currentFormatY)
-				.tickSize( -this.width-(m.right+m.left) )
+				.ticks(chartHeight < 450 ? 5 : 10, currentFormatY)
+				.tickSize( -(this.width-(m.right+m.left)) )
 				)
 			.selectAll("text")
 				.attr("dx", "-.25em");
@@ -352,8 +366,11 @@ class myIOchart {
 	updateAxes(){
 		var that = this;
 		var m = this.margin;
+		var chartHeight = this.totalWidth > 600 ? this.height : this.height * 0.8 ;
 		
 		var transitionSpeed = this.options.transition.speed;
+		
+		
 		
 		switch (this.options.xAxisFormat){
 			case "yearMon":
@@ -372,7 +389,7 @@ class myIOchart {
 				this.svg.selectAll('.x.axis')
 					.transition().ease(d3.easeQuad)
 					.duration(transitionSpeed)
-					.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
+					.attr("transform", "translate(0," + (chartHeight-(m.top+m.bottom)) + ")")
 					.call(d3.axisBottom(this.xScale))
 						.selectAll("text")
 						.attr("dx", "-.25em")
@@ -384,10 +401,10 @@ class myIOchart {
 				this.svg.selectAll('.x.axis')
 					.transition().ease(d3.easeQuad)
 					.duration(transitionSpeed)
-					.attr("transform", "translate(0," + (this.height-(m.top+m.bottom)) + ")")
+					.attr("transform", "translate(0," + (chartHeight-(m.top+m.bottom)) + ")")
 						.call(d3.axisBottom(this.xScale)
 								.ticks(this.width < 550 ? 5 : 10, xFormat)
-								.tickSize( -(this.height-(m.top+m.bottom)) )
+								.tickSize( -(chartHeight-(m.top+m.bottom)) )
 								//.tickFormat(function(e){ if(Math.floor(+e) != +e){return;} return +e;})
 									)
 							.selectAll("text")
@@ -403,7 +420,7 @@ class myIOchart {
 			.transition().ease(d3.easeQuad)
 			.duration(transitionSpeed)
 			.call(d3.axisLeft(this.yScale)
-				.ticks(this.height < 450 ? 5 : 10, currentFormatY)
+				.ticks(chartHeight < 450 ? 5 : 10, currentFormatY)
 				.tickSize( -(this.width-(m.right+m.left)) )
 				)				
 			.selectAll("text")
@@ -494,7 +511,7 @@ class myIOchart {
 			.attr("fill", "none")
 			.attr('clip-path', 'url(#' + this.element.id + 'clip'+ ')')
 			.style('stroke', d => this.options.colorScheme[2] == "on" ? this.colorScheme(d[ly.mapping.group]) : ly.color )
-			.style("stroke-width", 3)
+			.style("stroke-width", this.totalWidth > 600 ? 3:1)
 			.style('opacity', 0)
 			.attr("class", 'tag-line-' + this.element.id + '-'  + key.replace(/\s+/g, '') );
 			
@@ -504,6 +521,7 @@ class myIOchart {
 		  .ease(d3.easeQuad)
 		  .duration(transitionSpeed)
 			.style('opacity', 1)
+			.style("stroke-width", this.totalWidth > 600 ? 3:1)
 			.style('stroke',d => this.options.colorScheme[2] == "on" ? this.colorScheme(d[0][ly.mapping.group]) : ly.color )
 			.attr("d", valueLine);
 	}
@@ -524,13 +542,14 @@ class myIOchart {
 		  .transition()
 		  .ease(d3.easeQuad)
 		  .duration(transitionSpeed)
+			.attr('r', this.totalWidth > 600 ? 5:3)
 			.style('fill', d => this.options.colorScheme[2] == "on" ? this.colorScheme(d[ly.mapping.group]) : ly.color )
 			.attr('cx', e => this.xScale( e[ly.mapping.x_var] ) )
 			.attr('cy', e => this.yScale( e[ this.newY ? this.newY : ly.mapping.y_var ] ) );
 		
 		points.enter()
 			.append('circle')
-			.attr('r', 5)
+			.attr('r', this.totalWidth > 600 ? 5:3)
 			.style('fill', d => this.options.colorScheme[2] == "on" ? this.colorScheme(d[ly.mapping.group]) : ly.color )
 			.style('opacity', 0)
 			.attr('clip-path', 'url(#' + this.element.id + 'clip'+ ')')
@@ -920,41 +939,44 @@ class myIOchart {
 		var m = this.margin;
 		
 		d3.select(this.element).select('.legend-box').remove();
-		d3.select(this.element).selectAll('.legendElement').remove();
+		d3.select(this.element).selectAll('.legendElements').remove();
 		
-		var svg = d3.select(this.element).select('svg');
+		var svg = this.legendArea;
 		
 		var labelIndex = this.plotLayers.map(function(d) { return d.label; });
+		
+		var n = this.totalWidth > 600 ? 1 : Math.floor(this.totalWidth/125);
+		var itemWidth = 125;
+		var itemHeight = 25;
 		
 		//create legend	box (exists in the background)
 		var legendBox = svg.append('rect')
 			.attr('class', 'legend-box')
-			.attr("x", this.width - 70)
-			.attr("transform", function(d) { return "translate(0,40)";})
-			//.attr("y", 35)
-			.attr('width', '150px')
-			.attr('height', (this.plotLayers.length * 20) + 'px')
+			.attr("transform", function(d) { return "translate(5," + (this.totalWidth > 600 ? m.top : 0) + ")";})
+			.style( 'width', this.totalWidth > 600 ? this.height : this.height * 0.2 )
+			.style( 'width', this.totalWidth > 600 ? this.totalWidth - this.width : this.totalWidth - this.margin.left )
 			.style('fill', 'white')
 			.style('opacity', 0.75);
 			
-		this.plotLayers.forEach(function(d){
+		this.plotLayers.forEach(function(d,i){
 		
 		var legendElement = svg.append('g')
+			.attr('class', 'legendElements')
 			.selectAll('.legendElement')
 			.data([d.label])
 			.enter()
 			.append('g')
 			.attr('class', 'legendElement')
-			.attr("transform", d => "translate(0," +  (75 + labelIndex.indexOf(d)* 20) + ")" )
+			.attr("transform", () => "translate(" + i%n * itemWidth + "," + Math.floor(i/n) * itemHeight + ")" )
 			.attr("font-family", "sans-serif")
 			.attr("font-size", 10)
-			.attr("text-anchor", "end")
+			.attr("text-anchor", "start")
 			.on('click', toggleLine);
 		
 		switch (d.type){
 			case "line":
 				legendElement.append("rect")
-					.attr("x", that.width - 12)
+					.attr("x", 5)
 					.attr('y', 5)
 					.attr("width", 12)
 					.attr("height", 12)
@@ -963,7 +985,7 @@ class myIOchart {
 				break;
 			case "point":
 				legendElement.append("circle")
-					.attr("cx", that.width - 5)
+					.attr("cx", 5)
 					.attr('cy', 6)
 					.attr('r', 5)
 					.attr("fill", d.color)
@@ -972,7 +994,7 @@ class myIOchart {
 			
 			default:
 				legendElement.append("rect")
-				.attr("x", that.width - 12)
+				.attr("x", 5)
 				.attr("width", 12)
 				.attr("height", 12)
 				.attr("fill", d.color)
@@ -980,8 +1002,8 @@ class myIOchart {
 		}
 		
 		legendElement.append("text")
-			.attr("x", that.width - 15)
-			.attr("y", 9.5)
+			.attr("x", 20)
+			.attr("y", 10.5)
 			.attr("dy", "0.35em")
 			.attr('font-size', 12)
 			.text( d => d );
@@ -1058,24 +1080,32 @@ class myIOchart {
 		
 	}
 	
-	resize(){
+	resize(width, height){
 		
-		this.width = this.element.offsetWidth;
-		this.height = this.element.offsetHeight;
-		
+		this.totalWidth = Math.max(width, 280);
+		this.width = this.totalWidth > 600 ? this.totalWidth * 0.8 : this.totalWidth;
+		this.height = height;
 		
 		this.svg
-			.attr('width', this.width)
-			.attr('height', this.height);
+			.attr('width', width)
+			.attr('height', height);
 			
 		this.plot 
-			.attr('transform','translate('+this.margin.left+','+this.margin.top+')');
+			.attr('transform','translate('+this.margin.left+','+this.margin.top+')')
+			.style('width', this.width - this.margin.right);
 		
 		this.clipPath
 			.attr('x', 0)
 			.attr('y', 0)
 			.attr('width', this.width - (this.margin.left + this.margin.right))
-			.attr('height', this.height - (this.margin.top + this.margin.bottom));
+			.attr('height', (this.totalWidth > 600 ? this.height: this.height * 0.8) - (this.margin.top + this.margin.bottom));
+		
+		this.legendTranslate = this.totalWidth > 600 ? 'translate(' + (this.width) + ',0)' : 'translate(' + this.margin.left + ',' + ( this.height*0.8 ) +')';
+		
+		this.legendArea 
+			.attr('transform', this.legendTranslate )
+			.style( 'width', this.totalWidth > 600 ? this.height : this.height * 0.2 )
+			.style( 'width', this.totalWidth > 600 ? this.totalWidth - this.width : this.totalWidth - this.margin.left );
 		
 		this.processScales(this.plotLayers);	
 		

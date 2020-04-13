@@ -22,7 +22,7 @@ myIO <- function(data = NULL, width = NULL, height = NULL, elementId = NULL) {
                    margin = list(top = 30,
                                  bottom = 60,
                                  left = 50,
-                                 right = 50),
+                                 right = 5),
                    xlim = list(min = NULL,
                                max = NULL),
                    ylim = list(min = NULL,
