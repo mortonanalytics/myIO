@@ -62,3 +62,29 @@ myIO(elementId = "tester") %>%
                             y_var = "y",
                             radius = 20))
 
+
+df <- mtcars %>% mutate(cars = rownames(.))
+class(df$cyl) <- "character"
+class(df$vs) <- "character"
+class(df$am) <- "character"
+class(df$gear) <- "character"
+class(df$carb) <- "character"
+
+colors <- substr(viridis(6), 1, 7)
+
+myIO() %>%
+  addIoLayer(
+    type = "treemap",
+    color = c("steelblue", "red", "orange", "green", "brown", "purple"),
+    label = "treemap",
+    data = df,
+    mapping = list(
+      level_2 = "cyl",
+      level_1 = "carb",
+      x_var = "cars",
+      y_var = "mpg"
+    )
+  )
+
+%>%
+  setColorScheme(colorShceme = colors, setCategories = unique(df$carb))

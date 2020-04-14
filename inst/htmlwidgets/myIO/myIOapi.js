@@ -61,7 +61,7 @@ class myIOchart {
 			.append('g')
 			.attr('class', 'myIO-legend-area')
 			.attr('transform', this.legendTranslate )
-			.style( 'width', this.totalWidth > 600 ? this.height : this.height * 0.2 )
+			.style( 'height', this.totalWidth > 600 ? this.height : this.height * 0.2 )
 			.style( 'width', this.totalWidth > 600 ? this.totalWidth - this.width : this.totalWidth - this.margin.left );
 	
 		this.initialize();
@@ -89,6 +89,7 @@ class myIOchart {
 				break;
 				
 			case "hexbin":
+				
 				this.setZoom();
 				this.processScales(this.currentLayers);
 				this.addAxes();
@@ -97,6 +98,7 @@ class myIOchart {
 				break;
 				
 			case "bar":
+				
 				this.setZoom();
 				this.processScales(this.currentLayers);
 				this.addAxes();
@@ -107,6 +109,7 @@ class myIOchart {
 				break;
 				
 			case "line":
+				
 				this.setZoom();
 				this.processScales(this.currentLayers);
 				this.addAxes();
@@ -117,6 +120,7 @@ class myIOchart {
 				break;
 				
 			case "point":
+				
 				this.setZoom();
 				this.processScales(this.currentLayers);
 				this.addAxes();
@@ -127,6 +131,7 @@ class myIOchart {
 				break;
 			
 			case "area":
+				
 				this.setZoom();
 				this.processScales(this.currentLayers);
 				this.addAxes();
@@ -137,6 +142,7 @@ class myIOchart {
 				break;
 				
 			case "stat_line":
+				
 				this.setZoom();
 				this.processScales(this.currentLayers);
 				this.addAxes();
@@ -291,7 +297,9 @@ class myIOchart {
 		}
 		
 		// if there is a color scheme defined
+		console.log(this.options);
 		if(this.options.colorScheme){
+			console.log("color scheme yes!");
 			this.colorDiscrete = d3.scaleOrdinal()
 				.range( this.options.colorScheme[0] )
 				.domain( this.options.colorScheme[1] );
@@ -461,7 +469,10 @@ class myIOchart {
 				case "hexbin":
 					that.addHexBins(d);
 					break;
-					
+				case "treemap":
+					that.addTreemap(d);
+					that.updateOrdinalColorLegend(d);
+					break;
 				default:
 				
 			}
@@ -790,6 +801,142 @@ class myIOchart {
 			.attr('d', hexbin.hexagon())
 			.attr('transform', function(d) { return "translate(" + d.x + "," + d.y + ")"; })
 			.attr('fill', function(d) { return color(d.length); });
+	}
+	
+	addTreemap(ly){
+		var that = this;
+		var m = this.margin;
+		var format = d3.format(",d")
+		var key = ly.label;
+		
+		if(this.options.colorScheme[2] == "on"){
+			
+			this.colorDiscrete = d3.scaleOrdinal()
+				.range( this.options.colorScheme[0] )
+				.domain( this.options.colorScheme[1] );
+			
+			this.colorContinuous = d3.scaleLinear()
+				.range( this.options.colorScheme[0] )
+				.domain( this.options.colorScheme[1] );
+		} else {
+			var colorKey = ly.data.children.map( d => d.name );
+			this.colorDiscrete = d3.scaleOrdinal()
+				.range(ly.color)
+				.domain(colorKey);
+		}
+		
+		// create hierarchy from data
+		var root = d3.hierarchy(ly.data)
+			.eachBefore(function(d) { d.data.id = (d.parent ? d.parent.data.id + "." : "") + d.data.name; })
+			.sum(sumBySize)
+			.sort(function(a,b) { return b.height - a.height || b.value - a.value});
+		
+		// define treemap function
+		var treemap = d3.treemap()
+			.tile(d3.treemapResquarify)
+			.size([
+				this.width - (m.left + m.right),
+				(this.totalWidth > 600 ? this.height : this.height *0.8) - (m.top + m.bottom)
+			])
+			.round(true)
+			.paddingInner(1);
+		
+		treemap(root);
+		
+		// data join
+		var cell = this.chart
+			.selectAll('.root')
+			.data(root.leaves());
+			
+		// EXIT
+		cell.exit().remove();
+		
+		// ENTER
+		var newCell = cell.enter()
+			.append('g')
+			.attr('class', 'root')
+			//.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
+			.attr('transform', function(d) { return "translate(" + d.x0 + "," + d.y0 + ")"; });
+		
+		// append rect
+		newCell.append("rect")
+			.attr('class', 'tag-tree-' + that.element.id + '-'  + key.replace(/\s+/g, ''))
+			.attr('id', function(d) { return d.data.id; })
+			.attr('width', function(d) { return d.x1 - d.x0; })
+			.attr('height', function(d) { return d.y1 - d.y0; })
+			//.attr('opacity', 0.5)
+			.attr('fill', function(d) { while (d.depth > 1) d = d.parent; return that.colorDiscrete(d.data.id); });
+		
+		// UPDATE
+		cell.merge(newCell)
+			.transition()
+			.duration(750)
+			.attr("transform", function(d) { return "translate(" + d.x0 + "," + d.y0 + ")"; })
+		  .select("rect")
+			.attr("width", function(d) { return d.x1 - d.x0; })
+
+			.attr("height", function(d) { return d.y1 - d.y0; })
+			.attr('fill', function(d) { while (d.depth > 1) d = d.parent; return that.colorDiscrete(d.data.id); });
+
+			
+		// append text
+		newCell.append('text')
+			.selectAll('tspan')
+			.data(function(d) { 
+				var name = d.data[ly.mapping.x_var];
+				return name[0].split(/(?=[A-Z][^A-Z])/g).concat(format(d.value)); 
+			})
+			.enter().append('tspan')
+			.attr('x', 3)
+			.attr('y', function(d,i,nodes) { return (i === nodes.length - 1) * 3 + 16 + (i - 0.5) * 9; })
+			.attr('fill-opacity',  function(d,i) { 
+				return this.parentNode.parentNode.getBBox().width > 40 ? 1 : 0; 
+				})
+			.attr('fill', 'black')
+			.text(function(d) { return d; });
+			
+		// append title/tooltip
+		newCell.append('title')
+			.text(function(d) { 
+				return d.data[ly.mapping.level_1] + "  \n" + 
+					d.data[ly.mapping.level_2] + " \n" +
+					d.data[ly.mapping.x_var] + "  \n" +
+					format(d.value); })
+					
+		// append text
+		cell.selectAll('text').remove();
+		
+		cell.append('text')
+			.selectAll('tspan')
+			.data(function(d) { 
+				var name = d.data[ly.mapping.x_var];
+				return name[0].split(/(?=[A-Z][^A-Z])/g).concat(format(d.value)); 
+			})
+			.enter().append('tspan')
+			.attr('x', 3)
+			.attr('y', function(d,i,nodes) { return (i === nodes.length - 1) * 3 + 16 + (i - 0.5) * 9; })
+			.attr('fill-opacity',  function(d,i) { 
+				return this.parentNode.parentNode.getBBox().width > 40 ? 1 : 0; 
+				})
+			.attr('fill', 'black')
+
+			.text(function(d) { return d; });
+			
+		// append title/tooltip
+		cell.selectAll('title').remove();
+		
+		cell.append('title')
+			.text(function(d) { 
+				return d.data[ly.mapping.level_1] + "  \n" + 
+					d.data[ly.mapping.level_2] + "  \n" +
+					d.data[ly.mapping.x_var] + "  \n" +
+
+					format(d.value); })
+		
+		//helper functions
+		function sumBySize(d) {
+			return d[ly.mapping.y_var];
+		}		
 	}
 	
 	addCrosshairsX(ly){
@@ -1252,6 +1399,59 @@ class myIOchart {
 		}
 	}
 	
+	updateOrdinalColorLegend(ly){
+		var that = this;
+		var m = this.margin;
+		
+		d3.select(this.element).select('.legend-box').remove();
+		d3.select(this.element).selectAll('.legendElements').remove();
+		
+		var svg = this.legendArea;
+		
+		var itemWidth = this.totalWidth > 600 ? 140 : 125;
+		var itemHeight = this.totalWidth > 600 ? 25 : 22;
+		var n = this.totalWidth > 600 ? 1 : Math.floor(this.totalWidth/itemWidth);
+		
+		//create legend	box (exists in the background)
+		var legendBox = svg.append('rect')
+			.attr('class', 'legend-box')
+			.attr("transform", function(d) { return "translate(5," + (this.totalWidth > 600 ? m.top : 0) + ")";})
+			.style( 'width', this.totalWidth > 600 ? this.height : this.height * 0.2 )
+			.style( 'width', this.totalWidth > 600 ? this.totalWidth - this.width : this.totalWidth - this.margin.left )
+			.style('fill', 'white')
+			.style('opacity', 0.75);
+		
+		var colorKey = ly.data.children.map( d => d.name );	
+		
+		colorKey.forEach(function(d,i){
+			
+			var legendElement = svg.append('g')
+				.attr('class', 'legendElements')
+				.selectAll('.legendElement')
+				.data(d)
+				.enter()
+				.append('g')
+				.attr('class', 'legendElement')
+				.attr("transform", () => "translate(" + i%n * itemWidth + "," + Math.floor(i/n) * itemHeight + ")" )
+				.attr("text-anchor", "start")
+				.attr('font-size', that.totalWidth > 600 ? 12 : 10);
+			
+			legendElement.append("rect")
+				.attr("x", 5)
+				.attr("width", 12)
+				.attr("height", 12)
+				.attr("fill", that.colorDiscrete("treemap."+ d))
+				.attr("stroke", that.colorDiscrete("treemap."+ d));
+						
+			legendElement.append("text")
+				.attr("x", 20)
+				.attr("y", 10.5)
+				.attr("dy", "0.35em")
+				.text( d );
+				
+			})
+	}
+	
 	updateRollover(lys){
 		
 	}
@@ -1271,24 +1471,36 @@ class myIOchart {
 			.style('width', this.width - this.margin.right);
 		
 		this.clipPath
-			.attr('x', 0)
-			.attr('y', 0)
-			.attr('width', this.width - (this.margin.left + this.margin.right))
-			.attr('height', (this.totalWidth > 600 ? this.height: this.height * 0.8) - (this.margin.top + this.margin.bottom));
-		
+				.attr('x', 0)
+				.attr('y', 0)
+				.attr('width', this.width - (this.margin.left + this.margin.right))
+				.attr('height', (this.totalWidth > 600 ? this.height: this.height * 0.8) - (this.margin.top + this.margin.bottom));
+				
 		this.legendTranslate = this.totalWidth > 600 ? 'translate(' + (this.width) + ',0)' : 'translate(' + this.margin.left + ',' + ( this.height*0.8 ) +')';
 		
 		this.legendArea 
 			.attr('transform', this.legendTranslate )
-			.style( 'width', this.totalWidth > 600 ? this.height : this.height * 0.2 )
+			.style( 'height', this.totalWidth > 600 ? this.height : this.height * 0.2 )
 			.style( 'width', this.totalWidth > 600 ? this.totalWidth - this.width : this.totalWidth - this.margin.left );
 		
-		this.processScales(this.currentLayers);	
+		if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut"){
+			
+			
+			this.processScales(this.currentLayers);
+		}	
 		
-		this.updateAxes();
+		if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut"){
+			this.updateAxes();
+		}
+		
 		this.routeLayers(this.currentLayers);
 		
-		if(this.svg.selectAll('.legendElement').data().length > 0) this.updateLegend();
+		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type != "treemap"){
+			this.updateLegend();
+		} 
+		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type == "treemap"){
+			this.updateOrdinalColorLegend(this.plotLayers[0]);
+		} 
 	}
 }
 
