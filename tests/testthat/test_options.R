@@ -8,17 +8,18 @@ test_object_opt <- myIO::addIoLayer(myIO::myIO(),
                                 data = datasets::mtcars,
                                 mapping = list(x_var = "wt",
                                                y_var = "mpg")) %>%
-              myIO::setAxisFormat(xAxis = ".0f", yAxis = ".1f") %>%
-              myIO::dragPoints() %>%
-              myIO::flipAxis() %>%
-              myIO::defineCategoricalAxis() %>%
-              myIO::setmargin(top = 100) %>%
-              myIO::setAxisLimits(xlim = list(min = 0)) %>%
-              myIO::suppressAxis(xAxis = TRUE, yAxis = TRUE) %>%
-              myIO::suppressLegend() %>%
-              myIO::setTransitionSpeed(speed = 1500) %>%
-              myIO::setColorScheme(colorShceme = list("red")) %>%
-              myIO::setToolTipOptions(suppressY = TRUE)
+  myIO::setAxisFormat(xAxis = ".0f", yAxis = ".1f") %>%
+  myIO::dragPoints() %>%
+  myIO::flipAxis() %>%
+  myIO::defineCategoricalAxis() %>%
+  myIO::setmargin(top = 100) %>%
+  myIO::setAxisLimits(xlim = list(min = 0)) %>%
+  myIO::suppressAxis(xAxis = TRUE, yAxis = TRUE) %>%
+  myIO::suppressLegend() %>%
+  myIO::setTransitionSpeed(speed = 1500) %>%
+  myIO::setColorScheme(colorShceme = list("red")) %>%
+  myIO::setToolTipOptions(suppressY = TRUE) %>%
+  myIO::setReferenceLines()
 
 testthat::test_that("axis options get set", {
  expect_equal(test_object_opt$x$options$xAxisFormat, ".0f")
@@ -77,5 +78,11 @@ testthat::test_that("color scheme set to user inputs", {
 
 testthat::test_that("tooltipoptions set to user inputs", {
   testthat::expect_equal(test_object_opt$x$options$toolTipFormat, "s")
+
+})
+
+testthat::test_that("reference lines  set to user inputs", {
+  testthat::expect_equal(test_object_opt$x$options$referenceLine$x, 0)
+  testthat::expect_equal(test_object_opt$x$options$referenceLine$y, 0)
 
 })
