@@ -13,15 +13,15 @@ df <- datasets::airquality %>%
 colors <- substr(viridis(5), 1, 7)
 
 myIO()%>%
-  addIoLayer(type = "line",
+  addIoLayer(type = "point",
              color = colors,
              label = "Month",
              data = df ,
              mapping = list(
                x_var = "Day",
                y_var = "Temp",
-               #low_y = "Temp_low",
-               #high_y = "Temp_high",
+               low_y = "Temp_low",
+               high_y = "Temp_high",
                group = "Month"
              )) %>%
   setToggle(newY = "Percent", newScaleY = ".0%") %>%

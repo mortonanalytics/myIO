@@ -445,6 +445,8 @@ class myIOchart {
 					break;
 				
 				case "point":
+					if(d.mapping.low_y) { that.addCrosshairsY(d); }
+					if(d.mapping.low_x) { that.addCrosshairsX(d); }
 					that.addPoints(d);
 					break;
 				
@@ -679,7 +681,6 @@ class myIOchart {
 		var barSize = ly.options.barSize == "small" ? 0.5 : 1;
 		var bandwidth = this.options.categoricalScale.yAxis == true ? (this.height - (m.top + m.bottom)) / ly.data.length : Math.min(100, (this.height - (this.margin.top + this.margin.bottom)) / ly.data.length);
 		
-		
 		var transitionSpeed = this.options.transition.speed;
 		
 		var bars = this.chart
@@ -789,6 +790,85 @@ class myIOchart {
 			.attr('d', hexbin.hexagon())
 			.attr('transform', function(d) { return "translate(" + d.x + "," + d.y + ")"; })
 			.attr('fill', function(d) { return color(d.length); });
+	}
+	
+	addCrosshairsX(ly){
+		var transitionSpeed = this.options.transition.speed;
+		
+		var crosshairsX = this.chart
+			.selectAll( '.tag-crosshairX-' + this.element.id + '-'  +ly.label.replace(/\s+/g, '')) 
+			.data(ly.data);
+		
+		crosshairsX.exit()
+		  .transition().remove();
+			  
+		crosshairsX
+			.transition()
+			.delay(transitionSpeed)
+			.duration(transitionSpeed)
+			.ease(d3.easeQuad)
+			.attr('x1', d => this.xScale(d[ly.mapping.low_x]) )
+			.attr('x2', d => this.xScale(d[ly.mapping.high_x]) )
+			.attr('y1', d => this.yScale(d[ly.mapping.y_var]) )
+			.attr('y2', d => this.yScale(d[ly.mapping.y_var]) );
+			
+		crosshairsX.enter()
+			.append('line')
+			.style('fill', 'none')
+			.style('stroke', 'black')
+			.attr('clip-path', 'url(#' + this.element.id + 'clip'+ ')')
+			.style('opacity', 0.5)
+			.attr('x1', d => this.xScale(d[ly.mapping.x_var]) )
+			.attr('x2', d => this.xScale(d[ly.mapping.x_var]) )
+			.attr('y1', d => this.yScale(d[ly.mapping.y_var]) )
+			.attr('y2', d => this.yScale(d[ly.mapping.y_var]) )
+			.attr("class", 'tag-crosshairX-' + this.element.id + '-' + ly.label.replace(/\s+/g, '')  )
+			.transition()
+			.delay(transitionSpeed)
+			.duration(transitionSpeed)
+			.ease(d3.easeQuad)
+			.attr('x1', d => this.xScale(d[ly.mapping.low_x]) )
+			.attr('x2', d => this.xScale(d[ly.mapping.high_x]) );
+	}
+	
+	addCrosshairsY(ly){
+		
+		var transitionSpeed = this.options.transition.speed;
+		
+		var crosshairsY = this.chart
+			.selectAll( '.tag-crosshairY-' + this.element.id + '-'  +ly.label.replace(/\s+/g, '')) 
+			.data(ly.data);
+		
+		crosshairsY.exit()
+		  .transition().remove();
+			  
+		crosshairsY
+			.transition()
+			.delay(transitionSpeed)
+			.ease(d3.easeQuad)
+			.duration(transitionSpeed)
+			.attr('x1', d => this.xScale(d[ly.mapping.x_var]) )
+			.attr('x2', d => this.xScale(d[ly.mapping.x_var]) )
+			.attr('y1', d => this.yScale(d[ly.mapping.low_y]) )
+			.attr('y2', d => this.yScale(d[ly.mapping.high_y]) );
+			
+		crosshairsY.enter()
+			.append('line')
+			.style('fill', 'none')
+			.style('stroke', 'black')
+			.attr('clip-path', 'url(#' + this.element.id + 'clip'+ ')')
+			.style('opacity', 0.5)
+			.attr('x1', d => this.xScale(d[ly.mapping.x_var]) )
+			.attr('x2', d => this.xScale(d[ly.mapping.x_var]) )
+			.attr('y1', d => this.yScale(d[ly.mapping.y_var]) )
+			.attr('y2', d => this.yScale(d[ly.mapping.y_var]) )
+			.attr("class", 'tag-crosshairY-' + this.element.id + '-' + ly.label.replace(/\s+/g, '')  )
+			.transition()
+			.delay(transitionSpeed)
+			.ease(d3.easeQuad)
+			.duration(transitionSpeed)
+			.attr('y1', d => this.yScale(d[ly.mapping.low_y]) )
+			.attr('y2', d => this.yScale(d[ly.mapping.high_y]) );		
 	}
 	
 	dragPoints(ly){
@@ -945,11 +1025,11 @@ class myIOchart {
 		var m =  this.margin;
 		
 		var transitionSpeed = this.options.transition.speed;
-		console.log(this.options.referenceLine.x.length);
+		
 		var xRef = [this.options.referenceLine.x];
 		var yRef = [this.options.referenceLine.y];
 		
-		if(xRef) {
+		if(this.options.referenceLine.x) {
 			var xRefLine = this.plot
 				.selectAll('.ref-x-line')
 				.data(xRef);
@@ -959,7 +1039,7 @@ class myIOchart {
 				.style('opacity', 0)
 				.attr('y2', this.height - (m.top + m.bottom))
 				.remove();
-			console.log(xRefLine);
+			
 			var newxRef =xRefLine.enter().append('line')
 				.attr('class', 'ref-x-line')
 				.attr('fill', 'none')
@@ -986,7 +1066,7 @@ class myIOchart {
 				
 		}
 		
-		if(yRef) {
+		if(this.options.referenceLine.y) {
 			var yRefLine = this.plot
 				.selectAll('.ref-y-line')
 				.data(yRef);
