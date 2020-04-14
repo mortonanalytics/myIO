@@ -17,7 +17,7 @@ myIO <- function(data = NULL, width = NULL, height = NULL, elementId = NULL) {
   # forward options using x
   x = list(
     data = data,
-    options = list(referenceLine = list(x = 0, y = 0),
+    options = list(referenceLine = list(x = NULL, y = NULL),
                    transition = list(speed = 200),
                    margin = list(top = 30,
                                  bottom = 60,

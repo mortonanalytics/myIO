@@ -941,7 +941,86 @@ class myIOchart {
 	}
 	
 	updateReferenceLines(){
+		var that = this;
+		var m =  this.margin;
 		
+		var transitionSpeed = this.options.transition.speed;
+		console.log(this.options.referenceLine.x.length);
+		var xRef = [this.options.referenceLine.x];
+		var yRef = [this.options.referenceLine.y];
+		
+		if(xRef) {
+			var xRefLine = this.plot
+				.selectAll('.ref-x-line')
+				.data(xRef);
+			
+			xRefLine.exit() 
+				.transition().duration(100)
+				.style('opacity', 0)
+				.attr('y2', this.height - (m.top + m.bottom))
+				.remove();
+			console.log(xRefLine);
+			var newxRef =xRefLine.enter().append('line')
+				.attr('class', 'ref-x-line')
+				.attr('fill', 'none')
+				.style('stroke', 'gray')
+				.style('stroke-width', 3)
+				//.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
+				.attr('x1', d => this.xScale(d) )
+				.attr('x2', d => this.xScale(d) )
+				.attr('y1', this.height - (m.top + m.bottom))
+				.attr('y2', this.height - (m.top + m.bottom ))
+				.transition()
+				.ease(d3.easeQuad)
+				.duration(transitionSpeed)
+				.attr('y2', 0);
+			
+			xRefLine
+				.transition()
+				.ease(d3.easeQuad)
+				.duration(transitionSpeed)
+				.attr('x1', d => this.xScale(d) )
+				.attr('x2', d => this.xScale(d) )
+				.attr('y1', this.height - (m.top + m.bottom))
+				.attr('y2', 0);
+				
+		}
+		
+		if(yRef) {
+			var yRefLine = this.plot
+				.selectAll('.ref-y-line')
+				.data(yRef);
+				
+			yRefLine.exit()
+				.transition().duration(100)
+				.attr('y2', this.width - (m.left + m.right))
+				.style('opacity', 0)
+				.remove();
+				
+			var newyRef = yRefLine.enter().append('line')
+				.attr('class', 'ref-y-line')
+				.attr('fill', 'none')
+				.style('stroke', 'gray')
+				.style('stroke-width', 3)
+				//.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
+				.attr('x1', 0)
+				.attr('x2', 0)
+				.attr('y1',d => this.yScale(d) )
+				.attr('y2',  d => this.yScale(d) )
+				.transition()
+				.ease(d3.easeQuad)
+				.duration(transitionSpeed)
+				.attr('x2', this.width - (m.left + m.right));
+				
+			yRefLine.merge(newyRef)
+				.transition()
+				.ease(d3.easeQuad)
+				.duration(transitionSpeed)
+				.attr('x1', 0)
+				.attr('x2', this.width - (m.left + m.right))
+				.attr('y1', d => this.yScale(d) )
+				.attr('y2',  d => this.yScale(d) );
+		}
 	}
 	
 	updateLegend(){

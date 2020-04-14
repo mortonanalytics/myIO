@@ -24,10 +24,8 @@ myIO()%>%
                #high_y = "Temp_high",
                group = "Month"
              )) %>%
-  #setAxisLimits(xlim = list(min = "1"))%>%
   setToggle(newY = "Percent", newScaleY = ".0%") %>%
   setAxisFormat(yAxis = ".0f")
-
 
 myIO() %>%
   addIoLayer(type = "bar",
