@@ -70,36 +70,37 @@ class myIOchart {
 	initialize(){
 		this.addButtons();
 		this.setClipPath();
+		this.currentLayers = this.plotLayers;
 		
-		switch ( this.plotLayers[0].type ) {
+		switch ( this.currentLayers[0].type ) {
 			case "gauge":
-				this.routeLayers(this.plotLayers);
+				this.routeLayers(this.currentLayers);
 				this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
 				break;
 				
 			case "donut":
-				this.routeLayers(this.plotLayers);
+				this.routeLayers(this.currentLayers);
 				this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
 				break;
 				
 			case "treemap":
-				this.routeLayers(this.plotLayers);
+				this.routeLayers(this.currentLayers);
 				this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
 				break;
 				
 			case "hexbin":
 				this.setZoom();
-				this.processScales(this.plotLayers);
+				this.processScales(this.currentLayers);
 				this.addAxes();
-				this.routeLayers(this.plotLayers);
+				this.routeLayers(this.currentLayers);
 				this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
 				break;
 				
 			case "bar":
 				this.setZoom();
-				this.processScales(this.plotLayers);
+				this.processScales(this.currentLayers);
 				this.addAxes();
-				this.routeLayers(this.plotLayers);
+				this.routeLayers(this.currentLayers);
 				this.updateReferenceLines();
 				this.updateLegend();
 				this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
@@ -107,19 +108,19 @@ class myIOchart {
 				
 			case "line":
 				this.setZoom();
-				this.processScales(this.plotLayers);
+				this.processScales(this.currentLayers);
 				this.addAxes();
-				this.routeLayers(this.plotLayers);
+				this.routeLayers(this.currentLayers);
 				this.updateReferenceLines();
 				this.updateLegend();
-				this.updateRollover(this.plotLayers);
+				this.updateRollover(this.currentLayers);
 				break;
 				
 			case "point":
 				this.setZoom();
-				this.processScales(this.plotLayers);
+				this.processScales(this.currentLayers);
 				this.addAxes();
-				this.routeLayers(this.plotLayers);
+				this.routeLayers(this.currentLayers);
 				this.updateReferenceLines();
 				this.updateLegend();
 				this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
@@ -127,19 +128,19 @@ class myIOchart {
 			
 			case "area":
 				this.setZoom();
-				this.processScales(this.plotLayers);
+				this.processScales(this.currentLayers);
 				this.addAxes();
-				this.routeLayers(this.plotLayers);
+				this.routeLayers(this.currentLayers);
 				this.updateReferenceLines();
 				this.updateLegend();
-				this.updateRollover(this.plotLayers);
+				this.updateRollover(this.currentLayers);
 				break;
 				
 			case "stat_line":
 				this.setZoom();
-				this.processScales(this.plotLayers);
+				this.processScales(this.currentLayers);
 				this.addAxes();
-				this.routeLayers(this.plotLayers);
+				this.routeLayers(this.currentLayers);
 				this.updateReferenceLines();
 				this.updateLegend();
 				this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
@@ -219,8 +220,8 @@ class myIOchart {
 		//calculate buffer
 		var x_buffer = Math.max(Math.abs(x_max - x_min) * .05, 0.5) ;
 	
-		var final_x_min = this.options.xlim.min ? this.options.xlim.min : (x_min - x_buffer) ;
-		var final_x_max = this.options.xlim.max ? this.options.xlim.max : (x_max + x_buffer) ;
+		var final_x_min = this.options.xlim.min ? +this.options.xlim.min : (x_min - x_buffer) ;
+		var final_x_max = this.options.xlim.max ? +this.options.xlim.max : (x_max + x_buffer) ;
 		var xExtent = [final_x_min, 
 					   final_x_max ];
 					   
@@ -245,8 +246,8 @@ class myIOchart {
 		var y_buffer = Math.abs(y_max - y_min) * .15 ;
 		
 		//user inputs if available
-		var final_y_min = this.options.ylim.min ? this.options.ylim.min : (y_min - y_buffer) ;
-		var final_y_max = this.options.ylim.max ? this.options.ylim.max : (y_max + y_buffer) ;
+		var final_y_min = this.options.ylim.min ? +this.options.ylim.min : (y_min - y_buffer) ;
+		var final_y_max = this.options.ylim.max ? +this.options.ylim.max : (y_max + y_buffer) ;
 		var yExtent = [(final_y_min), 
 					   (final_y_max)];
 					   
@@ -634,7 +635,7 @@ class myIOchart {
 			.attr('x', d => defineScale(d,ly,bandwidth, barSize, this.options.categoricalScale.xAxis) )
 			.attr('y', this.yScale(0))
 			.attr('width', (barSize * bandwidth)-2)
-			.attr('height', this.height -( m.top + m.bottom ))
+			.attr('height', this.yScale(0))
 			.on('mouseover', hoverTip)
 			.on('mousemove', hoverTip)
 			.on('mouseout', hoverTipHide);
@@ -671,10 +672,14 @@ class myIOchart {
 		
 		var that = this;
 		var m = this.margin;
+		
 		var data = ly.data;
 		var key = ly.label;
+		
 		var barSize = ly.options.barSize == "small" ? 0.5 : 1;
 		var bandwidth = this.options.categoricalScale.yAxis == true ? (this.height - (m.top + m.bottom)) / ly.data.length : Math.min(100, (this.height - (this.margin.top + this.margin.bottom)) / ly.data.length);
+		
+		
 		var transitionSpeed = this.options.transition.speed;
 		
 		var bars = this.chart
@@ -683,7 +688,9 @@ class myIOchart {
 			.data(data);
 		
 		bars.exit()
-			.transition().duration(transitionSpeed).attr('width', 0)
+			.transition()
+			.duration(transitionSpeed)
+			.attr('width', 0)
 			.remove();
 		
 		var newBars = bars.enter()
@@ -698,7 +705,7 @@ class myIOchart {
 			.on('mouseover', hoverTip)
 			.on('mousemove', hoverTip)
 			.on('mouseout', hoverTipHide);
-			
+	
 		bars.merge(newBars)
 			.transition()
 			.ease(d3.easeQuad)
@@ -707,7 +714,10 @@ class myIOchart {
 			.attr('x', d => this.xScale(Math.min(0, d[ly.mapping.y_var])) )
 			.attr('height', (barSize * bandwidth)-2)
 			.attr('width', d => Math.abs(this.xScale(d[ly.mapping.y_var]) - this.xScale(0)) );
-			
+		console.log("yscale check:" + this.yScale(25));
+		
+		console.log(bars);
+		
 		function hoverTip(){
 			
 		}
@@ -943,11 +953,13 @@ class myIOchart {
 		
 		var svg = this.legendArea;
 		
-		var labelIndex = this.plotLayers.map(function(d) { return d.label; });
+		var labelIndex = this.plotLayers.map( function(d) { return d.label; } );
+		var currentLayerIndex = this.currentLayers.map( function(d) { return d.label; } );
+		var hiddenLayers = labelIndex.filter(d => currentLayerIndex.indexOf(d) < 0);
 		
-		var n = this.totalWidth > 600 ? 1 : Math.floor(this.totalWidth/125);
-		var itemWidth = 125;
-		var itemHeight = 25;
+		var itemWidth = this.totalWidth > 600 ? 140 : 125;
+		var itemHeight = this.totalWidth > 600 ? 25 : 22;
+		var n = this.totalWidth > 600 ? 1 : Math.floor(this.totalWidth/itemWidth);
 		
 		//create legend	box (exists in the background)
 		var legendBox = svg.append('rect')
@@ -959,101 +971,107 @@ class myIOchart {
 			.style('opacity', 0.75);
 			
 		this.plotLayers.forEach(function(d,i){
-		
-		var legendElement = svg.append('g')
-			.attr('class', 'legendElements')
-			.selectAll('.legendElement')
-			.data([d.label])
-			.enter()
-			.append('g')
-			.attr('class', 'legendElement')
-			.attr("transform", () => "translate(" + i%n * itemWidth + "," + Math.floor(i/n) * itemHeight + ")" )
-			.attr("font-family", "sans-serif")
-			.attr("font-size", 10)
-			.attr("text-anchor", "start")
-			.on('click', toggleLine);
-		
-		switch (d.type){
-			case "line":
-				legendElement.append("rect")
+
+			var legendElement = svg.append('g')
+				.attr('class', 'legendElements')
+				.selectAll('.legendElement')
+				.data([d.label])
+				.enter()
+				.append('g')
+				.attr('class', 'legendElement')
+				.attr("transform", () => "translate(" + i%n * itemWidth + "," + Math.floor(i/n) * itemHeight + ")" )
+				.attr("text-anchor", "start")
+				.attr('font-size', that.totalWidth > 600 ? 12 : 10)
+				.style("opacity", currentLayerIndex.indexOf(d.label) > -1 ? 1: 0.5 )
+				//.style("fill-opacity", currentLayerIndex.indexOf(d.label) > -1 ? 1: 0 )
+				.on('click', toggleLine);
+			
+			switch (d.type){
+				case "line":
+					legendElement.append("rect")
+						.attr("x", 5)
+						.attr('y', 5)
+						.attr("width", 12)
+						.attr("height", 12)
+						.attr("fill", d.color )
+						//.attr("fill-opacity", currentLayerIndex.indexOf(d.label) > -1 ? 1: 0.1 )
+						.attr("stroke", d.color);
+					break;
+				case "point":
+					legendElement.append("circle")
+						.attr("cx", 5)
+						.attr('cy', 6)
+						.attr('r', 5)
+						.attr("fill", d.color)
+						//.attr("fill-opacity", currentLayerIndex.indexOf(d.label) > -1 ? 1: 0.1 )
+						.attr("stroke", d.color);
+					break;
+				
+				default:
+					legendElement.append("rect")
 					.attr("x", 5)
-					.attr('y', 5)
 					.attr("width", 12)
 					.attr("height", 12)
 					.attr("fill", d.color)
+					//.attr("fill-opacity", currentLayerIndex.indexOf(d.label) > -1 ? 1: 0.1 )
 					.attr("stroke", d.color);
-				break;
-			case "point":
-				legendElement.append("circle")
-					.attr("cx", 5)
-					.attr('cy', 6)
-					.attr('r', 5)
-					.attr("fill", d.color)
-					.attr("stroke", d.color);
-				break;
+			}
 			
-			default:
-				legendElement.append("rect")
-				.attr("x", 5)
-				.attr("width", 12)
-				.attr("height", 12)
-				.attr("fill", d.color)
-				.attr("stroke", d.color);
-		}
+			legendElement.append("text")
+				.attr("x", 20)
+				.attr("y", 10.5)
+				.attr("dy", "0.35em")
+				.text( d => d );
+				
+			})
+		console.log(hiddenLayers);
 		
-		legendElement.append("text")
-			.attr("x", 20)
-			.attr("y", 10.5)
-			.attr("dy", "0.35em")
-			.attr('font-size', 12)
-			.text( d => d );
-			
-		})
-		
-		var filteredElements = [];
+		var filteredElements = hiddenLayers ? hiddenLayers : [];
 			
 		function toggleLine(){
 			var selectedData = d3.select(this).data();
 			
 			//toggle elements in and out of filteredElements
-			if(filteredElements.length < 1) {
+			if ( !filteredElements.includes(selectedData[0]) ){
 				
 				filteredElements.push(selectedData[0]);
 				
 				d3.select(this)
 					.style('opacity', 0.5);
-					
+				/*	
 				d3.select(this).select('rect')
-					.attr('fill-opacity', 0);
+					.attr('fill-opacity', 0.1);
 					
 				d3.select(this).select('circle')
-					.attr('fill-opacity', 0);	
-				
-			} else if ( !filteredElements.includes(selectedData[0]) ){
-				
-				filteredElements.push(selectedData[0]);
-				
-				d3.select(this)
-					.style('opacity', 0.5);
-					
-				d3.select(this).select('rect')
-					.attr('fill-opacity', 0);
-					
-				d3.select(this).select('circle')
-					.attr('fill-opacity', 0);
-					
+					.attr('fill-opacity', 0.1);
+				*/	
 			} else if ( filteredElements.includes(selectedData[0]) ){
 				
 				filteredElements = filteredElements.filter(function(d){
 					return d != selectedData[0];
 				});
 				d3.select(this).style('opacity', 1);
-				
+				/*
 				d3.select(this).select('rect')
 					.attr('fill-opacity', 1);
 				
 				d3.select(this).select('circle')
 					.attr('fill-opacity', 1);
+				*/
+			} else if(filteredElements.length < 1) {
+				
+				filteredElements.push(selectedData[0]);
+				
+				d3.select(this)
+					.style('opacity', 0.5);
+				/*	
+				d3.select(this).select('rect')
+					.attr('fill-opacity', 0.1);
+					
+				d3.select(this).select('circle')
+					.attr('fill-opacity', 0.1);	
+				*/
+				
 			}
 			
 			var filteredLayers = that.plotLayers.filter(function(d){
@@ -1065,12 +1083,13 @@ class myIOchart {
 					return filteredElements.indexOf(d.label) > -1;
 				})
 				.map(function(d) { return d.label; });;
-		
-			that.processScales(filteredLayers);
-			that.routeLayers(filteredLayers);
+			
+			that.currentLayers = filteredLayers;
+			that.processScales(that.currentLayers);
+			that.routeLayers(that.currentLayers);
 			that.removeLayers(removedLayers);
 			that.updateAxes();
-			//that.addToolTip(filteredLayers);
+			//that.addToolTip(currentLayers);
 			//that.addButtons();
 		
 		}
@@ -1107,10 +1126,10 @@ class myIOchart {
 			.style( 'width', this.totalWidth > 600 ? this.height : this.height * 0.2 )
 			.style( 'width', this.totalWidth > 600 ? this.totalWidth - this.width : this.totalWidth - this.margin.left );
 		
-		this.processScales(this.plotLayers);	
+		this.processScales(this.currentLayers);	
 		
 		this.updateAxes();
-		this.routeLayers(this.plotLayers);
+		this.routeLayers(this.currentLayers);
 		
 		if(this.svg.selectAll('.legendElement').data().length > 0) this.updateLegend();
 	}

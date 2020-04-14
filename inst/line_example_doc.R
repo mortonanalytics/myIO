@@ -32,16 +32,16 @@ myIO()%>%
 myIO() %>%
   addIoLayer(type = "bar",
              color = colors[1],
-             label = "M5",
-             data = df %>% filter(Month == "M5"),
+             label = "This Is the Month of 5",
+             data = df %>% filter(Month == "This Is the Month of 5"),
              mapping = list(
                x_var = "Day",
                y_var = "Temp"
              ))%>%
   addIoLayer(type = "bar",
              color = colors[2],
-             label = "M6",
-             data = df %>% filter(Month == "M7"),
+             label = "This Is the Month of 7",
+             data = df %>% filter(Month == "This Is the Month of 7"),
              mapping = list(
                x_var = "Day",
                y_var = "Temp"
@@ -49,8 +49,7 @@ myIO() %>%
              options = list(barSize = "small")
              )%>%
   setAxisLimits(ylim = list(min = "0")) %>%
-  defineCategoricalAxis(xAxis = FALSE, yAxis = TRUE) %>%
-  flipAxis()
+  defineCategoricalAxis(xAxis = TRUE, yAxis = FALSE)
 
 df_hexbin <- data.frame(x = rnorm(1000),
                         y = rnorm(1000))
