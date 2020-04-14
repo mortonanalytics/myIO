@@ -804,7 +804,6 @@ class myIOchart {
 			  
 		crosshairsX
 			.transition()
-			.delay(transitionSpeed)
 			.duration(transitionSpeed)
 			.ease(d3.easeQuad)
 			.attr('x1', d => this.xScale(d[ly.mapping.low_x]) )
@@ -844,7 +843,6 @@ class myIOchart {
 			  
 		crosshairsY
 			.transition()
-			.delay(transitionSpeed)
 			.ease(d3.easeQuad)
 			.duration(transitionSpeed)
 			.attr('x1', d => this.xScale(d[ly.mapping.x_var]) )

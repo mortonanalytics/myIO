@@ -8,7 +8,8 @@ df <- datasets::airquality %>%
          Temp_high = Temp * c(1.2,1.1,1.3)) %>%
   group_by(Day) %>%
   mutate(Percent = Temp/sum(Temp)) %>%
-  ungroup()
+  ungroup() %>%
+  mutate(Day2 = Day * c(1.02, 1.03, 1.01, 1.05, 1.1, 1.08))
 
 colors <- substr(viridis(5), 1, 7)
 
@@ -26,6 +27,7 @@ myIO()%>%
              )) %>%
   setToggle(newY = "Percent", newScaleY = ".0%") %>%
   setAxisFormat(yAxis = ".0f")
+
 
 myIO() %>%
   addIoLayer(type = "bar",
