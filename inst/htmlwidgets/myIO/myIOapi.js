@@ -1463,7 +1463,7 @@ class myIOchart {
 		
 		this.plotLayers = x.layers;
 		this.currentLayers = this.plotLayers;
-		var newLayers = x.layers.map(d => d.label );
+		var newLayers = x.layers.map( d => d.label );
 		var oldLayers = [];
 		this.layerIndex.forEach(function(d){
 				var x = newLayers.indexOf(d);
@@ -1478,6 +1478,8 @@ class myIOchart {
 		}	
 		
 		this.routeLayers(this.currentLayers);
+		console.log(oldLayers);
+		this.removeLayers(oldLayers);
 		
 		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type != "treemap"){
 			this.updateLegend();
@@ -1485,7 +1487,6 @@ class myIOchart {
 		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type == "treemap"){
 			this.updateOrdinalColorLegend(this.plotLayers[0]);
 		}	
-		
 	}
 	
 	resize(width, height){
