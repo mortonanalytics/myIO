@@ -39,7 +39,7 @@ class myIOchart {
 			
 			case "donut":
 			this.plot = this.svg.append('g')
-				.attr('transform','translate('+this.width/2+','+this.height/2+')')
+				.attr('transform','translate('+this.width/2+','+(this.totalWidth > 600 ? this.height: this.height * 0.8)/2+')')
 				.attr('class', 'myIO-chart-offset');
 			break;
 			
@@ -162,16 +162,7 @@ class myIOchart {
 		
 		switch (type){
 			case "donut":
-				var chartHeight = this.totalWidth > 600 ? this.height : this.height * 0.8 ;
-				this.clipPath = this.svg.append('defs').append('svg:clipPath')
-					.attr('id', this.element.id + 'clip')
-				  .append('svg:rect')
-					.attr('x', this.margin.left)
-					.attr('y', this.margin.top)
-					.attr('width', this.width - (this.margin.left + this.margin.right))
-					.attr('height', chartHeight - (this.margin.top + this.margin.bottom));
 				
-				this.svg.attr('clip-path', 'url(#' + this.element.id + 'clip'+ ')');
 				break;
 			
 			default:
@@ -1607,6 +1598,7 @@ class myIOchart {
 				break;
 			case "donut":
 				var colorKey = ly.data.map( d => d[ly.mapping.x_var] );
+				console.log(colorKey);
 				break;
 			
 			default:
@@ -1630,8 +1622,8 @@ class myIOchart {
 				.attr("x", 5)
 				.attr("width", 12)
 				.attr("height", 12)
-				.attr("fill", that.colorDiscrete("treemap."+ d))
-				.attr("stroke", that.colorDiscrete("treemap."+ d));
+				.attr("fill", ly.type == "treemap" ? that.colorDiscrete("treemap."+ d) : that.colorDiscrete(d[0]) )
+				.attr("stroke", ly.type == "treemap" ? that.colorDiscrete("treemap."+ d) : that.colorDiscrete(d[0]) );
 						
 			legendElement.append("text")
 				.attr("x", 20)
@@ -1696,23 +1688,14 @@ class myIOchart {
 				this.plot
 					.attr('transform','translate('+this.totalWidth/2+','+this.height/2+')')
 					.attr('class', 'myIO-chart-offset');
-				this.clipPath
-					.attr('x', this.margin.left)
-					.attr('y', this.margin.top)
-					.attr('width', this.width - (this.margin.left + this.margin.right))
-					.attr('height', (this.totalWidth > 600 ? this.height: this.height * 0.8) - (this.margin.top + this.margin.bottom));
+				
 				break;
 			
 			case "donut":
 				this.plot
-					.attr('transform','translate('+this.width/2+','+this.height/2+')')
+					.attr('transform','translate('+this.width/2+','+(this.totalWidth > 600 ? this.height: this.height * 0.8)/2+')')
 					.attr('class', 'myIO-chart-offset');
 
-				this.clipPath
-					.attr('x', this.margin.left)
-					.attr('y', this.margin.top)
-					.attr('width', this.width - (this.margin.left + this.margin.right))
-					.attr('height', (this.totalWidth > 600 ? this.height: this.height * 0.8) - (this.margin.top + this.margin.bottom));
 				break;
 			
 			default:
@@ -1744,10 +1727,10 @@ class myIOchart {
 		
 		this.routeLayers(this.currentLayers);
 		
-		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type != "treemap"){
+		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type != "treemap" & this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut"){
 			this.updateLegend();
 		} 
-		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type == "treemap"){
+		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type == "treemap" || this.plotLayers[0].type == "gauge" || this.plotLayers[0].type == "donut"){
 			this.updateOrdinalColorLegend(this.plotLayers[0]);
 		} 
 	}
