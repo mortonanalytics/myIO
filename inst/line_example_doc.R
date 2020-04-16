@@ -102,3 +102,13 @@ myIO() %>%
       y_var = "y"
     )
   )
+
+myIO() %>%
+  addIoLayer(
+    type = "gauge",
+    color = "blue",
+    label = "gauge",
+    data = data.frame(value = 0.9),
+    mapping = list(value = "value")
+
+  )

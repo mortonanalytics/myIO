@@ -33,7 +33,7 @@ class myIOchart {
 
 			case "gauge":
 			this.plot = this.svg.append('g')
-				.attr('transform','translate('+this.totalWidth/2+','+this.height/2+')')
+				.attr('transform','translate('+this.width/2+','+(this.totalWidth > 600 ? this.height *0.8 : this.height * 0.6)+')')
 				.attr('class', 'myIO-chart-offset');
 			break;
 			
@@ -162,6 +162,7 @@ class myIOchart {
 		
 		switch (type){
 			case "donut":
+			case "gauge":
 				
 				break;
 			
@@ -487,6 +488,12 @@ class myIOchart {
 				case "donut":
 					that.addDonut(d);
 					that.updateOrdinalColorLegend(d);
+					break;
+				
+				case "gauge":
+					that.addGauge(d);
+					break;
+					
 				default:
 				
 			}
@@ -1033,6 +1040,8 @@ class myIOchart {
 	addDonut(ly){
 		var that = this;
 		var m = this.margin;
+		
+		var transitionSpeed = this.options.transition.speed;
 
 		//define gauge variable
 		var twoPi = 2 * Math.PI;
@@ -1086,7 +1095,8 @@ class myIOchart {
 			.each(function(d) { this._current = 0; });
 			
 		path.merge(newPath).transition()
-			.duration(1500)
+			.duration(transitionSpeed)
+			.ease(d3.easeQuad)
 			.attr('fill', (d,i) => this.colorDiscrete(i) )
 			.attrTween('d', arcTween)
 
@@ -1107,7 +1117,7 @@ class myIOchart {
 			return d.startAngle + (d.endAngle - d.startAngle)/2;
 		}
 
-		textLabel.merge(newText).transition().duration(1000)
+		textLabel.merge(newText).transition().duration(transitionSpeed).ease(d3.easeQuad)
 			.text(d => d.data[ly.mapping.x_var] )
 			.style('opacity', function(d){
 				var wedgeSize =  Math.abs(d.endAngle - d.startAngle);
@@ -1153,7 +1163,7 @@ class myIOchart {
 			.style('opacity', 0)
 			.style('stroke' , 'gray');
 
-		polyline.merge(newPolyline).transition().duration(1000)
+		polyline.merge(newPolyline).transition().duration(transitionSpeed).ease(d3.easeQuad)
 			.style('opacity', function(d){
 				var wedgeSize =  Math.abs(d.endAngle - d.startAngle);
 				if(wedgeSize > 0.3) {
@@ -1185,6 +1195,72 @@ class myIOchart {
 			return arc(i(t));
 		  };
 		}
+	}
+	
+	addGauge(ly){
+		var that = this;
+		var m = this.margin;
+		var transitionSpeed = this.options.transition.speed;
+		
+		//define gauge variable
+		var tau = Math.PI;
+		var radius = Math.max(Math.min(this.width, (this.totalWidth > 600 ? this.height: this.height * 0.8))/2, 30);
+		var barWidth = 30 ;
+		var value = ly.data[0].value[0]; 
+		var data = [value, (1 - value) ];
+			
+		//define gauge functions
+		var arc = d3.arc()
+			.innerRadius(radius-barWidth)
+			.outerRadius(radius);
+			
+		var pie = d3.pie()
+			.sort(null)
+			.value( d => d)
+			.startAngle( tau * -0.5 )
+			.endAngle( tau * 0.5);
+		
+		var percentFormat = d3.format(".1%")
+		
+		var path = this.chart
+			.selectAll('path')
+			.data(pie(data));
+		
+		path.exit().remove();
+		
+		var newPath = path.enter()
+			.append('path')
+			.attr('class', 'donut')
+			.attr('fill', (d,i) => [ly.color, "gray"][i] )
+			.transition().duration(transitionSpeed).ease(d3.easeBack)
+			.attr('d', arc)
+			.each(function(d) { this._current = 0; });
+		
+		path.merge(newPath).transition().duration(transitionSpeed).ease(d3.easeBack)
+			.duration(transitionSpeed)
+			.attr('fill', (d,i) => [ly.color, "gray"][i] )
+			.attrTween('d', arcTween)
+		
+		function arcTween(a) {
+		  this._current = this._current || a;		
+		  var i = d3.interpolate(this._current, a);
+		  this._current = i(0);
+		  return function(t) {
+			return arc(i(t));
+		  };
+		}
+		
+		this.chart.selectAll('.gauge-text').remove();
+		
+		var label = this.chart
+			.append('g')
+			.append('text')
+			.text(percentFormat(data[0]))
+			.attr('class', 'gauge-text')
+			.attr('text-anchor', 'middle')
+			.attr('font-size', 20)
+			.attr('dy', '-0.45em');
+		
 	}
 	
 	dragPoints(ly){
@@ -1663,10 +1739,10 @@ class myIOchart {
 
 		this.removeLayers(oldLayers);
 		
-		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type != "treemap"){
+		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type != "treemap" & this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut"){
 			this.updateLegend();
 		} 
-		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type == "treemap"){
+		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type == "treemap" || this.plotLayers[0].type == "gauge" || this.plotLayers[0].type == "donut"){
 			this.updateOrdinalColorLegend(this.plotLayers[0]);
 		}	
 	}
@@ -1686,7 +1762,7 @@ class myIOchart {
 
 			case "gauge":
 				this.plot
-					.attr('transform','translate('+this.totalWidth/2+','+this.height/2+')')
+					.attr('transform','translate('+this.width/2+','+(this.totalWidth > 600 ? this.height * 0.8 : this.height * 0.6)+')')
 					.attr('class', 'myIO-chart-offset');
 				
 				break;
@@ -1806,7 +1882,6 @@ function getSVGString( svgNode ) {
 		element.insertBefore( styleElement, refNode );
 	}
 }
-
 
 function svgString2Image( svgString, width, height, format, callback ) {
 	var format = format ? format : 'png';

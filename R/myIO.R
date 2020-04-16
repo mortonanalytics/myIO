@@ -18,7 +18,7 @@ myIO <- function(data = NULL, width = NULL, height = NULL, elementId = NULL) {
   x = list(
     data = data,
     options = list(referenceLine = list(x = NULL, y = NULL),
-                   transition = list(speed = 200),
+                   transition = list(speed = 1000),
                    margin = list(top = 30,
                                  bottom = 60,
                                  left = 50,

@@ -27,8 +27,9 @@ ui <- fluidPage(
 
         # Show a plot of the generated distribution
         mainPanel(width = 12,
-           column(6,myIOOutput("distPlot",width = "100%")),
-           column(6, myIOOutput("donut", width = "100%"))
+           column(6,myIOOutput("distPlot",width = "100%", height = "350px")),
+           column(6, myIOOutput("donut", width = "100%", height = "350px")),
+           column(6, myIOOutput("gauge", width = "100%", height = "250px"))
         )
     )
 )
@@ -88,6 +89,18 @@ server <- function(input, output) {
                     x_var = "x",
                     y_var = "y"
                 )
+            )
+    })
+
+    output$gauge <- renderMyIO({
+        myIO() %>%
+            addIoLayer(
+                type = "gauge",
+                color = "steelblue",
+                label = "gauge",
+                data = data.frame(value = input$slider / 10),
+                mapping = list(value = "value")
+
             )
     })
 }
