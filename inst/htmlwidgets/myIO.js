@@ -11,7 +11,7 @@ HTMLWidgets.widget({
       renderValue: function(x) {
 		if(x.layers) {
 			if(this.myIOchart){
-				this.myIOchart.update(x);
+				this.myIOchart.updateChart(x);
 			} else {
 
 				this.myIOchart = new myIOchart({

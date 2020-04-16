@@ -1456,6 +1456,38 @@ class myIOchart {
 		
 	}
 	
+	updateChart(x) {
+		var that = this;
+		var m = this.margin;
+		this.options = x.options;
+		
+		this.plotLayers = x.layers;
+		this.currentLayers = this.plotLayers;
+		var newLayers = x.layers.map(d => d.label );
+		var oldLayers = [];
+		this.layerIndex.forEach(function(d){
+				var x = newLayers.indexOf(d);
+				if(x < 0) {
+					oldLayers.push(d);
+					}
+			});
+			
+		if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut"){
+			this.processScales(this.currentLayers);
+			this.updateAxes();
+		}	
+		
+		this.routeLayers(this.currentLayers);
+		
+		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type != "treemap"){
+			this.updateLegend();
+		} 
+		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type == "treemap"){
+			this.updateOrdinalColorLegend(this.plotLayers[0]);
+		}	
+		
+	}
+	
 	resize(width, height){
 		
 		this.totalWidth = Math.max(width, 280);
@@ -1468,7 +1500,7 @@ class myIOchart {
 			
 		this.plot 
 			.attr('transform','translate('+this.margin.left+','+this.margin.top+')')
-			.style('width', this.width - this.margin.right);
+			.style('width', this.width - (this.margin.left + this.margin.right) );
 		
 		this.clipPath
 				.attr('x', 0)
@@ -1484,14 +1516,9 @@ class myIOchart {
 			.style( 'width', this.totalWidth > 600 ? this.totalWidth - this.width : this.totalWidth - this.margin.left );
 		
 		if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut"){
-			
-			
 			this.processScales(this.currentLayers);
-		}	
-		
-		if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut"){
 			this.updateAxes();
-		}
+		}	
 		
 		this.routeLayers(this.currentLayers);
 		
