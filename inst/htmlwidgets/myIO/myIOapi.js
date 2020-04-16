@@ -39,7 +39,7 @@ class myIOchart {
 			
 			case "donut":
 			this.plot = this.svg.append('g')
-				.attr('transform','translate('+this.totalWidth/2+','+this.height/2+')')
+				.attr('transform','translate('+this.width/2+','+this.height/2+')')
 				.attr('class', 'myIO-chart-offset');
 			break;
 			
@@ -68,10 +68,11 @@ class myIOchart {
 	}
 	
 	initialize(){
-		this.addButtons();
-		this.setClipPath();
 		this.currentLayers = this.plotLayers;
 		
+		this.addButtons();
+		this.setClipPath( this.currentLayers[0].type );
+				
 		switch ( this.currentLayers[0].type ) {
 			case "gauge":
 				this.routeLayers(this.currentLayers);
@@ -157,17 +158,35 @@ class myIOchart {
 		
 	}
 	
-	setClipPath(){
-		var chartHeight = this.totalWidth > 600 ? this.height : this.height * 0.8 ;
-		this.clipPath = this.chart.append('defs').append('svg:clipPath')
-			.attr('id', this.element.id + 'clip')
-		  .append('svg:rect')
-			.attr('x', 0)
-			.attr('y', 0)
-			.attr('width', this.width - (this.margin.left + this.margin.right))
-			.attr('height', chartHeight - (this.margin.top + this.margin.bottom));
+	setClipPath(type){
 		
-		this.chart.attr('clip-path', 'url(#' + this.element.id + 'clip'+ ')')
+		switch (type){
+			case "donut":
+				var chartHeight = this.totalWidth > 600 ? this.height : this.height * 0.8 ;
+				this.clipPath = this.svg.append('defs').append('svg:clipPath')
+					.attr('id', this.element.id + 'clip')
+				  .append('svg:rect')
+					.attr('x', this.margin.left)
+					.attr('y', this.margin.top)
+					.attr('width', this.width - (this.margin.left + this.margin.right))
+					.attr('height', chartHeight - (this.margin.top + this.margin.bottom));
+				
+				this.svg.attr('clip-path', 'url(#' + this.element.id + 'clip'+ ')');
+				break;
+			
+			default:
+				var chartHeight = this.totalWidth > 600 ? this.height : this.height * 0.8 ;
+				this.clipPath = this.chart.append('defs').append('svg:clipPath')
+					.attr('id', this.element.id + 'clip')
+				  .append('svg:rect')
+					.attr('x', 0)
+					.attr('y', 0)
+					.attr('width', this.width - (this.margin.left + this.margin.right))
+					.attr('height', chartHeight - (this.margin.top + this.margin.bottom));
+				
+				this.chart.attr('clip-path', 'url(#' + this.element.id + 'clip'+ ')')
+		}
+		
 	}
 	
 	setZoom(){
@@ -473,6 +492,10 @@ class myIOchart {
 					that.addTreemap(d);
 					that.updateOrdinalColorLegend(d);
 					break;
+					
+				case "donut":
+					that.addDonut(d);
+					that.updateOrdinalColorLegend(d);
 				default:
 				
 			}
@@ -1016,6 +1039,163 @@ class myIOchart {
 			.attr('y2', d => this.yScale(d[ly.mapping.high_y]) );		
 	}
 	
+	addDonut(ly){
+		var that = this;
+		var m = this.margin;
+
+		//define gauge variable
+		var twoPi = 2 * Math.PI;
+		var radius = Math.min(this.width - (m.right + m.left), this.height - (m.top + m.bottom))/2;
+		var barWidth = 30 ;
+		
+		var pie = d3.pie()
+			.sort(null)
+			.value( d => d[ly.mapping.y_var] );
+		
+		var arc = d3.arc()
+		  .innerRadius(radius * 0.8)
+		  .outerRadius(radius * 0.4);
+		  
+		var outerArc  = d3.arc()
+		  .innerRadius(radius * 0.9)
+		  .outerRadius(radius * 0.9);
+		  
+		var data = ly.data;
+		
+		if(this.options.colorScheme[2] == "on"){
+			
+			this.colorDiscrete = d3.scaleOrdinal()
+				.range( this.options.colorScheme[0] )
+				.domain( this.options.colorScheme[1] );
+			
+			this.colorContinuous = d3.scaleLinear()
+				.range( this.options.colorScheme[0] )
+				.domain( this.options.colorScheme[1] );
+		} else {
+			var colorKey = ly.data.map( d => d[ly.mapping.x_var] );
+			this.colorDiscrete = d3.scaleOrdinal()
+				.range(ly.color)
+				.domain(colorKey);
+		}
+		
+		var key = function(d){ return d.data[ly.mapping.x_var]; };
+		
+		//data join
+		var path = this.chart
+			.selectAll('.donut')
+			.data(pie(data));
+		 
+		path.exit().remove();
+		
+		var newPath = path.enter()
+			.append('path')
+			.attr('class', 'donut')
+			.attr('fill', (d,i) => this.colorDiscrete(i) )
+			.attr('d', arc)
+			.each(function(d) { this._current = 0; });
+			
+		path.merge(newPath).transition()
+			.duration(1500)
+			.attr('fill', (d,i) => this.colorDiscrete(i) )
+			.attrTween('d', arcTween)
+
+		/* ------- TEXT LABELS -------*/
+
+		var textLabel = this.chart.selectAll("text")
+			.data(pie(data));
+
+		var newText = textLabel.enter()
+			.append("text")
+			.attr('class', 'donut-text')
+			.style('font-size', '12px')
+			.style('opacity', 0)
+			.attr("dy", ".35em")
+			.text(d => d.data[ly.mapping.x_var] );
+		
+		function midAngle(d){
+			return d.startAngle + (d.endAngle - d.startAngle)/2;
+		}
+
+		textLabel.merge(newText).transition().duration(1000)
+			.text(d => d.data[ly.mapping.x_var] )
+			.style('opacity', function(d){
+				var wedgeSize =  Math.abs(d.endAngle - d.startAngle);
+				if(wedgeSize > 0.3) {
+					return 1;
+					} else {
+						return 0;
+					}
+			})
+			.attrTween("transform", function(d) {
+				this._current = this._current || d;
+				var interpolate = d3.interpolate(this._current, d);
+				this._current = interpolate(0);
+				return function(t) {
+					var d2 = interpolate(t);
+					var pos = outerArc.centroid(d2);
+					pos[0] = radius * (midAngle(d2) < Math.PI ? 1 : -1);
+					return "translate("+ pos +")";
+				};
+			})
+			.styleTween("text-anchor", function(d){
+				this._current = this._current || d;
+				var interpolate = d3.interpolate(this._current, d);
+				this._current = interpolate(0);
+				return function(t) {
+					var d2 = interpolate(t);
+					return midAngle(d2) < Math.PI ? "start":"end";
+				};
+			});
+
+		textLabel.exit()
+			.remove();
+
+		/* ------- SLICE TO TEXT POLYLINES -------*/
+
+		var polyline = this.chart.selectAll("polyline")
+			.data(pie(data));
+		
+		var newPolyline = polyline.enter()
+			.append("polyline")
+			.style('fill', 'none')
+			.style('stroke-width', '1px')
+			.style('opacity', 0)
+			.style('stroke' , 'gray');
+
+		polyline.merge(newPolyline).transition().duration(1000)
+			.style('opacity', function(d){
+				var wedgeSize =  Math.abs(d.endAngle - d.startAngle);
+				if(wedgeSize > 0.3) {
+					return 1;
+					} else {
+						return 0;
+					}
+			})
+			.attrTween("points", function(d){
+				this._current = this._current || d;
+				var interpolate = d3.interpolate(this._current, d);
+				this._current = interpolate(0);
+				return function(t) {
+					var d2 = interpolate(t);
+					var pos = outerArc.centroid(d2);
+					pos[0] = radius * 0.95 * (midAngle(d2) < Math.PI ? 1 : -1);
+					return [arc.centroid(d2), outerArc.centroid(d2), pos];
+				};			
+			});
+		
+		polyline.exit()
+			.remove();
+			
+		function arcTween(a) {
+		  this._current = this._current || a;		
+		  var i = d3.interpolate(this._current, a);
+		  this._current = i(0);
+		  return function(t) {
+			return arc(i(t));
+		  };
+		}
+	}
+	
 	dragPoints(ly){
 		const that = this;
 		
@@ -1421,7 +1601,17 @@ class myIOchart {
 			.style('fill', 'white')
 			.style('opacity', 0.75);
 		
-		var colorKey = ly.data.children.map( d => d.name );	
+		switch (ly.type) {
+			case "treemap":
+				var colorKey = ly.data.children.map( d => d.name );	
+				break;
+			case "donut":
+				var colorKey = ly.data.map( d => d[ly.mapping.x_var] );
+				break;
+			
+			default:
+		}
+		
 		
 		colorKey.forEach(function(d,i){
 			
@@ -1478,7 +1668,7 @@ class myIOchart {
 		}	
 		
 		this.routeLayers(this.currentLayers);
-		console.log(oldLayers);
+
 		this.removeLayers(oldLayers);
 		
 		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type != "treemap"){
@@ -1499,15 +1689,46 @@ class myIOchart {
 			.attr('width', width)
 			.attr('height', height);
 			
-		this.plot 
-			.attr('transform','translate('+this.margin.left+','+this.margin.top+')')
-			.style('width', this.width - (this.margin.left + this.margin.right) );
 		
-		this.clipPath
-				.attr('x', 0)
-				.attr('y', 0)
-				.attr('width', this.width - (this.margin.left + this.margin.right))
-				.attr('height', (this.totalWidth > 600 ? this.height: this.height * 0.8) - (this.margin.top + this.margin.bottom));
+		switch ( this.plotLayers[0].type ) {
+
+			case "gauge":
+				this.plot
+					.attr('transform','translate('+this.totalWidth/2+','+this.height/2+')')
+					.attr('class', 'myIO-chart-offset');
+				this.clipPath
+					.attr('x', this.margin.left)
+					.attr('y', this.margin.top)
+					.attr('width', this.width - (this.margin.left + this.margin.right))
+					.attr('height', (this.totalWidth > 600 ? this.height: this.height * 0.8) - (this.margin.top + this.margin.bottom));
+				break;
+			
+			case "donut":
+				this.plot
+					.attr('transform','translate('+this.width/2+','+this.height/2+')')
+					.attr('class', 'myIO-chart-offset');
+
+				this.clipPath
+					.attr('x', this.margin.left)
+					.attr('y', this.margin.top)
+					.attr('width', this.width - (this.margin.left + this.margin.right))
+					.attr('height', (this.totalWidth > 600 ? this.height: this.height * 0.8) - (this.margin.top + this.margin.bottom));
+				break;
+			
+			default:
+				this.plot 
+					.attr('transform','translate('+this.margin.left+','+this.margin.top+')')
+					.style('width', this.width - (this.margin.left + this.margin.right) );
+				
+				this.clipPath
+					.attr('x', 0)
+					.attr('y', 0)
+					.attr('width', this.width - (this.margin.left + this.margin.right))
+					.attr('height', (this.totalWidth > 600 ? this.height: this.height * 0.8) - (this.margin.top + this.margin.bottom));
+		
+		}
+		
+		
 				
 		this.legendTranslate = this.totalWidth > 600 ? 'translate(' + (this.width) + ',0)' : 'translate(' + this.margin.left + ',' + ( this.height*0.8 ) +')';
 		

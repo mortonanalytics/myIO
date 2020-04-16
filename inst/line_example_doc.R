@@ -84,7 +84,21 @@ myIO() %>%
       x_var = "cars",
       y_var = "mpg"
     )
-  )
-
-%>%
+  )%>%
   setColorScheme(colorShceme = colors, setCategories = unique(df$carb))
+
+df_donut <- data.frame(x = c("First", "Second", "Third"),
+                       y = c(10, 9,8),
+                       stringsAsFactors = FALSE)
+
+myIO() %>%
+  addIoLayer(
+    type = "donut",
+    color = c("steelblue", "red", "orange"),
+    label = "donut",
+    data = df_donut,
+    mapping = list(
+      x_var = "x",
+      y_var = "y"
+    )
+  )

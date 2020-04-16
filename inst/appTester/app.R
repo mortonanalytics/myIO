@@ -21,13 +21,14 @@ ui <- fluidPage(
     # Sidebar with a slider input for number of bins
     sidebarLayout(
         sidebarPanel(width = 12,
-                     sliderInput("slider", "Slide to alter", min = 1, max = 10, value = 5),
+                     sliderInput("slider", "Slide to alter", min = 1, max = 10, value = 5, step = 0.2),
                      checkboxGroupInput("group", "which groups to include", choices = 1:5, selected = 1:5)
         ),
 
         # Show a plot of the generated distribution
         mainPanel(width = 12,
-           myIOOutput("distPlot",width = "100%")
+           column(6,myIOOutput("distPlot",width = "100%")),
+           column(6, myIOOutput("donut", width = "100%"))
         )
     )
 )
@@ -50,7 +51,6 @@ server <- function(input, output) {
         colors <- substr(viridis(5), 1, 7)
 
         groupsAre <- unlist(unique(df$Month))[ as.numeric(input$group) ]
-        print(groupsAre)
 
         df <- df %>%
             filter(Month %in% groupsAre)
@@ -68,6 +68,27 @@ server <- function(input, output) {
                            group = "Month"
                        )) %>%
             setAxisFormat(yAxis = ".0f")
+    })
+
+    output$donut <- renderMyIO({
+
+        rando <- rnorm(3, mean = input$slider, sd = input$slider / 3)
+
+        df_donut <- data.frame(x = c("First", "Second", "Third"),
+                               y = c(10, 9,8) *rando,
+                               stringsAsFactors = FALSE)
+
+        myIO() %>%
+            addIoLayer(
+                type = "donut",
+                color = c("steelblue", "red", "orange"),
+                label = "donut",
+                data = df_donut,
+                mapping = list(
+                    x_var = "x",
+                    y_var = "y"
+                )
+            )
     })
 }
 
