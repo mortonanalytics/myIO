@@ -21,8 +21,8 @@ myIO()%>%
              mapping = list(
                x_var = "Day",
                y_var = "Temp",
-               low_y = "Temp_low",
-               high_y = "Temp_high",
+               # low_y = "Temp_low",
+               # high_y = "Temp_high",
                group = "Month"
              )) %>%
   setToggle(newY = "Percent", newScaleY = ".0%") %>%
