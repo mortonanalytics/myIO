@@ -1207,12 +1207,13 @@ class myIOchart {
 		var radius = Math.max(Math.min(this.width, (this.totalWidth > 600 ? this.height: this.height * 0.8))/2, 30);
 		var barWidth = 30 ;
 		var value = ly.data[0].value[0]; 
-		var data = [value, (1 - value) ];
+		var data = [value, 1 - value];
 			
 		//define gauge functions
 		var arc = d3.arc()
 			.innerRadius(radius-barWidth)
-			.outerRadius(radius);
+			.outerRadius(radius)
+			.cornerRadius(10);
 			
 		var pie = d3.pie()
 			.sort(null)
@@ -1222,24 +1223,44 @@ class myIOchart {
 		
 		var percentFormat = d3.format(".1%")
 		
+		var pathBackground = this.chart
+			.selectAll('.myIO-gauge-background')
+			.data(pie([1]));
+		
+		pathBackground.exit().remove();
+		
+		var newPathBackground = pathBackground.enter()
+			.append('path')
+			.attr('class', 'myIO-gauge-background')
+			.attr('fill', "gray" )
+			.transition().duration(transitionSpeed).ease(d3.easeBack)
+			.attr('d', arc)
+			.each(function(d) { this._current = 0; });
+		
+		pathBackground.transition().duration(transitionSpeed).ease(d3.easeBack)
+			.duration(transitionSpeed)
+			.attr('fill', "gray" )
+			.attrTween('d', arcTween);
+		
+		
 		var path = this.chart
-			.selectAll('path')
+			.selectAll('.myIO-gauge-value')
 			.data(pie(data));
 		
 		path.exit().remove();
 		
 		var newPath = path.enter()
 			.append('path')
-			.attr('class', 'donut')
-			.attr('fill', (d,i) => [ly.color, "gray"][i] )
+			.attr('class', 'myIO-gauge-value')
+			.attr('fill', (d,i) => [ly.color, "transparent"][i] )
 			.transition().duration(transitionSpeed).ease(d3.easeBack)
 			.attr('d', arc)
 			.each(function(d) { this._current = 0; });
 		
 		path.merge(newPath).transition().duration(transitionSpeed).ease(d3.easeBack)
 			.duration(transitionSpeed)
-			.attr('fill', (d,i) => [ly.color, "gray"][i] )
-			.attrTween('d', arcTween)
+			.attr('fill', (d,i) => [ly.color, "transparent"][i] )
+			.attrTween('d', arcTween);
 		
 		function arcTween(a) {
 		  this._current = this._current || a;		
@@ -1742,7 +1763,7 @@ class myIOchart {
 		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type != "treemap" & this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut"){
 			this.updateLegend();
 		} 
-		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type == "treemap" || this.plotLayers[0].type == "gauge" || this.plotLayers[0].type == "donut"){
+		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type == "treemap" || this.plotLayers[0].type == "donut"){
 			this.updateOrdinalColorLegend(this.plotLayers[0]);
 		}	
 	}
