@@ -26,7 +26,7 @@ myIO()%>%
                group = "Month"
              )) %>%
   setToggle(newY = "Percent", newScaleY = ".0%") %>%
-  setAxisFormat(yAxis = ".0f")
+  setAxisFormat(xAxis = ".0f",yAxis = ".0f")
 
 
 myIO() %>%

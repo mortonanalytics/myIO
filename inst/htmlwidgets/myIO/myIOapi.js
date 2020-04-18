@@ -1820,6 +1820,17 @@ class myIOchart {
 	updateRollover(lys){
 		var that = this;
 		var m = this.margin;
+		var horizontalBreakPoint = this.width * 0.8;
+		
+		console.log(this.options);
+		var exclusions = ["text", "yearMon"];
+	
+		var xFormat = !(exclusions.indexOf(this.options.xAxisFormat) in exclusions) ? d3.format(this.options.xAxisFormat ? this.options.xAxisFormat : "d") : function(x) {return x;} ;	
+		
+		var yFormat = d3.format(this.options.yAxisFormat ? this.options.yAxisFormat : "d");
+		var currentFormatY = this.newScaleY ? d3.format(this.newScaleY) : yFormat;
+		
+		var toolTipFormat = !(exclusions.indexOf(this.options.xAxisFormat) in exclusions) ?  d3.format(this.options.toolTipFormat ? this.options.toolTipFormat : "d"): function(x) {return x;} ;
 		
 		switch (lys[0].type){
 			case "bar":
@@ -1855,18 +1866,18 @@ class myIOchart {
 				return keepLayer == d.label;
 			});
 
-			var xData = data[thisLayer[0].mapping.x_var];
-			var yData = data[thisLayer[0].mapping.y_var];
+			var xData = xFormat( data[thisLayer[0].mapping.x_var] );
+			var yData = yFormat( data[thisLayer[0].mapping.y_var] );
 			var groupData = thisLayer[0].label;
 			var color = that.options.colorScheme[2] == "on" ? that.colorScheme(groupData) : thisLayer[0].color ;
 			
-			d3.select(this).style('stroke-width', '3px').style('stroke', color);
+			d3.select(this).style('stroke-width', '4px').style('stroke', color);
 			
 			that.tooltip.transition();
 			
 			that.tooltip
-              .style("left", (d3.mouse(this)[0] ) + 'px')
-			  .style("top", 5 + 'px')
+              .style("left", (d3.mouse(this)[0] > horizontalBreakPoint ? horizontalBreakPoint : d3.mouse(this)[0]) + 'px')
+			  .style("top", Math.max(d3.mouse(this)[1] - 70, 0) + 'px')
 			  .style('opacity', 1)
               .style("display", "inline-block");
 			
@@ -1875,12 +1886,12 @@ class myIOchart {
 			
 			that.toolTipBody
 				.html('<div class="dot" style="background-color:'+ color + ';"></div>' +
-					'<span> ' + thisLayer[0].mapping.y_var + ' - ' + yData + '</span>'
+					'<span><strong>' + thisLayer[0].mapping.y_var + '</strong> ' + yData + '</span>'
 				);
 		}
 		function hoverTipHide(){
-			d3.select(this).style('stroke-width', '0px').style('stroke', 'transparent');
-			that.tooltip.transition().delay(1000).style("display", "none");
+			d3.select(this).transition().duration(800).style('stroke-width', '0px').style('stroke', 'transparent');
+			that.tooltip.transition().delay(800).style("display", "none");
 		}
 	}
 	
@@ -1906,6 +1917,7 @@ class myIOchart {
 		}	
 		
 		this.routeLayers(this.currentLayers);
+		this.updateRollover(this.currentLayers);
 
 		this.removeLayers(oldLayers);
 		
@@ -1976,7 +1988,7 @@ class myIOchart {
 		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type != "treemap" & this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut"){
 			this.updateLegend();
 		} 
-		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type == "treemap" || this.plotLayers[0].type == "gauge" || this.plotLayers[0].type == "donut"){
+		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type == "treemap" || this.plotLayers[0].type == "donut"){
 			this.updateOrdinalColorLegend(this.plotLayers[0]);
 		} 
 	}

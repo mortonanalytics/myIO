@@ -64,11 +64,12 @@ server <- function(input, output) {
                        mapping = list(
                            x_var = "Day2",
                            y_var = "Temp",
-                           low_y = "Temp_low",
-                           high_y = "Temp_high",
+                           # low_y = "Temp_low",
+                           # high_y = "Temp_high",
                            group = "Month"
                        )) %>%
-            setAxisFormat(yAxis = ".0f")
+            setAxisFormat(xAxis = ".2f",yAxis = ".0f")
+
     })
 
     output$donut <- renderMyIO({
