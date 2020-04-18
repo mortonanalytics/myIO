@@ -22,6 +22,7 @@ class myIOchart {
 	draw(){		
 		//set up parent element and SVG
 		this.element.innerHTML = '';
+		
 		this.svg = d3.select(this.element)
 			.append('svg')
 			.attr('class', 'myIO-svg')
@@ -71,46 +72,43 @@ class myIOchart {
 		this.currentLayers = this.plotLayers;
 		
 		this.addButtons();
+		
+		this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
+		this.toolTipTitle = this.tooltip
+			.append('div')
+			.attr('class', 'toolTipTitle')
+			.style('background-color', 'lightgray');
+		this.toolTipBody = this.tooltip
+			.append('div')
+			.attr('class', 'toolTipBody');
+			
 		this.setClipPath( this.currentLayers[0].type );
 				
 		switch ( this.currentLayers[0].type ) {
 			case "gauge":
 				this.routeLayers(this.currentLayers);
-				this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
+				this.updateRollover(this.currentLayers);
 				break;
 				
 			case "donut":
 				this.routeLayers(this.currentLayers);
-				this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
+				this.updateRollover(this.currentLayers);				
 				break;
 				
 			case "treemap":
 				this.routeLayers(this.currentLayers);
-				this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
+				this.updateRollover(this.currentLayers);
 				break;
 				
-			case "hexbin":
-				
+			case "hexbin":				
 				this.setZoom();
 				this.processScales(this.currentLayers);
 				this.addAxes();
-				this.routeLayers(this.currentLayers);
-				this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
+				this.routeLayers(this.currentLayers);	
+				this.updateRollover(this.currentLayers);				
 				break;
 				
-			case "bar":
-				
-				this.setZoom();
-				this.processScales(this.currentLayers);
-				this.addAxes();
-				this.routeLayers(this.currentLayers);
-				this.updateReferenceLines();
-				this.updateLegend();
-				this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
-				break;
-				
-			case "line":
-				
+			case "bar":				
 				this.setZoom();
 				this.processScales(this.currentLayers);
 				this.addAxes();
@@ -120,19 +118,27 @@ class myIOchart {
 				this.updateRollover(this.currentLayers);
 				break;
 				
-			case "point":
-				
+			case "line":				
 				this.setZoom();
 				this.processScales(this.currentLayers);
 				this.addAxes();
 				this.routeLayers(this.currentLayers);
 				this.updateReferenceLines();
 				this.updateLegend();
-				this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
+				this.updateRollover(this.currentLayers);
+				break;
+				
+			case "point":				
+				this.setZoom();
+				this.processScales(this.currentLayers);
+				this.addAxes();
+				this.routeLayers(this.currentLayers);
+				this.updateReferenceLines();
+				this.updateLegend();
+				this.updateRollover(this.currentLayers);
 				break;
 			
-			case "area":
-				
+			case "area":		
 				this.setZoom();
 				this.processScales(this.currentLayers);
 				this.addAxes();
@@ -142,15 +148,14 @@ class myIOchart {
 				this.updateRollover(this.currentLayers);
 				break;
 				
-			case "stat_line":
-				
+			case "stat_line":				
 				this.setZoom();
 				this.processScales(this.currentLayers);
 				this.addAxes();
 				this.routeLayers(this.currentLayers);
 				this.updateReferenceLines();
 				this.updateLegend();
-				this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
+				this.updateRollover(this.currentLayers);
 		}
 	}
 	
@@ -1813,7 +1818,70 @@ class myIOchart {
 	}
 	
 	updateRollover(lys){
+		var that = this;
+		var m = this.margin;
 		
+		switch (lys[0].type){
+			case "bar":
+				this.chart.selectAll('rect')
+					.on("mouseout", hoverTipHide)
+					.on("mouseover", hoverTip)
+					.on("mousemove", hoverTip);				
+				break;
+				
+			case "point":
+				this.chart.selectAll('circle')
+					.on("mouseout", hoverTipHide)
+					.on("mouseover", hoverTip)
+					.on("mousemove", hoverTip);				
+				break;
+				
+			case "line":
+				//update rect observer
+				//get position
+				//get data
+				//place tool line
+				//place tool tip div
+		}
+		
+		function hoverTip(){
+			
+			var data = d3.select(this).data()[0];
+			
+			var thisLayer = lys.filter(function(d){
+				var keepLayer = Object.values(data).filter(function(e){
+					return e == d.label;
+				});
+				return keepLayer == d.label;
+			});
+
+			var xData = data[thisLayer[0].mapping.x_var];
+			var yData = data[thisLayer[0].mapping.y_var];
+			var groupData = thisLayer[0].label;
+			var color = that.options.colorScheme[2] == "on" ? that.colorScheme(groupData) : thisLayer[0].color ;
+			
+			d3.select(this).style('stroke-width', '3px').style('stroke', color);
+			
+			that.tooltip.transition();
+			
+			that.tooltip
+              .style("left", (d3.mouse(this)[0] ) + 'px')
+			  .style("top", 5 + 'px')
+			  .style('opacity', 1)
+              .style("display", "inline-block");
+			
+			that.toolTipTitle
+				.html('<span>' + thisLayer[0].mapping.x_var + ': ' + xData + '</span>') 
+			
+			that.toolTipBody
+				.html('<div class="dot" style="background-color:'+ color + ';"></div>' +
+					'<span> ' + thisLayer[0].mapping.y_var + ' - ' + yData + '</span>'
+				);
+		}
+		function hoverTipHide(){
+			d3.select(this).style('stroke-width', '0px').style('stroke', 'transparent');
+			that.tooltip.transition().delay(1000).style("display", "none");
+		}
 	}
 	
 	updateChart(x) {

@@ -27,8 +27,8 @@ ui <- fluidPage(
 
         # Show a plot of the generated distribution
         mainPanel(width = 12,
-           column(6,myIOOutput("distPlot",width = "100%", height = "350px")),
-           column(6, myIOOutput("donut", width = "100%", height = "350px")),
+           column(6,myIOOutput("donut",width = "100%", height = "350px")),
+           column(6, myIOOutput("distPlot", width = "100%", height = "350px")),
            column(6, myIOOutput("gauge", width = "100%", height = "250px"))
         )
     )
