@@ -48,7 +48,7 @@ class myIOchart {
 			this.plot = this.svg.append('g')
 				.attr('transform','translate('+this.margin.left+','+this.margin.top+')')
 				.style('width', this.width - this.margin.right)
-				.attr('class', 'myIO-chart-offset');	
+				.attr('class', 'myIO-chart-offset');
 		
 		}
 		
@@ -1747,7 +1747,7 @@ class myIOchart {
 			that.routeLayers(that.currentLayers);
 			that.removeLayers(removedLayers);
 			that.updateAxes();
-			//that.addToolTip(currentLayers);
+			that.updateRollover(that.currentLayers);
 			//that.addButtons();
 		
 		}
@@ -1822,7 +1822,6 @@ class myIOchart {
 		var m = this.margin;
 		var horizontalBreakPoint = this.width * 0.8;
 		
-		console.log(this.options);
 		var exclusions = ["text", "yearMon"];
 	
 		var xFormat = !(exclusions.indexOf(this.options.xAxisFormat) in exclusions) ? d3.format(this.options.xAxisFormat ? this.options.xAxisFormat : "d") : function(x) {return x;} ;	
@@ -1848,11 +1847,21 @@ class myIOchart {
 				break;
 				
 			case "line":
-				//update rect observer
-				//get position
-				//get data
-				//place tool line
-				//place tool tip div
+				d3.select('.toolTipBox').remove();
+				this.toolLine =  this.chart.append('line').attr('class', 'toolLine');
+				this.toolTipBox = this.svg.append("rect")
+					.attr('class', 'toolTipBox')
+					.attr("opacity", 0)
+					.attr("width", this.width - (this.margin.left + this.margin.right))
+					.attr("height", this.height - ( this.margin.top + this.margin.bottom))
+					.attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")")
+					.on("mouseover", function() { 
+						that.tooltip.style("display", null); that.toolLine.style("stroke", null); 
+						})
+					.on("mouseout", function() { 
+						that.tooltip.style("display", "none"); that.toolLine.style("stroke", "none"); 
+						})
+					.on("mousemove", scalePointPosition);
 		}
 		
 		function hoverTip(){
@@ -1882,7 +1891,7 @@ class myIOchart {
               .style("display", "inline-block");
 			
 			that.toolTipTitle
-				.html('<span>' + thisLayer[0].mapping.x_var + ': ' + xData + '</span>') 
+				.html('<span>' + thisLayer[0].mapping.x_var + ': ' + xData + '</span>'); 
 			
 			that.toolTipBody
 				.html('<div class="dot" style="background-color:'+ color + ';"></div>' +
@@ -1893,6 +1902,76 @@ class myIOchart {
 			d3.select(this).transition().duration(800).style('stroke-width', '0px').style('stroke', 'transparent');
 			that.tooltip.transition().delay(800).style("display", "none");
 		}
+		function scalePointPosition() {
+			
+			var tipText = [];
+			var mouse = d3.mouse(this);
+			
+			var indexExtent = d3.max(lys.map(d => d.data.length));
+			
+			//line tool tip text
+			lys.forEach(function(d,i) {	
+				var key = d.label;
+				var color = d.color;
+				var values = d.data;
+				var layerIndexLength = values.length;
+				
+				var x_var = d.mapping.x_var;
+				
+				var currentY = that.newY ? that.newY : d.mapping.y_var;
+				var y_var = currentY;
+				
+				var toolTip_var = d.mapping.toolTip;
+				
+				var xPos =  that.xScale.invert(mouse[0]);
+				var bisect = d3.bisector(function(d) {return d[x_var]; }).left;
+				var idx = bisect(values, xPos);
+				//TODO: I need to figure out how to hand bisector when layer data length is less than
+				//the max data length of all layers
+				var d0 = values[idx - 1];
+				var d1 = values[idx];
+				
+				if(d0 == undefined | d1 == undefined) return
+				var v = xPos - d0[x_var] > d1[x_var] - xPos ? d1 : d0;
+					
+				var finalObject = {
+					color: color,
+					label: key,
+					x_var: x_var,
+					y_var: y_var,
+					toolTip_var: toolTip_var,
+					values: v
+				}
+				tipText.push(finalObject);
+			});
+			
+			that.toolLine
+				.style('stroke', 'black')
+				.style('stroke-dasharray', '1,1')
+				.attr('x1', that.xScale(tipText[0].values[tipText[0].x_var]))
+				.attr('x2', that.xScale(tipText[0].values[tipText[0].x_var]))
+				.attr('y1',0)
+				.attr('y2', that.height - (that.margin.top +that.margin.bottom));
+				
+			that.tooltip
+				.style('display', 'inline-block')
+				.style('opacity', 0.9)
+				.style("left", (d3.mouse(this)[0] > horizontalBreakPoint ? horizontalBreakPoint : (that.xScale(tipText[0].values[tipText[0].x_var])) )+ 'px')
+				.style("top", Math.max(d3.mouse(this)[1] - 70, 0) + 'px');
+				
+			that.toolTipTitle
+				.html('<span>' + tipText[0].x_var + ': ' + xFormat(tipText[0].values[tipText[0].x_var]) + '</span>'); 
+			
+			that.toolTipBody
+				.html(function() {
+					var y_text = []
+					tipText.forEach(function(d){
+						y_text.push('<div class="dot" style="background-color:' + d.color + ';"></div><span><strong>' + d.label + '</strong>: ' + currentFormatY(d.values[d.y_var]) + '</span><br>' );
+						});
+					return y_text.join(' ')
+				});
+	}
+
 	}
 	
 	updateChart(x) {

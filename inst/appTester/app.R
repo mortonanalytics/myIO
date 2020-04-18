@@ -57,12 +57,12 @@ server <- function(input, output) {
             filter(Month %in% groupsAre)
 
         myIO()%>%
-            addIoLayer(type = "point",
+            addIoLayer(type = "line",
                        color = colors,
                        label = "Month",
                        data = df ,
                        mapping = list(
-                           x_var = "Day2",
+                           x_var = "Day",
                            y_var = "Temp",
                            # low_y = "Temp_low",
                            # high_y = "Temp_high",

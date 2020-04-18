@@ -9,12 +9,13 @@ df <- datasets::airquality %>%
   group_by(Day) %>%
   mutate(Percent = Temp/sum(Temp)) %>%
   ungroup() %>%
-  mutate(Day2 = Day * c(1.02, 1.03, 1.01, 1.05, 1.1, 1.08))
+  mutate(Day2 = Day * c(1.02, 1.03, 1.01, 1.05, 1.1, 1.08))%>%
+  arrange(Day)
 
 colors <- substr(viridis(5), 1, 7)
 
 myIO()%>%
-  addIoLayer(type = "point",
+  addIoLayer(type = "line",
              color = colors,
              label = "Month",
              data = df ,

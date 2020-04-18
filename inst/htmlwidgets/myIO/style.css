@@ -86,6 +86,8 @@
 	min-height: 35px;
 	margin-top: 10px;
 	margin-left: 5px;
+	padding-right: 5px;
+	padding-left: 5px;
 	text-align: left;
 	font-family:Roboto, sans-serif;
 }
