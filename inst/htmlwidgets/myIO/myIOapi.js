@@ -1874,6 +1874,7 @@ class myIOchart {
 				
 			case "line":
 				d3.select('.toolTipBox').remove();
+				d3.select('.toolLine').remove();
 				this.toolLine =  this.chart.append('line').attr('class', 'toolLine');
 				this.toolTipBox = this.svg.append("rect")
 					.attr('class', 'toolTipBox')
