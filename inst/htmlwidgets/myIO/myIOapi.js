@@ -189,7 +189,7 @@ class myIOchart {
 		var buttons = buttonDiv.selectAll('.button')
 			.data(data2Use)
 		  .enter()
-			.append('svg')
+			.append('div')
 			.attr('class', 'button')		
 			//.attr("transform", function(d) { return "translate(" +  tempData.indexOf(d)* 20 + ", 0)"; })
 			.html(function(d){ return d.html})
@@ -2017,7 +2017,8 @@ class myIOchart {
 		this.svg
 			.attr('width', width)
 			.attr('height', height);
-			
+		
+		this.addButtons();		
 		
 		switch ( this.plotLayers[0].type ) {
 
