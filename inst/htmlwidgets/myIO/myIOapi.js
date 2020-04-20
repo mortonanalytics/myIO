@@ -177,14 +177,14 @@ class myIOchart {
 		}
 	]
 			
-		d3.select(this.element).select('.buttonDiv').remove();
+		//d3.select(this.element).select('.buttonDiv').remove();
 		var data2Use = this.options.toggleY ? buttonData : buttonData.slice(0,2);
 		
 		var buttonDiv = d3.select(this.element).append("div")
 			.attr("class", "buttonDiv")  
 			.style('opacity', 1)
 			.style("left", ( that.width - ( 40 + ( 40*data2Use.length ) ) ) + 'px')
-			.style("top", '5px');
+			.style("top", '0px');
 				
 		var buttons = buttonDiv.selectAll('.button')
 			.data(data2Use)
@@ -1014,6 +1014,7 @@ class myIOchart {
 			
 		// append text
 		newCell.append('text')
+			.attr('class', 'inner-text')
 			.selectAll('tspan')
 			.data(function(d) { 
 				var name = d.data[ly.mapping.x_var];
@@ -1219,7 +1220,7 @@ class myIOchart {
 
 		var newText = textLabel.enter()
 			.append("text")
-			.attr('class', 'donut-text')
+			.attr('class', 'inner-text')
 			.style('font-size', '12px')
 			.style('opacity', 0)
 			.attr("dy", ".35em")
@@ -1388,6 +1389,7 @@ class myIOchart {
 		var label = this.chart
 			.append('g')
 			.append('text')
+			.attr('class', 'inner-text')
 			.text(percentFormat(data[0]))
 			.attr('class', 'gauge-text')
 			.attr('text-anchor', 'middle')
@@ -2072,7 +2074,7 @@ class myIOchart {
 		var buttons2Use = d3.select(this.element).select(".buttonDiv").selectAll('.button').data(); 
 		d3.select(this.element).select(".buttonDiv")  
 			.style("left", ( this.width - ( 40 + ( 40*buttons2Use.length ) ) ) + 'px')
-			.style("top", '5px');	
+			.style("top", '0px');	
 		
 		switch ( this.plotLayers[0].type ) {
 

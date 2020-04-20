@@ -50,7 +50,8 @@ myIO() %>%
              options = list(barSize = "small")
              )%>%
   setAxisLimits(ylim = list(min = "0")) %>%
-  defineCategoricalAxis(xAxis = TRUE, yAxis = FALSE)
+  defineCategoricalAxis(xAxis = FALSE, yAxis = TRUE) %>%
+  flipAxis()
 
 df_hexbin <- data.frame(x = rnorm(1000),
                         y = rnorm(1000))

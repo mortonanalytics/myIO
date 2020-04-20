@@ -16,6 +16,7 @@ knitr::opts_chunk$set(echo = FALSE)
 library(dplyr)
 library(myIO)
 library(viridis)
+library(shiny)
 
 df <- datasets::airquality %>%
   mutate(Month = paste0("M", Month),
@@ -27,20 +28,23 @@ df <- datasets::airquality %>%
 
 colors <- substr(viridis(5), 1, 7)
 
-myIO()%>%
-  addIoLayer(type = "line",
-             color = colors,
-             label = "Month",
-             data = df ,
-             mapping = list(
-               x_var = "Day",
-               y_var = "Temp",
-               #low_y = "Temp_low",
-               #high_y = "Temp_high",
-               group = "Month"
-             )) %>%
-  #setAxisLimits(xlim = list(min = "1"))%>%
-  setToggle(newY = "Percent", newScaleY = ".0%") %>%
-  setAxisFormat(yAxis = ".0f")
+column(12,
+       myIO(width = "100%")%>%
+        addIoLayer(type = "line",
+                   color = colors,
+                   label = "Month",
+                   data = df ,
+                   mapping = list(
+                     x_var = "Day",
+                     y_var = "Temp",
+                     #low_y = "Temp_low",
+                     #high_y = "Temp_high",
+                     group = "Month"
+                   )) %>%
+        #setAxisLimits(xlim = list(min = "1"))%>%
+        setToggle(newY = "Percent", newScaleY = ".0%") %>%
+        setAxisFormat(yAxis = ".0f")
+       )
+
 ```
 
