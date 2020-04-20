@@ -8,20 +8,13 @@
   border-radius: 50%;
   display: inline-block;
 }
-
-.axis text {
+.x-label {
 	font-family: sans-serif;
 	font-size: 13px;
 	fill: #7a7a52;
 }
 
-.x.label {
-	font-family: sans-serif;
-	font-size: 13px;
-	fill: #7a7a52;
-}
-
-.y.label {
+.y-label {
 	font-family: sans-serif;
 	font-size: 13px;
 	fill: #7a7a52;
@@ -31,29 +24,27 @@
   shape-rendering: crispEdges;
 }
 
-.x.axis line {
+.x-grid {
   stroke: gray;
   stroke-width: 1px;
   opacity:0.4;
   stroke-dasharray: 3,3;
+  shape-rendering: crispEdges;
 }
 
-.x.axis .minor {
-  stroke-opacity: .5;
-}
-
-.x.axis path {
+.x-axis-line {
   display: none;
 }
 
-.y.axis line{
+.y-grid {
   stroke: gray;
   stroke-width: 1px;
   opacity:0.4;
   stroke-dasharray: 3,3;
+  shape-rendering: crispEdges;
 }
 
-.y.axis path {
+.y-axis-line {
   display: none;
 }
 

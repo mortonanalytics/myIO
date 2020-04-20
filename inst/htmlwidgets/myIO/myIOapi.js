@@ -432,10 +432,11 @@ class myIOchart {
 		switch (this.options.categoricalScale.xAxis){
 			case true:
 			this.plot.append('g')
-				.attr("class", "x axis")
+				.attr("class", "x-axis")
 				.attr("transform", "translate(0," + (chartHeight-(m.top+m.bottom)) + ")")
 				.call(d3.axisBottom(this.xScale))
 					.selectAll("text")
+					.attr("class", "x-label")
 					.attr("dx", "-.25em")
 					.attr('text-anchor', this.width < 550 ? 'end' : 'center')
 					.attr("transform", this.width < 550 ? "rotate(-65)" : "rotate(-0)");
@@ -443,7 +444,7 @@ class myIOchart {
 			
 			case false:
 				this.plot.append('g')
-					.attr("class", "x axis")
+					.attr("class", "x-axis")
 					.attr("transform", "translate(0," + (chartHeight-(m.top+m.bottom)) + ")")
 					.call(d3.axisBottom(this.xScale)
 							.ticks(this.width < 550 ? 5 : 10, xFormat)
@@ -451,22 +452,37 @@ class myIOchart {
 							.tickSize( -(this.height-(m.top+m.bottom)) )
 								)
 						.selectAll("text")
+							.attr("class", "x-label")
 							.attr('dy', '1.25em')
 							.attr('text-anchor', this.width < 550 ? 'end' : 'center')
 							.attr("transform", this.width < 550 ? "rotate(-65)" : "rotate(-0)");
 			
 		}
 		
+		this.plot.selectAll('.x-axis').selectAll('.domain')
+			.attr('class', 'x-axis-line');
+			
+		this.plot.selectAll('.x-axis').selectAll('.tick line')
+			.attr('class', 'x-grid');
+		
+		
 		var currentFormatY = this.newScaleY ? this.newScaleY : yFormat;
 
 		this.plot.append('g')
-			.attr("class", "y axis")
+			.attr("class", "y-axis")
 			.call(d3.axisLeft(this.yScale)
 				.ticks(chartHeight < 450 ? 5 : 10, currentFormatY)
 				.tickSize( -(this.width-(m.right+m.left)) )
 				)
 			.selectAll("text")
+				.attr("class", "y-label")
 				.attr("dx", "-.25em");
+		
+		this.plot.selectAll('.y-axis').selectAll('.domain')
+			.attr('class', 'y-axis-line');
+			
+		this.plot.selectAll('.y-axis').selectAll('.tick line')
+			.attr('class', 'y-grid');
 	}
 	
 	updateAxes(){
@@ -492,7 +508,7 @@ class myIOchart {
 		
 		switch (this.options.categoricalScale.xAxis){
 			case true:
-				this.svg.selectAll('.x.axis')
+				this.svg.selectAll('.x-axis')
 					.transition().ease(d3.easeQuad)
 					.duration(transitionSpeed)
 					.attr("transform", "translate(0," + (chartHeight-(m.top+m.bottom)) + ")")
@@ -504,7 +520,7 @@ class myIOchart {
 			break;
 			
 			case false:
-				this.svg.selectAll('.x.axis')
+				this.svg.selectAll('.x-axis')
 					.transition().ease(d3.easeQuad)
 					.duration(transitionSpeed)
 					.attr("transform", "translate(0," + (chartHeight-(m.top+m.bottom)) + ")")
@@ -522,7 +538,7 @@ class myIOchart {
 		
 		var currentFormatY = this.newScaleY ? this.newScaleY : yFormat;
 		
-		this.svg.selectAll('.y.axis')
+		this.svg.selectAll('.y-axis')
 			.transition().ease(d3.easeQuad)
 			.duration(transitionSpeed)
 			.call(d3.axisLeft(this.yScale)
@@ -2088,13 +2104,13 @@ function getSVGString( svgNode ) {
 
 	function getCSSStyles( parentElement ) {
 		var selectorTextArr = [];
-
+		
 		// Add Parent element Id and Classes to the list
 		selectorTextArr.push( '#'+parentElement.id );
 		for (var c = 0; c < parentElement.classList.length; c++)
 				if ( !contains('.'+parentElement.classList[c], selectorTextArr) )
 					selectorTextArr.push( '.'+parentElement.classList[c] );
-
+		console.log(selectorTextArr);
 		// Add Children element Ids and Classes to the list
 		var nodes = parentElement.getElementsByTagName("*");
 		for (var i = 0; i < nodes.length; i++) {
@@ -2121,6 +2137,7 @@ function getSVGString( svgNode ) {
 		    	}
 
 			var cssRules = s.cssRules;
+			console.log(cssRules);
 			for (var r = 0; r < cssRules.length; r++) {
 				if ( contains( cssRules[r].selectorText, selectorTextArr ) )
 					extractedCSSText += cssRules[r].cssText;
