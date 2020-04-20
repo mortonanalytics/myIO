@@ -12,7 +12,7 @@
 #' @return the same myIO object
 #'
 #' @export
-myIO <- function(data = NULL, width = NULL, height = NULL, elementId = NULL) {
+myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL) {
 
   # forward options using x
   x = list(
