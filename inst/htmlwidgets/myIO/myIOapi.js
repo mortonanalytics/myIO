@@ -2149,7 +2149,7 @@ function getSVGString( svgNode ) {
 		for (var c = 0; c < parentElement.classList.length; c++)
 				if ( !contains('.'+parentElement.classList[c], selectorTextArr) )
 					selectorTextArr.push( '.'+parentElement.classList[c] );
-		console.log(selectorTextArr);
+		
 		// Add Children element Ids and Classes to the list
 		var nodes = parentElement.getElementsByTagName("*");
 		for (var i = 0; i < nodes.length; i++) {
@@ -2176,14 +2176,13 @@ function getSVGString( svgNode ) {
 		    	}
 
 			var cssRules = s.cssRules;
-			console.log(cssRules);
+			
 			for (var r = 0; r < cssRules.length; r++) {
 				if ( contains( cssRules[r].selectorText, selectorTextArr ) )
 					extractedCSSText += cssRules[r].cssText;
 			}
 		}
 		
-		console.log(extractedCSSText);
 		return extractedCSSText;
 
 		function contains(str,arr) {

@@ -20,6 +20,7 @@ ui <- fluidPage(
 
     # Sidebar with a slider input for number of bins
     sidebarLayout(
+
         sidebarPanel(width = 12,
                      sliderInput("slider", "Slide to alter", min = 1, max = 10, value = 5, step = 0.2),
                      checkboxGroupInput("group", "which groups to include", choices = 1:5, selected = 1:5)
@@ -97,7 +98,7 @@ server <- function(input, output) {
         myIO() %>%
             addIoLayer(
                 type = "gauge",
-                color = "steelblue",
+                color = "orange",
                 label = "gauge",
                 data = data.frame(value = input$slider / 10),
                 mapping = list(value = "value")
