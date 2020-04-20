@@ -1882,10 +1882,12 @@ class myIOchart {
 					.attr("height", this.height - ( this.margin.top + this.margin.bottom))
 					.attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")")
 					.on("mouseover", function() { 
-						that.tooltip.style("display", null); that.toolLine.style("stroke", null); 
+						that.tooltip.style("display", null); 
+						that.toolLine.style("stroke", null); 
 						})
 					.on("mouseout", function() { 
-						that.tooltip.style("display", "none"); that.toolLine.style("stroke", "none"); 
+						that.tooltip.style("display", "none"); 
+						that.toolLine.style("stroke", "none"); 
 						})
 					.on("mousemove", scalePointPosition);
 		}
@@ -1935,6 +1937,10 @@ class myIOchart {
 			
 			var indexExtent = d3.max(lys.map(d => d.data.length));
 			
+			var xPos =  that.xScale.invert(mouse[0]);
+				
+			var bisect = d3.bisector(d => +d[0]).left;
+			
 			//line tool tip text
 			lys.forEach(function(d,i) {	
 				var key = d.label;
@@ -1953,9 +1959,6 @@ class myIOchart {
 				
 				var toolTip_var = d.mapping.toolTip;
 				
-				var xPos =  that.xScale.invert(mouse[0]);
-				
-				var bisect = d3.bisector(d => +d[0]).left;
 				var idx = bisect(layerIndex, xPos);
 				
 				var d0 = values[idx - 1];
@@ -1966,7 +1969,6 @@ class myIOchart {
 				// TODO: (potential first issue for someone) programmtically handle uneven layer x axis lengths
 				if(d0 == undefined | d1 == undefined){
 					if(layerIndexLength < indexExtent ){
-						console.log(key);
 						if( xPos < (d3.max(layerIndex, d => +d) + 0.5)) {
 							var v = d0;
 						} else {
@@ -2001,7 +2003,7 @@ class myIOchart {
 				
 			that.tooltip
 				.style('display', 'inline-block')
-				.style('opacity', 0.9)
+				.style('opacity', 1)
 				.style("left", (d3.mouse(this)[0] > horizontalBreakPoint ? horizontalBreakPoint : (that.xScale(tipText[0].values[tipText[0].x_var])) )+ 'px')
 				.style("top", Math.max(d3.mouse(this)[1] - 70, 0) + 'px');
 				
@@ -2066,7 +2068,10 @@ class myIOchart {
 			.attr('width', width)
 			.attr('height', height);
 		
-		this.addButtons();		
+		var buttons2Use = d3.select(this.element).select(".buttonDiv").selectAll('.button').data(); 
+		d3.select(this.element).select(".buttonDiv")  
+			.style("left", ( this.width - ( 40 + ( 40*buttons2Use.length ) ) ) + 'px')
+			.style("top", '5px');	
 		
 		switch ( this.plotLayers[0].type ) {
 
@@ -2115,6 +2120,7 @@ class myIOchart {
 		
 		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type != "treemap" & this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut"){
 			this.updateLegend();
+			this.updateRollover(this.currentLayers);
 		} 
 		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type == "treemap" || this.plotLayers[0].type == "donut"){
 			this.updateOrdinalColorLegend(this.plotLayers[0]);
