@@ -536,6 +536,12 @@ class myIOchart {
 			
 		}
 		
+		this.plot.selectAll('.x-axis').selectAll('.domain')
+			.attr('class', 'x-axis-line');
+			
+		this.plot.selectAll('.x-axis').selectAll('.tick line')
+			.attr('class', 'x-grid');
+		
 		var currentFormatY = this.newScaleY ? this.newScaleY : yFormat;
 		
 		this.svg.selectAll('.y-axis')
@@ -547,7 +553,11 @@ class myIOchart {
 				)				
 			.selectAll("text")
 				.attr("dx", "-.25em");
-		
+		this.plot.selectAll('.y-axis').selectAll('.domain')
+			.attr('class', 'y-axis-line');
+			
+		this.plot.selectAll('.y-axis').selectAll('.tick line')
+			.attr('class', 'y-grid');
 	}
 	
 	routeLayers(lys){
@@ -1930,26 +1940,45 @@ class myIOchart {
 				var key = d.label;
 				var color = d.color;
 				var values = d.data;
-				var layerIndexLength = values.length;
-				
 				var x_var = d.mapping.x_var;
 				
+				var layerIndex =  values.map( d => d[x_var] );
+				
+				var layerIndexLength = values.length;
+				
+				//if(layerIndexLength < indexExtent) layerIndex.push([indexExtent]);
+							
 				var currentY = that.newY ? that.newY : d.mapping.y_var;
 				var y_var = currentY;
 				
 				var toolTip_var = d.mapping.toolTip;
 				
 				var xPos =  that.xScale.invert(mouse[0]);
-				var bisect = d3.bisector(function(d) {return d[x_var]; }).left;
-				var idx = bisect(values, xPos);
-				//TODO: I need to figure out how to hand bisector when layer data length is less than
-				//the max data length of all layers
+				
+				var bisect = d3.bisector(d => +d[0]).left;
+				var idx = bisect(layerIndex, xPos);
+				
 				var d0 = values[idx - 1];
 				var d1 = values[idx];
 				
-				if(d0 == undefined | d1 == undefined) return
-				var v = xPos - d0[x_var] > d1[x_var] - xPos ? d1 : d0;
-					
+				// this nested if/then handles situations where layers have uneven sizes
+				// it only allows for max values at this point
+				// TODO: (potential first issue for someone) programmtically handle uneven layer x axis lengths
+				if(d0 == undefined | d1 == undefined){
+					if(layerIndexLength < indexExtent ){
+						console.log(key);
+						if( xPos < (d3.max(layerIndex, d => +d) + 0.5)) {
+							var v = d0;
+						} else {
+							return ;
+						}						
+					} else {
+						return ;
+					}
+				} else {
+					var v = xPos - d0[x_var] > d1[x_var] - xPos ? d1 : d0;
+				}
+									
 				var finalObject = {
 					color: color,
 					label: key,
@@ -1961,7 +1990,8 @@ class myIOchart {
 				tipText.push(finalObject);
 			});
 			
-			that.toolLine
+			if(tipText[0] != undefined){
+				that.toolLine
 				.style('stroke', 'black')
 				.style('stroke-dasharray', '1,1')
 				.attr('x1', that.xScale(tipText[0].values[tipText[0].x_var]))
@@ -1986,7 +2016,9 @@ class myIOchart {
 						});
 					return y_text.join(' ')
 				});
-	}
+			}
+			
+		}
 
 	}
 	
