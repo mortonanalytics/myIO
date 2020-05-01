@@ -37,6 +37,11 @@
 	font-size: 13px;
 	fill: #7a7a52;
 }
+.legend-label {
+	font-family:Roboto, sans-serif;
+	font-size: 13px;
+	fill: #7a7a52;
+}
 
 .axis {
   shape-rendering: crispEdges;
@@ -64,6 +69,10 @@
 
 .y-axis-line {
   display: none;
+}
+
+.legend-line {
+	display: none;
 }
 
 .toolTip {
@@ -111,8 +120,7 @@
 }
 
 .button {
-  color: rgba(0,0,0,0.30);
-  border-color: rgba(0,0,0,0.30);
+  fill: #7a7a52;
   border-radius: 5px;
   padding: 3px;
   margin: 3px;

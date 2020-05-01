@@ -50,13 +50,13 @@ myIO() %>%
              options = list(barSize = "small")
              )%>%
   setAxisLimits(ylim = list(min = "0")) %>%
-  defineCategoricalAxis(xAxis = FALSE, yAxis = TRUE) %>%
+  #defineCategoricalAxis(xAxis = FALSE, yAxis = TRUE) %>%
   flipAxis()
 
 df_hexbin <- data.frame(x = rnorm(1000),
                         y = rnorm(1000))
 
-myIO(elementId = "tester") %>%
+myIO(elementId = "tester", height = "600px") %>%
   addIoLayer(type = "hexbin",
              label = "test",
              data = df_hexbin,
@@ -74,7 +74,7 @@ class(df$carb) <- "character"
 
 colors <- substr(viridis(6), 1, 7)
 
-myIO() %>%
+myIO(height = "600px") %>%
   addIoLayer(
     type = "treemap",
     color = c("steelblue", "red", "orange", "green", "brown", "purple"),
@@ -86,11 +86,10 @@ myIO() %>%
       x_var = "cars",
       y_var = "mpg"
     )
-  )%>%
-  setColorScheme(colorShceme = colors, setCategories = unique(df$carb))
+  )
 
-df_donut <- data.frame(x = c("First", "Second", "Third"),
-                       y = c(10, 9,8),
+df_donut <- data.frame(x = c("Apples", "Oranges", "Berries"),
+                       y = c(2, 9,5),
                        stringsAsFactors = FALSE)
 
 myIO() %>%
@@ -108,7 +107,7 @@ myIO() %>%
 myIO() %>%
   addIoLayer(
     type = "gauge",
-    color = "blue",
+    color = "orange",
     label = "gauge",
     data = data.frame(value = 0.9),
     mapping = list(value = "value")

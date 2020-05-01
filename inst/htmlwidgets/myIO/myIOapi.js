@@ -104,7 +104,8 @@ class myIOchart {
 				this.setZoom();
 				this.processScales(this.currentLayers);
 				this.addAxes();
-				this.routeLayers(this.currentLayers);	
+				this.routeLayers(this.currentLayers);
+				this.updateContinuousColorLegend();
 				this.updateRollover(this.currentLayers);				
 				break;
 				
@@ -903,9 +904,9 @@ class myIOchart {
 		var binnedData = hexbin(points);
 		
 		//color scale
-		var color = d3.scaleSequential(d3.interpolateBuPu)
-		 .domain([0, d3.max(binnedData, d => d.length) / 2])
-				
+		this.colorContinuous = d3.scaleSequential(d3.interpolateBuPu)
+		 .domain([ 0, d3.max(binnedData, d => d.length) ]);
+		
 		//data join
 		var bins = this.chart
 			.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
@@ -933,7 +934,7 @@ class myIOchart {
 				.duration(transitionSpeed)
 			.attr('d', hexbin.hexagon())
 			.attr('transform', function(d) { return "translate(" + d.x + "," + d.y + ")"; })
-			.attr('fill', function(d) { return color(d.length); });
+			.attr('fill', function(d) { return that.colorContinuous(d.length); });
 	}
 	
 	addTreemap(ly){
@@ -1845,6 +1846,127 @@ class myIOchart {
 			})
 	}
 	
+	updateContinuousColorLegend(){
+		var that = this;
+		var m = this.margin;
+		
+		d3.select(this.element).select('.legend-box').remove();
+		d3.select(this.element).selectAll('.legendElements').remove();
+		d3.select(this.element).select('#linear-gradient').remove();
+		
+		var svg = this.legendArea;
+		var defs = this.chart.select('defs')
+		var colorContinuous = this.colorContinuous;
+		console.log(colorContinuous.domain());
+		//create legend	box (exists in the background)
+		var legendBox = svg.append('rect')
+			.attr('class', 'legend-box')
+			.attr("transform", function(d) { return "translate(5," + (this.totalWidth > 600 ? m.top : 0) + ")";})
+			.style( 'width', this.totalWidth > 600 ? this.height : this.height * 0.2 )
+			.style( 'width', this.totalWidth > 600 ? this.totalWidth - this.width : this.totalWidth - this.margin.left )
+			.style('fill', 'white')
+			.style('opacity', 0.75);
+		
+		var whichWay = this.totalWidth > 600 ? "up" : "over" ;
+		switch (whichWay){
+			case "up":
+				buildVerticalLegend();
+			break;
+			
+			case "over":
+				buildHorizontalLegend();
+			break;
+		}
+		
+		function buildVerticalLegend(){
+			//create gradient
+			const linearGradient = defs.append("linearGradient")
+				.attr("id", "linear-gradient")
+				.attr('x1', '0%') // bottom
+				.attr('y1', '100%')
+				.attr('x2', '0%') // to top
+				.attr('y2', '0%')
+				.attr('spreadMethod', 'pad');
+	  
+			linearGradient.selectAll("stop")
+				.data(colorContinuous.ticks().map((t, i, n) => ({ offset: `${100*i/n.length}%`, color: colorContinuous(t) })))
+				.enter().append("stop")
+				.attr("offset", d => d.offset)
+				.attr("stop-color", d => d.color);
+			
+			//append rect for legend element
+			svg.append('g')
+				.attr('class', 'legendElements')
+				.attr("transform", `translate(10, 15)`)
+				.append("rect")
+				.attr('transform', `translate(0, 0)`)
+				.attr("width", 20)
+				.attr("height", that.height - m.top - 10)
+				.style("fill", "url(#linear-gradient)");
+			///call axis on the legend
+			var legendScale = d3.scaleLinear()
+				.range([ that.height - m.top - m.bottom, 0 ])
+				.domain([ colorContinuous.domain()[0], colorContinuous.domain()[1] ]);
+			
+			var legendAxis = d3.axisRight()
+				.scale(legendScale)
+				.ticks(5);
+				
+			svg.append("g")
+			  .attr("class", "legendElements legendAxis")
+			  .attr("transform", "translate(30, 15)")
+			  .call(legendAxis)
+			  .selectAll("text")
+				.attr("class", "legend-label");
+			  
+			svg.selectAll('.domain')
+				.attr('class', 'legend-line');
+			
+		}
+		
+		function buildHorizontalLegend(){
+			//create gradient
+			const linearGradient = defs.append("linearGradient")
+				.attr("id", "linear-gradient");
+	  
+			linearGradient.selectAll("stop")
+				.data(colorContinuous.ticks().map((t, i, n) => ({ offset: `${100*i/n.length}%`, color: colorContinuous(t) })))
+				.enter().append("stop")
+				.attr("offset", d => d.offset)
+				.attr("stop-color", d => d.color);
+			
+			//append rect for legend element
+			svg.append('g')
+				.attr('class', 'legendElements legendBox')
+				.attr("transform", `translate(0, 20)`)
+				.append("rect")
+				.attr('transform', `translate(10, 0)`)
+				.attr("width", that.width - m.right - m.left)
+				.attr("height", 20)
+				.style("fill", "url(#linear-gradient)");
+			
+			//call axis on the legend
+			var legendScale = d3.scaleLinear()
+				.range([ 0, that.width - m.right - m.left])
+				.domain([ colorContinuous.domain()[0], colorContinuous.domain()[1] ]);
+			
+			var legendAxis = d3.axisBottom()
+				.scale(legendScale)
+				.ticks(5);
+				
+			svg.append("g")
+			  .attr("class", "legendElements legendAxis")
+			  .attr("transform", "translate(10, 40)")
+			  .call(legendAxis)
+			  .selectAll("text")
+				.attr("class", "legend-label");
+			  
+			svg.selectAll('.domain')
+				.attr('class', 'legend-line');
+		}
+		
+	}
+	
 	updateRollover(lys){
 		var that = this;
 		var m = this.margin;
@@ -1872,6 +1994,13 @@ class myIOchart {
 					.on("mouseout", hoverTipHide)
 					.on("mouseover", hoverTip)
 					.on("mousemove", hoverTip);				
+				break;
+			
+			case "hexbin":
+				this.chart.selectAll('path')
+					.on("mouseout", hoverHexHide)
+					.on("mouseover", hoverHex)
+					.on("mousemove", hoverHex);
 				break;
 				
 			case "line":
@@ -2024,7 +2153,32 @@ class myIOchart {
 			}
 			
 		}
-
+		function hoverHex(){
+			var data = d3.select(this).data()[0];
+			var color = d3.select(this).attr('fill')
+			var xPoint = data['x'] ;
+			var yPoint = data['y'] ;
+			var pointFormat = d3.format(',.2f')
+			
+			that.tooltip.transition();
+			
+			that.tooltip
+              .style("left", (xPoint > horizontalBreakPoint ? horizontalBreakPoint : xPoint) + 'px')
+			  .style("top", Math.max(yPoint - 70, 0) + 'px')
+			  .style('opacity', 1)
+              .style("display", "inline-block");
+			
+			that.toolTipTitle
+				.html('<span>x: ' + pointFormat(that.xScale.invert(xPoint))  + ', y: ' + pointFormat(that.yScale.invert(yPoint)) + '</span>'); 
+			
+			that.toolTipBody
+				.html('<div class="dot" style="background-color:'+ color + ';"></div>' +
+					'<span><strong>Count: </strong> ' + data.length + '</span>'
+				);
+		}		
+		function hoverHexHide(){
+			that.tooltip.transition().delay(800).style("display", "none");
+		}
 	}
 	
 	updateChart(x) {
@@ -2121,10 +2275,14 @@ class myIOchart {
 		
 		this.routeLayers(this.currentLayers);
 		
-		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type != "treemap" & this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut"){
+		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type != "treemap" & this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut" & this.plotLayers[0].type != "hexbin"){
 			this.updateLegend();
 			this.updateRollover(this.currentLayers);
 		} 
+		if(this.plotLayers[0].type == "hexbin"){
+			this.updateContinuousColorLegend();
+			this.updateRollover(this.currentLayers);
+		}
 		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type == "treemap" || this.plotLayers[0].type == "donut"){
 			this.updateOrdinalColorLegend(this.plotLayers[0]);
 		} 
