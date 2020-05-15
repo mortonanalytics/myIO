@@ -6,7 +6,7 @@ class myIOchart {
 		this.options = opts.options;
 		this.margin = this.options.margin;
 		this.totalWidth = Math.max(opts.width, 280);
-		this.width = this.totalWidth > 600 ? this.totalWidth * 0.8 : this.totalWidth;
+		this.width = this.totalWidth > 600 & this.options.suppressLegend == false ? this.totalWidth * 0.8 : this.totalWidth;
 		this.height = opts.height;
 		this.draw();
     }
@@ -56,14 +56,18 @@ class myIOchart {
 			.append('g')
 			.attr('class', 'myIO-chart-area');
 		
-		this.legendTranslate = this.totalWidth > 600 ? 'translate(' + (this.width) + ',0)' : 'translate(' + this.margin.left + ',' + ( this.height*0.8 ) +')';
+		if(this.options.suppressLegend == false){
+			this.legendTranslate = this.totalWidth > 600 ? 'translate(' + (this.width) + ',0)' : 'translate(' + this.margin.left + ',' + ( this.height*0.8 ) +')';
 		
-		this.legendArea = this.svg
+		
+			this.legendArea = this.svg
 			.append('g')
 			.attr('class', 'myIO-legend-area')
 			.attr('transform', this.legendTranslate )
 			.style( 'height', this.totalWidth > 600 ? this.height : this.height * 0.2 )
 			.style( 'width', this.totalWidth > 600 ? this.totalWidth - this.width : this.totalWidth - this.margin.left );
+		}
+		
 	
 		this.initialize();
 	}
@@ -74,10 +78,12 @@ class myIOchart {
 		this.addButtons();
 		
 		this.tooltip = d3.select(this.element).append("div").attr("class", "toolTip");
+		
 		this.toolTipTitle = this.tooltip
 			.append('div')
 			.attr('class', 'toolTipTitle')
 			.style('background-color', 'lightgray');
+		
 		this.toolTipBody = this.tooltip
 			.append('div')
 			.attr('class', 'toolTipBody');
@@ -115,7 +121,7 @@ class myIOchart {
 				this.addAxes();
 				this.routeLayers(this.currentLayers);
 				this.updateReferenceLines();
-				this.updateLegend();
+				if(this.options.suppressLegend == false) this.updateLegend();
 				this.updateRollover(this.currentLayers);
 				break;
 				
@@ -125,7 +131,7 @@ class myIOchart {
 				this.addAxes();
 				this.routeLayers(this.currentLayers);
 				this.updateReferenceLines();
-				this.updateLegend();
+				if(this.options.suppressLegend == false) this.updateLegend();
 				this.updateRollover(this.currentLayers);
 				break;
 				
@@ -135,7 +141,7 @@ class myIOchart {
 				this.addAxes();
 				this.routeLayers(this.currentLayers);
 				this.updateReferenceLines();
-				this.updateLegend();
+				if(this.options.suppressLegend == false) this.updateLegend();
 				this.updateRollover(this.currentLayers);
 				break;
 			
@@ -145,7 +151,7 @@ class myIOchart {
 				this.addAxes();
 				this.routeLayers(this.currentLayers);
 				this.updateReferenceLines();
-				this.updateLegend();
+				if(this.options.suppressLegend == false) this.updateLegend();
 				this.updateRollover(this.currentLayers);
 				break;
 				
@@ -155,7 +161,7 @@ class myIOchart {
 				this.addAxes();
 				this.routeLayers(this.currentLayers);
 				this.updateReferenceLines();
-				this.updateLegend();
+				if(this.options.suppressLegend == false) this.updateLegend();
 				this.updateRollover(this.currentLayers);
 		}
 	}
@@ -255,7 +261,13 @@ class myIOchart {
 				break;
 			
 			default:
-				var chartHeight = this.totalWidth > 600 ? this.height : this.height * 0.8 ;
+				if(this.options.suppressLegend == false){
+					var chartHeight = this.totalWidth > 600 ? this.height : this.height * 0.8 ;
+				} else {
+					var chartHeight = this.height ;
+				}
+				
+				
 				this.clipPath = this.chart.append('defs').append('svg:clipPath')
 					.attr('id', this.element.id + 'clip')
 				  .append('svg:rect')
@@ -366,7 +378,12 @@ class myIOchart {
 		}).filter(onlyUnique);
 					   
 		// create x scale
-		var chartHeight = this.totalWidth > 600 ? this.height : this.height * 0.8 ;
+		if(this.options.suppressLegend == false){
+					var chartHeight = this.totalWidth > 600 ? this.height : this.height * 0.8 ;
+				} else {
+					var chartHeight = this.height ;
+				}
+				
 		switch (this.options.categoricalScale.xAxis){
 			case true:
 				this.xScale = d3.scaleBand()
@@ -395,7 +412,6 @@ class myIOchart {
 		}
 		
 		// if there is a color scheme defined
-		console.log(this.options);
 		if(this.options.colorScheme){
 			console.log("color scheme yes!");
 			this.colorDiscrete = d3.scaleOrdinal()
@@ -416,7 +432,11 @@ class myIOchart {
 	addAxes(){
 		var that = this;
 		var m = this.margin;
-		var chartHeight = this.totalWidth > 600 ? this.height : this.height * 0.8 ;
+		if(this.options.suppressLegend == false){
+					var chartHeight = this.totalWidth > 600 ? this.height : this.height * 0.8 ;
+				} else {
+					var chartHeight = this.height ;
+				}
 		
 		switch (this.options.xAxisFormat){
 			case "yearMon":
@@ -489,7 +509,11 @@ class myIOchart {
 	updateAxes(){
 		var that = this;
 		var m = this.margin;
-		var chartHeight = this.totalWidth > 600 ? this.height : this.height * 0.8 ;
+		if(this.options.suppressLegend == false){
+					var chartHeight = this.totalWidth > 600 ? this.height : this.height * 0.8 ;
+				} else {
+					var chartHeight = this.height ;
+				}
 		
 		var transitionSpeed = this.options.transition.speed;
 		
@@ -1957,6 +1981,7 @@ class myIOchart {
 		var that = this;
 		var m = this.margin;
 		var horizontalBreakPoint = this.width * 0.8;
+		var verticalBreakPoint = this.height * 0.5;
 		
 		var exclusions = ["text", "yearMon"];
 	
@@ -2032,7 +2057,7 @@ class myIOchart {
 			
 			that.tooltip
               .style("left", (d3.mouse(this)[0] > horizontalBreakPoint ? horizontalBreakPoint : d3.mouse(this)[0]) + 'px')
-			  .style("top", Math.max(d3.mouse(this)[1] - 70, 0) + 'px')
+			  .style("top", ( d3.mouse(this)[1] > verticalBreakPoint ? verticalBreakPoint - 70 : Math.max(d3.mouse(this)[1] - 70, 0) ) + 'px')
 			  .style('opacity', 1)
               .style("display", "inline-block");
 			
@@ -2118,12 +2143,12 @@ class myIOchart {
 				.attr('x2', that.xScale(tipText[0].values[tipText[0].x_var]))
 				.attr('y1',0)
 				.attr('y2', that.height - (that.margin.top +that.margin.bottom));
-				
+			
 			that.tooltip
 				.style('display', 'inline-block')
 				.style('opacity', 1)
 				.style("left", (d3.mouse(this)[0] > horizontalBreakPoint ? horizontalBreakPoint : (that.xScale(tipText[0].values[tipText[0].x_var])) )+ 'px')
-				.style("top", Math.max(d3.mouse(this)[1] - 70, 0) + 'px');
+				.style("top", ( d3.mouse(this)[1] > verticalBreakPoint ? verticalBreakPoint - 70 : Math.max(d3.mouse(this)[1] - 70, 0) ) + 'px')
 				
 			that.toolTipTitle
 				.html('<span>' + tipText[0].x_var + ': ' + xFormat(tipText[0].values[tipText[0].x_var]) + '</span>'); 
@@ -2149,8 +2174,8 @@ class myIOchart {
 			that.tooltip.transition();
 			
 			that.tooltip
-              .style("left", (xPoint > horizontalBreakPoint ? horizontalBreakPoint : xPoint) + 'px')
-			  .style("top", Math.max(yPoint - 70, 0) + 'px')
+              .style("left", ( xPoint > horizontalBreakPoint ? horizontalBreakPoint : xPoint ) + 'px')
+			  .style("top", ( yPoint > verticalBreakPoint ? verticalBreakPoint - 70 : Math.max(yPoint - 70, 0) ) + 'px')
 			  .style('opacity', 1)
               .style("display", "inline-block");
 			
@@ -2194,7 +2219,7 @@ class myIOchart {
 		this.removeLayers(oldLayers);
 		
 		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type != "treemap" & this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut"){
-			this.updateLegend();
+			if(this.options.suppressLegend == false) this.updateLegend();
 		} 
 		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type == "treemap" || this.plotLayers[0].type == "donut"){
 			this.updateOrdinalColorLegend(this.plotLayers[0]);
@@ -2204,7 +2229,7 @@ class myIOchart {
 	resize(width, height){
 		
 		this.totalWidth = Math.max(width, 280);
-		this.width = this.totalWidth > 600 ? this.totalWidth * 0.8 : this.totalWidth;
+		this.width = this.totalWidth > 600 & this.options.suppressLegend == false ? this.totalWidth * 0.8 : this.totalWidth;
 		this.height = height;
 		
 		this.svg
@@ -2212,6 +2237,7 @@ class myIOchart {
 			.attr('height', height);
 		
 		var buttons2Use = d3.select(this.element).select(".buttonDiv").selectAll('.button').data(); 
+		
 		d3.select(this.element).select(".buttonDiv")  
 			.style("left", ( this.width - ( 40 + ( 40*buttons2Use.length ) ) ) + 'px')
 			.style("top", '0px');	
@@ -2237,22 +2263,30 @@ class myIOchart {
 					.attr('transform','translate('+this.margin.left+','+this.margin.top+')')
 					.style('width', this.width - (this.margin.left + this.margin.right) );
 				
+				if(this.options.suppressLegend == false){
+					var chartHeight = this.totalWidth > 600 ? this.height : this.height * 0.8 ;
+				} else {
+					var chartHeight = this.height ;
+				}
+				
 				this.clipPath
 					.attr('x', 0)
 					.attr('y', 0)
 					.attr('width', this.width - (this.margin.left + this.margin.right))
-					.attr('height', (this.totalWidth > 600 ? this.height: this.height * 0.8) - (this.margin.top + this.margin.bottom));
+					.attr('height', chartHeight - (this.margin.top + this.margin.bottom));
 		
 		}
 		
 		
-				
-		this.legendTranslate = this.totalWidth > 600 ? 'translate(' + (this.width) + ',0)' : 'translate(' + this.margin.left + ',' + ( this.height*0.8 ) +')';
+		if(this.options.suppressLegend == false) {
+			this.legendTranslate = this.totalWidth > 600 ? 'translate(' + (this.width) + ',0)' : 'translate(' + this.margin.left + ',' + ( this.height*0.8 ) +')';
 		
-		this.legendArea 
-			.attr('transform', this.legendTranslate )
-			.style( 'height', this.totalWidth > 600 ? this.height : this.height * 0.2 )
-			.style( 'width', this.totalWidth > 600 ? this.totalWidth - this.width : this.totalWidth - this.margin.left );
+			this.legendArea 
+				.attr('transform', this.legendTranslate )
+				.style( 'height', this.totalWidth > 600 ? this.height : this.height * 0.2 )
+				.style( 'width', this.totalWidth > 600 ? this.totalWidth - this.width : this.totalWidth - this.margin.left );
+		}	
+		
 		
 		if(this.plotLayers[0].type != "treemap"& this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut"){
 			this.processScales(this.currentLayers);
@@ -2260,18 +2294,24 @@ class myIOchart {
 		}	
 		
 		this.routeLayers(this.currentLayers);
-		
-		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type != "treemap" & this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut" & this.plotLayers[0].type != "hexbin"){
-			this.updateLegend();
+		if(this.options.suppressLegend == false) {
+			if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type != "treemap" & this.plotLayers[0].type != "gauge" & this.plotLayers[0].type != "donut" & this.plotLayers[0].type != "hexbin"){
+				this.updateLegend();
+				this.updateRollover(this.currentLayers);
+			} 
+			
+			if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type == "treemap" || this.plotLayers[0].type == "donut"){
+			this.updateOrdinalColorLegend(this.plotLayers[0]);
+			} 
+		} else{
 			this.updateRollover(this.currentLayers);
-		} 
+		}
+		
 		if(this.plotLayers[0].type == "hexbin"){
 			this.updateContinuousColorLegend();
 			this.updateRollover(this.currentLayers);
 		}
-		if(this.legendArea.selectAll('.legendElement').data().length > 0 & this.plotLayers[0].type == "treemap" || this.plotLayers[0].type == "donut"){
-			this.updateOrdinalColorLegend(this.plotLayers[0]);
-		} 
+		
 	}
 }
 
@@ -2302,6 +2342,9 @@ function getSVGString( svgNode ) {
 			var id = nodes[i].id;
 			if ( !contains('#'+id, selectorTextArr) )
 				selectorTextArr.push( '#'+id );
+			
+			if ( '@'+id )
+				selectorTextArr.push( '@'+id );
 
 			var classes = nodes[i].classList;
 			for (var c = 0; c < classes.length; c++)

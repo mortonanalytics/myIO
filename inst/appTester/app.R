@@ -70,7 +70,8 @@ server <- function(input, output) {
                            # high_y = "Temp_high",
                            group = "Month"
                        )) %>%
-            setAxisFormat(xAxis = ".2f",yAxis = ".0f")
+            setAxisFormat(xAxis = ".2f",yAxis = ".0f") %>%
+            suppressLegend()
 
     })
 
