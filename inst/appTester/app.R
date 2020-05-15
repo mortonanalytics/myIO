@@ -28,8 +28,9 @@ ui <- fluidPage(
 
         # Show a plot of the generated distribution
         mainPanel(width = 12,
-           column(6,myIOOutput("donut",width = "100%", height = "350px")),
            column(6, myIOOutput("distPlot", width = "100%", height = "350px")),
+           column(6, myIOOutput("distPlot2", width = "100%", height = "350px")),
+           column(6,myIOOutput("donut",width = "100%", height = "350px")),
            column(6, myIOOutput("gauge", width = "100%", height = "250px"))
         )
     )
@@ -39,6 +40,41 @@ ui <- fluidPage(
 server <- function(input, output) {
 
     output$distPlot <- renderMyIO({
+        rando <- rnorm(31, mean = 0, sd = input$slider / 3)
+
+        df <- datasets::airquality %>%
+            mutate(Month = paste0("This Is the Month of ", Month),
+                   Temp_low = Temp * c(0.8,0.9,0.75),
+                   Temp_high = Temp * c(1.2,1.1,1.3)) %>%
+            group_by(Day) %>%
+            mutate(Percent = Temp/sum(Temp)) %>%
+            ungroup() %>%
+            mutate(Day2 = Day * rando[Day] )
+
+        colors <- substr(viridis(5), 1, 7)
+
+        groupsAre <- unlist(unique(df$Month))[ as.numeric(input$group) ]
+
+        df <- df %>%
+            filter(Month %in% groupsAre)
+
+        myIO()%>%
+            addIoLayer(type = "line",
+                       color = colors,
+                       label = "Month",
+                       data = df ,
+                       mapping = list(
+                           x_var = "Day",
+                           y_var = "Temp",
+                           # low_y = "Temp_low",
+                           # high_y = "Temp_high",
+                           group = "Month"
+                       )) %>%
+            setAxisFormat(xAxis = ".2f",yAxis = ".0f")
+
+    })
+
+    output$distPlot2 <- renderMyIO({
         rando <- rnorm(31, mean = 0, sd = input$slider / 3)
 
         df <- datasets::airquality %>%

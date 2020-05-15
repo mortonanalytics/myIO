@@ -847,10 +847,7 @@ class myIOchart {
 			.attr('y', d => barSize == 1 ? this.yScale(d[ly.mapping.x_var]) : this.yScale(d[ly.mapping.x_var]) + bandwidth/4 )
 			.attr('x', d => this.xScale(Math.min(0, d[ly.mapping.y_var])) )
 			.attr('height', (barSize * bandwidth)-2)
-			.attr('width', 0)
-			.on('mouseover', hoverTip)
-			.on('mousemove', hoverTip)
-			.on('mouseout', hoverTipHide);
+			.attr('width', 0);			
 	
 		bars.merge(newBars)
 			.transition()
@@ -860,17 +857,6 @@ class myIOchart {
 			.attr('x', d => this.xScale(Math.min(0, d[ly.mapping.y_var])) )
 			.attr('height', (barSize * bandwidth)-2)
 			.attr('width', d => Math.abs(this.xScale(d[ly.mapping.y_var]) - this.xScale(0)) );
-		console.log("yscale check:" + this.yScale(25));
-		
-		console.log(bars);
-		
-		function hoverTip(){
-			
-		}
-		
-		function hoverTipHide(){
-			
-		}
 		
 		function defineScale(d,ly, bandwidth, barSize, scale){
 			switch (scale){
@@ -2004,8 +1990,8 @@ class myIOchart {
 				break;
 				
 			case "line":
-				d3.select('.toolTipBox').remove();
-				d3.select('.toolLine').remove();
+				d3.select(this.element).select('.toolTipBox').remove();
+				d3.select(this.element).select('.toolLine').remove();
 				this.toolLine =  this.chart.append('line').attr('class', 'toolLine');
 				this.toolTipBox = this.svg.append("rect")
 					.attr('class', 'toolTipBox')
