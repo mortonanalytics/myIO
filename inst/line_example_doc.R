@@ -15,10 +15,10 @@ df <- datasets::airquality %>%
 colors <- substr(viridis(5), 1, 7)
 
 myIO()%>%
-  addIoLayer(type = "line",
+  addIoLayer(type = "groupedBar",
              color = colors,
-             label = "Month",
-             data = df ,
+             label = "stuff",
+             data = df[df$Day < 10,] ,
              mapping = list(
                x_var = "Day",
                y_var = "Temp",
@@ -27,7 +27,8 @@ myIO()%>%
                group = "Month"
              )) %>%
   setToggle(newY = "Percent", newScaleY = ".0%") %>%
-  setAxisFormat(xAxis = ".0f",yAxis = ".0f")
+  setAxisFormat(xAxis = ".0f",yAxis = ".0f") %>%
+  setAxisLimits(xlim = list(max = "10"),ylim = list(min="0"))
 
 
 myIO() %>%

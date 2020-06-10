@@ -28,7 +28,7 @@ addIoLayer <- function(myIO,
   #stopifnot(is.character(color))
   stopifnot(is.character(label))
   stopifnot(is.list(mapping))
-  stopifnot(type %in% c("line", "point", "treemap", "bar", "hexbin", "gauge", "donut", "area"))
+  stopifnot(type %in% c("line", "point", "treemap", "bar", "hexbin", "gauge", "donut", "area", "groupedBar"))
 
   presets <-list(barSize = "large",
                  toolTipOptions = list(suppressY = FALSE))
