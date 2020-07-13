@@ -14,6 +14,8 @@ df <- datasets::airquality %>%
 
 colors <- substr(viridis(5), 1, 7)
 
+devtools::install()
+
 myIO()%>%
   addIoLayer(type = "groupedBar",
              color = colors,

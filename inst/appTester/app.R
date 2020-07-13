@@ -40,6 +40,7 @@ ui <- fluidPage(
 server <- function(input, output) {
 
     output$distPlot <- renderMyIO({
+
         rando <- rnorm(31, mean = 0, sd = input$slider / 3)
 
         df <- datasets::airquality %>%
@@ -59,19 +60,20 @@ server <- function(input, output) {
             filter(Month %in% groupsAre)
 
         myIO()%>%
-            addIoLayer(type = "line",
+            addIoLayer(type = "groupedBar",
                        color = colors,
                        label = "Month",
                        data = df ,
                        mapping = list(
                            x_var = "Day",
                            y_var = "Temp",
+                           #radius = 20
                            # low_y = "Temp_low",
                            # high_y = "Temp_high",
                            group = "Month"
                        )) %>%
-            setAxisFormat(xAxis = ".2f",yAxis = ".0f") %>%
-            suppressLegend()
+            setToggle(newY = "Percent", newScaleY = ".0%") %>%
+            setAxisFormat(xAxis = ".2f",yAxis = ".0f")
 
     })
 
