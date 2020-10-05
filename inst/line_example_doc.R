@@ -2,6 +2,10 @@ library(dplyr)
 library(myIO)
 library(viridis)
 
+devtools::install()
+print("done")
+
+##### grouped example #####
 df <- datasets::airquality %>%
   mutate(Month = paste0("This Is the Month of ", Month),
          Temp_low = Temp * c(0.8,0.9,0.75),
@@ -13,8 +17,6 @@ df <- datasets::airquality %>%
   arrange(Day)
 
 colors <- substr(viridis(5), 1, 7)
-
-devtools::install()
 
 myIO()%>%
   addIoLayer(type = "groupedBar",
@@ -32,6 +34,7 @@ myIO()%>%
   setAxisFormat(xAxis = ".0f",yAxis = ".0f") %>%
   setAxisLimits(xlim = list(max = "10"),ylim = list(min="0"))
 
+#### multi-layer example ####
 
 myIO() %>%
   addIoLayer(type = "bar",
@@ -56,6 +59,8 @@ myIO() %>%
   #defineCategoricalAxis(xAxis = FALSE, yAxis = TRUE) %>%
   flipAxis()
 
+
+#### hexbin example ####
 df_hexbin <- data.frame(x = rnorm(1000),
                         y = rnorm(1000))
 
@@ -67,6 +72,7 @@ myIO(elementId = "tester", height = "600px") %>%
                             y_var = "y",
                             radius = 20))
 
+#### treemap example ####
 
 df <- mtcars %>% mutate(cars = rownames(.))
 class(df$cyl) <- "character"
@@ -91,6 +97,8 @@ myIO(height = "600px") %>%
     )
   )
 
+
+#### donut example ####
 df_donut <- data.frame(x = c("Apples", "Oranges", "Berries"),
                        y = c(2, 9,5),
                        stringsAsFactors = FALSE)
@@ -107,6 +115,7 @@ myIO() %>%
     )
   )
 
+#### gauge example ####
 myIO() %>%
   addIoLayer(
     type = "gauge",
@@ -115,4 +124,20 @@ myIO() %>%
     data = data.frame(value = 0.9),
     mapping = list(value = "value")
 
+  )
+
+
+#### histogram example ####
+data <- data.frame(x = rnorm(100, 15, 3))
+
+myIO() %>%
+  addIoLayer(
+    type = "histogram",
+    color = "steelblue",
+    label = "test",
+    data = data,
+    mapping = list(
+      value = "x",
+      bins = 12
+    )
   )

@@ -106,6 +106,15 @@ class myIOchart {
 				this.updateRollover(this.currentLayers);
 				break;
 				
+			case "histogram":
+				this.setZoom();
+				this.createBins(this.currentLayers);
+				this.addAxes();
+				this.routeLayers(this.currentLayers);
+				if(this.options.suppressLegend == false) this.updateLegend();
+				this.updateRollover(this.currentLayers);				
+				break;
+				
 			case "hexbin":				
 				this.setZoom();
 				this.processScales(this.currentLayers);
@@ -214,7 +223,8 @@ class myIOchart {
 			.attr('class', 'button')		
 			//.attr("transform", function(d) { return "translate(" +  tempData.indexOf(d)* 20 + ", 0)"; })
 			.html(function(d){ return d.html})
-			.on('click', function(d){
+			.on('click', function(event, d){
+				
 				if(d.name == "image"){
 					var svgString = getSVGString(that.svg.node());
 					svgString2Image( svgString, 2*that.width, 2*that.height, 'png', save ); // passes Blob and filesize String to the callback
@@ -321,6 +331,55 @@ class myIOchart {
 	
 	setZoom(){
 		
+	}
+	
+	createBins(lys){
+		var m = this.margin;
+		
+		if(this.options.suppressLegend == false){
+					var chartHeight = this.totalWidth > 600 ? this.height : this.height * 0.8 ;
+				} else {
+					var chartHeight = this.height ;
+				}
+		var x_extents = [];
+		
+		lys.forEach(function(d){
+				
+			var x = d3.extent( d.data, function(e) { return +e[d.mapping.value]; });
+	
+			x_extents.push(x);
+
+		});
+		
+		var x_min = d3.min(x_extents, function(d,i) {return d[0]; });
+		var x_max = d3.max(x_extents, function(d,i) {return d[1]; });
+		
+		var xExtent = [ x_min, 
+					   x_max ];
+		
+		var x = d3.scaleLinear()
+			.domain(xExtent).nice()
+			.range([0, this.width - (m.left + m.right)]);
+	
+		lys.forEach(function(d){
+			
+			var values = d.data.map(e => e[d.mapping.value]);
+			
+			console.log(values);
+			
+			d.bins = d3.bin()
+				.domain(x.domain())
+				.thresholds(x.ticks(d.mapping.bins))
+			  (values);
+			  
+			d.max_value =  d3.max(d.bins, d => d.length);
+		});	
+		
+		this.xScale = x;
+		
+		this.yScale = d3.scaleLinear()
+			.domain([0, d3.max(lys, d => d.max_value)]).nice()
+			.range([chartHeight - (m.top + m.bottom), 0])
 	}
 	
 	processScales(lys){
@@ -524,6 +583,8 @@ class myIOchart {
 		this.plot.selectAll('.x-axis').selectAll('.tick line')
 			.attr('class', 'x-grid');
 		
+		this.plot.selectAll('.x-axis').selectAll('text')
+			.attr('class', 'x-label');
 		
 		var currentFormatY = this.newScaleY ? this.newScaleY : yFormat;
 
@@ -542,6 +603,9 @@ class myIOchart {
 			
 		this.plot.selectAll('.y-axis').selectAll('.tick line')
 			.attr('class', 'y-grid');
+			
+		this.plot.selectAll('.y-axis').selectAll('text')
+			.attr('class', 'y-label');
 	}
 	
 	updateAxes(){
@@ -604,6 +668,9 @@ class myIOchart {
 			
 		this.plot.selectAll('.x-axis').selectAll('.tick line')
 			.attr('class', 'x-grid');
+			
+		this.plot.selectAll('.x-axis').selectAll('text')
+			.attr('class', 'x-label');
 		
 		var currentFormatY = this.newScaleY ? this.newScaleY : yFormat;
 		
@@ -622,6 +689,9 @@ class myIOchart {
 			
 		this.plot.selectAll('.y-axis').selectAll('.tick line')
 			.attr('class', 'y-grid');
+		
+		this.plot.selectAll('.y-axis').selectAll('text')
+			.attr('class', 'y-label');
 	}
 	
 	routeLayers(lys){
@@ -636,6 +706,11 @@ class myIOchart {
 			var layerType = d.type;
 			
 			switch (layerType){
+				case "histogram":
+					console.log("route layers achieved");
+					that.addHistogramBars(d);
+					break;
+				
 				case "line":
 					that.addLine(d);
 					that.addPoints(d);
@@ -820,6 +895,42 @@ class myIOchart {
 			.attr("d", valueArea)
 			.style('opacity', 0.4);
 	}
+	
+	addHistogramBars(ly){
+		var that = this;
+		var m = this.margin;
+		var data = ly.bins;
+		var key = ly.label;
+		var transitionSpeed = this.options.transition.speed;
+		
+		var bars = this.chart
+			.selectAll('.tag-bar-' + this.element.id + '-'  + key.replace(/\s+/g, ''))
+			//.selectAll('rect')
+			.data(data);
+		
+		bars.exit()
+			.transition().duration(transitionSpeed).attr('y', this.yScale(0))
+			.remove();
+		
+		var newBars = bars.enter()
+			.append('rect')
+			.attr('class', 'tag-bar-' + this.element.id + '-'  + key.replace(/\s+/g, ''))
+			.attr('clip-path', 'url(#' + this.element.id + 'clip'+ ')')
+			.style('fill', d => this.options.colorScheme[2] == "on" ? this.colorScheme(d[ly.mapping.x_var]) : ly.color )
+			.attr("x", d => this.xScale(d.x0) + 1)
+			.attr('y', this.yScale(0))
+			.attr("width", d => Math.max(0, this.xScale(d.x1) - this.xScale(d.x0) - 1))
+			.attr('height', this.yScale(0));
+			
+		bars.merge(newBars)
+			.transition()
+			.ease(d3.easeQuad)
+			.duration(transitionSpeed)
+			.attr("x", d => this.xScale(d.x0) + 1)
+			.attr("width", d => Math.max(0, this.xScale(d.x1) - this.xScale(d.x0) - 1))
+			.attr("y", d => this.yScale(d.length))
+			.attr("height", d => this.yScale(0) - this.yScale(d.length));
+	}
 
 	addVerticalBars(ly){
 		var that = this;
@@ -932,9 +1043,10 @@ class myIOchart {
 		var transitionSpeed = this.options.transition.speed;
 		
 		var data = getGroupedDataObject(lys, that);
+		
 		var colors = lys.map(d => d.color);
 		
-		var bandwidth = ( ( that.width - ( that.margin.right + that.margin.left ) ) / (data[0].length + 1) ) / colors.length;
+		var bandwidth = ( ( that.width - ( that.margin.right + that.margin.left ) ) / (data[0].length) ) / colors.length;
 		
 		if(typeof this.layout == 'undefined'){
 				this.layout = "grouped";
@@ -992,10 +1104,10 @@ class myIOchart {
 		function defineScale(d,ly, bandwidth, barSize, scale){
 			switch (scale){
 				case true:
-					return barSize == 1 ? that.xScale(d.data.key) : that.xScale(d.data.key) + (bandwidth/4) ;
+					return barSize == 1 ? that.xScale(d.data[0]) : that.xScale(d.data[0]) + (bandwidth/4) ;
 					break;
 				default:
-					return barSize == 1 ? that.xScale(+d.data.key) - (bandwidth/2) : that.xScale(+d.data.key) - (bandwidth/4);
+					return barSize == 1 ? that.xScale(+d.data[0]) - (bandwidth/2) : that.xScale(+d.data[0]) - (bandwidth/4);
 			}
 		}
 	
@@ -1890,8 +2002,8 @@ class myIOchart {
 			
 			that.currentLayers = filteredLayers;
 			that.processScales(that.currentLayers);
-			that.routeLayers(that.currentLayers);
 			that.removeLayers(removedLayers);
+			that.routeLayers(that.currentLayers);
 			if(that.currentLayers[0].type != "groupedBar") that.updateAxes();
 			that.updateRollover(that.currentLayers);
 			//that.addButtons();
@@ -2111,6 +2223,13 @@ class myIOchart {
 					.on("mouseout", hoverGroupedBarHide)
 					.on("mouseover", hoverGroupedBar)
 					.on("mousemove", hoverGroupedBar);
+				break;
+			case "histogram":
+				this.chart.selectAll('rect')
+					.on("mouseout", hoverHistogramHide)
+					.on("mouseover", hoverHistogram)
+					.on("mousemove", hoverHistogram);
+				break;
 			case "point":
 				this.chart.selectAll('circle')
 					.on("mouseout", hoverTipHide)
@@ -2146,7 +2265,7 @@ class myIOchart {
 					.on("mousemove", scalePointPosition);
 		}
 		
-		function hoverTip(){
+		function hoverTip(event){
 			
 			var data = d3.select(this).data()[0];
 			
@@ -2175,8 +2294,8 @@ class myIOchart {
 			that.tooltip.transition();
 			
 			that.tooltip
-              .style("left", (d3.mouse(this)[0] > horizontalBreakPoint ? horizontalBreakPoint : d3.mouse(this)[0]) + 'px')
-			  .style("top", ( d3.mouse(this)[1] > verticalBreakPoint ? verticalBreakPoint - 70 : Math.max(d3.mouse(this)[1] - 70, 0) ) + 'px')
+              .style("left", (d3.pointer(event, this)[0] > horizontalBreakPoint ? horizontalBreakPoint : d3.pointer(event, this)[0]) + 'px')
+			  .style("top", ( d3.pointer(event, this)[1] > verticalBreakPoint ? verticalBreakPoint - 70 : Math.max(d3.pointer(event, this)[1] - 70, 0) ) + 'px')
 			  .style('opacity', 1)
               .style("display", "inline-block");
 			
@@ -2194,10 +2313,10 @@ class myIOchart {
 			that.tooltip.transition().delay(800).style("display", "none");
 		}
 		
-		function scalePointPosition() {
+		function scalePointPosition(event) {
 			
 			var tipText = [];
-			var mouse = d3.mouse(this);
+			var mouse = d3.pointer(event, this);
 			
 			var indexExtent = d3.max(lys.map(d => d.data.length));
 			
@@ -2275,8 +2394,8 @@ class myIOchart {
 			that.tooltip
 				.style('display', 'inline-block')
 				.style('opacity', 1)
-				.style("left", (d3.mouse(this)[0] > horizontalBreakPoint ? horizontalBreakPoint : (that.xScale(tipText[0].values[tipText[0].x_var])) )+ 'px')
-				.style("top", ( d3.mouse(this)[1] > verticalBreakPoint ? verticalBreakPoint - 70 : Math.max(d3.mouse(this)[1] - 70, 0) ) + 'px')
+				.style("left", (d3.pointer(event, this)[0] > horizontalBreakPoint ? horizontalBreakPoint : (that.xScale(tipText[0].values[tipText[0].x_var])) )+ 'px')
+				.style("top", ( d3.pointer(event, this)[1] > verticalBreakPoint ? verticalBreakPoint - 70 : Math.max(d3.mouse(event, this)[1] - 70, 0) ) + 'px')
 				
 			that.toolTipTitle
 				.html('<span>' + tipText[0].x_var + ': ' + xFormat(tipText[0].values[tipText[0].x_var]) + '</span>'); 
@@ -2326,13 +2445,15 @@ class myIOchart {
 			that.tooltip.transition().delay(800).style("display", "none");
 		}
 		
-		function hoverGroupedBar(){
+		function hoverGroupedBar(event){
 			const selection = d3.select(this);
 			const data = selection.data()[0];
 			
 			var thisLayer = lys[data.idx];
+			
+			console.log(data)
 
-			var xData = xFormat( data.data.key );
+			var xData = xFormat( data.data[0] );
 			var yData = currentFormatY( data[1] - data[0] );
 			var groupData = thisLayer.label;
 			var color = that.options.colorScheme[2] == "on" ? that.colorScheme(groupData) : thisLayer.color ;
@@ -2347,8 +2468,8 @@ class myIOchart {
 			that.tooltip.transition();
 			
 			that.tooltip
-              .style("left", (d3.mouse(this)[0] > horizontalBreakPoint ? horizontalBreakPoint : d3.mouse(this)[0]) + 'px')
-			  .style("top", ( d3.mouse(this)[1] > verticalBreakPoint ? verticalBreakPoint - 70 : Math.max(d3.mouse(this)[1] - 70, 0) ) + 'px')
+              .style("left", (d3.pointer(event, this)[0] > horizontalBreakPoint ? horizontalBreakPoint : d3.pointer(event, this)[0]) + 'px')
+			  .style("top", ( d3.pointer(event, this)[1] > verticalBreakPoint ? verticalBreakPoint - 70 : Math.max(d3.pointer(event, this)[1] - 70, 0) ) + 'px')
 			  .style('opacity', 1)
               .style("display", "inline-block");
 			
@@ -2364,6 +2485,42 @@ class myIOchart {
 		function hoverGroupedBarHide(){
 			d3.select(this).style('opacity', null);
 			that.tooltip.transition().delay(800).style("display", "none");
+		}
+		
+		function hoverHistogram(){
+			var data = d3.select(this).data()[0];
+			var color = d3.select(this).attr('fill')
+			console.log(data);
+			var xPoint = data['x0'] ;
+			var yPoint = data.length ;
+			var pointFormat = d3.format(',.2f')
+			
+			if(HTMLWidgets.shinyMode){
+
+				Shiny.onInputChange('myIO-' + that.element.id + '-rollover', JSON.stringify(data));
+			}
+			
+			that.tooltip.transition();
+			
+			that.tooltip
+				.transition()
+				.duration(100)
+              .style("left", ( that.xScale(xPoint) > horizontalBreakPoint ? horizontalBreakPoint : that.xScale(xPoint) ) + 'px')
+			  .style("top", ( that.yScale(yPoint) > verticalBreakPoint ? verticalBreakPoint - 70 : Math.max(that.yScale(yPoint) - 70, 0) ) + 'px')
+			  .style('opacity', 1)
+              .style("display", "inline-block");
+			
+			that.toolTipTitle
+				.html('<span>Bin: ' + data['x0'] + ' to ' + data['x1'] + '</span>'); 
+			
+			that.toolTipBody
+				.html('<div class="dot" style="background-color:'+ color + ';"></div>' +
+					'<span><strong>Count: </strong> ' + data.length + '</span>'
+				);
+		}
+		
+		function hoverHistogramHide(){
+			that.tooltip.transition().delay(500).style("display", "none");
 		}
 	}
 	
@@ -2523,6 +2680,9 @@ function transitionGrouped(that, data, colors, bandwidth){
 		
 	that.plot.selectAll('.y-axis').selectAll('.tick line')
 		.attr('class', 'y-grid');
+		
+	that.plot.selectAll('.y-axis').selectAll('text')
+		.attr('class', 'y-label');
 	
 	const barsNew = d3.select(that.element).selectAll('.tag-grouped-bar-g')
 		.selectAll( 'rect' )
@@ -2539,7 +2699,7 @@ function transitionGrouped(that, data, colors, bandwidth){
 	barsNew.enter()
 		.append('rect')
 		.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
-		.attr('x', (d) => that.xScale(+d.data.key) + (bandwidth * d.idx)  )
+		.attr('x', (d) => that.xScale(+d.data[0]) + (bandwidth * d.idx)  )
 		.attr('y', that.yScale(0))
 		.attr('height', 0)
 		.attr('width', bandwidth )
@@ -2553,7 +2713,7 @@ function transitionGrouped(that, data, colors, bandwidth){
 		.transition()
 		.duration(transitionSpeed)
 		.delay( d => d.idx *20 )
-		.attr('x', (d) => that.xScale(+d.data.key) + (bandwidth * d.idx)  )
+		.attr('x', function(d) { console.log(d); return that.xScale(+d.data[0]) + (bandwidth * d.idx) } )
 		.attr('width', bandwidth )
 	  .transition()
 		.attr('y', d => that.yScale( d[1] - d[0] ) )
@@ -2598,6 +2758,9 @@ function transitionStacked(that, data, colors, bandwidth){
 		
 	that.plot.selectAll('.y-axis').selectAll('.tick line')
 		.attr('class', 'y-grid');
+		
+	that.plot.selectAll('.y-axis').selectAll('text')
+		.attr('class', 'y-label');
 				
 	const barsNew = d3.select(that.element).selectAll('.tag-grouped-bar-g')
 		.selectAll( 'rect' )
@@ -2614,7 +2777,7 @@ function transitionStacked(that, data, colors, bandwidth){
 	barsNew.enter()
 		.append('rect')
 		.attr('clip-path', 'url(#' + that.element.id + 'clip'+ ')')
-		.attr('x', (d) => that.xScale(+d.data.key) )
+		.attr('x', (d) => that.xScale(+d.data[0]) )
 		.attr("y", d => yScale(d[1]))
 		.attr('height', 0)
 		.attr('width', bandwidth * data.length )
@@ -2624,7 +2787,7 @@ function transitionStacked(that, data, colors, bandwidth){
 		.attr("y", d => yScale(d[1]))
 		.attr("height", d => yScale(d[0]) - yScale(d[1]))
 	  .transition()
-		.attr('x', (d) => that.xScale(+d.data.key) )
+		.attr('x', (d) => that.xScale(+d.data[0]) )
 		.attr('width', bandwidth * data.length );
 	
 	barsNew.merge(barsNew)
@@ -2634,7 +2797,7 @@ function transitionStacked(that, data, colors, bandwidth){
 		.attr("y", d => yScale(d[1]))
 		.attr("height", d => yScale(d[0]) - yScale(d[1]))
 	  .transition()
-		.attr('x', (d) => that.xScale(+d.data.key) )
+		.attr('x', (d) => that.xScale(+d.data[0]) )
 		.attr('width', bandwidth * data.length );
 	
 	
@@ -2664,11 +2827,11 @@ function getGroupedDataObject(lys, that){
 	
 	var flattenedData = [].concat.apply([],data);
 	
-	var nestedData =  d3.nest()
-		.key( function(d){
-			return d[x_var[0]];
-		})
-		.entries(flattenedData);
+	var nestedData =  d3.group(flattenedData, d => d[ x_var[0] ][0] );
+		//.key( function(d){
+		//	return d[x_var[0]];
+		//})
+		//.entries(flattenedData);		
 	
 	var groupedKeys = [...Array(keys.length).keys()];
 	
@@ -2676,10 +2839,11 @@ function getGroupedDataObject(lys, that){
 	
 	var groupedData = d3.stack()
 		.keys(groupedKeys)
-		.value( (d,key) => {	
-			return d.values[key] == undefined ? 0 : d.values[key][ currentY ];
+		.value( (d,key) => {
+			return d[1][key] == undefined ? 0 : d[1][key][ currentY ];
 		} )(nestedData);
-		
+	
+	
 	groupedData.forEach(function(d,i){
 		d.forEach(function(e){
 			e['idx'] = i;
