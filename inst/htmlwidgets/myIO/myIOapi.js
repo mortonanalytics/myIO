@@ -1300,16 +1300,16 @@
   function bindPointDrag(chart, layer) {
     var color = resolveColor(chart, layer.data[layer.mapping.group], layer.color);
     var drag = d3.drag().on("start", function() {
-      d3.select(this).raise().classed("active", true);
+      d3.select(this).raise().classed("active", true).style("cursor", "grabbing");
     }).on("drag", function(event, d) {
       d[0] = chart.xScale.invert(event.x);
       d[1] = chart.yScale.invert(event.y);
       d3.select(this).attr("cx", chart.xScale(d[0])).attr("cy", chart.yScale(d[1]));
     }).on("end", function() {
-      d3.select(this).classed("active", false);
+      d3.select(this).classed("active", false).style("cursor", "grab");
       chart.updateRegression(color, layer.label);
     });
-    chart.chart.selectAll("." + tagName("point", chart.element.id, layer.label)).call(drag);
+    chart.chart.selectAll("." + tagName("point", chart.element.id, layer.label)).style("cursor", "grab").call(drag);
   }
 
   // inst/htmlwidgets/myIO/src/tooltip.js
@@ -1461,7 +1461,7 @@
     if (lys.some(function(layer) {
       return layer.type === "donut";
     })) {
-      bindOrdinalHover(".donut", function(d, layer) {
+      bindOrdinalHover(".donut", "donut", function(d, layer) {
         return {
           title: { text: layer.mapping.x_var + ": " + d.data[layer.mapping.x_var] },
           items: [{
@@ -1563,7 +1563,7 @@
     }
     function removeElementHighlight(node, layer) {
       var selection = d3.select(node);
-      selection.interrupt().transition().duration(HOVER_TRANSITION_MS).style("stroke-width", layer.type === "hexbin" ? "0px" : "0px").style("stroke", "transparent").style("stroke-opacity", null);
+      selection.interrupt().transition().duration(HOVER_TRANSITION_MS).style("stroke-width", "0px").style("stroke", "transparent").style("stroke-opacity", null);
       if (layer.type === "point") {
         selection.transition().duration(HOVER_TRANSITION_MS).attr("r", pointRadius(that));
       }
@@ -1652,9 +1652,9 @@
       }
       hideChartTooltip(that);
     }
-    function bindOrdinalHover(selector, tooltipBuilder) {
+    function bindOrdinalHover(selector, layerType, tooltipBuilder) {
       var layer = lys.filter(function(candidate) {
-        return candidate.type === "donut";
+        return candidate.type === layerType;
       })[0];
       chart.chart.selectAll(selector).on("mouseout", function() {
         chart.chart.selectAll(selector).transition().duration(HOVER_TRANSITION_MS).style("opacity", 1);
@@ -1667,6 +1667,15 @@
       }).on("mousemove", function(event, d) {
         var tooltip = tooltipBuilder(d, layer);
         showChartTooltip(that, { pointer: getContainerPointer(event), title: tooltip.title, items: tooltip.items });
+      }).on("touchstart", function(event, d) {
+        event.preventDefault();
+        chart.chart.selectAll(selector).style("opacity", 0.4);
+        d3.select(this).style("opacity", 0.85);
+        var tooltip = tooltipBuilder(d, layer);
+        showChartTooltip(that, { pointer: getContainerPointer(event), title: tooltip.title, items: tooltip.items });
+      }).on("touchend", function() {
+        chart.chart.selectAll(selector).transition().duration(HOVER_TRANSITION_MS).style("opacity", 1);
+        hideChartTooltip(that);
       });
     }
     function showTreemap(event, d) {
@@ -2377,7 +2386,6 @@
           }
         }, this);
       }
-      this.addButtons(this.derived.currentLayers);
       initializeTooltip(this);
       this.captureLegacyAliases();
       if (this.derived.currentLayers.length > 0) {

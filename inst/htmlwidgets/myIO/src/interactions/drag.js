@@ -5,7 +5,7 @@ export function bindPointDrag(chart, layer) {
 
   var drag = d3.drag()
     .on("start", function() {
-      d3.select(this).raise().classed("active", true);
+      d3.select(this).raise().classed("active", true).style("cursor", "grabbing");
     })
     .on("drag", function(event, d) {
       d[0] = chart.xScale.invert(event.x);
@@ -16,11 +16,12 @@ export function bindPointDrag(chart, layer) {
         .attr("cy", chart.yScale(d[1]));
     })
     .on("end", function() {
-      d3.select(this).classed("active", false);
+      d3.select(this).classed("active", false).style("cursor", "grab");
       chart.updateRegression(color, layer.label);
     });
 
   chart.chart
     .selectAll("." + tagName("point", chart.element.id, layer.label))
+    .style("cursor", "grab")
     .call(drag);
 }

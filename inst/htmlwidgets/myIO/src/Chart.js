@@ -176,7 +176,6 @@ export class myIOchart {
         }
       }, this);
     }
-    this.addButtons(this.derived.currentLayers);
     initializeTooltip(this);
     this.captureLegacyAliases();
     if (this.derived.currentLayers.length > 0) {

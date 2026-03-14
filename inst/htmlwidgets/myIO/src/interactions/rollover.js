@@ -45,7 +45,7 @@ export function bindRollover(chart, layers) {
   }
 
   if (lys.some(function(layer) { return layer.type === "donut"; })) {
-    bindOrdinalHover(".donut", function(d, layer) {
+    bindOrdinalHover(".donut", "donut", function(d, layer) {
       return {
         title: { text: layer.mapping.x_var + ": " + d.data[layer.mapping.x_var] },
         items: [{
@@ -179,7 +179,7 @@ export function bindRollover(chart, layers) {
   function removeElementHighlight(node, layer) {
     var selection = d3.select(node);
     selection.interrupt().transition().duration(HOVER_TRANSITION_MS)
-      .style("stroke-width", layer.type === "hexbin" ? "0px" : "0px")
+      .style("stroke-width", "0px")
       .style("stroke", "transparent")
       .style("stroke-opacity", null);
 
@@ -298,9 +298,9 @@ export function bindRollover(chart, layers) {
     hideChartTooltip(that);
   }
 
-  function bindOrdinalHover(selector, tooltipBuilder) {
+  function bindOrdinalHover(selector, layerType, tooltipBuilder) {
     var layer = lys.filter(function(candidate) {
-      return candidate.type === "donut";
+      return candidate.type === layerType;
     })[0];
     chart.chart.selectAll(selector)
       .on("mouseout", function() {
@@ -316,6 +316,17 @@ export function bindRollover(chart, layers) {
       .on("mousemove", function(event, d) {
         var tooltip = tooltipBuilder(d, layer);
         showChartTooltip(that, { pointer: getContainerPointer(event), title: tooltip.title, items: tooltip.items });
+      })
+      .on("touchstart", function(event, d) {
+        event.preventDefault();
+        chart.chart.selectAll(selector).style("opacity", 0.4);
+        d3.select(this).style("opacity", 0.85);
+        var tooltip = tooltipBuilder(d, layer);
+        showChartTooltip(that, { pointer: getContainerPointer(event), title: tooltip.title, items: tooltip.items });
+      })
+      .on("touchend", function() {
+        chart.chart.selectAll(selector).transition().duration(HOVER_TRANSITION_MS).style("opacity", 1);
+        hideChartTooltip(that);
       });
   }
 
