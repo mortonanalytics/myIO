@@ -4,3 +4,4 @@
 ..Rcheck/00check.log
 ..Rcheck/00install.out
 /docs
+node_modules/

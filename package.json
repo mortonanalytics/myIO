@@ -1,0 +1,11 @@
+{
+  "name": "myio-widget-build",
+  "private": true,
+  "scripts": {
+    "build": "esbuild inst/htmlwidgets/myIO/src/index.js --bundle --format=iife --outfile=inst/htmlwidgets/myIO/myIOapi.js",
+    "watch": "esbuild inst/htmlwidgets/myIO/src/index.js --bundle --format=iife --outfile=inst/htmlwidgets/myIO/myIOapi.js --watch"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.10"
+  }
+}
