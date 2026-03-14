@@ -76,7 +76,7 @@ myIO() |>
 Visualize a range using low and high y values:
 
 ``` r
-aq <- airquality[complete.cases(airquality), ]
+aq <- airquality[airquality$Month == 7 & complete.cases(airquality), ]
 aq$TempLow <- aq$Temp - 8
 aq$TempHigh <- aq$Temp + 8
 
@@ -95,7 +95,7 @@ myIO() |>
     data = aq,
     mapping = list(x_var = "Day", y_var = "Temp")
   ) |>
-  setAxisFormat(xLabel = "Day", yLabel = "Temperature (F)") |>
+  setAxisFormat(xLabel = "Day of Month (July)", yLabel = "Temperature (F)") |>
   setMargin(top = 20, bottom = 70, left = 60, right = 10)
 ```
 
@@ -135,12 +135,14 @@ myIO() |>
 Summarize proportions with a donut:
 
 ``` r
+donut_data <- aggregate(mpg ~ cyl, data = mtcars, FUN = mean)
+
 myIO() |>
   addIoLayer(
     type = "donut",
     color = c("#E69F00", "#56B4E9", "#009E73"),
     label = "cylinders",
-    data = mtcars,
+    data = donut_data,
     mapping = list(x_var = "cyl", y_var = "mpg")
   )
 ```
@@ -156,7 +158,7 @@ myIO() |>
     color = "#0072B2",
     label = "density",
     data = mtcars,
-    mapping = list(x_var = "wt", y_var = "mpg")
+    mapping = list(x_var = "wt", y_var = "mpg", radius = 20)
   ) |>
   setAxisFormat(xLabel = "Weight (1000 lbs)", yLabel = "Miles per Gallon") |>
   setMargin(top = 20, bottom = 70, left = 60, right = 10)
@@ -175,7 +177,7 @@ myIO() |>
     data = mtcars,
     mapping = list(value = "mpg")
   ) |>
-  setReferenceLines(x = mean(mtcars$mpg))
+  setReferenceLines(xRef = mean(mtcars$mpg))
 ```
 
 ## Interactive Scatter with Draggable Points

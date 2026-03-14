@@ -150,7 +150,7 @@ myIO() |>
     color = "steelblue",
     label = "hexbin",
     data = mtcars,
-    mapping = list(x_var = "wt", y_var = "mpg")
+    mapping = list(x_var = "wt", y_var = "mpg", radius = 20)
   )
 ```
 
