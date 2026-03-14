@@ -39,7 +39,7 @@ export function bindRollover(chart, layers) {
   }
 
   if (lys.length > 0 && lys.every(function(layer) {
-    return ["line", "stat_line", "area"].indexOf(layer.type) > -1;
+    return ["line", "area"].indexOf(layer.type) > -1;
   })) {
     createHoverOverlay(chart, showOverlayTooltip, clearOverlayTooltip);
   }

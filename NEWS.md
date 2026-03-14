@@ -1,13 +1,12 @@
-# myIO 1.0.0
+# myIO 2.0.0
 
 ## Features
 
-* Layered grammar for composing visualizations: add multiple geometry and
-  statistical layers to a single chart via `addIoLayer()` and
-  `addIoStatLayer()`.
+* Layered grammar for composing visualizations with transform-aware
+  `addIoLayer()`, including `transform = "lm"` for derived line layers.
 * Chart types: bar, grouped bar, line, area, scatter, histogram, hexbin,
   treemap, gauge, and donut charts.
-* Built-in statistical layers including linear regression lines.
+* Versioned widget spec with per-layer ids, transform metadata, and source-key provenance.
 * Interactive tooltips with automatic formatting.
 * Responsive sizing that adapts to container dimensions.
 * CSV and SVG export buttons.

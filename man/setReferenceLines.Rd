@@ -19,3 +19,8 @@ the same myIO object
 \description{
 Sets x and y reference lines
 }
+\examples{
+# Add reference lines at x=5 and y=20
+myIO() |> setReferenceLines(xRef = 5, yRef = 20)
+
+}

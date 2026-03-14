@@ -2,14 +2,12 @@ import { getRendererForLayer } from "../registry.js";
 
 const COMPAT_GROUP = {
   line: "axes-continuous",
-  stat_line: "axes-continuous",
   point: "axes-continuous",
   area: "axes-continuous",
   bar: "axes-categorical",
   groupedBar: "axes-categorical",
   histogram: "axes-binned",
   hexbin: "axes-hex",
-  regression: "axes-continuous",
   treemap: "standalone-treemap",
   donut: "standalone-donut",
   gauge: "standalone-gauge"
@@ -101,6 +99,21 @@ export function validateAgainstContract(layer, contract) {
     }
   });
   return { errors, warnings };
+}
+
+export function validateSpecContract(config, requiredFields) {
+  const errors = [];
+  if (!config || config.specVersion !== 1) {
+    errors.push("Chart config must include specVersion 1.");
+  }
+  (config.layers || []).forEach(function(layer) {
+    requiredFields.forEach(function(field) {
+      if (!(field in layer)) {
+        errors.push("Layer '" + (layer.label || "unknown") + "' is missing field '" + field + "'.");
+      }
+    });
+  });
+  return errors;
 }
 
 export function validateLayers(chart) {

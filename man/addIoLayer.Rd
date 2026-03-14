@@ -11,43 +11,27 @@ addIoLayer(
   label,
   data = NULL,
   mapping,
+  transform = "identity",
   options = list(barSize = "large", toolTipOptions = list(suppressY = FALSE))
 )
 }
 \arguments{
-\item{myIO}{an htmlwidget object created by the myIO() function}
+\item{myIO}{an htmlwidget object created by the `myIO()` function}
 
-\item{type}{a quoted string defining the type of layer: 'bar', 'line', 'point', 'hexbin', 'treemap'}
+\item{type}{chart type}
 
-\item{color}{a quoted string defining the layer's color as an CSS recognized color}
+\item{color}{optional CSS color string or vector for grouped layers}
 
-\item{label}{a unique quoted label/id string for the plot}
+\item{label}{unique layer label}
 
-\item{data}{(optional) R dataframe/tibble}
+\item{data}{data frame backing the layer}
 
-\item{mapping}{a list object defining variables for the layer: layer(x_var = "xVar", y_var = "yVar")}
+\item{mapping}{named aesthetic mapping list}
 
-\item{options}{a list oboject defining options for that layer}
-}
-\value{
-the same myIO object with the new layer attached to the message for the browser (myIO$x$layers)
+\item{transform}{transform name applied before serialization}
+
+\item{options}{layer options passed through to the widget config}
 }
 \description{
 Adds individual layer to a myIO widget
-}
-\examples{
-# Add a line layer
-myIO() |>
-  addIoLayer(
-    type = "line", color = "steelblue", label = "mpg_line",
-    data = mtcars, mapping = list(x_var = "wt", y_var = "mpg")
-  )
-
-# Add a point layer
-myIO() |>
-  addIoLayer(
-    type = "point", color = "red", label = "mpg_points",
-    data = mtcars, mapping = list(x_var = "wt", y_var = "mpg")
-  )
-
 }

@@ -2,22 +2,68 @@
 #'
 #' Adds individual layer to a myIO widget
 #'
+#' @param myIO an htmlwidget object created by the `myIO()` function
+#' @param type chart type
+#' @param color optional CSS color string or vector for grouped layers
+#' @param label unique layer label
+#' @param data data frame backing the layer
+#' @param mapping named aesthetic mapping list
+#' @param transform transform name applied before serialization
+#' @param options layer options passed through to the widget config
+#'
 #' @export
 addIoLayer <- function(myIO,
-                     type,
-                     color = NULL,
-                     label,
-                     data = NULL,
-                     mapping,
-                     options = list(barSize = "large",
-                                    toolTipOptions = list(suppressY = FALSE))) {
+                       type,
+                       color = NULL,
+                       label,
+                       data = NULL,
+                       mapping,
+                       transform = "identity",
+                       options = list(barSize = "large",
+                                      toolTipOptions = list(suppressY = FALSE))) {
 
   allowed_types <- c("line", "point", "bar", "hexbin", "treemap", "gauge",
                      "donut", "area", "groupedBar", "histogram")
+  compatibility_groups <- list(
+    line = "axes-continuous",
+    point = "axes-continuous",
+    area = "axes-continuous",
+    bar = "axes-categorical",
+    groupedBar = "axes-categorical",
+    histogram = "axes-binned",
+    hexbin = "axes-hex",
+    treemap = "standalone-treemap",
+    donut = "standalone-donut",
+    gauge = "standalone-gauge"
+  )
+  group_matrix <- list(
+    "axes-continuous" = c("axes-continuous", "axes-categorical", "axes-binned"),
+    "axes-categorical" = c("axes-continuous", "axes-categorical"),
+    "axes-binned" = c("axes-continuous", "axes-binned"),
+    "axes-hex" = c("axes-hex"),
+    "standalone-treemap" = c("standalone-treemap"),
+    "standalone-donut" = c("standalone-donut"),
+    "standalone-gauge" = c("standalone-gauge")
+  )
+  valid_combinations <- list(
+    line = c("identity", "lm"),
+    point = c("identity"),
+    area = c("identity"),
+    bar = c("identity"),
+    groupedBar = c("identity"),
+    histogram = c("identity"),
+    hexbin = c("identity"),
+    treemap = c("identity"),
+    donut = c("identity"),
+    gauge = c("identity")
+  )
 
   if (!is.character(type) || length(type) != 1 || is.na(type) || !(type %in% allowed_types)) {
     stop("Unknown layer type '", paste(type, collapse = ", "), "'. Must be one of: ",
          paste(allowed_types, collapse = ", "), ".", call. = FALSE)
+  }
+  if (!is.character(transform) || length(transform) != 1 || is.na(transform)) {
+    stop("'transform' must be a single character string.", call. = FALSE)
   }
   if (!is.list(mapping)) {
     stop("'mapping' must be a list, e.g. list(x_var = 'col1', y_var = 'col2').", call. = FALSE)
@@ -36,6 +82,13 @@ addIoLayer <- function(myIO,
     data <- myIO$x$data
   }
   myIO$x$data <- NULL
+  data <- ensure_source_key(data)
+
+  if (type %in% names(composite_registry())) {
+    composite_layers <- expandComposite(type, label, data, mapping, options, color, existing_layers)
+    myIO$x$config$layers <- c(myIO$x$config$layers, composite_layers)
+    return(myIO)
+  }
 
   required_map <- switch(type,
     treemap = c("level_1", "level_2"),
@@ -49,7 +102,8 @@ addIoLayer <- function(myIO,
     stop("Missing required mapping: ", paste(missing_map, collapse = ", "), call. = FALSE)
   }
 
-  for (field in intersect(c("x_var", "y_var", "group", "level_1", "level_2", "value", "low_y", "high_y"), names(mapping))) {
+  mapped_fields <- intersect(c("x_var", "y_var", "group", "level_1", "level_2", "value", "low_y", "high_y"), names(mapping))
+  for (field in mapped_fields) {
     if (!mapping[[field]] %in% colnames(data)) {
       stop("Mapping variable '", mapping[[field]], "' not found in data.", call. = FALSE)
     }
@@ -67,42 +121,89 @@ addIoLayer <- function(myIO,
     options <- presets
   }
 
-  standalone_types <- c("treemap", "gauge", "donut")
-  current_types <- vapply(existing_layers, function(layer) layer$type, character(1))
-  if ((type %in% standalone_types && length(current_types) > 0) ||
-      (any(current_types %in% standalone_types) && !(type %in% standalone_types))) {
-    stop("Cannot mix standalone layer types with other layers.", call. = FALSE)
+  new_group <- compatibility_groups[[type]]
+  current_groups <- unique(vapply(existing_layers, function(layer) compatibility_groups[[layer$type]], character(1)))
+  if (length(current_groups) > 0) {
+    incompatible <- vapply(current_groups, function(group) !(new_group %in% group_matrix[[group]]), logical(1))
+    if (any(incompatible)) {
+      conflict_group <- current_groups[[which(incompatible)[1]]]
+      stop("Cannot mix layer groups '", new_group, "' and '", conflict_group, "'.", call. = FALSE)
+    }
+  }
+
+  transform_fn <- get_transform(transform)
+  if (!(transform %in% valid_combinations[[type]])) {
+    stop("Transform '", transform, "' is not valid for layer type '", type, "'.", call. = FALSE)
+  }
+  layer_id <- next_layer_id(existing_layers)
+
+  build_layer <- function(layer_type, layer_label, layer_data, layer_mapping, layer_color,
+                          layer_transform_meta, order, derived_from = NULL,
+                          composite = NULL, composite_role = NULL) {
+    layer <- list(
+      id = if (order == 1L) layer_id else sprintf("%s_sub_%02d", layer_id, order),
+      type = layer_type,
+      color = layer_color,
+      label = layer_label,
+      data = layer_data,
+      mapping = layer_mapping,
+      options = options,
+      transform = transform,
+      transformMeta = layer_transform_meta,
+      encoding = list(),
+      sourceKey = "_source_key",
+      derivedFrom = derived_from,
+      order = order,
+      visibility = TRUE
+    )
+    if (!is.null(composite)) {
+      layer$`_composite` <- composite
+      layer$`_compositeRole` <- composite_role
+    }
+    layer
   }
 
   if (length(grep("group", names(mapping))) == 0) {
+    transformed <- transform_fn(data, mapping, options)
+    transformed_data <- transformed$data
+
     if (type == "treemap") {
-      data <- build_tree(data, label, mapping$level_1, mapping$level_2)
+      layer_data <- build_tree(transformed_data, label, mapping$level_1, mapping$level_2)
     } else {
-      data <- lapply(seq_len(nrow(data)), function(i) {
-        lapply(data[i, , drop = FALSE], function(col) col[[1]])
-      })
+      layer_data <- as_layer_rows(transformed_data)
     }
 
-    layer <- list(type = type, color = color, label = label, data = data, mapping = mapping, options = options)
-    myIO$x$config$layers <- c(myIO$x$config$layers, list(layer))
-  } else {
-    groupList <- unique(data[[mapping$group]])
-    if (is.null(color)) {
-      color <- c("#1E90FF", "#DC143C", "#336292", "#070A41", "orange")
-      color <- color[seq_along(groupList)]
-    } else {
-      color <- color[seq_along(groupList)]
-    }
-    newLayers <- lapply(groupList, buildLayers,
-      group = mapping$group,
-      grouping = groupList,
-      color = color,
-      data = data,
-      type = type,
-      mapping = mapping,
-      options = options
+    myIO$x$config$layers <- c(
+      myIO$x$config$layers,
+      list(build_layer(type, label, layer_data, mapping, color, transformed$meta, 1L))
     )
-    myIO$x$config$layers <- c(myIO$x$config$layers, newLayers)
+    return(myIO)
+  }
+
+  groupList <- unique(data[[mapping$group]])
+  if (is.null(color)) {
+    color <- rep_len(OKABE_ITO_PALETTE, length(groupList))
+  } else {
+    color <- rep_len(color, length(groupList))
+  }
+
+  for (index in seq_along(groupList)) {
+    group_value <- groupList[[index]]
+    temp_df <- data[data[[mapping$group]] == group_value, , drop = FALSE]
+    transformed <- transform_fn(temp_df, mapping, options)
+    myIO$x$config$layers <- c(
+      myIO$x$config$layers,
+      list(build_layer(
+      layer_type = type,
+      layer_label = as.character(group_value),
+      layer_data = as_layer_rows(transformed$data),
+      layer_mapping = mapping,
+      layer_color = color[[index]],
+      layer_transform_meta = transformed$meta,
+      order = index,
+      derived_from = layer_id
+      ))
+    )
   }
 
   myIO

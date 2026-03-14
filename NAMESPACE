@@ -2,7 +2,6 @@
 
 export("%>%")
 export(addIoLayer)
-export(addIoStatLayer)
 export(defineCategoricalAxis)
 export(dragPoints)
 export(flipAxis)
@@ -24,4 +23,3 @@ importFrom(htmlwidgets,createWidget)
 importFrom(htmlwidgets,shinyRenderWidget)
 importFrom(htmlwidgets,shinyWidgetOutput)
 importFrom(magrittr,"%>%")
-importFrom(stats,lm)

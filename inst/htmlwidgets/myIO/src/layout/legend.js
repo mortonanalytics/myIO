@@ -21,6 +21,7 @@ export function syncLegend(chart, state) {
 export function updateLegend(chart) {
   var m = chart.margin;
   var activeLayers = chart.currentLayers || [];
+  var legendLayers = [];
 
   if (activeLayers.length === 0) {
     d3.select(chart.element).select(".legend-box").remove();
@@ -32,8 +33,17 @@ export function updateLegend(chart) {
   d3.select(chart.element).selectAll(".legendElements").remove();
 
   var svg = chart.legendArea;
-  var labelIndex = chart.plotLayers.map(function(d) { return d.label; });
-  var currentLayerIndex = activeLayers.map(function(d) { return d.label; });
+  var grouped = new Map();
+  chart.plotLayers.forEach(function(layer) {
+    var key = layer._composite || layer.label;
+    if (!grouped.has(key)) {
+      grouped.set(key, { key: key, label: key, color: layer.color, type: layer.type, layerLabels: [] });
+    }
+    grouped.get(key).layerLabels.push(layer.label);
+  });
+  legendLayers = Array.from(grouped.values());
+  var labelIndex = legendLayers.map(function(d) { return d.label; });
+  var currentLayerIndex = activeLayers.map(function(d) { return d._composite || d.label; });
   var hiddenLayers = labelIndex.filter(function(d) { return currentLayerIndex.indexOf(d) < 0; });
   var itemWidth = responsiveValue(chart, 140, 125);
   var itemHeight = responsiveValue(chart, 25, 22);
@@ -46,7 +56,7 @@ export function updateLegend(chart) {
     .style("fill", "white")
     .style("opacity", 0.75);
 
-  chart.plotLayers.forEach(function(layer, i) {
+  legendLayers.forEach(function(layer, i) {
     var legendElement = svg.append("g")
       .attr("class", "legendElements")
       .selectAll(".legendElement")
@@ -121,7 +131,7 @@ export function updateLegend(chart) {
     applyLegendState(d3.select(this), isVisible);
 
     var filteredLayers = chart.plotLayers.filter(function(d) {
-      return filteredElements.indexOf(d.label) === -1;
+      return filteredElements.indexOf(d._composite || d.label) === -1;
     });
     var removedLayers = chart.plotLayers.filter(function(d) {
       return filteredElements.indexOf(d.label) > -1;

@@ -24,8 +24,15 @@ in RStudio, Shiny apps, and R Markdown documents.
 The core workflow is simple:
 
 1. Create a widget with `myIO()`
-2. Add layers with `addIoLayer()` or `addIoStatLayer()`
+2. Add layers with `addIoLayer()`
 3. Customize with option functions
+
+## Installation
+
+```{r install, eval = FALSE}
+# install.packages("devtools")
+devtools::install_github("mortonanalytics/myIO")
+```
 
 ## Your First Chart
 
@@ -35,7 +42,7 @@ Create a scatter plot of `mtcars` data:
 myIO() |>
   addIoLayer(
     type = "point",
-    color = "steelblue",
+    color = "#E69F00",
     label = "mpg_vs_wt",
     data = mtcars,
     mapping = list(x_var = "wt", y_var = "mpg")
@@ -45,7 +52,7 @@ myIO() |>
 ## Adding Multiple Layers
 
 You can stack layers on a single chart. Here we add points and a linear
-model trend line:
+model trend line using the `lm` transform:
 
 ```{r multi-layer, eval = FALSE}
 myIO() |>
@@ -56,8 +63,9 @@ myIO() |>
     data = mtcars,
     mapping = list(x_var = "wt", y_var = "mpg")
   ) |>
-  addIoStatLayer(
-    type = "lm",
+  addIoLayer(
+    type = "line",
+    transform = "lm",
     color = "red",
     label = "trend",
     data = mtcars,
@@ -65,10 +73,13 @@ myIO() |>
   )
 ```
 
+See the [Transforms & Theming](transforms-and-theming.html) vignette for
+details on available transforms.
+
 ## Customizing the Chart
 
-Option functions let you control axes, margins, legends, and more. They
-all follow the same pipe-friendly pattern:
+Option functions let you control axes, margins, legends, theming, and more.
+They all follow the same pipe-friendly pattern:
 
 ```{r customize, eval = FALSE}
 myIO() |>
@@ -98,12 +109,36 @@ aq$Month <- paste0("M", aq$Month)
 myIO() |>
   addIoLayer(
     type = "line",
-    color = c("steelblue", "orange", "green", "red", "purple"),
+    color = c("#E69F00", "#56B4E9", "#009E73", "#D55E00", "#0072B2"),
     label = "Month",
     data = aq,
     mapping = list(x_var = "Day", y_var = "Temp", group = "Month")
   )
 ```
+
+## Theming
+
+Apply visual themes to change colors, fonts, and backgrounds:
+
+```{r theme-example, eval = FALSE}
+myIO() |>
+  addIoLayer(
+    type = "point",
+    color = "#56B4E9",
+    label = "scatter",
+    data = mtcars,
+    mapping = list(x_var = "wt", y_var = "mpg")
+  ) |>
+  setTheme(
+    text_color = "#e0e0e0",
+    grid_color = "#333333",
+    bg = "#1a1a2e",
+    font = "Fira Code, monospace"
+  )
+```
+
+See [Transforms & Theming](transforms-and-theming.html) for the full
+theming API.
 
 ## Using in Shiny
 
@@ -142,6 +177,7 @@ shinyApp(ui, server)
 | `setAxisLimits()` | Set min/max for x and y axes |
 | `setMargin()` | Set chart margins (top, bottom, left, right) |
 | `setColorScheme()` | Set color palette and category labels |
+| `setTheme()` | Set theme tokens (colors, font, background) |
 | `setTransitionSpeed()` | Set animation speed (0 to disable) |
 | `setReferenceLines()` | Add x and y reference lines |
 | `setToggle()` | Add a toggle button to switch y variable |

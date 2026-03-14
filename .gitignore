@@ -1,8 +1,9 @@
-.Rproj.user
+.Rproj.user/
 .Rhistory
 .RData
-..Rcheck/00check.log
-..Rcheck/00install.out
-/docs
+.DS_Store
 node_modules/
-/inst/appTester/e2e_output
+..Rcheck/
+myIO.Rcheck/
+*.tar.gz
+inst/appTester/e2e_output/

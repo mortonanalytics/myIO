@@ -17,3 +17,8 @@ the same myIO object
 \description{
 Suppresses legend from printing
 }
+\examples{
+# Hide the legend
+myIO() |> suppressLegend()
+
+}

@@ -4,9 +4,13 @@
   "scripts": {
     "build": "esbuild inst/htmlwidgets/myIO/src/index.js --bundle --format=iife --outfile=inst/htmlwidgets/myIO/myIOapi.js",
     "watch": "esbuild inst/htmlwidgets/myIO/src/index.js --bundle --format=iife --outfile=inst/htmlwidgets/myIO/myIOapi.js --watch",
-    "verify": "npm run build && node -e \"require('fs').readFileSync('inst/htmlwidgets/myIO/myIOapi.js','utf8')\" && echo 'Bundle OK'"
+    "verify": "npm run build && node -e \"require('fs').readFileSync('inst/htmlwidgets/myIO/myIOapi.js','utf8')\" && echo 'Bundle OK'",
+    "test": "vitest run"
   },
   "devDependencies": {
-    "esbuild": "^0.25.10"
+    "d3": "^7.9.0",
+    "esbuild": "^0.25.10",
+    "jsdom": "^26.1.0",
+    "vitest": "^3.2.4"
   }
 }

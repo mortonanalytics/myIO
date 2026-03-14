@@ -26,6 +26,7 @@ myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL
   x <- list(
     data = data,
     config = list(
+      specVersion = 1L,
       layers = list(),
       layout = list(
         margin = list(top = 30, bottom = 60, left = 50, right = 5),
@@ -37,7 +38,7 @@ myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL
         ylim = list(min = NULL, max = NULL),
         categoricalScale = list(xAxis = FALSE, yAxis = FALSE),
         flipAxis = FALSE,
-        colorScheme = list(colors = c("steelblue", "orange"), domain = c("none"), enabled = FALSE)
+        colorScheme = list(colors = OKABE_ITO_PALETTE, domain = c("none"), enabled = FALSE)
       ),
       axes = list(
         xAxisFormat = "s",

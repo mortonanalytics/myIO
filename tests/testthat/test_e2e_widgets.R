@@ -50,7 +50,7 @@ test_that("Line chart renders with grouped layers", {
   save_widget(w, "02_line")
 })
 
-test_that("Point + LM renders with scatter and regression layers", {
+test_that("Point + LM renders with scatter and transformed line layers", {
   df <- datasets::mtcars
 
   w <- myIO() %>%
@@ -61,8 +61,9 @@ test_that("Point + LM renders with scatter and regression layers", {
       data = df,
       mapping = list(x_var = "wt", y_var = "mpg")
     ) %>%
-    addIoStatLayer(
-      type = "lm",
+    addIoLayer(
+      type = "line",
+      transform = "lm",
       color = "#E15759",
       label = "Linear Fit",
       data = df,
@@ -73,7 +74,8 @@ test_that("Point + LM renders with scatter and regression layers", {
   layers <- w$x$config$layers
   expect_length(layers, 2)
   expect_equal(layers[[1]]$type, "point")
-  expect_equal(layers[[2]]$type, "stat_line")
+  expect_equal(layers[[2]]$type, "line")
+  expect_equal(layers[[2]]$transform, "lm")
   save_widget(w, "03_point_lm")
 })
 

@@ -114,8 +114,9 @@ server <- function(input, output) {
         data = df,
         mapping = list(x_var = "wt", y_var = "mpg")
       ) %>%
-      addIoStatLayer(
-        type = "lm",
+      addIoLayer(
+        type = "line",
+        transform = "lm",
         color = "#E15759",
         label = "Linear Fit",
         data = df,

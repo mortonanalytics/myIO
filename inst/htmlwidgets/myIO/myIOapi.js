@@ -180,84 +180,6 @@
     });
   }
 
-  // inst/htmlwidgets/myIO/src/utils/math.js
-  function linearRegression(data, yVar, xVar) {
-    const x = data.map(function(d) {
-      return d[xVar];
-    });
-    const y = data.map(function(d) {
-      return d[yVar];
-    });
-    const lr = {};
-    const n = y.length;
-    let sum_x = 0;
-    let sum_y = 0;
-    let sum_xy = 0;
-    let sum_xx = 0;
-    let sum_yy = 0;
-    for (let i = 0; i < y.length; i++) {
-      sum_x += x[i];
-      sum_y += y[i];
-      sum_xy += x[i] * y[i];
-      sum_xx += x[i] * x[i];
-      sum_yy += y[i] * y[i];
-    }
-    lr.slope = (n * sum_xy - sum_x * sum_y) / (n * sum_xx - sum_x * sum_x);
-    lr.intercept = (sum_y - lr.slope * sum_x) / n;
-    lr.r2 = Math.pow(
-      (n * sum_xy - sum_x * sum_y) / Math.sqrt((n * sum_xx - sum_x * sum_x) * (n * sum_yy - sum_y * sum_y)),
-      2
-    );
-    lr.fn = function(xValue) {
-      return this.slope * xValue + this.intercept;
-    };
-    return lr;
-  }
-
-  // inst/htmlwidgets/myIO/src/renderers/RegressionRenderer.js
-  var RegressionRenderer = class {
-    static type = "regression";
-    static traits = { hasAxes: true, referenceLines: false, legendType: "none", binning: false, rolloverStyle: "none", scaleCapabilities: { invertX: false } };
-    static dataContract = { x_var: { required: true, numeric: true }, y_var: { required: true, numeric: true } };
-    renderFromPoints(chart, color, label) {
-      var that = chart;
-      var transitionSpeed = chart.options.transition.speed / 2;
-      var valueLine = d3.line().x(function(d) {
-        return chart.xScale(d.x_var);
-      }).y(function(d) {
-        return chart.yScale(d.y_est);
-      });
-      var points = [];
-      chart.chart.selectAll("." + tagName("point", chart.element.id, label)).each(function() {
-        var x = that.xScale.invert(this.getAttribute("cx"));
-        var y = that.yScale.invert(this.getAttribute("cy"));
-        points.push({
-          x_var: x,
-          y_var: y
-        });
-      });
-      var regression = linearRegression(points, "y_var", "x_var");
-      if (HTMLWidgets.shinyMode) {
-        Shiny.onInputChange("myIOregression-" + label.replace(/\s+/g, ""), regression);
-      }
-      points.forEach(function(d) {
-        d.y_est = regression.fn(d.x_var);
-      });
-      var finalPoints = points.sort(function(a, b) {
-        return a.x_var - b.x_var;
-      }).filter(function(d, i) {
-        return i === 0 || i === points.length - 1;
-      });
-      var linePath = chart.chart.selectAll("." + tagName("regression-line", chart.element.id, label)).data([finalPoints]);
-      linePath.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
-      var newLinePath = linePath.enter().append("path").attr("class", tagName("regression-line", chart.element.id, label)).attr("clip-path", "url(#" + chart.element.id + "clip)").style("fill", "none").style("stroke", color).style("stroke-width", 3).style("opacity", 0);
-      linePath.merge(newLinePath).transition().ease(d3.easeQuad).duration(transitionSpeed).style("opacity", 1).style("stroke", color).attr("d", valueLine);
-    }
-    remove(chart, layer) {
-      chart.dom.chartArea.selectAll("." + tagName("regression-line", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
-    }
-  };
-
   // inst/htmlwidgets/myIO/src/renderers/AreaRenderer.js
   var AreaRenderer = class {
     static type = "area";
@@ -945,13 +867,6 @@
     }
   };
 
-  // inst/htmlwidgets/myIO/src/renderers/StatLineRenderer.js
-  var StatLineRenderer = class extends LineRenderer {
-    static type = "stat_line";
-    static traits = { hasAxes: true, referenceLines: true, legendType: "layer", binning: false, rolloverStyle: "overlay", scaleCapabilities: { invertX: true } };
-    static dataContract = { x_var: { required: true, numeric: true, sorted: true }, y_var: { required: true, numeric: true } };
-  };
-
   // inst/htmlwidgets/myIO/src/registry.js
   var rendererRegistry = /* @__PURE__ */ new Map();
   function registerRenderer(type, RendererClass) {
@@ -983,14 +898,8 @@
     if (!rendererRegistry.has(LineRenderer.type)) {
       registerRenderer(LineRenderer.type, new LineRenderer());
     }
-    if (!rendererRegistry.has(StatLineRenderer.type)) {
-      registerRenderer(StatLineRenderer.type, new StatLineRenderer());
-    }
     if (!rendererRegistry.has(PointRenderer.type)) {
       registerRenderer(PointRenderer.type, new PointRenderer());
-    }
-    if (!rendererRegistry.has(RegressionRenderer.type)) {
-      registerRenderer(RegressionRenderer.type, new RegressionRenderer());
     }
     if (!rendererRegistry.has(AreaRenderer.type)) {
       registerRenderer(AreaRenderer.type, new AreaRenderer());
@@ -1471,7 +1380,7 @@
       }).on("touchend", clearGroupedBar);
     }
     if (lys.length > 0 && lys.every(function(layer) {
-      return ["line", "stat_line", "area"].indexOf(layer.type) > -1;
+      return ["line", "area"].indexOf(layer.type) > -1;
     })) {
       createHoverOverlay(chart, showOverlayTooltip, clearOverlayTooltip);
     }
@@ -1906,14 +1815,12 @@
   // inst/htmlwidgets/myIO/src/derive/validate.js
   var COMPAT_GROUP = {
     line: "axes-continuous",
-    stat_line: "axes-continuous",
     point: "axes-continuous",
     area: "axes-continuous",
     bar: "axes-categorical",
     groupedBar: "axes-categorical",
     histogram: "axes-binned",
     hexbin: "axes-hex",
-    regression: "axes-continuous",
     treemap: "standalone-treemap",
     donut: "standalone-donut",
     gauge: "standalone-gauge"
@@ -2053,6 +1960,7 @@
   function updateLegend(chart) {
     var m = chart.margin;
     var activeLayers = chart.currentLayers || [];
+    var legendLayers = [];
     if (activeLayers.length === 0) {
       d3.select(chart.element).select(".legend-box").remove();
       d3.select(chart.element).selectAll(".legendElements").remove();
@@ -2061,11 +1969,20 @@
     d3.select(chart.element).select(".legend-box").remove();
     d3.select(chart.element).selectAll(".legendElements").remove();
     var svg = chart.legendArea;
-    var labelIndex = chart.plotLayers.map(function(d) {
+    var grouped = /* @__PURE__ */ new Map();
+    chart.plotLayers.forEach(function(layer) {
+      var key = layer._composite || layer.label;
+      if (!grouped.has(key)) {
+        grouped.set(key, { key, label: key, color: layer.color, type: layer.type, layerLabels: [] });
+      }
+      grouped.get(key).layerLabels.push(layer.label);
+    });
+    legendLayers = Array.from(grouped.values());
+    var labelIndex = legendLayers.map(function(d) {
       return d.label;
     });
     var currentLayerIndex = activeLayers.map(function(d) {
-      return d.label;
+      return d._composite || d.label;
     });
     var hiddenLayers = labelIndex.filter(function(d) {
       return currentLayerIndex.indexOf(d) < 0;
@@ -2074,7 +1991,7 @@
     var itemHeight = responsiveValue(chart, 25, 22);
     var n = isMobile(chart) ? Math.max(1, Math.floor(chart.totalWidth / itemWidth)) : 1;
     svg.append("rect").attr("class", "legend-box").attr("transform", "translate(5," + responsiveValue(chart, m.top, 0) + ")").style("width", responsiveValue(chart, chart.totalWidth - chart.width, chart.totalWidth - chart.margin.left)).style("fill", "white").style("opacity", 0.75);
-    chart.plotLayers.forEach(function(layer, i) {
+    legendLayers.forEach(function(layer, i) {
       var legendElement = svg.append("g").attr("class", "legendElements").selectAll(".legendElement").data([layer.label]).enter().append("g").attr("class", "legendElement").attr("transform", function() {
         return "translate(" + i % n * itemWidth + "," + Math.floor(i / n) * itemHeight + ")";
       }).attr("text-anchor", "start").attr("font-size", responsiveValue(chart, 12, 10)).style("opacity", 1).attr("tabindex", 0).attr("role", "switch").attr("aria-checked", currentLayerIndex.indexOf(layer.label) > -1 ? "true" : "false").on("click", toggleLine).on("keydown", function(event) {
@@ -2108,7 +2025,7 @@
       }
       applyLegendState(d3.select(this), isVisible);
       var filteredLayers = chart.plotLayers.filter(function(d) {
-        return filteredElements.indexOf(d.label) === -1;
+        return filteredElements.indexOf(d._composite || d.label) === -1;
       });
       var removedLayers = chart.plotLayers.filter(function(d) {
         return filteredElements.indexOf(d.label) > -1;
@@ -2586,7 +2503,12 @@
       updateOrdinalColorLegend(this, ly);
     }
     updateRegression(color, label) {
-      getRenderer("regression").renderFromPoints(this, color, label);
+      const lineLayer = (this.config.layers || []).find(function(layer) {
+        return layer.label === label && layer.type === "line";
+      });
+      if (lineLayer) {
+        getRenderer("line").render(this, { ...lineLayer, color }, this.config.layers);
+      }
     }
     updateChart(newConfig) {
       const oldLabels = this.derived.layerIndex || [];

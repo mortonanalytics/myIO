@@ -13,6 +13,7 @@
 }
 
 :root {
+  --chart-primary-color: #E69F00;
   --chart-font: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --chart-text-color: #6b7280;
   --chart-grid-color: #9ca3af;

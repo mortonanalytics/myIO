@@ -21,7 +21,7 @@ devtools::install_github("mortonanalytics/myIO")
 
 ## Usage
 
-Build plots by piping layers together with `myIO()`, `addIoLayer()`, and optionally `addIoStatLayer()`:
+Build plots by piping layers together with `myIO()` and `addIoLayer()`:
 
 ```r
 library(myIO)
@@ -29,13 +29,14 @@ library(myIO)
 myIO() |>
   addIoLayer(
     type = "point",
-    color = "steelblue",
+    color = "#E69F00",
     label = "points",
     data = mtcars,
     mapping = list(x_var = "wt", y_var = "mpg")
   ) |>
-  addIoStatLayer(
-    type = "lm",
+  addIoLayer(
+    type = "line",
+    transform = "lm",
     color = "red",
     label = "trend",
     data = mtcars,
@@ -69,10 +70,7 @@ myIO() |>
 | `label` | Unique identifier for the layer |
 | `data` | A data frame |
 | `mapping` | List mapping variables, e.g. `list(x_var = "wt", y_var = "mpg")` |
-
-## `addIoStatLayer()`
-
-Adds a statistical layer on top of existing layers. Currently supports `type = "lm"` for linear trend lines.
+| `transform` | Optional derived-data transform, e.g. `"identity"` or `"lm"` |
 
 ## Customization
 
@@ -90,4 +88,3 @@ Customize plots by chaining additional functions:
 - `setReferenceLines()` — Add reference lines
 
 See the [Getting Started](https://github.com/mortonanalytics/myIO/blob/main/vignettes/getting-started.Rmd) and [Chart Types](https://github.com/mortonanalytics/myIO/blob/main/vignettes/chart-types.Rmd) vignettes for full examples.
-

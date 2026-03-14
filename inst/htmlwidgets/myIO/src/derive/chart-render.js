@@ -22,7 +22,7 @@ export function usesOrdinalLegend(type) {
 }
 
 export function needsReferenceLines(type) {
-  return ["bar", "groupedBar", "line", "point", "area", "stat_line"].indexOf(type) > -1;
+  return ["bar", "groupedBar", "line", "point", "area"].indexOf(type) > -1;
 }
 
 export function deriveChartRender(chart) {

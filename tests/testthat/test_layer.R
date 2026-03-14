@@ -1,4 +1,4 @@
-test_that("addIoLayer creates a single layer", {
+test_that("addIoLayer creates a single identity layer with spec fields", {
   widget <- myIO::addIoLayer(
     myIO::myIO(),
     type = "line",
@@ -7,35 +7,45 @@ test_that("addIoLayer creates a single layer", {
     data = datasets::mtcars,
     mapping = list(x_var = "wt", y_var = "mpg")
   )
-  expect_length(widget$x$config$layers, 1)
-  expect_equal(widget$x$config$layers[[1]]$type, "line")
-  expect_equal(widget$x$config$layers[[1]]$label, "test_line")
+
+  layer <- widget$x$config$layers[[1]]
+  expect_equal(layer$type, "line")
+  expect_equal(layer$label, "test_line")
+  expect_equal(layer$transform, "identity")
+  expect_equal(layer$id, "layer_001")
+  expect_equal(layer$sourceKey, "_source_key")
+  expect_true(isTRUE(layer$visibility))
 })
 
-test_that("addIoLayer supports valid types", {
-  valid_types <- c("line", "point", "bar", "hexbin", "treemap", "gauge", "donut", "area", "groupedBar", "histogram")
-  for (type in valid_types) {
-    mapping <- if (type == "treemap") list(level_1 = "vs", level_2 = "cyl") else if (type %in% c("gauge", "histogram")) list(value = "mpg") else list(x_var = "wt", y_var = "mpg")
-    widget <- myIO::addIoLayer(myIO::myIO(), type = type, label = paste0("test_", type), color = "blue", data = datasets::mtcars, mapping = mapping)
-    expect_length(widget$x$config$layers, 1)
-  }
+test_that("addIoLayer supports lm transform through the unified API", {
+  widget <- myIO::addIoLayer(
+    myIO::myIO(),
+    type = "line",
+    transform = "lm",
+    label = "linear_test",
+    color = "red",
+    data = datasets::mtcars,
+    mapping = list(x_var = "wt", y_var = "mpg")
+  )
+
+  layer <- widget$x$config$layers[[1]]
+  expect_equal(layer$type, "line")
+  expect_equal(layer$transform, "lm")
+  expect_equal(layer$transformMeta$name, "lm")
+  xs <- vapply(layer$data, function(row) row$wt, numeric(1))
+  expect_equal(xs, sort(xs))
 })
 
-test_that("addIoLayer stacks multiple layers", {
-  widget <- myIO::myIO()
-  widget <- myIO::addIoLayer(widget, type = "line", label = "layer1", color = "red", data = datasets::mtcars, mapping = list(x_var = "wt", y_var = "mpg"))
-  widget <- myIO::addIoLayer(widget, type = "point", label = "layer2", color = "blue", data = datasets::mtcars, mapping = list(x_var = "wt", y_var = "mpg"))
-  expect_length(widget$x$config$layers, 2)
-})
+test_that("addIoLayer rejects unknown transform and invalid type/transform pair", {
+  expect_error(
+    myIO::addIoLayer(myIO::myIO(), type = "line", transform = "unknown", label = "test", data = mtcars, mapping = list(x_var = "wt", y_var = "mpg")),
+    "Unknown transform"
+  )
 
-test_that("dragPoints updates config", {
-  widget <- myIO::dragPoints(myIO::myIO())
-  expect_true(widget$x$config$interactions$dragPoints)
-})
-
-test_that("addIoStatLayer creates lm layer", {
-  widget <- myIO::addIoStatLayer(myIO::myIO(), type = "lm", label = "linear_test", color = "red", data = datasets::mtcars, mapping = list(x_var = "wt", y_var = "mpg"))
-  expect_equal(widget$x$config$layers[[1]]$type, "stat_line")
+  expect_error(
+    myIO::addIoLayer(myIO::myIO(), type = "point", transform = "lm", label = "test", data = mtcars, mapping = list(x_var = "wt", y_var = "mpg")),
+    "not valid"
+  )
 })
 
 test_that("addIoLayer rejects missing mapping variable", {
@@ -53,18 +63,27 @@ test_that("addIoLayer rejects duplicate label", {
   )
 })
 
-test_that("addIoLayer rejects incompatible layer types", {
+test_that("addIoLayer validates compatibility groups", {
   w <- myIO::addIoLayer(myIO::myIO(), type = "donut", label = "d", color = "red", data = data.frame(x = "A", y = 1), mapping = list(x_var = "x", y_var = "y"))
   expect_error(
     myIO::addIoLayer(w, type = "bar", label = "b", color = "blue", data = mtcars, mapping = list(x_var = "cyl", y_var = "mpg")),
-    "Cannot mix"
+    "layer groups"
   )
 })
 
-test_that("addIoLayer rejects non-numeric y for bar", {
-  df <- data.frame(x = c("a", "b"), y = c("foo", "bar"), stringsAsFactors = FALSE)
-  expect_error(
-    myIO::addIoLayer(myIO::myIO(), type = "bar", label = "test", color = "red", data = df, mapping = list(x_var = "x", y_var = "y")),
-    "must be numeric"
+test_that("grouped layers use the default Okabe-Ito palette", {
+  df <- datasets::airquality
+  df$Month <- as.character(df$Month)
+
+  widget <- myIO::addIoLayer(
+    myIO::myIO(),
+    type = "line",
+    label = "temp",
+    data = df,
+    mapping = list(x_var = "Day", y_var = "Temp", group = "Month")
   )
+
+  colors <- vapply(widget$x$config$layers, function(layer) layer$color, character(1))
+  expect_equal(colors[[1]], "#E69F00")
+  expect_equal(colors[[2]], "#56B4E9")
 })

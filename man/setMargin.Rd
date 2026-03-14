@@ -2,12 +2,9 @@
 % Please edit documentation in R/setMargin.R
 \name{setMargin}
 \alias{setMargin}
-\alias{setmargin}
 \title{setMargin()}
 \usage{
 setMargin(myIO, top = 20, bottom = 40, left = 50, right = 50)
-
-setmargin(...)
 }
 \arguments{
 \item{myIO}{an htmlwidget object created by the myIO() function}
@@ -19,8 +16,6 @@ setmargin(...)
 \item{left}{a numeric value representing in pixels the left margin}
 
 \item{right}{a numeric value representing in pixels the right margin}
-
-\item{...}{Arguments passed to `setMargin()`.}
 }
 \value{
 the same myIO object

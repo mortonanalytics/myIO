@@ -1,16 +1,18 @@
 Package: myIO
 Type: Package
 Title: Interactive Data Visualizations Using 'd3.js'
-Version: 1.0.0
+Version: 2.0.0
 Authors@R: person("Ryan", "Morton", email = "morton@myma.us",
     role = c("aut", "cre"))
+Author: Ryan Morton [aut, cre]
+Maintainer: Ryan Morton <morton@myma.us>
 Description: Create interactive data visualizations powered by 'd3.js' directly
     from R. Provides a layered grammar for bindings composition, supporting
     bar charts, line charts, scatter plots, histograms, treemaps, gauges,
-    hexbin plots, and more. Includes built-in statistical layers, tooltips,
+    hexbin plots, and more. Includes transform-driven derived layers, tooltips,
     responsive sizing, and 'Shiny' integration.
 License: MIT + file LICENSE
-URL: https://github.com/mortonanalytics/myIO
+URL: https://mortonanalytics.github.io/myIO/, https://github.com/mortonanalytics/myIO
 BugReports: https://github.com/mortonanalytics/myIO/issues
 Depends: R (>= 4.1.0)
 Encoding: UTF-8
@@ -18,7 +20,8 @@ RoxygenNote: 7.3.2
 Suggests:
   testthat (>= 3.0.0),
   knitr,
-  rmarkdown
+  rmarkdown,
+  pkgdown
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 Imports:

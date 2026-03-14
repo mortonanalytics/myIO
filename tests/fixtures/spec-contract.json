@@ -1,0 +1,16 @@
+{
+  "requiredLayerFields": [
+    "id",
+    "type",
+    "label",
+    "mapping",
+    "data",
+    "transform",
+    "transformMeta",
+    "encoding",
+    "sourceKey",
+    "derivedFrom",
+    "order",
+    "visibility"
+  ]
+}

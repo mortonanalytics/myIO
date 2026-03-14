@@ -17,10 +17,26 @@ library(myIO)
 
 ## Overview
 
-myIO supports 12 chart types via the `type` argument in `addIoLayer()`. This
-vignette shows an example of each.
+myIO supports multiple chart types via the `type` argument in `addIoLayer()`.
+This vignette shows an example of each.
 
 All examples use built-in R datasets so you can copy and run them directly.
+
+## Layer Compatibility
+
+Chart types are organized into compatibility groups. You can freely combine
+types within compatible groups (e.g. point + line + area), but standalone
+types like treemap or gauge cannot be mixed with other types.
+
+| Group | Types |
+|-------|-------|
+| Continuous axes | `line`, `point`, `area` |
+| Categorical axes | `bar`, `groupedBar` |
+| Binned axes | `histogram` |
+| Standalone | `hexbin`, `treemap`, `donut`, `gauge` |
+
+Continuous, categorical, and binned groups can be combined with each other.
+Standalone groups cannot be mixed.
 
 ## Line Chart
 
@@ -64,14 +80,20 @@ myIO() |>
 
 ## Area Chart
 
+Area charts require `x_var`, `low_y`, and `high_y` in the mapping:
+
 ```{r area, eval = FALSE}
+aq <- airquality[complete.cases(airquality), ]
+aq$TempLow <- aq$Temp - 5
+aq$TempHigh <- aq$Temp + 5
+
 myIO() |>
   addIoLayer(
     type = "area",
     color = "lightsteelblue",
     label = "area",
-    data = airquality,
-    mapping = list(x_var = "Day", y_var = "Temp")
+    data = aq,
+    mapping = list(x_var = "Day", low_y = "TempLow", high_y = "TempHigh")
   )
 ```
 
@@ -97,32 +119,6 @@ myIO() |>
     type = "histogram",
     color = "steelblue",
     label = "hist",
-    data = mtcars,
-    mapping = list(x_var = "mpg", y_var = "mpg")
-  )
-```
-
-## Density Plot
-
-```{r density, eval = FALSE}
-myIO() |>
-  addIoLayer(
-    type = "density",
-    color = "purple",
-    label = "density",
-    data = mtcars,
-    mapping = list(x_var = "mpg", y_var = "mpg")
-  )
-```
-
-## Ridgeline Plot
-
-```{r ridgeline, eval = FALSE}
-myIO() |>
-  addIoLayer(
-    type = "ridgeline",
-    color = "steelblue",
-    label = "ridges",
     data = mtcars,
     mapping = list(x_var = "mpg", y_var = "mpg")
   )
@@ -184,7 +180,8 @@ myIO() |>
 
 ## Combining Chart Types
 
-You can overlay multiple chart types on a single widget:
+You can overlay compatible chart types on a single widget. Here we layer
+points, a connecting line, and a linear model trend line:
 
 ```{r combined, eval = FALSE}
 myIO() |>
@@ -202,8 +199,9 @@ myIO() |>
     data = mtcars,
     mapping = list(x_var = "wt", y_var = "mpg")
   ) |>
-  addIoStatLayer(
-    type = "lm",
+  addIoLayer(
+    type = "line",
+    transform = "lm",
     color = "red",
     label = "trend",
     data = mtcars,

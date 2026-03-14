@@ -19,3 +19,11 @@ the same myIO object
 \description{
 Function to define the x variable as categorical
 }
+\examples{
+# Define x axis as categorical
+myIO() |> defineCategoricalAxis(xAxis = TRUE)
+
+# Define both axes as categorical
+myIO() |> defineCategoricalAxis(xAxis = TRUE, yAxis = TRUE)
+
+}

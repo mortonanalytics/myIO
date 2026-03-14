@@ -15,6 +15,7 @@ test_that("myIO sets dimensions and elementId", {
 test_that("myIO has default config structure", {
   widget <- myIO::myIO()
   cfg <- widget$x$config
+  expect_equal(cfg$specVersion, 1L)
   expect_equal(cfg$layout$margin$top, 30)
   expect_equal(cfg$layout$margin$bottom, 60)
   expect_equal(cfg$layout$margin$left, 50)
@@ -24,6 +25,7 @@ test_that("myIO has default config structure", {
   expect_equal(cfg$axes$xAxisFormat, "s")
   expect_equal(cfg$transitions$speed, 1000)
   expect_equal(length(cfg$layers), 0)
+  expect_equal(cfg$scales$colorScheme$colors[[1]], "#E69F00")
 })
 
 test_that("myIO stores data when provided", {

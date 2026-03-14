@@ -10,6 +10,7 @@ import { syncLegend, updateOrdinalColorLegend as updateOrdinalColorLegendImpl } 
 import { syncReferenceLines } from "./layout/reference-lines.js";
 import { getChartHeight, initializeScaffold, updateScaffoldLayout } from "./layout/scaffold.js";
 import { hideChartTooltip, initializeTooltip, removeHoverOverlay } from "./tooltip.js";
+import { linearRegression } from "./utils/math.js";
 import { isMobile, tagName } from "./utils/responsive.js";
 
 const MIN_CHART_WIDTH = 280;
@@ -350,7 +351,39 @@ export class myIOchart {
   }
 
   updateRegression(color, label) {
-    getRenderer("regression").renderFromPoints(this, color, label);
+    const pointLayer = (this.config.layers || []).find(function(layer) {
+      return layer.label === label && layer.type === "point";
+    });
+    if (!pointLayer) {
+      return;
+    }
+
+    (this.config.layers || []).forEach(function(layer) {
+      if (layer.type !== "line" || layer.transform !== "lm") {
+        return;
+      }
+      if (!layer.mapping || !pointLayer.mapping) {
+        return;
+      }
+      if (layer.mapping.x_var !== pointLayer.mapping.x_var || layer.mapping.y_var !== pointLayer.mapping.y_var) {
+        return;
+      }
+
+      const regression = linearRegression(pointLayer.data, pointLayer.mapping.y_var, pointLayer.mapping.x_var);
+      const derivedData = pointLayer.data
+        .map(function(row) {
+          return {
+            ...row,
+            [layer.mapping.y_var]: regression.fn(row[layer.mapping.x_var])
+          };
+        })
+        .sort(function(a, b) {
+          return a[layer.mapping.x_var] - b[layer.mapping.x_var];
+        });
+
+      layer.data = derivedData;
+      getRenderer("line").render(this, { ...layer, color: color || layer.color }, this.config.layers);
+    }, this);
   }
 
   updateChart(newConfig) {

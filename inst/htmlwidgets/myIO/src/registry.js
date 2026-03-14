@@ -2,7 +2,6 @@ const rendererRegistry = new Map();
 
 import { LineRenderer } from "./renderers/LineRenderer.js";
 import { PointRenderer } from "./renderers/PointRenderer.js";
-import { RegressionRenderer } from "./renderers/RegressionRenderer.js";
 import { AreaRenderer } from "./renderers/AreaRenderer.js";
 import { BarRenderer } from "./renderers/BarRenderer.js";
 import { GroupedBarRenderer } from "./renderers/GroupedBarRenderer.js";
@@ -11,7 +10,6 @@ import { HexbinRenderer } from "./renderers/HexbinRenderer.js";
 import { TreemapRenderer } from "./renderers/TreemapRenderer.js";
 import { DonutRenderer } from "./renderers/DonutRenderer.js";
 import { GaugeRenderer } from "./renderers/GaugeRenderer.js";
-import { StatLineRenderer } from "./renderers/StatLineRenderer.js";
 
 export function registerRenderer(type, RendererClass) {
   if (rendererRegistry.has(type)) {
@@ -48,14 +46,8 @@ export function registerBuiltInRenderers() {
   if (!rendererRegistry.has(LineRenderer.type)) {
     registerRenderer(LineRenderer.type, new LineRenderer());
   }
-  if (!rendererRegistry.has(StatLineRenderer.type)) {
-    registerRenderer(StatLineRenderer.type, new StatLineRenderer());
-  }
   if (!rendererRegistry.has(PointRenderer.type)) {
     registerRenderer(PointRenderer.type, new PointRenderer());
-  }
-  if (!rendererRegistry.has(RegressionRenderer.type)) {
-    registerRenderer(RegressionRenderer.type, new RegressionRenderer());
   }
   if (!rendererRegistry.has(AreaRenderer.type)) {
     registerRenderer(AreaRenderer.type, new AreaRenderer());

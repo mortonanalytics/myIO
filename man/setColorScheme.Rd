@@ -4,19 +4,12 @@
 \alias{setColorScheme}
 \title{setColorScheme()}
 \usage{
-setColorScheme(
-  myIO,
-  colorScheme = NULL,
-  colorShceme = NULL,
-  setCategories = NULL
-)
+setColorScheme(myIO, colorScheme = NULL, setCategories = NULL)
 }
 \arguments{
 \item{myIO}{an htmlwidget object created by the myIO() function}
 
 \item{colorScheme}{a vector of colors in the order you want them used}
-
-\item{colorShceme}{a vector of colors in the order you want them used}
 
 \item{setCategories}{an optional vector of names that will be mapped to the corresponding color in the colorScheme}
 }

@@ -9,8 +9,6 @@
 #' @param bottom a numeric value representing in pixels the bottom margin
 #' @param left a numeric value representing in pixels the left margin
 #' @param right a numeric value representing in pixels the right margin
-#' @param ... Arguments passed to `setMargin()`.
-#'
 #' @return the same myIO object
 #'
 #' @examples
