@@ -12,122 +12,217 @@
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-.inner-text {
-	font-family:Roboto, sans-serif;
-	font-size: 13px;
+:root {
+  --chart-font: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --chart-text-color: #6b7280;
+  --chart-grid-color: #9ca3af;
+  --chart-grid-opacity: 0.4;
+  --chart-bg: #ffffff;
+  --chart-tooltip-bg: #ffffff;
+  --chart-tooltip-border: #e5e7eb;
+  --chart-tooltip-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  --chart-tooltip-radius: 7px;
+  --chart-radius-sm: 4px;
+  --chart-radius-md: 7px;
+  --chart-spacing-xs: 2px;
+  --chart-spacing-sm: 4px;
+  --chart-spacing-md: 8px;
+  --chart-spacing-lg: 16px;
+  --chart-button-color: #6b7280;
+  --chart-button-hover-bg: rgba(107, 114, 128, 0.1);
+  --chart-focus-ring: 0 0 0 2px rgba(59, 130, 246, 0.5);
+  --chart-transition-speed: 300ms;
+  --chart-ref-line-color: #9ca3af;
+  --chart-ref-line-width: 2px;
+  --chart-legend-inactive-opacity: 0.4;
 }
-.legendElement {
-	font-family:Roboto, sans-serif;
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --chart-transition-speed: 0ms; }
+}
+
+.myIO-svg {
+  background: var(--chart-bg);
+}
+
+.inner-text,
+.legendElement,
+.x-label,
+.y-label,
+.legend-label,
+.toolTip,
+.button,
+.myIO-empty-state {
+  font-family: var(--chart-font);
+}
+
+.inner-text,
+.x-label,
+.y-label,
+.legend-label {
+  font-size: 13px;
+  fill: var(--chart-text-color);
 }
 
 .dot {
   height: 10px;
   width: 10px;
+  min-width: 10px;
   border-radius: 50%;
   display: inline-block;
-}
-.x-label {
-	font-family:Roboto, sans-serif;
-	font-size: 13px;
-	fill: #7a7a52;
-}
-
-.y-label {
-	font-family:Roboto, sans-serif;
-	font-size: 13px;
-	fill: #7a7a52;
-}
-.legend-label {
-	font-family:Roboto, sans-serif;
-	font-size: 13px;
-	fill: #7a7a52;
 }
 
 .axis {
   shape-rendering: crispEdges;
 }
 
-.x-grid {
-  stroke: gray;
-  stroke-width: 1px;
-  opacity:0.4;
-  stroke-dasharray: 3,3;
-  shape-rendering: crispEdges;
-}
-
-.x-axis-line {
-  display: none;
-}
-
+.x-grid,
 .y-grid {
-  stroke: gray;
+  stroke: var(--chart-grid-color);
   stroke-width: 1px;
-  opacity:0.4;
-  stroke-dasharray: 3,3;
+  opacity: var(--chart-grid-opacity);
+  stroke-dasharray: 3, 3;
   shape-rendering: crispEdges;
 }
 
-.y-axis-line {
-  display: none;
-}
-
+.x-axis-line,
+.y-axis-line,
 .legend-line {
-	display: none;
+  display: none;
 }
 
 .toolTip {
   pointer-events: none;
   position: absolute;
+  z-index: 9999;
   display: none;
+  max-width: 280px;
   min-width: 125px;
   height: auto;
-  background: none repeat scroll 0 0 #ffffff;
-  border-radius: 2px;
-  line-height: 1.3;
-  box-shadow: 0px 3px 9px rgba(0, 0, 0, .15);
+  color: var(--chart-text-color);
+  background: var(--chart-tooltip-bg);
+  border: 1px solid var(--chart-tooltip-border);
+  border-radius: var(--chart-tooltip-radius);
+  line-height: 1.4;
+  box-shadow: var(--chart-tooltip-shadow);
 }
 
 .toolTipTitle {
-	min-height: 35px;
+  min-height: 35px;
+  border-left: 3px solid var(--chart-text-color);
 }
-.toolTipTitle span{
-	font-family:Roboto, sans-serif;
-	font-weight:900;
-	min-width: 125px;
-	margin: auto;
-	padding: 10px;
-	text-align: center;
-	display:block;
+
+.toolTipTitle span {
+  font-weight: 700;
+  min-width: 125px;
+  margin: auto;
+  padding: 10px 12px 8px;
+  text-align: left;
+  display: block;
 }
+
 .toolTipBody {
-	min-width: 120px;
-	min-height: 35px;
-	margin-top: 10px;
-	margin-left: 5px;
-	padding-right: 5px;
-	padding-left: 5px;
-	text-align: left;
-	font-family:Roboto, sans-serif;
+  min-width: 120px;
+  padding: 0 12px 12px;
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+
+.toolTipItem {
+  display: flex;
+  align-items: center;
+  gap: var(--chart-spacing-sm);
+  margin-top: var(--chart-spacing-sm);
+}
+
+.toolTipLabel {
+  font-weight: 600;
+}
+
+.toolTipValue {
+  margin-left: auto;
 }
 
 .buttonDiv {
   pointer-events: all;
   position: absolute;
-  display: inline-block;
-  min-width: 40px;
-  height: auto;
+  z-index: 10;
+  display: inline-flex;
+  gap: var(--chart-spacing-sm);
   background: transparent;
 }
 
 .button {
-  fill: #7a7a52;
-  border-radius: 5px;
-  padding: 3px;
-  margin: 3px;
+  color: var(--chart-button-color);
+  border-radius: var(--chart-radius-md);
+  padding: 6px;
+  margin: 0;
   text-align: center;
   text-decoration: none;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 14px;
-  width: 40px;
-  height: 25px;
+  width: 44px;
+  height: 32px;
+  transition: background-color 0.15s ease;
+}
+
+.button:hover {
+  background-color: var(--chart-button-hover-bg);
+}
+
+.button:focus-visible {
+  outline: none;
+  box-shadow: var(--chart-focus-ring);
+}
+
+.legendElement {
+  cursor: pointer;
+}
+
+.legendElement:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.5);
+  outline-offset: 2px;
+}
+
+[class^="tag-bar-"],
+[class^="tag-point-"],
+[class^="tag-hexbin-"],
+[class^="tag-tree-"],
+.tag-grouped-bar-g rect,
+.donut,
+.button,
+.legendElement {
+  cursor: pointer;
+}
+
+.toolLine {
+  stroke: var(--chart-ref-line-color);
+  stroke-width: var(--chart-ref-line-width);
+}
+
+.myIO-empty-state {
+  font-size: 14px;
+  fill: var(--chart-text-color);
+  text-anchor: middle;
+  dominant-baseline: central;
+  opacity: 0.5;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media print {
+  .buttonDiv { display: none !important; }
+  .toolTip { display: none !important; }
 }

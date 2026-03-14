@@ -6,7 +6,7 @@ export function transitionGrouped(chart, data, colors, bandwidth) {
 
   const barsNew = d3.select(chart.element).selectAll(".tag-grouped-bar-g").selectAll("rect").data(function(d) { return d; });
 
-  barsNew.exit().transition().duration(transitionSpeed).attr("height", 0).attr("y", 0).remove();
+  barsNew.exit().transition().ease(d3.easeQuadIn).duration(transitionSpeed).attr("height", 0).attr("y", 0).remove();
 
   barsNew.enter()
     .append("rect")
@@ -16,6 +16,7 @@ export function transitionGrouped(chart, data, colors, bandwidth) {
     .attr("height", 0)
     .attr("width", bandwidth)
     .transition()
+    .ease(d3.easeQuadOut)
     .duration(transitionSpeed)
     .delay(function(d) { return d.idx * 20; })
     .attr("y", function(d) { return chart.yScale(d[1] - d[0]); })
@@ -23,6 +24,7 @@ export function transitionGrouped(chart, data, colors, bandwidth) {
 
   barsNew.merge(barsNew)
     .transition()
+    .ease(d3.easeQuad)
     .duration(transitionSpeed)
     .delay(function(d) { return d.idx * 20; })
     .attr("x", function(d) { return chart.xScale(+d.data[0]) + bandwidth * d.idx; })
@@ -41,7 +43,7 @@ export function transitionStacked(chart, data, colors, bandwidth) {
 
   const barsNew = d3.select(chart.element).selectAll(".tag-grouped-bar-g").selectAll("rect").data(function(d) { return d; });
 
-  barsNew.exit().transition().duration(transitionSpeed).attr("height", 0).attr("y", 0).remove();
+  barsNew.exit().transition().ease(d3.easeQuadIn).duration(transitionSpeed).attr("height", 0).attr("y", 0).remove();
 
   barsNew.enter()
     .append("rect")
@@ -51,6 +53,7 @@ export function transitionStacked(chart, data, colors, bandwidth) {
     .attr("height", 0)
     .attr("width", bandwidth * data.length)
     .transition()
+    .ease(d3.easeQuadOut)
     .duration(transitionSpeed)
     .delay(function(d) { return d.idx * 20; })
     .attr("y", function(d) { return yScale(d[1]); })
@@ -61,6 +64,7 @@ export function transitionStacked(chart, data, colors, bandwidth) {
 
   barsNew.merge(barsNew)
     .transition()
+    .ease(d3.easeQuad)
     .duration(transitionSpeed)
     .delay(function(d) { return d.idx * 20; })
     .attr("y", function(d) { return yScale(d[1]); })

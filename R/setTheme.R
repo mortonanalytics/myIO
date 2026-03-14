@@ -1,0 +1,31 @@
+#' setTheme()
+#'
+#' Sets chart theme tokens using CSS custom properties
+#'
+#' @param io an htmlwidget object created by the myIO() function
+#' @param text_color text and label color
+#' @param grid_color grid line color
+#' @param bg background color
+#' @param font font family
+#' @param ... additional CSS custom property overrides without the `chart-` prefix
+#'
+#' @return the same myIO object
+#' @export
+setTheme <- function(io, text_color = NULL, grid_color = NULL, bg = NULL, font = NULL, ...) {
+  theme <- list(
+    "chart-text-color" = text_color,
+    "chart-grid-color" = grid_color,
+    "chart-bg" = bg,
+    "chart-font" = font
+  )
+
+  extras <- list(...)
+  if (length(extras) > 0) {
+    for (name in names(extras)) {
+      theme[[paste0("chart-", name)]] <- extras[[name]]
+    }
+  }
+
+  io$x$config$theme <- Filter(Negate(is.null), theme)
+  io
+}

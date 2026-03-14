@@ -319,13 +319,15 @@
     var bandwidth = chart.options.categoricalScale.xAxis == true ? (chart.width - (m.left + m.right)) / chart.x_banded.length : Math.min(100, (chart.width - (chart.margin.right + chart.margin.left)) / layer.data.length);
     var transitionSpeed = chart.options.transition.speed;
     var bars = chart.chart.selectAll("." + tagName("bar", chart.element.id, key)).data(data);
-    bars.exit().transition().duration(transitionSpeed).attr("y", chart.yScale(0)).remove();
+    bars.exit().transition().ease(d3.easeQuadIn).duration(transitionSpeed).attr("y", chart.yScale(0)).remove();
     var newBars = bars.enter().append("rect").attr("class", tagName("bar", chart.element.id, key)).attr("clip-path", "url(#" + chart.element.id + "clip)").style("fill", function(d) {
       return resolveColor(chart, d[layer.mapping.x_var], layer.color);
     }).attr("x", function(d) {
       return defineVerticalScale(chart, d, layer, bandwidth, barSize, chart.options.categoricalScale.xAxis);
     }).attr("y", chart.yScale(0)).attr("width", barSize * bandwidth - 2).attr("height", chart.yScale(0));
-    bars.merge(newBars).transition().ease(d3.easeQuad).duration(transitionSpeed).attr("x", function(d) {
+    bars.merge(newBars).transition().ease(d3.easeQuadOut).duration(transitionSpeed).delay(function(d, i) {
+      return i * 20;
+    }).attr("x", function(d) {
       return defineVerticalScale(chart, d, layer, bandwidth, barSize, chart.options.categoricalScale.xAxis);
     }).attr("y", function(d) {
       return chart.yScale(d[layer.mapping.y_var]);
@@ -349,7 +351,7 @@
     var bandwidth = chart.options.categoricalScale.yAxis == true ? (chart.height - (m.top + m.bottom)) / layer.data.length : Math.min(100, (chart.height - (chart.margin.top + chart.margin.bottom)) / layer.data.length);
     var transitionSpeed = chart.options.transition.speed;
     var bars = chart.chart.selectAll("." + tagName("bar", chart.element.id, key)).data(data);
-    bars.exit().transition().duration(transitionSpeed).attr("width", 0).remove();
+    bars.exit().transition().ease(d3.easeQuadIn).duration(transitionSpeed).attr("width", 0).remove();
     var newBars = bars.enter().append("rect").attr("class", tagName("bar", chart.element.id, key)).attr("clip-path", "url(#" + chart.element.id + "clip)").style("fill", function(d) {
       return resolveColor(chart, d[layer.mapping.x_var], layer.color);
     }).attr("y", function(d) {
@@ -357,7 +359,9 @@
     }).attr("x", function(d) {
       return chart.xScale(Math.min(0, d[layer.mapping.y_var]));
     }).attr("height", barSize * bandwidth - 2).attr("width", 0);
-    bars.merge(newBars).transition().ease(d3.easeQuad).duration(transitionSpeed).attr("y", function(d) {
+    bars.merge(newBars).transition().ease(d3.easeQuadOut).duration(transitionSpeed).delay(function(d, i) {
+      return i * 20;
+    }).attr("y", function(d) {
       return barSize == 1 ? chart.yScale(d[layer.mapping.x_var]) : chart.yScale(d[layer.mapping.x_var]) + bandwidth / 4;
     }).attr("x", function(d) {
       return chart.xScale(Math.min(0, d[layer.mapping.y_var]));
@@ -375,13 +379,24 @@
   }
   function initializeScaffold(chart) {
     d3.select(chart.element).selectAll(".myIO-svg, .buttonDiv, .toolTip").remove();
-    chart.svg = d3.select(chart.element).append("svg").attr("class", "myIO-svg").attr("id", "myIO-svg" + chart.element.id).attr("width", chart.totalWidth).attr("height", chart.height).attr("viewBox", "0 0 " + chart.totalWidth + " " + chart.height);
+    d3.select(chart.element).style("position", "relative");
+    chart.svg = d3.select(chart.element).append("svg").attr("class", "myIO-svg").attr("id", "myIO-svg" + chart.element.id).attr("width", chart.totalWidth).attr("height", chart.height).attr("viewBox", "0 0 " + chart.totalWidth + " " + chart.height).attr("role", "img").attr("aria-label", buildAriaLabel(chart));
     applyPlotTransform(chart);
     chart.chart = chart.plot.append("g").attr("class", "myIO-chart-area");
     if (chart.options.suppressLegend == false) {
       chart.legendTranslate = isMobile(chart) ? "translate(" + chart.margin.left + "," + chart.height * 0.8 + ")" : "translate(" + chart.width + ",0)";
       chart.legendArea = chart.svg.append("g").attr("class", "myIO-legend-area").attr("transform", chart.legendTranslate).style("height", responsiveValue(chart, chart.height, chart.height * 0.2)).style("width", responsiveValue(chart, chart.totalWidth - chart.width, chart.totalWidth - chart.margin.left));
     }
+  }
+  function buildAriaLabel(chart) {
+    var firstLayer = chart.plotLayers[0];
+    if (!firstLayer) {
+      return "Data visualization chart";
+    }
+    var chartType = firstLayer.type ? firstLayer.type.replace(/([A-Z])/g, " $1").toLowerCase() : "data visualization";
+    var xLabel = chart.options.xAxisLabel || chart.options.xAxisFormat || "x-axis";
+    var yLabel = chart.options.yAxisLabel || chart.options.yAxisFormat || "y-axis";
+    return chartType.charAt(0).toUpperCase() + chartType.slice(1) + " chart showing " + yLabel + " by " + xLabel;
   }
   function updateScaffoldLayout(chart) {
     chart.svg.attr("width", chart.totalWidth).attr("height", chart.height).attr("viewBox", "0 0 " + chart.totalWidth + " " + chart.height);
@@ -462,17 +477,17 @@
     const barsNew = d3.select(chart.element).selectAll(".tag-grouped-bar-g").selectAll("rect").data(function(d) {
       return d;
     });
-    barsNew.exit().transition().duration(transitionSpeed).attr("height", 0).attr("y", 0).remove();
+    barsNew.exit().transition().ease(d3.easeQuadIn).duration(transitionSpeed).attr("height", 0).attr("y", 0).remove();
     barsNew.enter().append("rect").attr("clip-path", "url(#" + chart.element.id + "clip)").attr("x", function(d) {
       return chart.xScale(+d.data[0]) + bandwidth * d.idx;
-    }).attr("y", chart.yScale(0)).attr("height", 0).attr("width", bandwidth).transition().duration(transitionSpeed).delay(function(d) {
+    }).attr("y", chart.yScale(0)).attr("height", 0).attr("width", bandwidth).transition().ease(d3.easeQuadOut).duration(transitionSpeed).delay(function(d) {
       return d.idx * 20;
     }).attr("y", function(d) {
       return chart.yScale(d[1] - d[0]);
     }).attr("height", function(d) {
       return chart.yScale(0) - chart.yScale(d[1] - d[0]);
     });
-    barsNew.merge(barsNew).transition().duration(transitionSpeed).delay(function(d) {
+    barsNew.merge(barsNew).transition().ease(d3.easeQuad).duration(transitionSpeed).delay(function(d) {
       return d.idx * 20;
     }).attr("x", function(d) {
       return chart.xScale(+d.data[0]) + bandwidth * d.idx;
@@ -491,12 +506,12 @@
     const barsNew = d3.select(chart.element).selectAll(".tag-grouped-bar-g").selectAll("rect").data(function(d) {
       return d;
     });
-    barsNew.exit().transition().duration(transitionSpeed).attr("height", 0).attr("y", 0).remove();
+    barsNew.exit().transition().ease(d3.easeQuadIn).duration(transitionSpeed).attr("height", 0).attr("y", 0).remove();
     barsNew.enter().append("rect").attr("clip-path", "url(#" + chart.element.id + "clip)").attr("x", function(d) {
       return chart.xScale(+d.data[0]);
     }).attr("y", function(d) {
       return yScale(d[1]);
-    }).attr("height", 0).attr("width", bandwidth * data.length).transition().duration(transitionSpeed).delay(function(d) {
+    }).attr("height", 0).attr("width", bandwidth * data.length).transition().ease(d3.easeQuadOut).duration(transitionSpeed).delay(function(d) {
       return d.idx * 20;
     }).attr("y", function(d) {
       return yScale(d[1]);
@@ -505,7 +520,7 @@
     }).transition().attr("x", function(d) {
       return chart.xScale(+d.data[0]);
     }).attr("width", bandwidth * data.length);
-    barsNew.merge(barsNew).transition().duration(transitionSpeed).delay(function(d) {
+    barsNew.merge(barsNew).transition().ease(d3.easeQuad).duration(transitionSpeed).delay(function(d) {
       return d.idx * 20;
     }).attr("y", function(d) {
       return yScale(d[1]);
@@ -715,7 +730,7 @@
         while (d.depth > 1) d = d.parent;
         return chart.colorDiscrete(d.data.id);
       });
-      cell.merge(newCell).transition().duration(750).attr("transform", function(d) {
+      cell.merge(newCell).transition().duration(750).ease(d3.easeQuad).attr("transform", function(d) {
         return "translate(" + d.x0 + "," + d.y0 + ")";
       }).select("rect").attr("width", function(d) {
         return d.x1 - d.x0;
@@ -1032,28 +1047,10 @@
     svgString = svgString.replace(/NS\d+:href/g, "xlink:href");
     return svgString;
     function getCSSStyles(parentElement) {
-      var selectorTextArr = [];
-      selectorTextArr.push("#" + parentElement.id);
-      for (var c = 0; c < parentElement.classList.length; c++) {
-        if (!contains("." + parentElement.classList[c], selectorTextArr)) {
-          selectorTextArr.push("." + parentElement.classList[c]);
-        }
-      }
+      var selectorTextArr = collectSelectors(parentElement);
       var nodes = parentElement.getElementsByTagName("*");
       for (var i = 0; i < nodes.length; i++) {
-        var id = nodes[i].id;
-        if (!contains("#" + id, selectorTextArr)) {
-          selectorTextArr.push("#" + id);
-        }
-        if ("@" + id) {
-          selectorTextArr.push("@" + id);
-        }
-        var classes = nodes[i].classList;
-        for (var j = 0; j < classes.length; j++) {
-          if (!contains("." + classes[j], selectorTextArr)) {
-            selectorTextArr.push("." + classes[j]);
-          }
-        }
+        selectorTextArr = selectorTextArr.concat(collectSelectors(nodes[i]));
       }
       var extractedCSSText = "";
       for (var k = 0; k < document.styleSheets.length; k++) {
@@ -1066,14 +1063,44 @@
         }
         var cssRules = s.cssRules;
         for (var r = 0; r < cssRules.length; r++) {
-          if (contains(cssRules[r].selectorText, selectorTextArr)) {
-            extractedCSSText += cssRules[r].cssText;
+          var rule = cssRules[r];
+          if (rule.type === CSSRule.FONT_FACE_RULE || rule.selectorText === ":root") {
+            extractedCSSText += rule.cssText;
+            continue;
+          }
+          if (matchesRule(rule, parentElement, selectorTextArr)) {
+            extractedCSSText += rule.cssText;
           }
         }
       }
       return extractedCSSText;
-      function contains(str, arr) {
-        return arr.indexOf(str) !== -1;
+      function collectSelectors(node) {
+        var selectors = [];
+        if (node.id) {
+          selectors.push("#" + node.id);
+        }
+        if (node.classList) {
+          for (var c = 0; c < node.classList.length; c++) {
+            selectors.push("." + node.classList[c]);
+          }
+        }
+        return selectors;
+      }
+      function matchesRule(rule2, rootNode, selectorList) {
+        if (!rule2.selectorText) {
+          return false;
+        }
+        return rule2.selectorText.split(",").some(function(selector) {
+          var trimmed = selector.trim();
+          if (selectorList.indexOf(trimmed) !== -1) {
+            return true;
+          }
+          try {
+            return !!rootNode.querySelector(trimmed);
+          } catch (e) {
+            return false;
+          }
+        });
       }
     }
     function appendCSS(cssText, element) {
@@ -1196,56 +1223,77 @@
   })("undefined" != typeof self && self || "undefined" != typeof window && window || (void 0).content);
 
   // inst/htmlwidgets/myIO/src/interactions/buttons.js
+  var BUTTON_LABELS = {
+    image: "Export as PNG",
+    chart: "Download CSV data",
+    percent: "Toggle percent view",
+    group2stack: "Toggle grouped/stacked layout"
+  };
   function addButtons(chart, layers) {
+    d3.select(chart.element).select(".buttonDiv").remove();
     var buttonData = [
-      {
-        name: "image",
-        html: '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 32 32"><title>PNG</title><path d="M9.5 19c0 3.59 2.91 6.5 6.5 6.5s6.5-2.91 6.5-6.5-2.91-6.5-6.5-6.5-6.5 2.91-6.5 6.5zM30 8h-7c-0.5-2-1-4-3-4h-8c-2 0-2.5 2-3 4h-7c-1.1 0-2 0.9-2 2v18c0 1.1 0.9 2 2 2h28c1.1 0 2-0.9 2-2v-18c0-1.1-0.9-2-2-2zM16 27.875c-4.902 0-8.875-3.973-8.875-8.875s3.973-8.875 8.875-8.875c4.902 0 8.875 3.973 8.875 8.875s-3.973 8.875-8.875 8.875zM30 14h-4v-2h4v2z"></path></svg>'
-      },
-      {
-        name: "chart",
-        html: '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 -3 35 35"><title>Download Data</title><path d="M26 2h-20l-6 6v21c0 0.552 0.448 1 1 1h30c0.552 0 1-0.448 1-1v-21l-6-6zM16 26l-10-8h6v-6h8v6h6l-10 8zM4.828 6l2-2h18.343l2 2h-22.343z"></path></svg>'
-      },
-      {
-        name: "percent",
-        html: '<!-- Generated by IcoMoon.io --><svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="-5 -5 32 32"><title>Percent to Number</title><path d="M18.293 4.293l-14 14c-0.391 0.391-0.391 1.024 0 1.414s1.024 0.391 1.414 0l14-14c0.391-0.391 0.391-1.024 0-1.414s-1.024-0.391-1.414 0zM10 6.5c0-0.966-0.393-1.843-1.025-2.475s-1.509-1.025-2.475-1.025-1.843 0.393-2.475 1.025-1.025 1.509-1.025 2.475 0.393 1.843 1.025 2.475 1.509 1.025 2.475 1.025 1.843-0.393 2.475-1.025 1.025-1.509 1.025-2.475zM8 6.5c0 0.414-0.167 0.788-0.439 1.061s-0.647 0.439-1.061 0.439-0.788-0.167-1.061-0.439-0.439-0.647-0.439-1.061 0.167-0.788 0.439-1.061 0.647-0.439 1.061-0.439 0.788 0.167 1.061 0.439 0.439 0.647 0.439 1.061zM21 17.5c0-0.966-0.393-1.843-1.025-2.475s-1.509-1.025-2.475-1.025-1.843 0.393-2.475 1.025-1.025 1.509-1.025 2.475 0.393 1.843 1.025 2.475 1.509 1.025 2.475 1.025 1.843-0.393 2.475-1.025 1.025-1.509 1.025-2.475zM19 17.5c0 0.414-0.167 0.788-0.439 1.061s-0.647 0.439-1.061 0.439-0.788-0.167-1.061-0.439-0.439-0.647-0.439-1.061 0.167-0.788 0.439-1.061 0.647-0.439 1.061-0.439 0.788 0.167 1.061 0.439 0.439 0.647 0.439 1.061z"></path></svg>'
-      },
-      {
-        name: "group2stack",
-        html: '<!-- Generated by IcoMoon.io --><svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 32 32"><title>Grouped2Stacked</title><path d="M8 6l-4-4h-2v2l4 4zM10 0h2v4h-2zM18 10h4v2h-4zM20 4v-2h-2l-4 4 2 2zM0 10h4v2h-4zM10 18h2v4h-2zM2 18v2h2l4-4-2-2zM31.563 27.563l-19.879-19.879c-0.583-0.583-1.538-0.583-2.121 0l-1.879 1.879c-0.583 0.583-0.583 1.538 0 2.121l19.879 19.879c0.583 0.583 1.538 0.583 2.121 0l1.879-1.879c0.583-0.583 0.583-1.538 0-2.121zM15 17l-6-6 2-2 6 6-2 2z"></path></svg>'
-      }
+      { name: "image", html: iconCamera() },
+      { name: "chart", html: iconFileDown() },
+      { name: "percent", html: iconPercent() },
+      { name: "group2stack", html: iconLayers() }
     ];
-    var data2Use = chart.options.toggleY ? chart.plotLayers[0].type == "groupedBar" ? buttonData : buttonData.slice(0, 3) : buttonData.slice(0, 2);
-    var buttonDiv = d3.select(chart.element).append("div").attr("class", "buttonDiv").style("opacity", 1).style("left", chart.width - (40 + 40 * data2Use.length) + "px").style("top", "0px");
-    buttonDiv.selectAll(".button").data(data2Use).enter().append("div").attr("class", "button").html(function(d) {
+    var data2Use = chart.options.toggleY ? chart.plotLayers[0].type === "groupedBar" ? buttonData : buttonData.slice(0, 3) : buttonData.slice(0, 2);
+    var buttonDiv = d3.select(chart.element).append("div").attr("class", "buttonDiv").style("display", chart.runtime.totalWidth < 400 ? "none" : "inline-flex").style("right", chart.options.suppressLegend ? "0px" : "8px").style("top", "0px");
+    var buttons = buttonDiv.selectAll(".button").data(data2Use).enter().append("div").attr("class", "button").attr("role", "button").attr("tabindex", "0").attr("aria-label", function(d) {
+      return BUTTON_LABELS[d.name];
+    }).html(function(d) {
       return d.html;
     }).on("click", function(event, d) {
-      if (d.name == "image") {
-        var svgString = getSVGString(chart.svg.node());
-        svgString2Image(svgString, 2 * chart.width, 2 * chart.height, "png", function(dataBlob) {
-          saveAs(dataBlob, chart.element.id + ".png");
-        });
-      } else if (d.name == "chart") {
-        var csvData = [];
-        chart.plotLayers.forEach(function(layer) {
-          csvData.push(layer.data);
-        });
-        exportToCsv(chart.element.id + "_data.csv", [].concat.apply([], csvData));
-      } else if (d.name == "percent") {
-        if (chart.toggleY) {
-          if (chart.toggleY[0] == chart.options.toggleY[0]) {
-            chart.toggleY = [chart.plotLayers[0].mapping.y_var, chart.options.yAxisFormat];
-          } else if (chart.toggleY[0] == chart.plotLayers[0].mapping.y_var) {
-            chart.toggleY = chart.options.toggleY;
-          }
-        } else {
-          chart.toggleY = chart.options.toggleY;
-        }
-        chart.toggleVarY(chart.toggleY);
-      } else if (d.name == "group2stack") {
-        chart.toggleGroupedLayout(layers);
+      handleAction(chart, layers, d.name);
+    }).on("keydown", function(event, d) {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        handleAction(chart, layers, d.name);
       }
     });
+    buttons.append("span").attr("class", "sr-only").text(function(d) {
+      return BUTTON_LABELS[d.name];
+    });
+  }
+  function handleAction(chart, layers, name) {
+    if (name === "image") {
+      var svgString = getSVGString(chart.svg.node());
+      svgString2Image(svgString, 2 * chart.width, 2 * chart.height, "png", function(dataBlob) {
+        saveAs(dataBlob, chart.element.id + ".png");
+      });
+      return;
+    }
+    if (name === "chart") {
+      var csvData = [];
+      chart.plotLayers.forEach(function(layer) {
+        csvData.push(layer.data);
+      });
+      exportToCsv(chart.element.id + "_data.csv", [].concat.apply([], csvData));
+      return;
+    }
+    if (name === "percent") {
+      var nextToggle = chart.runtime.activeY === chart.options.toggleY[0] ? [chart.plotLayers[0].mapping.y_var, chart.options.yAxisFormat] : chart.options.toggleY;
+      chart.toggleVarY(nextToggle);
+      return;
+    }
+    if (name === "group2stack") {
+      chart.toggleGroupedLayout(layers);
+    }
+  }
+  function iconWrapper(paths) {
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true">' + paths + "</svg>";
+  }
+  function iconCamera() {
+    return iconWrapper('<path d="M4 7h3l2-2h6l2 2h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"></path><circle cx="12" cy="13" r="4"></circle>');
+  }
+  function iconFileDown() {
+    return iconWrapper('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M12 12v6"></path><path d="m9 15 3 3 3-3"></path>');
+  }
+  function iconPercent() {
+    return iconWrapper('<line x1="19" y1="5" x2="5" y2="19"></line><circle cx="7" cy="7" r="2"></circle><circle cx="17" cy="17" r="2"></circle>');
+  }
+  function iconLayers() {
+    return iconWrapper('<rect x="4" y="5" width="14" height="4" rx="1"></rect><rect x="6" y="10" width="14" height="4" rx="1"></rect><rect x="8" y="15" width="14" height="4" rx="1"></rect>');
   }
 
   // inst/htmlwidgets/myIO/src/interactions/drag.js
@@ -1265,235 +1313,388 @@
   }
 
   // inst/htmlwidgets/myIO/src/tooltip.js
+  function sanitize(str) {
+    const div = document.createElement("div");
+    div.textContent = String(str);
+    return div.innerHTML;
+  }
   function initializeTooltip(chart) {
-    chart.dom.tooltip = d3.select(chart.dom.element).append("div").attr("class", "toolTip");
-    chart.dom.tooltipTitle = chart.dom.tooltip.append("div").attr("class", "toolTipTitle").style("background-color", "lightgray");
+    chart.dom.tooltip = d3.select(chart.dom.element).append("div").attr("class", "toolTip").attr("role", "status").attr("aria-live", "polite").attr("aria-hidden", "true");
+    chart.dom.tooltipTitle = chart.dom.tooltip.append("div").attr("class", "toolTipTitle");
     chart.dom.tooltipBody = chart.dom.tooltip.append("div").attr("class", "toolTipBody");
+    chart.runtime.tooltipHideTimer = null;
     chart.captureLegacyAliases();
   }
   function removeHoverOverlay(chart) {
-    d3.select(chart.element).select(".toolTipBox").remove();
-    d3.select(chart.element).select(".toolLine").remove();
-    chart.toolTipBox = null;
-    chart.toolLine = null;
+    d3.select(chart.dom.element).select(".toolTipBox").remove();
+    d3.select(chart.dom.element).select(".toolLine").remove();
+    d3.select(chart.dom.element).select(".toolPointLayer").remove();
+    chart.runtime.toolTipBox = null;
+    chart.runtime.toolLine = null;
+    chart.runtime.toolPointLayer = null;
+    chart.syncLegacyAliases();
   }
-  function createHoverOverlay(chart, onMove) {
+  function createHoverOverlay(chart, onMove, onEnd) {
     removeHoverOverlay(chart);
-    chart.toolLine = chart.chart.append("line").attr("class", "toolLine");
-    chart.toolTipBox = chart.svg.append("rect").attr("class", "toolTipBox").attr("opacity", 0).attr("width", chart.width - (chart.margin.left + chart.margin.right)).attr("height", chart.height - (chart.margin.top + chart.margin.bottom)).attr("transform", "translate(" + chart.margin.left + "," + chart.margin.top + ")").on("mouseover", function() {
-      chart.tooltip.style("display", null);
-      chart.toolLine.style("stroke", null);
+    chart.runtime.toolLine = chart.dom.chartArea.append("line").attr("class", "toolLine");
+    chart.runtime.toolPointLayer = chart.dom.chartArea.append("g").attr("class", "toolPointLayer");
+    chart.runtime.toolTipBox = chart.dom.svg.append("rect").attr("class", "toolTipBox").attr("opacity", 0).attr("width", chart.width - (chart.margin.left + chart.margin.right)).attr("height", chart.height - (chart.margin.top + chart.margin.bottom)).attr("transform", "translate(" + chart.margin.left + "," + chart.margin.top + ")").on("mouseover", function(event) {
+      onMove(event);
+    }).on("mousemove", function(event) {
+      onMove(event);
     }).on("mouseout", function() {
-      hideTooltip(chart);
-      if (chart.toolLine) {
-        chart.toolLine.style("stroke", "none");
+      if (typeof onEnd === "function") {
+        onEnd();
       }
-    }).on("mousemove", onMove);
+    }).on("touchstart", function(event) {
+      event.preventDefault();
+      onMove(event);
+    }).on("touchmove", function(event) {
+      event.preventDefault();
+      onMove(event);
+    }).on("touchend", function() {
+      if (typeof onEnd === "function") {
+        onEnd();
+      }
+    });
+    chart.syncLegacyAliases();
   }
-  function showTooltip(chart, left, top) {
-    chart.tooltip.style("left", left + "px").style("top", top + "px").style("opacity", 1).style("display", "inline-block");
-  }
-  function setTooltipContent(chart, titleHtml, bodyHtml) {
-    chart.toolTipTitle.html(titleHtml);
-    chart.toolTipBody.html(bodyHtml);
-  }
-  function hideTooltip(chart, delay) {
-    var transition = chart.tooltip.transition();
-    if (delay) {
-      transition = transition.delay(delay);
+  function showChartTooltip(chart, config) {
+    if (!chart.dom.tooltip) {
+      return;
     }
-    transition.style("display", "none");
+    clearTimeout(chart.runtime.tooltipHideTimer);
+    const pointer = config.pointer || [0, 0];
+    const title = config.title || {};
+    const items = config.items || [];
+    const accentColor = items.length === 1 && items[0].color ? items[0].color : null;
+    chart.dom.tooltipTitle.style("border-left-color", accentColor || null).html("<span>" + sanitize(formatTooltipText(title)) + "</span>");
+    const rows = chart.dom.tooltipBody.selectAll(".toolTipItem").data(items);
+    rows.exit().remove();
+    const rowsEnter = rows.enter().append("div").attr("class", "toolTipItem");
+    rowsEnter.append("span").attr("class", "dot");
+    rowsEnter.append("span").attr("class", "toolTipLabel");
+    rowsEnter.append("span").attr("class", "toolTipValue");
+    rowsEnter.merge(rows).select(".dot").style("background-color", function(d) {
+      return d.color || "transparent";
+    });
+    rowsEnter.merge(rows).select(".toolTipLabel").text(function(d) {
+      return d.label || "";
+    });
+    rowsEnter.merge(rows).select(".toolTipValue").text(function(d) {
+      return formatTooltipText(d);
+    });
+    chart.dom.tooltip.style("display", "inline-block").style("opacity", 1).attr("aria-hidden", "false");
+    positionTooltip(chart, pointer);
+  }
+  function hideChartTooltip(chart) {
+    if (!chart.dom.tooltip) {
+      return;
+    }
+    clearTimeout(chart.runtime.tooltipHideTimer);
+    chart.runtime.tooltipHideTimer = window.setTimeout(function() {
+      chart.dom.tooltip.style("display", "none").style("opacity", 0).attr("aria-hidden", "true");
+    }, 300);
+  }
+  function formatTooltipText(config) {
+    if (config == null) {
+      return "";
+    }
+    if (typeof config === "string") {
+      return config;
+    }
+    const format = typeof config.format === "function" ? config.format : function(value) {
+      return value;
+    };
+    const text = config.text != null ? config.text : config.value;
+    return text == null ? "" : format(text);
+  }
+  function positionTooltip(chart, pointer) {
+    const containerRect = chart.dom.element.getBoundingClientRect();
+    const tooltipNode = chart.dom.tooltip.node();
+    chart.dom.tooltip.style("left", pointer[0] + 12 + "px").style("top", pointer[1] + 12 + "px");
+    const tooltipRect = tooltipNode.getBoundingClientRect();
+    let left = pointer[0] + 12;
+    let top = pointer[1] + 12;
+    if (left + tooltipRect.width > containerRect.width) {
+      left = Math.max(8, pointer[0] - tooltipRect.width - 12);
+    }
+    if (top + tooltipRect.height > containerRect.height) {
+      top = Math.max(8, pointer[1] - tooltipRect.height - 12);
+    }
+    chart.dom.tooltip.style("left", left + "px").style("top", top + "px");
   }
 
   // inst/htmlwidgets/myIO/src/interactions/rollover.js
+  var HOVER_TRANSITION_MS = 300;
   function bindRollover(chart, layers) {
-    var lys = layers || chart.currentLayers;
+    var lys = layers || chart.currentLayers || [];
     var that = chart;
-    var horizontalBreakPoint = chart.width * 0.8;
-    var verticalBreakPoint = chart.height * 0.5;
     var exclusions = ["text", "yearMon"];
-    var xFormat = !(exclusions.indexOf(chart.options.xAxisFormat) in exclusions) ? d3.format(chart.options.xAxisFormat ? chart.options.xAxisFormat : "d") : function(x) {
+    var xFormat = exclusions.indexOf(chart.options.xAxisFormat) > -1 ? function(x) {
       return x;
-    };
+    } : d3.format(chart.options.xAxisFormat ? chart.options.xAxisFormat : "d");
     var yFormat = d3.format(chart.options.yAxisFormat ? chart.options.yAxisFormat : "d");
     var currentFormatY = chart.newScaleY ? d3.format(chart.newScaleY) : yFormat;
     removeHoverOverlay(chart);
     lys.forEach(function(layer) {
-      if (layer.type === "bar") {
-        chart.chart.selectAll("." + tagName("bar", chart.element.id, layer.label)).on("mouseout", hoverTipHide).on("mouseover", hoverTip).on("mousemove", hoverTip);
-      }
-      if (layer.type === "histogram") {
-        chart.chart.selectAll("." + tagName("bar", chart.element.id, layer.label)).on("mouseout", hoverHistogramHide).on("mouseover", hoverHistogram).on("mousemove", hoverHistogram);
-      }
-      if (layer.type === "point") {
-        chart.chart.selectAll("." + tagName("point", chart.element.id, layer.label)).on("mouseout", hoverTipHide).on("mouseover", hoverTip).on("mousemove", hoverTip);
-      }
-      if (layer.type === "hexbin") {
-        chart.chart.selectAll("." + tagName("hexbin", chart.element.id, layer.label)).on("mouseout", hoverHexHide).on("mouseover", hoverHex).on("mousemove", hoverHex);
+      if (["bar", "point", "hexbin", "histogram"].indexOf(layer.type) > -1) {
+        bindElementLayer(layer);
       }
     });
     if (lys.some(function(layer) {
       return layer.type === "groupedBar";
     })) {
-      chart.chart.selectAll(".tag-grouped-bar-g rect").on("mouseout", hoverGroupedBarHide).on("mouseover", hoverGroupedBar).on("mousemove", hoverGroupedBar);
+      chart.chart.selectAll(".tag-grouped-bar-g rect").on("mouseout", clearGroupedBar).on("mouseover", showGroupedBar).on("mousemove", showGroupedBar).on("touchstart", function(event) {
+        event.preventDefault();
+        showGroupedBar.call(this, event);
+      }).on("touchmove", function(event) {
+        event.preventDefault();
+        showGroupedBar.call(this, event);
+      }).on("touchend", clearGroupedBar);
     }
     if (lys.length > 0 && lys.every(function(layer) {
       return ["line", "stat_line", "area"].indexOf(layer.type) > -1;
     })) {
-      createHoverOverlay(chart, scalePointPosition);
+      createHoverOverlay(chart, showOverlayTooltip, clearOverlayTooltip);
     }
-    function hoverTip(event) {
-      var data = d3.select(this).data()[0];
-      var thisLayer = lys.filter(function(d) {
-        var keepLayer = Object.values(data).filter(function(e) {
-          return e == d.label;
-        });
-        return keepLayer == d.label;
+    if (lys.some(function(layer) {
+      return layer.type === "donut";
+    })) {
+      bindOrdinalHover(".donut", function(d, layer) {
+        return {
+          title: { text: layer.mapping.x_var + ": " + d.data[layer.mapping.x_var] },
+          items: [{
+            color: chart.colorDiscrete(d.index),
+            label: layer.mapping.y_var,
+            value: d.data[layer.mapping.y_var]
+          }]
+        };
       });
-      var xData = xFormat(data[thisLayer[0].mapping.x_var]);
-      var yData = yFormat(data[thisLayer[0].mapping.y_var]);
-      var groupData = thisLayer[0].label;
-      var color = resolveColor(that, groupData, thisLayer[0].color);
+    }
+    if (lys.some(function(layer) {
+      return layer.type === "treemap";
+    })) {
+      chart.chart.selectAll(".root").on("mouseout", clearTreemap).on("mouseover", showTreemap).on("mousemove", showTreemap).on("touchstart", function(event) {
+        event.preventDefault();
+        showTreemap.call(this, event);
+      }).on("touchmove", function(event) {
+        event.preventDefault();
+        showTreemap.call(this, event);
+      }).on("touchend", clearTreemap);
+    }
+    function bindElementLayer(layer) {
+      var renderer = getRendererForLayer(layer);
+      var selector = renderer.getHoverSelector ? renderer.getHoverSelector(chart, layer) : "." + tagName(layer.type, chart.element.id, layer.label);
+      chart.chart.selectAll(selector).on("mouseout", function() {
+        clearElementHover.call(this, layer);
+      }).on("mouseover", function(event) {
+        showElementHover.call(this, event, layer);
+      }).on("mousemove", function(event) {
+        showElementHover.call(this, event, layer);
+      }).on("touchstart", function(event) {
+        event.preventDefault();
+        showElementHover.call(this, event, layer);
+      }).on("touchmove", function(event) {
+        event.preventDefault();
+        showElementHover.call(this, event, layer);
+      }).on("touchend", function() {
+        clearElementHover.call(this, layer);
+      });
+    }
+    function showElementHover(event, layer) {
+      var data = d3.select(this).data()[0];
+      var renderer = getRendererForLayer(layer);
+      var tooltip = buildTooltip(layer, renderer, data, this);
       if (HTMLWidgets.shinyMode) {
         Shiny.onInputChange("myIO-" + that.element.id + "-rollover", JSON.stringify(data));
       }
-      d3.select(this).style("stroke-width", "4px").style("stroke", color);
-      showTooltip(
-        that,
-        d3.pointer(event, this)[0] > horizontalBreakPoint ? horizontalBreakPoint : d3.pointer(event, this)[0],
-        d3.pointer(event, this)[1] > verticalBreakPoint ? verticalBreakPoint - 70 : Math.max(d3.pointer(event, this)[1] - 70, 0)
-      );
-      setTooltipContent(
-        that,
-        "<span>" + thisLayer[0].mapping.x_var + ": " + xData + "</span>",
-        '<div class="dot" style="background-color:' + color + ';"></div><span><strong>' + thisLayer[0].mapping.y_var + "</strong> " + yData + "</span>"
-      );
-    }
-    function hoverTipHide() {
-      d3.select(this).transition().duration(800).style("stroke-width", "0px").style("stroke", "transparent");
-      hideTooltip(that, 800);
-    }
-    function scalePointPosition(event) {
-      var tipText = [];
-      var mouse = d3.pointer(event, this);
-      var indexExtent = d3.max(lys.map(function(d) {
-        return d.data.length;
-      }));
-      var xPos = that.xScale.invert(mouse[0]);
-      var bisect = d3.bisector(function(d) {
-        return +d[0];
-      }).left;
-      lys.forEach(function(d) {
-        var values = d.data;
-        var x_var = d.mapping.x_var;
-        var layerIndex = values.map(function(value) {
-          return value[x_var];
-        });
-        var layerIndexLength = values.length;
-        var y_var = that.newY ? that.newY : d.mapping.y_var;
-        var idx = bisect(layerIndex, xPos);
-        var d0 = values[idx - 1];
-        var d1 = values[idx];
-        var v;
-        if (d0 == void 0 | d1 == void 0) {
-          if (layerIndexLength < indexExtent) {
-            if (xPos < d3.max(layerIndex, function(value) {
-              return +value;
-            }) + 0.5) {
-              v = d0;
-            } else {
-              return;
-            }
-          } else {
-            return;
-          }
-        } else {
-          v = xPos - d0[x_var] > d1[x_var] - xPos ? d1 : d0;
-        }
-        tipText.push({
-          color: d.color,
-          label: d.label,
-          x_var,
-          y_var,
-          toolTip_var: d.mapping.toolTip,
-          values: v
-        });
+      applyElementHighlight(this, layer, data);
+      showChartTooltip(that, {
+        pointer: getContainerPointer(event),
+        title: tooltip.title,
+        items: tooltip.items
       });
-      if (HTMLWidgets.shinyMode) {
-        Shiny.onInputChange("myIO-" + that.element.id + "-rollover", JSON.stringify(tipText.map(function(d) {
-          return d.values;
-        })));
+    }
+    function clearElementHover(layer) {
+      removeElementHighlight(this, layer);
+      hideChartTooltip(that);
+    }
+    function buildTooltip(layer, renderer, data, node) {
+      if (layer.type === "hexbin") {
+        var pointFormat = d3.format(",.2f");
+        return {
+          title: { text: "x: " + pointFormat(that.xScale.invert(data.x)) + ", y: " + pointFormat(that.yScale.invert(data.y)) },
+          items: [{ color: d3.select(node).attr("fill"), label: "Count", value: data.length }]
+        };
       }
-      if (tipText[0] != void 0) {
-        that.toolLine.style("stroke", "black").style("stroke-dasharray", "1,1").attr("x1", that.xScale(tipText[0].values[tipText[0].x_var])).attr("x2", that.xScale(tipText[0].values[tipText[0].x_var])).attr("y1", 0).attr("y2", that.height - (that.margin.top + that.margin.bottom));
-        showTooltip(
-          that,
-          d3.pointer(event, this)[0] > horizontalBreakPoint ? horizontalBreakPoint : that.xScale(tipText[0].values[tipText[0].x_var]),
-          d3.pointer(event, this)[1] > verticalBreakPoint ? verticalBreakPoint - 70 : Math.max(d3.pointer(event, this)[1] - 70, 0)
-        );
-        setTooltipContent(that, "<span>" + tipText[0].x_var + ": " + xFormat(tipText[0].values[tipText[0].x_var]) + "</span>", (function() {
-          var y_text = [];
-          tipText.forEach(function(d) {
-            y_text.push('<div class="dot" style="background-color:' + d.color + ';"></div><span><strong>' + d.label + "</strong>: " + currentFormatY(d.values[d.y_var]) + "</span><br>");
-          });
-          return y_text.join(" ");
-        })());
+      if (layer.type === "histogram") {
+        return {
+          title: { text: "Bin: " + data.x0 + " to " + data.x1 },
+          items: [{ color: d3.select(node).attr("fill"), label: "Count", value: data.length }]
+        };
+      }
+      var titleText = layer.mapping.x_var + ": " + xFormat(data[layer.mapping.x_var]);
+      var yKey = that.newY ? that.newY : layer.mapping.y_var;
+      var label = layer.type === "point" || layer.type === "bar" ? layer.mapping.y_var : layer.label;
+      var color = resolveColor(that, layer.label, layer.color);
+      if (renderer && typeof renderer.formatTooltip === "function") {
+        var formatted = renderer.formatTooltip(that, data, layer);
+        titleText = formatted.title || titleText;
+        label = formatted.label || label;
+        color = formatted.color || color;
+      }
+      return {
+        title: { text: titleText },
+        items: [{ color, label, value: currentFormatY(data[yKey]) }]
+      };
+    }
+    function applyElementHighlight(node, layer) {
+      var selection = d3.select(node);
+      var color = layer.type === "hexbin" ? "#333" : selection.attr("fill") || selection.style("fill") || resolveColor(that, layer.label, layer.color);
+      if (layer.type === "hexbin") {
+        selection.style("stroke", color).style("stroke-width", "2px");
+        return;
+      }
+      selection.interrupt().style("stroke", color).style("stroke-width", "2px").style("stroke-opacity", 0.8);
+      if (layer.type === "point") {
+        selection.attr("r", Math.max(+selection.attr("r") || 0, 6));
       }
     }
-    function hoverHex() {
-      var data = d3.select(this).data()[0];
-      var color = d3.select(this).attr("fill");
-      var xPoint = data.x;
-      var yPoint = data.y;
-      var pointFormat = d3.format(",.2f");
-      if (HTMLWidgets.shinyMode) {
-        Shiny.onInputChange("myIO-" + that.element.id + "-rollover", JSON.stringify(data));
+    function removeElementHighlight(node, layer) {
+      var selection = d3.select(node);
+      selection.interrupt().transition().duration(HOVER_TRANSITION_MS).style("stroke-width", layer.type === "hexbin" ? "0px" : "0px").style("stroke", "transparent").style("stroke-opacity", null);
+      if (layer.type === "point") {
+        selection.transition().duration(HOVER_TRANSITION_MS).attr("r", pointRadius(that));
       }
-      showTooltip(that, xPoint > horizontalBreakPoint ? horizontalBreakPoint : xPoint, yPoint > verticalBreakPoint ? verticalBreakPoint - 70 : Math.max(yPoint - 70, 0));
-      setTooltipContent(that, "<span>x: " + pointFormat(that.xScale.invert(xPoint)) + ", y: " + pointFormat(that.yScale.invert(yPoint)) + "</span>", '<div class="dot" style="background-color:' + color + ';"></div><span><strong>Count: </strong> ' + data.length + "</span>");
     }
-    function hoverHexHide() {
-      hideTooltip(that, 800);
-    }
-    function hoverGroupedBar(event) {
+    function showGroupedBar(event) {
       var data = d3.select(this).data()[0];
       var thisLayer = lys[data.idx];
-      var xData = xFormat(data.data[0]);
-      var yData = currentFormatY(data[1] - data[0]);
-      var groupData = thisLayer.label;
-      var color = resolveColor(that, groupData, thisLayer.color);
+      var color = resolveColor(that, thisLayer.label, thisLayer.color);
       if (HTMLWidgets.shinyMode) {
         Shiny.onInputChange("myIO-" + that.element.id + "-rollover", JSON.stringify(data.data.values));
       }
-      d3.select(this).style("opacity", 0.8);
-      showTooltip(
-        that,
-        d3.pointer(event, this)[0] > horizontalBreakPoint ? horizontalBreakPoint : d3.pointer(event, this)[0],
-        d3.pointer(event, this)[1] > verticalBreakPoint ? verticalBreakPoint - 70 : Math.max(d3.pointer(event, this)[1] - 70, 0)
-      );
-      setTooltipContent(that, "<span>" + thisLayer.mapping.x_var + ": " + xData + "</span>", '<div class="dot" style="background-color:' + color + ';"></div><span><strong>' + thisLayer.mapping.y_var + "</strong> " + yData + "</span>");
+      d3.select(this).interrupt().style("stroke", color).style("stroke-width", "2px").style("stroke-opacity", 0.8);
+      showChartTooltip(that, {
+        pointer: getContainerPointer(event),
+        title: { text: thisLayer.mapping.x_var + ": " + xFormat(data.data[0]) },
+        items: [{ color, label: thisLayer.mapping.y_var, value: currentFormatY(data[1] - data[0]) }]
+      });
     }
-    function hoverGroupedBarHide() {
-      d3.select(this).style("opacity", null);
-      hideTooltip(that, 800);
+    function clearGroupedBar() {
+      d3.select(this).interrupt().transition().duration(HOVER_TRANSITION_MS).style("stroke-width", "0px").style("stroke", "transparent").style("stroke-opacity", null);
+      hideChartTooltip(that);
     }
-    function hoverHistogram() {
-      var data = d3.select(this).data()[0];
-      var color = d3.select(this).attr("fill");
-      var xPoint = data.x0;
-      var yPoint = data.length;
-      if (HTMLWidgets.shinyMode) {
-        Shiny.onInputChange("myIO-" + that.element.id + "-rollover", JSON.stringify(data));
+    function showOverlayTooltip(event) {
+      var mouse = d3.pointer(event, this);
+      var xPos = that.xScale.invert(mouse[0]);
+      var tipText = [];
+      var bisect = d3.bisector(function(d) {
+        return +d[0];
+      }).left;
+      lys.forEach(function(layer) {
+        var values = layer.data;
+        var xVar = layer.mapping.x_var;
+        var yVar = that.newY ? that.newY : layer.mapping.y_var;
+        var layerIndex = values.map(function(value) {
+          return value[xVar];
+        });
+        var idx = bisect(layerIndex, xPos);
+        var d0 = values[idx - 1];
+        var d1 = values[idx];
+        var v = !d0 ? d1 : !d1 ? d0 : xPos - d0[xVar] > d1[xVar] - xPos ? d1 : d0;
+        if (!v) {
+          return;
+        }
+        tipText.push({
+          color: layer.color,
+          label: layer.label,
+          xVar,
+          yVar,
+          value: v
+        });
+      });
+      if (tipText.length === 0) {
+        clearOverlayTooltip();
+        return;
       }
-      showTooltip(
-        that,
-        that.xScale(xPoint) > horizontalBreakPoint ? horizontalBreakPoint : that.xScale(xPoint),
-        that.yScale(yPoint) > verticalBreakPoint ? verticalBreakPoint - 70 : Math.max(that.yScale(yPoint) - 70, 0)
-      );
-      setTooltipContent(that, "<span>Bin: " + data.x0 + " to " + data.x1 + "</span>", '<div class="dot" style="background-color:' + color + ';"></div><span><strong>Count: </strong> ' + data.length + "</span>");
+      if (HTMLWidgets.shinyMode) {
+        Shiny.onInputChange("myIO-" + that.element.id + "-rollover", JSON.stringify(tipText.map(function(d) {
+          return d.value;
+        })));
+      }
+      var xValue = tipText[0].value[tipText[0].xVar];
+      that.toolLine.style("stroke", "var(--chart-ref-line-color)").style("stroke-width", "1px").style("stroke-dasharray", "4,4").attr("x1", that.xScale(xValue)).attr("x2", that.xScale(xValue)).attr("y1", 0).attr("y2", that.height - (that.margin.top + that.margin.bottom));
+      var points = that.toolPointLayer.selectAll("circle").data(tipText);
+      points.exit().remove();
+      points.enter().append("circle").attr("r", 4).merge(points).attr("cx", function(d) {
+        return that.xScale(d.value[d.xVar]);
+      }).attr("cy", function(d) {
+        return that.yScale(d.value[d.yVar]);
+      }).attr("fill", "#ffffff").attr("stroke", function(d) {
+        return d.color;
+      }).attr("stroke-width", 2);
+      showChartTooltip(that, {
+        pointer: getContainerPointer(event),
+        title: { text: tipText[0].xVar + ": " + xFormat(xValue) },
+        items: tipText.map(function(d) {
+          return { color: d.color, label: d.label, value: currentFormatY(d.value[d.yVar]) };
+        })
+      });
     }
-    function hoverHistogramHide() {
-      hideTooltip(that, 500);
+    function clearOverlayTooltip() {
+      if (that.toolLine) {
+        that.toolLine.style("stroke", "none");
+      }
+      if (that.toolPointLayer) {
+        that.toolPointLayer.selectAll("*").remove();
+      }
+      hideChartTooltip(that);
+    }
+    function bindOrdinalHover(selector, tooltipBuilder) {
+      var layer = lys.filter(function(candidate) {
+        return candidate.type === "donut";
+      })[0];
+      chart.chart.selectAll(selector).on("mouseout", function() {
+        chart.chart.selectAll(selector).transition().duration(HOVER_TRANSITION_MS).style("opacity", 1);
+        hideChartTooltip(that);
+      }).on("mouseover", function(event, d) {
+        chart.chart.selectAll(selector).style("opacity", 0.4);
+        d3.select(this).style("opacity", 0.85);
+        var tooltip = tooltipBuilder(d, layer);
+        showChartTooltip(that, { pointer: getContainerPointer(event), title: tooltip.title, items: tooltip.items });
+      }).on("mousemove", function(event, d) {
+        var tooltip = tooltipBuilder(d, layer);
+        showChartTooltip(that, { pointer: getContainerPointer(event), title: tooltip.title, items: tooltip.items });
+      });
+    }
+    function showTreemap(event, d) {
+      var layer = lys.filter(function(candidate) {
+        return candidate.type === "treemap";
+      })[0];
+      var colorNode = d;
+      while (colorNode.depth > 1) {
+        colorNode = colorNode.parent;
+      }
+      chart.chart.selectAll(".root").style("opacity", 0.4);
+      d3.select(this).style("opacity", 0.85);
+      showChartTooltip(that, {
+        pointer: getContainerPointer(event),
+        title: { text: layer.mapping.level_1 + ": " + d.data[layer.mapping.level_1] },
+        items: [{
+          color: chart.colorDiscrete(colorNode.data.id),
+          label: d.data[layer.mapping.level_2],
+          value: d.value
+        }]
+      });
+    }
+    function clearTreemap() {
+      chart.chart.selectAll(".root").transition().duration(HOVER_TRANSITION_MS).style("opacity", 1);
+      hideChartTooltip(that);
+    }
+    function getContainerPointer(event) {
+      return d3.pointer(event, that.dom.element);
     }
   }
 
@@ -1783,7 +1984,7 @@
     return { errors, warnings };
   }
   function validateLayers(chart) {
-    const layers = chart.config.layers || [];
+    const layers = chart.derived.currentLayers || chart.config.layers || [];
     const composition = validateComposition(layers);
     if (!composition.valid) {
       composition.errors.forEach(function(message) {
@@ -1845,33 +2046,41 @@
     });
     var itemWidth = responsiveValue(chart, 140, 125);
     var itemHeight = responsiveValue(chart, 25, 22);
-    var n = isMobile(chart) ? Math.floor(chart.totalWidth / itemWidth) : 1;
+    var n = isMobile(chart) ? Math.max(1, Math.floor(chart.totalWidth / itemWidth)) : 1;
     svg.append("rect").attr("class", "legend-box").attr("transform", "translate(5," + responsiveValue(chart, m.top, 0) + ")").style("width", responsiveValue(chart, chart.totalWidth - chart.width, chart.totalWidth - chart.margin.left)).style("fill", "white").style("opacity", 0.75);
     chart.plotLayers.forEach(function(layer, i) {
       var legendElement = svg.append("g").attr("class", "legendElements").selectAll(".legendElement").data([layer.label]).enter().append("g").attr("class", "legendElement").attr("transform", function() {
         return "translate(" + i % n * itemWidth + "," + Math.floor(i / n) * itemHeight + ")";
-      }).attr("text-anchor", "start").attr("font-size", responsiveValue(chart, 12, 10)).style("opacity", currentLayerIndex.indexOf(layer.label) > -1 ? 1 : 0.5).on("click", toggleLine);
+      }).attr("text-anchor", "start").attr("font-size", responsiveValue(chart, 12, 10)).style("opacity", 1).attr("tabindex", 0).attr("role", "switch").attr("aria-checked", currentLayerIndex.indexOf(layer.label) > -1 ? "true" : "false").on("click", toggleLine).on("keydown", function(event) {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          toggleLine.call(this, event);
+        }
+      }).on("mouseover", hoverLegend).on("mouseout", resetLegendHover);
       if (layer.type === "point") {
-        legendElement.append("circle").attr("cx", 5).attr("cy", 6).attr("r", 5).attr("fill", layer.color).attr("stroke", layer.color);
+        legendElement.append("circle").attr("class", "legend-swatch").attr("cx", 5).attr("cy", 6).attr("r", 5).attr("fill", layer.color).attr("stroke", layer.color);
       } else {
-        legendElement.append("rect").attr("x", 5).attr("y", layer.type === "line" ? 5 : 0).attr("width", 12).attr("height", 12).attr("fill", layer.color).attr("stroke", layer.color);
+        legendElement.append("rect").attr("class", "legend-swatch").attr("x", 5).attr("y", layer.type === "line" ? 5 : 0).attr("width", 12).attr("height", 12).attr("fill", layer.color).attr("stroke", layer.color);
       }
-      legendElement.append("text").attr("x", 20).attr("y", 10.5).attr("dy", "0.35em").text(function(d) {
+      legendElement.append("text").attr("class", "legend-label").attr("x", 20).attr("y", 10.5).attr("dy", "0.35em").text(function(d) {
         return d;
       });
+      applyLegendState(legendElement, currentLayerIndex.indexOf(layer.label) > -1);
     });
     var filteredElements = hiddenLayers ? hiddenLayers : [];
     function toggleLine() {
       var selectedData = d3.select(this).data();
+      var isVisible;
       if (!filteredElements.includes(selectedData[0])) {
         filteredElements.push(selectedData[0]);
-        d3.select(this).style("opacity", 0.5);
+        isVisible = false;
       } else {
         filteredElements = filteredElements.filter(function(d) {
-          return d != selectedData[0];
+          return d !== selectedData[0];
         });
-        d3.select(this).style("opacity", 1);
+        isVisible = true;
       }
+      applyLegendState(d3.select(this), isVisible);
       var filteredLayers = chart.plotLayers.filter(function(d) {
         return filteredElements.indexOf(d.label) === -1;
       });
@@ -1880,15 +2089,23 @@
       }).map(function(d) {
         return d.label;
       });
-      chart.currentLayers = filteredLayers;
-      if (chart.currentLayers.length === 0) {
-        chart.removeLayers(removedLayers);
-        return;
-      }
-      chart.processScales(chart.currentLayers);
+      chart.derived.currentLayers = filteredLayers;
+      chart.syncLegacyAliases();
       chart.removeLayers(removedLayers);
-      chart.routeLayers(chart.currentLayers);
-      if (chart.currentLayers[0].type != "groupedBar") chart.updateAxes();
+      chart.renderCurrentLayers();
+    }
+    function hoverLegend() {
+      var isVisible = d3.select(this).attr("aria-checked") === "true";
+      d3.select(this).style("opacity", isVisible ? 0.8 : 0.3);
+    }
+    function resetLegendHover() {
+      var isVisible = d3.select(this).attr("aria-checked") === "true";
+      d3.select(this).style("opacity", isVisible ? 1 : null);
+    }
+    function applyLegendState(selection, isVisible) {
+      selection.attr("aria-checked", isVisible ? "true" : "false").style("opacity", isVisible ? 1 : null);
+      selection.select(".legend-swatch").style("opacity", isVisible ? 1 : "var(--chart-legend-inactive-opacity)");
+      selection.select("text").style("text-decoration", isVisible ? "none" : "line-through");
     }
   }
   function updateOrdinalColorLegend(chart, ly) {
@@ -1898,7 +2115,7 @@
     var svg = chart.legendArea;
     var itemWidth = responsiveValue(chart, 140, 125);
     var itemHeight = responsiveValue(chart, 25, 22);
-    var n = isMobile(chart) ? Math.floor(chart.totalWidth / itemWidth) : 1;
+    var n = isMobile(chart) ? Math.max(1, Math.floor(chart.totalWidth / itemWidth)) : 1;
     var colorKey = [];
     svg.append("rect").attr("class", "legend-box").attr("transform", "translate(5," + responsiveValue(chart, m.top, 0) + ")").style("width", responsiveValue(chart, chart.totalWidth - chart.width, chart.totalWidth - chart.margin.left)).style("fill", "white").style("opacity", 0.75);
     if (ly.type === "treemap") {
@@ -1911,10 +2128,11 @@
       });
     }
     colorKey.forEach(function(d, i) {
-      var legendElement = svg.append("g").attr("class", "legendElements").selectAll(".legendElement").data([d]).enter().append("g").attr("class", "legendElement").attr("transform", function() {
+      var swatchColor = ly.type === "treemap" ? chart.colorDiscrete("treemap." + d) : chart.colorDiscrete(i);
+      var legendElement = svg.append("g").attr("class", "legendElements").selectAll(".legendElement").data([d]).enter().append("g").attr("class", "legendElement").attr("tabindex", 0).attr("transform", function() {
         return "translate(" + i % n * itemWidth + "," + Math.floor(i / n) * itemHeight + ")";
       }).attr("text-anchor", "start").attr("font-size", responsiveValue(chart, 12, 10));
-      legendElement.append("rect").attr("x", 5).attr("width", 12).attr("height", 12).attr("fill", ly.type == "treemap" ? chart.colorDiscrete("treemap." + d) : chart.colorDiscrete(d)).attr("stroke", ly.type == "treemap" ? chart.colorDiscrete("treemap." + d) : chart.colorDiscrete(d));
+      legendElement.append("rect").attr("x", 5).attr("width", 12).attr("height", 12).attr("fill", swatchColor).attr("stroke", swatchColor);
       legendElement.append("text").attr("x", 20).attr("y", 10.5).attr("dy", "0.35em").text(d);
     });
   }
@@ -2053,8 +2271,12 @@
         totalWidth: Math.max(opts.width, MIN_CHART_WIDTH),
         layout: "grouped",
         activeY: null,
-        activeYFormat: null
+        activeYFormat: null,
+        tooltipHideTimer: null
       };
+      if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        this.config.transitions.speed = 0;
+      }
       this.runtime.width = !isMobile(this) && !this.config.layout.suppressLegend ? this.runtime.totalWidth * PLOT_WIDTH_RATIO : this.runtime.totalWidth;
       this.syncLegacyAliases();
       this.draw();
@@ -2099,6 +2321,7 @@
       this.newScaleY = this.runtime ? this.runtime.activeYFormat : null;
       this.toolLine = this.runtime ? this.runtime.toolLine : null;
       this.toolTipBox = this.runtime ? this.runtime.toolTipBox : null;
+      this.toolPointLayer = this.runtime ? this.runtime.toolPointLayer : null;
       this.xScale = this.derived ? this.derived.xScale : null;
       this.yScale = this.derived ? this.derived.yScale : null;
       this.colorDiscrete = this.derived ? this.derived.colorDiscrete : null;
@@ -2126,6 +2349,7 @@
       this.runtime.activeYFormat = this.newScaleY || this.runtime.activeYFormat;
       this.runtime.toolLine = this.toolLine || this.runtime.toolLine;
       this.runtime.toolTipBox = this.toolTipBox || this.runtime.toolTipBox;
+      this.runtime.toolPointLayer = this.toolPointLayer || this.runtime.toolPointLayer;
       this.derived.xScale = this.xScale || this.derived.xScale;
       this.derived.yScale = this.yScale || this.derived.yScale;
       this.derived.colorDiscrete = this.colorDiscrete || this.derived.colorDiscrete;
@@ -2145,6 +2369,14 @@
     initialize() {
       this.derived.currentLayers = this.config.layers;
       this.syncLegacyAliases();
+      if (this.config.theme) {
+        var el = this.dom.element;
+        Object.keys(this.config.theme).forEach(function(key) {
+          if (this.config.theme[key] != null) {
+            el.style.setProperty("--" + key, this.config.theme[key]);
+          }
+        }, this);
+      }
       this.addButtons(this.derived.currentLayers);
       initializeTooltip(this);
       this.captureLegacyAliases();
@@ -2164,7 +2396,12 @@
         this.emit("beforeRender", { options });
         this.derived.currentLayers = validateLayers(this);
         this.syncLegacyAliases();
+        this.clearEmptyState();
         if (!isCurrent()) {
+          return;
+        }
+        if (this.derived.currentLayers.length === 0) {
+          this.renderEmptyState();
           return;
         }
         const state = deriveChartRender(this);
@@ -2173,6 +2410,7 @@
         if (!isCurrent()) {
           return;
         }
+        this.addButtons(this.derived.currentLayers);
         this.emit("afterScales", { state });
         syncAxes(this, state, options);
         this.routeLayers(this.derived.currentLayers);
@@ -2183,6 +2421,35 @@
       } catch (error) {
         this.emit("error", { message: error.message, error });
         throw error;
+      }
+    }
+    clearEmptyState() {
+      if (this.dom && this.dom.svg) {
+        this.dom.svg.selectAll(".myIO-empty-state").remove();
+      }
+      if (this.dom && this.dom.element) {
+        d3.select(this.dom.element).select(".buttonDiv").style("display", null);
+      }
+    }
+    renderEmptyState() {
+      if (this.dom.chartArea) {
+        this.dom.chartArea.selectAll("*").interrupt().remove();
+      }
+      if (this.dom.plot) {
+        this.dom.plot.selectAll(".x-axis, .y-axis").interrupt().remove();
+        this.dom.plot.selectAll(".ref-x-line, .ref-y-line").remove();
+      }
+      if (this.dom.legendArea) {
+        this.dom.legendArea.selectAll("*").remove();
+      }
+      removeHoverOverlay(this);
+      hideChartTooltip(this);
+      if (this.dom.element) {
+        d3.select(this.dom.element).select(".buttonDiv").style("display", "none");
+      }
+      if (this.dom.svg) {
+        this.dom.svg.selectAll(".myIO-empty-state").remove();
+        this.dom.svg.append("text").attr("class", "myIO-empty-state").attr("x", this.runtime.totalWidth / 2).attr("y", this.runtime.height / 2).text("No data to display");
       }
     }
     addButtons(layers) {
@@ -2286,6 +2553,7 @@
     destroy() {
       this.emit("destroy", {});
       clearTimeout(this.runtime && this.runtime.resizeTimer);
+      clearTimeout(this.runtime && this.runtime.tooltipHideTimer);
       if (this.dom && this.dom.chartArea) {
         this.dom.chartArea.selectAll("*").interrupt();
       }

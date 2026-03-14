@@ -45,7 +45,7 @@ export class TreemapRenderer {
       .attr("fill", function(d) { while (d.depth > 1) d = d.parent; return chart.colorDiscrete(d.data.id); });
 
     cell.merge(newCell)
-      .transition().duration(750)
+      .transition().duration(750).ease(d3.easeQuad)
       .attr("transform", function(d) { return "translate(" + d.x0 + "," + d.y0 + ")"; })
       .select("rect")
       .attr("width", function(d) { return d.x1 - d.x0; })

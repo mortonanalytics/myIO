@@ -51,6 +51,7 @@ myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL
         toggleY = list(variable = NULL, format = NULL),
         toolTipOptions = list(suppressY = FALSE)
       ),
+      theme = list(),
       transitions = list(speed = 1000),
       referenceLines = list(x = NULL, y = NULL)
     )

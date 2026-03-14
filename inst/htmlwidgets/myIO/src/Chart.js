@@ -9,7 +9,7 @@ import { syncAxes } from "./layout/axes.js";
 import { syncLegend, updateOrdinalColorLegend as updateOrdinalColorLegendImpl } from "./layout/legend.js";
 import { syncReferenceLines } from "./layout/reference-lines.js";
 import { getChartHeight, initializeScaffold, updateScaffoldLayout } from "./layout/scaffold.js";
-import { initializeTooltip, removeHoverOverlay } from "./tooltip.js";
+import { hideChartTooltip, initializeTooltip, removeHoverOverlay } from "./tooltip.js";
 import { isMobile, tagName } from "./utils/responsive.js";
 
 const MIN_CHART_WIDTH = 280;
@@ -58,8 +58,12 @@ export class myIOchart {
       totalWidth: Math.max(opts.width, MIN_CHART_WIDTH),
       layout: "grouped",
       activeY: null,
-      activeYFormat: null
+      activeYFormat: null,
+      tooltipHideTimer: null
     };
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      this.config.transitions.speed = 0;
+    }
     this.runtime.width = !isMobile(this) && !this.config.layout.suppressLegend
       ? this.runtime.totalWidth * PLOT_WIDTH_RATIO
       : this.runtime.totalWidth;
@@ -113,6 +117,7 @@ export class myIOchart {
     this.newScaleY = this.runtime ? this.runtime.activeYFormat : null;
     this.toolLine = this.runtime ? this.runtime.toolLine : null;
     this.toolTipBox = this.runtime ? this.runtime.toolTipBox : null;
+    this.toolPointLayer = this.runtime ? this.runtime.toolPointLayer : null;
     this.xScale = this.derived ? this.derived.xScale : null;
     this.yScale = this.derived ? this.derived.yScale : null;
     this.colorDiscrete = this.derived ? this.derived.colorDiscrete : null;
@@ -141,6 +146,7 @@ export class myIOchart {
     this.runtime.activeYFormat = this.newScaleY || this.runtime.activeYFormat;
     this.runtime.toolLine = this.toolLine || this.runtime.toolLine;
     this.runtime.toolTipBox = this.toolTipBox || this.runtime.toolTipBox;
+    this.runtime.toolPointLayer = this.toolPointLayer || this.runtime.toolPointLayer;
     this.derived.xScale = this.xScale || this.derived.xScale;
     this.derived.yScale = this.yScale || this.derived.yScale;
     this.derived.colorDiscrete = this.colorDiscrete || this.derived.colorDiscrete;
@@ -162,6 +168,14 @@ export class myIOchart {
   initialize() {
     this.derived.currentLayers = this.config.layers;
     this.syncLegacyAliases();
+    if (this.config.theme) {
+      var el = this.dom.element;
+      Object.keys(this.config.theme).forEach(function(key) {
+        if (this.config.theme[key] != null) {
+          el.style.setProperty("--" + key, this.config.theme[key]);
+        }
+      }, this);
+    }
     this.addButtons(this.derived.currentLayers);
     initializeTooltip(this);
     this.captureLegacyAliases();
@@ -182,7 +196,12 @@ export class myIOchart {
       this.emit("beforeRender", { options });
       this.derived.currentLayers = validateLayers(this);
       this.syncLegacyAliases();
+      this.clearEmptyState();
       if (!isCurrent()) {
+        return;
+      }
+      if (this.derived.currentLayers.length === 0) {
+        this.renderEmptyState();
         return;
       }
       const state = deriveChartRender(this);
@@ -191,6 +210,7 @@ export class myIOchart {
       if (!isCurrent()) {
         return;
       }
+      this.addButtons(this.derived.currentLayers);
       this.emit("afterScales", { state });
       syncAxes(this, state, options);
       this.routeLayers(this.derived.currentLayers);
@@ -201,6 +221,41 @@ export class myIOchart {
     } catch (error) {
       this.emit("error", { message: error.message, error });
       throw error;
+    }
+  }
+
+  clearEmptyState() {
+    if (this.dom && this.dom.svg) {
+      this.dom.svg.selectAll(".myIO-empty-state").remove();
+    }
+    if (this.dom && this.dom.element) {
+      d3.select(this.dom.element).select(".buttonDiv").style("display", null);
+    }
+  }
+
+  renderEmptyState() {
+    if (this.dom.chartArea) {
+      this.dom.chartArea.selectAll("*").interrupt().remove();
+    }
+    if (this.dom.plot) {
+      this.dom.plot.selectAll(".x-axis, .y-axis").interrupt().remove();
+      this.dom.plot.selectAll(".ref-x-line, .ref-y-line").remove();
+    }
+    if (this.dom.legendArea) {
+      this.dom.legendArea.selectAll("*").remove();
+    }
+    removeHoverOverlay(this);
+    hideChartTooltip(this);
+    if (this.dom.element) {
+      d3.select(this.dom.element).select(".buttonDiv").style("display", "none");
+    }
+    if (this.dom.svg) {
+      this.dom.svg.selectAll(".myIO-empty-state").remove();
+      this.dom.svg.append("text")
+        .attr("class", "myIO-empty-state")
+        .attr("x", this.runtime.totalWidth / 2)
+        .attr("y", this.runtime.height / 2)
+        .text("No data to display");
     }
   }
 
@@ -319,6 +374,7 @@ export class myIOchart {
   destroy() {
     this.emit("destroy", {});
     clearTimeout(this.runtime && this.runtime.resizeTimer);
+    clearTimeout(this.runtime && this.runtime.tooltipHideTimer);
     if (this.dom && this.dom.chartArea) {
       this.dom.chartArea.selectAll("*").interrupt();
     }

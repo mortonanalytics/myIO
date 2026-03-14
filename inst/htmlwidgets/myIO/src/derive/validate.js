@@ -104,7 +104,7 @@ export function validateAgainstContract(layer, contract) {
 }
 
 export function validateLayers(chart) {
-  const layers = chart.config.layers || [];
+  const layers = chart.derived.currentLayers || chart.config.layers || [];
   const composition = validateComposition(layers);
   if (!composition.valid) {
     composition.errors.forEach(function(message) {

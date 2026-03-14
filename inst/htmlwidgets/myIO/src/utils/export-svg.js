@@ -11,32 +11,11 @@ export function getSVGString(svgNode) {
   return svgString;
 
   function getCSSStyles(parentElement) {
-    var selectorTextArr = [];
-
-    selectorTextArr.push("#" + parentElement.id);
-    for (var c = 0; c < parentElement.classList.length; c++) {
-      if (!contains("." + parentElement.classList[c], selectorTextArr)) {
-        selectorTextArr.push("." + parentElement.classList[c]);
-      }
-    }
+    var selectorTextArr = collectSelectors(parentElement);
 
     var nodes = parentElement.getElementsByTagName("*");
     for (var i = 0; i < nodes.length; i++) {
-      var id = nodes[i].id;
-      if (!contains("#" + id, selectorTextArr)) {
-        selectorTextArr.push("#" + id);
-      }
-
-      if ("@" + id) {
-        selectorTextArr.push("@" + id);
-      }
-
-      var classes = nodes[i].classList;
-      for (var j = 0; j < classes.length; j++) {
-        if (!contains("." + classes[j], selectorTextArr)) {
-          selectorTextArr.push("." + classes[j]);
-        }
-      }
+      selectorTextArr = selectorTextArr.concat(collectSelectors(nodes[i]));
     }
 
     var extractedCSSText = "";
@@ -53,16 +32,50 @@ export function getSVGString(svgNode) {
       var cssRules = s.cssRules;
 
       for (var r = 0; r < cssRules.length; r++) {
-        if (contains(cssRules[r].selectorText, selectorTextArr)) {
-          extractedCSSText += cssRules[r].cssText;
+        var rule = cssRules[r];
+        if (rule.type === CSSRule.FONT_FACE_RULE || rule.selectorText === ":root") {
+          extractedCSSText += rule.cssText;
+          continue;
+        }
+
+        if (matchesRule(rule, parentElement, selectorTextArr)) {
+          extractedCSSText += rule.cssText;
         }
       }
     }
 
     return extractedCSSText;
 
-    function contains(str, arr) {
-      return arr.indexOf(str) !== -1;
+    function collectSelectors(node) {
+      var selectors = [];
+      if (node.id) {
+        selectors.push("#" + node.id);
+      }
+      if (node.classList) {
+        for (var c = 0; c < node.classList.length; c++) {
+          selectors.push("." + node.classList[c]);
+        }
+      }
+      return selectors;
+    }
+
+    function matchesRule(rule, rootNode, selectorList) {
+      if (!rule.selectorText) {
+        return false;
+      }
+
+      return rule.selectorText.split(",").some(function(selector) {
+        var trimmed = selector.trim();
+        if (selectorList.indexOf(trimmed) !== -1) {
+          return true;
+        }
+
+        try {
+          return !!rootNode.querySelector(trimmed);
+        } catch (e) {
+          return false;
+        }
+      });
     }
   }
 

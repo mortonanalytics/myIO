@@ -10,6 +10,7 @@ export function getChartHeight(chart) {
 
 export function initializeScaffold(chart) {
   d3.select(chart.element).selectAll(".myIO-svg, .buttonDiv, .toolTip").remove();
+  d3.select(chart.element).style("position", "relative");
 
   chart.svg = d3.select(chart.element)
     .append("svg")
@@ -17,7 +18,9 @@ export function initializeScaffold(chart) {
     .attr("id", "myIO-svg" + chart.element.id)
     .attr("width", chart.totalWidth)
     .attr("height", chart.height)
-    .attr("viewBox", "0 0 " + chart.totalWidth + " " + chart.height);
+    .attr("viewBox", "0 0 " + chart.totalWidth + " " + chart.height)
+    .attr("role", "img")
+    .attr("aria-label", buildAriaLabel(chart));
 
   applyPlotTransform(chart);
 
@@ -34,6 +37,19 @@ export function initializeScaffold(chart) {
       .style("height", responsiveValue(chart, chart.height, chart.height * 0.2))
       .style("width", responsiveValue(chart, chart.totalWidth - chart.width, chart.totalWidth - chart.margin.left));
   }
+}
+
+function buildAriaLabel(chart) {
+  var firstLayer = chart.plotLayers[0];
+  if (!firstLayer) {
+    return "Data visualization chart";
+  }
+
+  var chartType = firstLayer.type ? firstLayer.type.replace(/([A-Z])/g, " $1").toLowerCase() : "data visualization";
+  var xLabel = chart.options.xAxisLabel || chart.options.xAxisFormat || "x-axis";
+  var yLabel = chart.options.yAxisLabel || chart.options.yAxisFormat || "y-axis";
+
+  return chartType.charAt(0).toUpperCase() + chartType.slice(1) + " chart showing " + yLabel + " by " + xLabel;
 }
 
 export function updateScaffoldLayout(chart) {

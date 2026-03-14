@@ -37,7 +37,7 @@ export function updateLegend(chart) {
   var hiddenLayers = labelIndex.filter(function(d) { return currentLayerIndex.indexOf(d) < 0; });
   var itemWidth = responsiveValue(chart, 140, 125);
   var itemHeight = responsiveValue(chart, 25, 22);
-  var n = isMobile(chart) ? Math.floor(chart.totalWidth / itemWidth) : 1;
+  var n = isMobile(chart) ? Math.max(1, Math.floor(chart.totalWidth / itemWidth)) : 1;
 
   svg.append("rect")
     .attr("class", "legend-box")
@@ -59,11 +59,23 @@ export function updateLegend(chart) {
       })
       .attr("text-anchor", "start")
       .attr("font-size", responsiveValue(chart, 12, 10))
-      .style("opacity", currentLayerIndex.indexOf(layer.label) > -1 ? 1 : 0.5)
-      .on("click", toggleLine);
+      .style("opacity", 1)
+      .attr("tabindex", 0)
+      .attr("role", "switch")
+      .attr("aria-checked", currentLayerIndex.indexOf(layer.label) > -1 ? "true" : "false")
+      .on("click", toggleLine)
+      .on("keydown", function(event) {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          toggleLine.call(this, event);
+        }
+      })
+      .on("mouseover", hoverLegend)
+      .on("mouseout", resetLegendHover);
 
     if (layer.type === "point") {
       legendElement.append("circle")
+        .attr("class", "legend-swatch")
         .attr("cx", 5)
         .attr("cy", 6)
         .attr("r", 5)
@@ -71,6 +83,7 @@ export function updateLegend(chart) {
         .attr("stroke", layer.color);
     } else {
       legendElement.append("rect")
+        .attr("class", "legend-swatch")
         .attr("x", 5)
         .attr("y", layer.type === "line" ? 5 : 0)
         .attr("width", 12)
@@ -80,26 +93,32 @@ export function updateLegend(chart) {
     }
 
     legendElement.append("text")
+      .attr("class", "legend-label")
       .attr("x", 20)
       .attr("y", 10.5)
       .attr("dy", "0.35em")
       .text(function(d) { return d; });
+
+    applyLegendState(legendElement, currentLayerIndex.indexOf(layer.label) > -1);
   });
 
   var filteredElements = hiddenLayers ? hiddenLayers : [];
 
   function toggleLine() {
     var selectedData = d3.select(this).data();
+    var isVisible;
 
     if (!filteredElements.includes(selectedData[0])) {
       filteredElements.push(selectedData[0]);
-      d3.select(this).style("opacity", 0.5);
+      isVisible = false;
     } else {
       filteredElements = filteredElements.filter(function(d) {
-        return d != selectedData[0];
+        return d !== selectedData[0];
       });
-      d3.select(this).style("opacity", 1);
+      isVisible = true;
     }
+
+    applyLegendState(d3.select(this), isVisible);
 
     var filteredLayers = chart.plotLayers.filter(function(d) {
       return filteredElements.indexOf(d.label) === -1;
@@ -110,15 +129,32 @@ export function updateLegend(chart) {
       return d.label;
     });
 
-    chart.currentLayers = filteredLayers;
-    if (chart.currentLayers.length === 0) {
-      chart.removeLayers(removedLayers);
-      return;
-    }
-    chart.processScales(chart.currentLayers);
+    chart.derived.currentLayers = filteredLayers;
+    chart.syncLegacyAliases();
     chart.removeLayers(removedLayers);
-    chart.routeLayers(chart.currentLayers);
-    if (chart.currentLayers[0].type != "groupedBar") chart.updateAxes();
+    chart.renderCurrentLayers();
+  }
+
+  function hoverLegend() {
+    var isVisible = d3.select(this).attr("aria-checked") === "true";
+    d3.select(this).style("opacity", isVisible ? 0.8 : 0.3);
+  }
+
+  function resetLegendHover() {
+    var isVisible = d3.select(this).attr("aria-checked") === "true";
+    d3.select(this).style("opacity", isVisible ? 1 : null);
+  }
+
+  function applyLegendState(selection, isVisible) {
+    selection
+      .attr("aria-checked", isVisible ? "true" : "false")
+      .style("opacity", isVisible ? 1 : null);
+
+    selection.select(".legend-swatch")
+      .style("opacity", isVisible ? 1 : "var(--chart-legend-inactive-opacity)");
+
+    selection.select("text")
+      .style("text-decoration", isVisible ? "none" : "line-through");
   }
 }
 
@@ -131,7 +167,7 @@ export function updateOrdinalColorLegend(chart, ly) {
   var svg = chart.legendArea;
   var itemWidth = responsiveValue(chart, 140, 125);
   var itemHeight = responsiveValue(chart, 25, 22);
-  var n = isMobile(chart) ? Math.floor(chart.totalWidth / itemWidth) : 1;
+  var n = isMobile(chart) ? Math.max(1, Math.floor(chart.totalWidth / itemWidth)) : 1;
   var colorKey = [];
 
   svg.append("rect")
@@ -148,6 +184,7 @@ export function updateOrdinalColorLegend(chart, ly) {
   }
 
   colorKey.forEach(function(d, i) {
+    var swatchColor = ly.type === "treemap" ? chart.colorDiscrete("treemap." + d) : chart.colorDiscrete(i);
     var legendElement = svg.append("g")
       .attr("class", "legendElements")
       .selectAll(".legendElement")
@@ -155,6 +192,7 @@ export function updateOrdinalColorLegend(chart, ly) {
       .enter()
       .append("g")
       .attr("class", "legendElement")
+      .attr("tabindex", 0)
       .attr("transform", function() {
         return "translate(" + i % n * itemWidth + "," + Math.floor(i / n) * itemHeight + ")";
       })
@@ -165,8 +203,8 @@ export function updateOrdinalColorLegend(chart, ly) {
       .attr("x", 5)
       .attr("width", 12)
       .attr("height", 12)
-      .attr("fill", ly.type == "treemap" ? chart.colorDiscrete("treemap." + d) : chart.colorDiscrete(d))
-      .attr("stroke", ly.type == "treemap" ? chart.colorDiscrete("treemap." + d) : chart.colorDiscrete(d));
+      .attr("fill", swatchColor)
+      .attr("stroke", swatchColor);
 
     legendElement.append("text")
       .attr("x", 20)

@@ -39,7 +39,7 @@ function renderVerticalBars(chart, layer) {
     .selectAll("." + tagName("bar", chart.element.id, key))
     .data(data);
 
-  bars.exit().transition().duration(transitionSpeed).attr("y", chart.yScale(0)).remove();
+  bars.exit().transition().ease(d3.easeQuadIn).duration(transitionSpeed).attr("y", chart.yScale(0)).remove();
 
   var newBars = bars.enter()
     .append("rect")
@@ -57,8 +57,9 @@ function renderVerticalBars(chart, layer) {
 
   bars.merge(newBars)
     .transition()
-    .ease(d3.easeQuad)
+    .ease(d3.easeQuadOut)
     .duration(transitionSpeed)
+    .delay(function(d, i) { return i * 20; })
     .attr("x", function(d) {
       return defineVerticalScale(chart, d, layer, bandwidth, barSize, chart.options.categoricalScale.xAxis);
     })
@@ -92,7 +93,7 @@ function renderHorizontalBars(chart, layer) {
     .selectAll("." + tagName("bar", chart.element.id, key))
     .data(data);
 
-  bars.exit().transition().duration(transitionSpeed).attr("width", 0).remove();
+  bars.exit().transition().ease(d3.easeQuadIn).duration(transitionSpeed).attr("width", 0).remove();
 
   var newBars = bars.enter()
     .append("rect")
@@ -112,8 +113,9 @@ function renderHorizontalBars(chart, layer) {
 
   bars.merge(newBars)
     .transition()
-    .ease(d3.easeQuad)
+    .ease(d3.easeQuadOut)
     .duration(transitionSpeed)
+    .delay(function(d, i) { return i * 20; })
     .attr("y", function(d) {
       return barSize == 1 ? chart.yScale(d[layer.mapping.x_var]) : chart.yScale(d[layer.mapping.x_var]) + bandwidth / 4;
     })
