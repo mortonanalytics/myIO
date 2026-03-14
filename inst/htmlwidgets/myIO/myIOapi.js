@@ -1644,20 +1644,20 @@ class myIOchart {
 			.call(drag);
 		
 		
-		function dragStart(d) {
+		function dragStart(event, d) {
 			d3.select(this).raise().classed('active', true);
 		}
 		
-		function dragging(d) {
-			d[0] = that.xScale.invert(d3.event.x);
-			d[1] = that.yScale.invert(d3.event.y);
+		function dragging(event, d) {
+			d[0] = that.xScale.invert(event.x);
+			d[1] = that.yScale.invert(event.y);
 			
 			d3.select(this)
 				.attr('cx', that.xScale(d[0]))
 				.attr('cy', that.yScale(d[1]));
 		}
 		
-		function dragEnd(d){
+		function dragEnd(event, d){
 			d3.select(this).classed('active', false);
 
 			that.updateRegression(color, ly.label);
