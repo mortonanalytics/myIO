@@ -144,6 +144,7 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
     gauge = c("value"),
     histogram = c("value"),
     area = c("x_var", "low_y", "high_y"),
+    hexbin = c("x_var", "y_var", "radius"),
     c("x_var", "y_var")
   )
   missing_map <- setdiff(required_map, names(mapping))

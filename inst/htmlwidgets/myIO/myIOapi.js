@@ -1181,6 +1181,16 @@
       return BUTTON_LABELS[d.name];
     });
   }
+  function repositionButtons(chart) {
+    if (chart.options.suppressLegend) return;
+    var legendNode = chart.legendArea && chart.legendArea.node();
+    if (!legendNode) return;
+    var bbox = legendNode.getBBox();
+    var legendHeight = bbox.y + bbox.height;
+    if (legendHeight > 0) {
+      d3.select(chart.element).select(".buttonDiv").style("top", legendHeight + "px");
+    }
+  }
   function handleAction(chart, layers, name) {
     if (name === "image") {
       var svgString = getSVGString(chart.svg.node());
@@ -2397,6 +2407,7 @@
         this.routeLayers(this.derived.currentLayers);
         syncReferenceLines(this, state, options);
         syncLegend(this, state);
+        repositionButtons(this);
         bindRollover(this);
         this.emit("afterRender", { state });
       } catch (error) {
