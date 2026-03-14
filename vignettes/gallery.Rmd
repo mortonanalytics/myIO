@@ -24,7 +24,7 @@ self-contained and uses built-in R datasets.
 
 Overlay raw data with a linear model fit:
 
-```{r scatter-trend, eval = FALSE}
+```{r scatter-trend, }
 myIO() |>
   addIoLayer(
     type = "point",
@@ -49,7 +49,7 @@ myIO() |>
 
 Track temperature across months using grouped data:
 
-```{r multi-line, eval = FALSE}
+```{r multi-line, }
 aq <- airquality
 aq$Month <- paste0("M", aq$Month)
 
@@ -69,7 +69,7 @@ myIO() |>
 
 Aggregate data across categories with custom formatting:
 
-```{r bar-chart, eval = FALSE}
+```{r bar-chart, }
 myIO() |>
   addIoLayer(
     type = "bar",
@@ -90,7 +90,7 @@ myIO() |>
 
 Visualize a range using low and high y values:
 
-```{r area-band, eval = FALSE}
+```{r area-band, }
 aq <- airquality[complete.cases(airquality), ]
 aq$TempLow <- aq$Temp - 8
 aq$TempHigh <- aq$Temp + 8
@@ -118,7 +118,7 @@ myIO() |>
 
 Combine theming with custom colors for a dark aesthetic:
 
-```{r dark-mode, eval = FALSE}
+```{r dark-mode, }
 myIO() |>
   addIoLayer(
     type = "point",
@@ -149,7 +149,7 @@ myIO() |>
 
 Summarize proportions with a donut:
 
-```{r donut, eval = FALSE}
+```{r donut, }
 myIO() |>
   addIoLayer(
     type = "donut",
@@ -164,7 +164,7 @@ myIO() |>
 
 Visualize point density in large datasets:
 
-```{r hexbin, eval = FALSE}
+```{r hexbin, }
 myIO() |>
   addIoLayer(
     type = "hexbin",
@@ -181,7 +181,7 @@ myIO() |>
 
 Show a distribution with a mean reference line:
 
-```{r histogram-ref, eval = FALSE}
+```{r histogram-ref, }
 myIO() |>
   addIoLayer(
     type = "histogram",
@@ -197,7 +197,7 @@ myIO() |>
 
 Enable drag interactions for exploratory analysis:
 
-```{r drag, eval = FALSE}
+```{r drag, }
 myIO() |>
   addIoLayer(
     type = "point",
@@ -215,7 +215,7 @@ myIO() |>
 
 Explore hierarchical data:
 
-```{r treemap, eval = FALSE}
+```{r treemap, }
 myIO() |>
   addIoLayer(
     type = "treemap",
