@@ -1691,7 +1691,12 @@
     donut: "standalone-donut",
     gauge: "standalone-gauge"
   };
-  var CROSS_GROUP_ALLOWED = /* @__PURE__ */ new Set(["axes-continuous:axes-categorical", "axes-categorical:axes-continuous"]);
+  var CROSS_GROUP_ALLOWED = /* @__PURE__ */ new Set([
+    "axes-continuous:axes-categorical",
+    "axes-categorical:axes-continuous",
+    "axes-binned:axes-continuous",
+    "axes-continuous:axes-binned"
+  ]);
   function validateComposition(layers) {
     if (layers.length <= 1) return { valid: true, errors: [] };
     const errors = [];

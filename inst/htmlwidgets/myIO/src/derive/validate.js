@@ -15,7 +15,10 @@ const COMPAT_GROUP = {
   gauge: "standalone-gauge"
 };
 
-const CROSS_GROUP_ALLOWED = new Set(["axes-continuous:axes-categorical", "axes-categorical:axes-continuous"]);
+const CROSS_GROUP_ALLOWED = new Set([
+  "axes-continuous:axes-categorical", "axes-categorical:axes-continuous",
+  "axes-binned:axes-continuous", "axes-continuous:axes-binned"
+]);
 
 export function validateComposition(layers) {
   if (layers.length <= 1) return { valid: true, errors: [] };
