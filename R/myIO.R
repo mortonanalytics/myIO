@@ -2,7 +2,7 @@
 #'
 #' myIO R + d3.js project
 #'
-#' @import htmlwidgets
+#' @importFrom htmlwidgets createWidget shinyWidgetOutput shinyRenderWidget
 #'
 #' @param data an optional point of entry for the data frame or vector
 #' @param width a string of either pixel width or a percentage width
@@ -13,6 +13,27 @@
 #'
 #' @export
 myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL) {
+  validateCssDimension <- function(value, arg) {
+    if (is.null(value)) {
+      return(invisible(NULL))
+    }
+
+    if (is.numeric(value) && length(value) == 1 && !is.na(value)) {
+      return(invisible(NULL))
+    }
+
+    if (is.character(value) && length(value) == 1 && !is.na(value)) {
+      return(invisible(NULL))
+    }
+
+    stop(
+      "'", arg, "' must be NULL, a single number, or a single character CSS unit.",
+      call. = FALSE
+    )
+  }
+
+  validateCssDimension(width, "width")
+  validateCssDimension(height, "height")
 
   # forward options using x
   x = list(
@@ -75,6 +96,5 @@ myIOOutput <- function(outputId, width = '100%', height = '400px'){
 #' @rdname myIO-shiny
 #' @export
 renderMyIO <- function(expr, env = parent.frame(), quoted = FALSE) {
-  if (!quoted) { expr <- substitute(expr) } # force quoted
-  htmlwidgets::shinyRenderWidget(expr, myIOOutput, env, quoted = TRUE)
+  htmlwidgets::shinyRenderWidget(expr, myIOOutput, env, quoted = quoted)
 }

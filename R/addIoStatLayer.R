@@ -21,12 +21,16 @@ addIoStatLayer <- function(myIO,
                      label,
                      data = NULL,
                      mapping ){
-  ##assert layer types
-  stopifnot(is.character(type))
-  stopifnot(is.character(color))
-  stopifnot(is.character(label))
-  stopifnot(is.list(mapping))
-  stopifnot(type %in% c("lm"))
+  allowed_stats <- c("lm")
+
+  if (!is.character(type) || length(type) != 1 || is.na(type) || !(type %in% allowed_stats)) {
+    stop(
+      "Unknown stat type '", paste(type, collapse = ", "),
+      "'. Must be one of: ", paste(allowed_stats, collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
 
   ## assign data
   if(is.null(data)) {

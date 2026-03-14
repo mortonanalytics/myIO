@@ -23,23 +23,38 @@ addIoLayer <- function(myIO,
                      options = list(barSize = "large",
                                     toolTipOptions = list(suppressY = FALSE))){
 
-  ##assert layer types
-  stopifnot(is.character(type))
-  #stopifnot(is.character(color))
-  stopifnot(is.character(label))
-  stopifnot(is.list(mapping))
-  stopifnot(type %in% c("line"
-                        ,"point"
-                        ,"treemap"
-                        ,"bar"
-                        ,"hexbin"
-                        ,"gauge"
-                        ,"donut"
-                        ,"area"
-                        ,"groupedBar"
-                        ,"histogram"
-                        ,"density"
-                        ,"ridgeline"))
+  allowed_types <- c("line",
+                     "point",
+                     "bar",
+                     "hexbin",
+                     "treemap",
+                     "gauge",
+                     "donut",
+                     "area",
+                     "groupedBar",
+                     "histogram",
+                     "density",
+                     "ridgeline")
+
+  if (!is.character(type) || length(type) != 1 || is.na(type) || !(type %in% allowed_types)) {
+    stop(
+      "Unknown layer type '", paste(type, collapse = ", "),
+      "'. Must be one of: ", paste(allowed_types, collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
+
+  if (!is.list(mapping)) {
+    stop(
+      "'mapping' must be a list, e.g. list(x_var = 'col1', y_var = 'col2').",
+      call. = FALSE
+    )
+  }
+
+  if (!is.character(label) || length(label) != 1 || is.na(label)) {
+    stop("'label' must be a single character string.", call. = FALSE)
+  }
 
   presets <-list(barSize = "large",
                  toolTipOptions = list(suppressY = FALSE))
