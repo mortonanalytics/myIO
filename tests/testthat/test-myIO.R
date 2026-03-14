@@ -34,6 +34,7 @@ test_that("myIO stores data when provided", {
 })
 
 test_that("shiny bindings are returned", {
+  skip_if_not_installed("shiny")
   expect_s3_class(myIO::myIOOutput("test_id"), "shiny.tag.list")
   expect_true(is.function(myIO::renderMyIO(myIO::myIO())))
 })
