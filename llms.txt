@@ -3,12 +3,12 @@
 ![](reference/figures/myIOsticker.png)
 
 [![R-CMD-check](https://github.com/mortonanalytics/myIO/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/mortonanalytics/myIO/actions/workflows/R-CMD-check.yaml)
-![coverage](reference/figures/coverage-badge.svg)[![Lifecycle:
+![R coverage](reference/figures/coverage-badge.svg)![JS
+coverage](reference/figures/js-coverage-badge.svg)[![Lifecycle:
 stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 [![License:
 MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitHub R package
-version](https://img.shields.io/github/r-package/v/mortonanalytics/myIO)](https://github.com/mortonanalytics/myIO)
+![version](https://img.shields.io/badge/version-1.0.0-blue)
 
 An R package for creating interactive `d3.js` visualizations using
 `htmlwidgets`. Supports 10 chart types including scatter plots, line
