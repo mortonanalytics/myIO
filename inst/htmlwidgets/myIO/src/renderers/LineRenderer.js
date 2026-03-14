@@ -2,6 +2,8 @@ import { pointRadius, resolveColor, strokeWidth, tagName } from "../utils/respon
 
 export class LineRenderer {
   static type = "line";
+  static traits = { hasAxes: true, referenceLines: true, legendType: "layer", binning: false, rolloverStyle: "overlay", scaleCapabilities: { invertX: true } };
+  static dataContract = { x_var: { required: true, numeric: true, sorted: true }, y_var: { required: true, numeric: true } };
 
   render(chart, layer) {
     var data = layer.data;
@@ -92,5 +94,14 @@ export class LineRenderer {
       .ease(d3.easeQuad)
       .duration(transitionSpeed)
       .style("opacity", 1);
+  }
+
+  formatTooltip(chart, d, layer) {
+    return { title: layer.mapping.x_var + ": " + d[layer.mapping.x_var], body: layer.label + ": " + d[chart.runtime.activeY || layer.mapping.y_var], color: layer.color, label: layer.label, value: d[chart.runtime.activeY || layer.mapping.y_var], raw: d };
+  }
+
+  remove(chart, layer) {
+    chart.dom.chartArea.selectAll("." + tagName("line", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll("." + tagName("point", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
   }
 }

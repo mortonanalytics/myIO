@@ -18,6 +18,6 @@
 #'
 #' @export
 flipAxis <- function(myIO, flipAxis = TRUE){
-  myIO$x$options$flipAxis <- flipAxis
+  myIO$x$config$scales$flipAxis <- flipAxis
   return(myIO)
 }

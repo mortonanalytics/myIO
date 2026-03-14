@@ -14,7 +14,7 @@
 #' @export
 suppressLegend <- function(myIO, suppressLegend = TRUE){
 
-  myIO$x$options$suppressLegend <- suppressLegend
+  myIO$x$config$layout$suppressLegend <- suppressLegend
 
   return(myIO)
 }

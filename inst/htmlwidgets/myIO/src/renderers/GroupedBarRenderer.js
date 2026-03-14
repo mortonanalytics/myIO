@@ -3,6 +3,8 @@ import { resolveColor } from "../utils/responsive.js";
 
 export class GroupedBarRenderer {
   static type = "groupedBar";
+  static traits = { hasAxes: true, referenceLines: true, legendType: "layer", binning: false, rolloverStyle: "element", scaleCapabilities: { invertX: false } };
+  static dataContract = { x_var: { required: true }, y_var: { required: true, numeric: true }, group: { required: true } };
 
   render(chart, layer, layers) {
     var lys = layers || [layer];
@@ -30,5 +32,17 @@ export class GroupedBarRenderer {
           transitionStacked(chart, data, colors, bandwidth);
         }
       });
+  }
+
+  getHoverSelector() {
+    return ".tag-grouped-bar-g rect";
+  }
+
+  formatTooltip(chart, d, layer) {
+    return { title: layer.mapping.x_var + ": " + d.data[0], body: layer.mapping.y_var + ": " + (d[1] - d[0]), color: layer.color, label: layer.label, value: d[1] - d[0], raw: d };
+  }
+
+  remove(chart) {
+    chart.dom.chartArea.selectAll(".tag-grouped-bar-g").transition().duration(500).style("opacity", 0).remove();
   }
 }

@@ -1,14 +1,21 @@
-export function initializeTooltip(chart) {
-  chart.tooltip = d3.select(chart.element).append("div").attr("class", "toolTip");
+export function sanitize(str) {
+  const div = document.createElement("div");
+  div.textContent = String(str);
+  return div.innerHTML;
+}
 
-  chart.toolTipTitle = chart.tooltip
+export function initializeTooltip(chart) {
+  chart.dom.tooltip = d3.select(chart.dom.element).append("div").attr("class", "toolTip");
+
+  chart.dom.tooltipTitle = chart.dom.tooltip
     .append("div")
     .attr("class", "toolTipTitle")
     .style("background-color", "lightgray");
 
-  chart.toolTipBody = chart.tooltip
+  chart.dom.tooltipBody = chart.dom.tooltip
     .append("div")
     .attr("class", "toolTipBody");
+  chart.captureLegacyAliases();
 }
 
 export function removeHoverOverlay(chart) {

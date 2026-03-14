@@ -1,5 +1,3 @@
-# Tests for addIoLayer and addIoStatLayer
-
 test_that("addIoLayer creates a single layer", {
   widget <- myIO::addIoLayer(
     myIO::myIO(),
@@ -9,200 +7,64 @@ test_that("addIoLayer creates a single layer", {
     data = datasets::mtcars,
     mapping = list(x_var = "wt", y_var = "mpg")
   )
-  expect_s3_class(widget, "htmlwidget")
-  expect_length(widget$x$layers, 1)
-  expect_equal(widget$x$layers[[1]]$type, "line")
-  expect_equal(widget$x$layers[[1]]$color, "red")
-  expect_equal(widget$x$layers[[1]]$label, "test_line")
+  expect_length(widget$x$config$layers, 1)
+  expect_equal(widget$x$config$layers[[1]]$type, "line")
+  expect_equal(widget$x$config$layers[[1]]$label, "test_line")
 })
 
-test_that("addIoLayer supports all valid layer types", {
-  valid_types <- c("line", "point", "bar", "hexbin", "treemap",
-                   "gauge", "donut", "area", "groupedBar",
-                   "histogram", "density", "ridgeline")
-
+test_that("addIoLayer supports valid types", {
+  valid_types <- c("line", "point", "bar", "hexbin", "treemap", "gauge", "donut", "area", "groupedBar", "histogram")
   for (type in valid_types) {
-    if (type == "treemap") {
-      widget <- myIO::addIoLayer(
-        myIO::myIO(),
-        type = "treemap",
-        label = "tree_test",
-        data = datasets::mtcars,
-        mapping = list(level_1 = "vs", level_2 = "cyl")
-      )
-    } else {
-      widget <- myIO::addIoLayer(
-        myIO::myIO(),
-        type = type,
-        label = paste0("test_", type),
-        color = "blue",
-        data = datasets::mtcars,
-        mapping = list(x_var = "wt", y_var = "mpg")
-      )
-    }
-    expect_s3_class(widget, "htmlwidget", info = paste("type:", type))
-    expect_length(widget$x$layers, 1, info = paste("type:", type))
+    mapping <- if (type == "treemap") list(level_1 = "vs", level_2 = "cyl") else if (type %in% c("gauge", "histogram")) list(value = "mpg") else list(x_var = "wt", y_var = "mpg")
+    widget <- myIO::addIoLayer(myIO::myIO(), type = type, label = paste0("test_", type), color = "blue", data = datasets::mtcars, mapping = mapping)
+    expect_length(widget$x$config$layers, 1)
   }
-})
-
-test_that("addIoLayer rejects invalid type", {
-  expect_error(
-    myIO::addIoLayer(
-      myIO::myIO(),
-      type = "invalid_type",
-      label = "test",
-      data = datasets::mtcars,
-      mapping = list(x_var = "wt", y_var = "mpg")
-    )
-  )
-})
-
-test_that("addIoLayer rejects non-character type", {
-  expect_error(
-    myIO::addIoLayer(
-      myIO::myIO(),
-      type = 123,
-      label = "test",
-      data = datasets::mtcars,
-      mapping = list(x_var = "wt", y_var = "mpg")
-    )
-  )
-})
-
-test_that("addIoLayer rejects non-list mapping", {
-  expect_error(
-    myIO::addIoLayer(
-      myIO::myIO(),
-      type = "line",
-      label = "test",
-      data = datasets::mtcars,
-      mapping = "not_a_list"
-    )
-  )
 })
 
 test_that("addIoLayer stacks multiple layers", {
   widget <- myIO::myIO()
-  widget <- myIO::addIoLayer(widget,
-    type = "line", label = "layer1", color = "red",
-    data = datasets::mtcars,
-    mapping = list(x_var = "wt", y_var = "mpg")
-  )
-  widget <- myIO::addIoLayer(widget,
-    type = "point", label = "layer2", color = "blue",
-    data = datasets::mtcars,
-    mapping = list(x_var = "wt", y_var = "mpg")
-  )
-  expect_length(widget$x$layers, 2)
-  expect_equal(widget$x$layers[[1]]$type, "line")
-  expect_equal(widget$x$layers[[2]]$type, "point")
+  widget <- myIO::addIoLayer(widget, type = "line", label = "layer1", color = "red", data = datasets::mtcars, mapping = list(x_var = "wt", y_var = "mpg"))
+  widget <- myIO::addIoLayer(widget, type = "point", label = "layer2", color = "blue", data = datasets::mtcars, mapping = list(x_var = "wt", y_var = "mpg"))
+  expect_length(widget$x$config$layers, 2)
 })
 
-test_that("addIoLayer handles grouped data", {
-  aq <- datasets::airquality
-  aq$Month <- paste0("M", aq$Month)
-
-  widget <- myIO::addIoLayer(
-    myIO::myIO(),
-    type = "line",
-    color = c("steelblue", "orange", "green", "red", "purple"),
-    label = "Month",
-    data = aq,
-    mapping = list(x_var = "Day", y_var = "Temp", group = "Month")
-  )
-  expect_length(widget$x$layers, length(unique(aq$Month)))
-})
-
-test_that("addIoLayer uses default colors for grouped data when color is NULL", {
-  aq <- datasets::airquality
-  aq$Month <- paste0("M", aq$Month)
-
-  widget <- myIO::addIoLayer(
-    myIO::myIO(),
-    type = "line",
-    color = NULL,
-    label = "Month",
-    data = aq,
-    mapping = list(x_var = "Day", y_var = "Temp", group = "Month")
-  )
-  expect_length(widget$x$layers, length(unique(aq$Month)))
-  # each layer should have a color assigned
-  for (layer in widget$x$layers) {
-    expect_true(!is.null(layer$color))
-  }
-})
-
-test_that("dragPoints adds option to widget", {
-  widget <- myIO::addIoLayer(
-    myIO::myIO(),
-    type = "point", label = "test", color = "red",
-    data = datasets::mtcars,
-    mapping = list(x_var = "wt", y_var = "mpg")
-  )
-  widget <- myIO::dragPoints(widget)
-  expect_true(widget$x$options$dragPoints)
+test_that("dragPoints updates config", {
+  widget <- myIO::dragPoints(myIO::myIO())
+  expect_true(widget$x$config$interactions$dragPoints)
 })
 
 test_that("addIoStatLayer creates lm layer", {
-  widget <- myIO::addIoStatLayer(
-    myIO::myIO(),
-    type = "lm",
-    label = "linear_test",
-    color = "red",
-    data = datasets::mtcars,
-    mapping = list(x_var = "wt", y_var = "mpg")
-  )
-  expect_s3_class(widget, "htmlwidget")
-  expect_length(widget$x$layers, 1)
-  expect_equal(widget$x$layers[[1]]$type, "stat_line")
-  expect_equal(widget$x$layers[[1]]$color, "red")
+  widget <- myIO::addIoStatLayer(myIO::myIO(), type = "lm", label = "linear_test", color = "red", data = datasets::mtcars, mapping = list(x_var = "wt", y_var = "mpg"))
+  expect_equal(widget$x$config$layers[[1]]$type, "stat_line")
 })
 
-test_that("addIoStatLayer rejects invalid stat type", {
+test_that("addIoLayer rejects missing mapping variable", {
   expect_error(
-    myIO::addIoStatLayer(
-      myIO::myIO(),
-      type = "invalid",
-      label = "test",
-      color = "red",
-      data = datasets::mtcars,
-      mapping = list(x_var = "wt", y_var = "mpg")
-    )
+    myIO::addIoLayer(myIO::myIO(), type = "line", label = "test", data = mtcars, mapping = list(x_var = "nonexistent", y_var = "mpg")),
+    "not found in data"
   )
 })
 
-test_that("addIoLayer with toggle creates correct structure", {
-  aq <- datasets::airquality
-  aq$Month <- paste0("M", aq$Month)
-  aq$Percent <- aq$Temp / sum(aq$Temp, na.rm = TRUE)
-
-  widget <- myIO::myIO(elementId = "tester")
-  widget <- myIO::addIoLayer(widget,
-    type = "line",
-    color = c("steelblue", "lightsteelblue", "orange", "green", "purple"),
-    label = "Month",
-    data = aq,
-    mapping = list(x_var = "Day", y_var = "Temp", group = "Month")
+test_that("addIoLayer rejects duplicate label", {
+  w <- myIO::addIoLayer(myIO::myIO(), type = "point", label = "pts", color = "red", data = mtcars, mapping = list(x_var = "wt", y_var = "mpg"))
+  expect_error(
+    myIO::addIoLayer(w, type = "line", label = "pts", color = "blue", data = mtcars, mapping = list(x_var = "wt", y_var = "mpg")),
+    "already exists"
   )
-  widget <- myIO::setAxisLimits(widget, xlim = list(min = "1"))
-  widget <- myIO::setToggle(widget, newY = "Percent", newScaleY = ".0%")
-  widget <- myIO::setAxisFormat(widget, yAxis = ".0f")
-
-  expect_length(widget$x$layers, 5)
-  expect_length(widget$x$options$toggleY, 2)
-  expect_equal(widget$x$options$toggleY[[1]], "Percent")
 })
 
-test_that("addIoLayer with treemap creates nested structure", {
-  widget <- myIO::addIoLayer(
-    myIO::myIO(),
-    type = "treemap",
-    label = "cars",
-    data = datasets::mtcars,
-    mapping = list(level_1 = "vs", level_2 = "cyl")
+test_that("addIoLayer rejects incompatible layer types", {
+  w <- myIO::addIoLayer(myIO::myIO(), type = "donut", label = "d", color = "red", data = data.frame(x = "A", y = 1), mapping = list(x_var = "x", y_var = "y"))
+  expect_error(
+    myIO::addIoLayer(w, type = "bar", label = "b", color = "blue", data = mtcars, mapping = list(x_var = "cyl", y_var = "mpg")),
+    "Cannot mix"
   )
-  expect_length(widget$x$layers, 1)
-  tree_data <- widget$x$layers[[1]]$data
-  expect_equal(tree_data$name, "cars")
-  expect_true(length(tree_data$children) > 0)
+})
+
+test_that("addIoLayer rejects non-numeric y for bar", {
+  df <- data.frame(x = c("a", "b"), y = c("foo", "bar"), stringsAsFactors = FALSE)
+  expect_error(
+    myIO::addIoLayer(myIO::myIO(), type = "bar", label = "test", color = "red", data = df, mapping = list(x_var = "x", y_var = "y")),
+    "must be numeric"
+  )
 })

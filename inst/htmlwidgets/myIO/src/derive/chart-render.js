@@ -1,4 +1,5 @@
 import { createBins, processScales } from "./scales.js";
+import { getRendererForLayer } from "../registry.js";
 
 export function getPrimaryType(chart) {
   return (chart.currentLayers && chart.currentLayers[0] ? chart.currentLayers[0].type : null);
@@ -25,19 +26,20 @@ export function needsReferenceLines(type) {
 }
 
 export function deriveChartRender(chart) {
-  var layers = chart.currentLayers || [];
-  var types = layers.map(function(layer) {
-    return layer.type;
+  var layers = chart.derived.currentLayers || [];
+  var traits = layers.map(function(layer) {
+    return getRendererForLayer(layer).constructor.traits;
   });
-  var primaryType = getPrimaryType(chart);
+  var primaryType = layers[0] ? layers[0].type : null;
+  var legendTypes = Array.from(new Set(traits.map(function(trait) { return trait.legendType; })));
 
   return {
     type: primaryType,
-    axesChart: types.every(isAxesChart),
-    histogram: types.length > 0 && types.every(usesHistogramBins),
-    continuousLegend: types.length > 0 && types.every(usesContinuousLegend),
-    ordinalLegend: types.length === 1 && usesOrdinalLegend(primaryType),
-    referenceLines: types.some(needsReferenceLines)
+    axesChart: traits.every(function(trait) { return trait.hasAxes; }),
+    histogram: traits.length > 0 && traits.every(function(trait) { return trait.binning; }),
+    continuousLegend: legendTypes.length === 1 && legendTypes[0] === "continuous",
+    ordinalLegend: legendTypes.length === 1 && legendTypes[0] === "ordinal",
+    referenceLines: traits.some(function(trait) { return trait.referenceLines; })
   };
 }
 
@@ -47,8 +49,8 @@ export function applyDerivedScales(chart, renderState) {
   }
 
   if (renderState.histogram) {
-    createBins(chart, chart.currentLayers);
+    createBins(chart, chart.derived.currentLayers);
   } else {
-    processScales(chart, chart.currentLayers);
+    processScales(chart, chart.derived.currentLayers);
   }
 }

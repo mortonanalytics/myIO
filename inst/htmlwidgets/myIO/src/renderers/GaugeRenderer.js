@@ -2,13 +2,21 @@ import { getChartHeight } from "../layout/scaffold.js";
 
 export class GaugeRenderer {
   static type = "gauge";
+  static traits = { hasAxes: false, referenceLines: false, legendType: "none", binning: false, rolloverStyle: "none", scaleCapabilities: { invertX: false } };
+  static dataContract = { value: { required: true, numeric: true } };
 
   render(chart, layer) {
     var transitionSpeed = chart.options.transition.speed;
     var tau = Math.PI;
     var radius = Math.max(Math.min(chart.width, getChartHeight(chart)) / 2, 30);
     var barWidth = 30;
-    var value = layer.data[0].value[0];
+    var firstDatum = Array.isArray(layer.data) && layer.data.length > 0 ? layer.data[0] : {};
+    var valueKey = layer.mapping.value;
+    var value = typeof valueKey === "string" ? +firstDatum[valueKey] : +valueKey;
+    if (!Number.isFinite(value)) {
+      value = 0;
+    }
+    value = Math.max(0, Math.min(1, value));
     var data = [value, 1 - value];
     var arc = d3.arc().innerRadius(radius - barWidth).outerRadius(radius).cornerRadius(10);
     var pie = d3.pie().sort(null).value(function(d) { return d; }).startAngle(tau * -0.5).endAngle(tau * 0.5);
@@ -60,5 +68,9 @@ export class GaugeRenderer {
       .attr("text-anchor", "middle")
       .attr("font-size", 20)
       .attr("dy", "-0.45em");
+  }
+
+  remove(chart) {
+    chart.dom.chartArea.selectAll(".myIO-gauge-background, .myIO-gauge-value, .gauge-text").transition().duration(500).style("opacity", 0).remove();
   }
 }

@@ -2,6 +2,8 @@ import { resolveColor, tagName } from "../utils/responsive.js";
 
 export class HistogramRenderer {
   static type = "histogram";
+  static traits = { hasAxes: true, referenceLines: false, legendType: "layer", binning: true, rolloverStyle: "element", scaleCapabilities: { invertX: false } };
+  static dataContract = { value: { required: true, numeric: true } };
 
   render(chart, layer) {
     var data = layer.bins;
@@ -18,8 +20,8 @@ export class HistogramRenderer {
       .append("rect")
       .attr("class", tagName("bar", chart.element.id, key))
       .attr("clip-path", "url(#" + chart.element.id + "clip)")
-      .style("fill", function(d) {
-        return resolveColor(chart, d[layer.mapping.x_var], layer.color);
+      .style("fill", function() {
+        return resolveColor(chart, layer.label, layer.color);
       })
       .attr("x", function(d) { return chart.xScale(d.x0) + 1; })
       .attr("y", chart.yScale(0))
@@ -34,5 +36,17 @@ export class HistogramRenderer {
       .attr("width", function(d) { return Math.max(0, chart.xScale(d.x1) - chart.xScale(d.x0) - 1); })
       .attr("y", function(d) { return chart.yScale(d.length); })
       .attr("height", function(d) { return chart.yScale(0) - chart.yScale(d.length); });
+  }
+
+  getHoverSelector(chart, layer) {
+    return "." + tagName("bar", chart.dom.element.id, layer.label);
+  }
+
+  formatTooltip(chart, d, layer) {
+    return { title: "Bin: " + d.x0 + " to " + d.x1, body: "Count: " + d.length, color: layer.color, label: "count", value: d.length, raw: d };
+  }
+
+  remove(chart, layer) {
+    chart.dom.chartArea.selectAll("." + tagName("bar", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
   }
 }

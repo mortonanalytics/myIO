@@ -1,5 +1,8 @@
 import { getChartHeight } from "../layout/scaffold.js";
 
+const X_DOMAIN_BUFFER = 0.05;
+const Y_DOMAIN_BUFFER = 0.15;
+
 export function createBins(chart, lys) {
   var m = chart.margin;
   var chartHeight = getChartHeight(chart);
@@ -35,8 +38,8 @@ export function createBins(chart, lys) {
     });
   });
 
-  chart.xScale = x;
-  chart.yScale = d3.scaleLinear()
+  chart.derived.xScale = x;
+  chart.derived.yScale = d3.scaleLinear()
     .domain([0, d3.max(lys, function(d) {
       return d.max_value;
     })]).nice()
@@ -83,20 +86,20 @@ export function processScales(chart, lys) {
   var x_max = d3.max(x_extents, function(d) { return d[1]; });
   var x_check1 = d3.min(x_extents, function(d) { return d[0]; });
   var x_check2 = d3.max(x_extents, function(d) { return d[1]; });
-  chart.x_check = (x_check1 == 0 & x_check2 == 0) == 1;
+  chart.derived.xCheck = x_check1 === 0 && x_check2 === 0;
 
   if (x_min == x_max) {
     x_min = x_min - 1;
     x_max = x_max + 1;
   }
 
-  var x_buffer = Math.max(Math.abs(x_max - x_min) * 0.05, 0.5);
+  var x_buffer = Math.max(Math.abs(x_max - x_min) * X_DOMAIN_BUFFER, 0.5);
   var xExtent = [
-    chart.options.xlim.min ? +chart.options.xlim.min : x_min - x_buffer,
-    chart.options.xlim.max ? +chart.options.xlim.max : x_max + x_buffer
+    chart.config.scales.xlim.min ? +chart.config.scales.xlim.min : x_min - x_buffer,
+    chart.config.scales.xlim.max ? +chart.config.scales.xlim.max : x_max + x_buffer
   ];
 
-  chart.x_banded = [].concat.apply([], x_bands).map(function(d) {
+  chart.derived.xBanded = [].concat.apply([], x_bands).map(function(d) {
     try { return d[0]; } catch (err) { return void 0; }
   }).filter(onlyUnique);
 
@@ -107,50 +110,51 @@ export function processScales(chart, lys) {
     y_max = y_max + 1;
   }
 
-  var y_buffer = Math.abs(y_max - y_min) * 0.15;
+  var y_buffer = Math.abs(y_max - y_min) * Y_DOMAIN_BUFFER;
   var yExtent = [
-    chart.options.ylim.min ? +chart.options.ylim.min : y_min - y_buffer,
-    chart.options.ylim.max ? +chart.options.ylim.max : y_max + y_buffer
+    chart.config.scales.ylim.min ? +chart.config.scales.ylim.min : y_min - y_buffer,
+    chart.config.scales.ylim.max ? +chart.config.scales.ylim.max : y_max + y_buffer
   ];
 
-  chart.y_banded = [].concat.apply([], y_bands).map(function(d) {
+  chart.derived.yBanded = [].concat.apply([], y_bands).map(function(d) {
     try { return d[0]; } catch (err) { return void 0; }
   }).filter(onlyUnique);
 
   var chartHeight = getChartHeight(chart);
 
-  switch (chart.options.categoricalScale.xAxis) {
+  switch (chart.config.scales.categoricalScale.xAxis) {
     case true:
-      chart.xScale = d3.scaleBand()
+      chart.derived.xScale = d3.scaleBand()
         .range([0, chart.width - (m.left + m.right)])
-        .domain(chart.options.flipAxis == true ? chart.y_banded : chart.x_banded);
+        .domain(chart.config.scales.flipAxis === true ? chart.derived.yBanded : chart.derived.xBanded);
       break;
     case false:
-      chart.xScale = d3.scaleLinear()
+      chart.derived.xScale = d3.scaleLinear()
         .range([0, chart.width - (m.right + m.left)])
-        .domain(chart.options.flipAxis == true ? yExtent : xExtent);
+        .domain(chart.config.scales.flipAxis === true ? yExtent : xExtent);
   }
 
-  switch (chart.options.categoricalScale.yAxis) {
+  switch (chart.config.scales.categoricalScale.yAxis) {
     case true:
-      chart.yScale = d3.scaleBand()
+      chart.derived.yScale = d3.scaleBand()
         .range([chartHeight - (m.top + m.bottom), 0])
-        .domain(chart.options.flipAxis == true ? chart.x_banded : chart.y_banded);
+        .domain(chart.config.scales.flipAxis === true ? chart.derived.xBanded : chart.derived.yBanded);
       break;
     case false:
-      chart.yScale = d3.scaleLinear()
+      chart.derived.yScale = d3.scaleLinear()
         .range([chartHeight - (m.top + m.bottom), 0])
-        .domain(chart.options.flipAxis == true ? xExtent : yExtent);
+        .domain(chart.config.scales.flipAxis === true ? xExtent : yExtent);
   }
 
-  if (chart.options.colorScheme) {
-    chart.colorDiscrete = d3.scaleOrdinal()
-      .range(chart.options.colorScheme[0])
-      .domain(chart.options.colorScheme[1]);
-    chart.colorContinuous = d3.scaleLinear()
-      .range(chart.options.colorScheme[0])
-      .domain(chart.options.colorScheme[1]);
+  if (chart.config.scales.colorScheme && chart.config.scales.colorScheme.enabled) {
+    chart.derived.colorDiscrete = d3.scaleOrdinal()
+      .range(chart.config.scales.colorScheme.colors)
+      .domain(chart.config.scales.colorScheme.domain);
+    chart.derived.colorContinuous = d3.scaleLinear()
+      .range(chart.config.scales.colorScheme.colors)
+      .domain(chart.config.scales.colorScheme.domain);
   }
+  chart.captureLegacyAliases();
 }
 
 function onlyUnique(value, index, self) {

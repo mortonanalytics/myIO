@@ -3,6 +3,8 @@ import { isColorSchemeActive, tagName } from "../utils/responsive.js";
 
 export class TreemapRenderer {
   static type = "treemap";
+  static traits = { hasAxes: false, referenceLines: false, legendType: "ordinal", binning: false, rolloverStyle: "none", scaleCapabilities: { invertX: false } };
+  static dataContract = { level_1: { required: true }, level_2: { required: true }, y_var: { required: false, numeric: true } };
 
   render(chart, layer) {
     var m = chart.margin;
@@ -83,5 +85,9 @@ export class TreemapRenderer {
       });
 
     chart.updateOrdinalColorLegend(layer);
+  }
+
+  remove(chart) {
+    chart.dom.chartArea.selectAll(".root").transition().duration(500).style("opacity", 0).remove();
   }
 }

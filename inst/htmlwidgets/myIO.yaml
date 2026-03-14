@@ -8,7 +8,7 @@ dependencies:
   src: htmlwidgets/lib
   script: ./d3-hexbin.js
 - name: myIO
-  version: 1.0.0
+  version: 2.0.0
   src: htmlwidgets/myIO
   script: ./myIOapi.js
   stylesheet: ./style.css

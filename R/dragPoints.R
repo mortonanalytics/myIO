@@ -18,6 +18,6 @@
 #'
 #' @export
 dragPoints <- function(myIO, dragPoints = TRUE){
-  myIO$x$options$dragPoints <- dragPoints
+  myIO$x$config$interactions$dragPoints <- dragPoints
   return(myIO)
 }

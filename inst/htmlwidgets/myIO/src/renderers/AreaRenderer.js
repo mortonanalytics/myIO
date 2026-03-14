@@ -2,6 +2,8 @@ import { resolveColor, tagName } from "../utils/responsive.js";
 
 export class AreaRenderer {
   static type = "area";
+  static traits = { hasAxes: true, referenceLines: true, legendType: "layer", binning: false, rolloverStyle: "overlay", scaleCapabilities: { invertX: true } };
+  static dataContract = { x_var: { required: true, numeric: true, sorted: true }, low_y: { required: true, numeric: true }, high_y: { required: true, numeric: true } };
 
   render(chart, layer) {
     var data = layer.data;
@@ -41,5 +43,13 @@ export class AreaRenderer {
       .duration(transitionSpeed)
       .attr("d", valueArea)
       .style("opacity", 0.4);
+  }
+
+  formatTooltip(chart, d, layer) {
+    return { title: layer.mapping.x_var + ": " + d[layer.mapping.x_var], body: layer.label + ": " + d[layer.mapping.high_y], color: layer.color, label: layer.label, value: d[layer.mapping.high_y], raw: d };
+  }
+
+  remove(chart, layer) {
+    chart.dom.chartArea.selectAll("." + tagName("area", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
   }
 }

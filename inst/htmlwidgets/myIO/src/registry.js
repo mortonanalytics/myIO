@@ -18,6 +18,17 @@ export function registerRenderer(type, RendererClass) {
     throw new Error("Renderer already registered for type: " + type);
   }
 
+  var traits = RendererClass && RendererClass.constructor ? RendererClass.constructor.traits : null;
+  var requiredTraitKeys = ["hasAxes", "referenceLines", "legendType", "binning", "rolloverStyle"];
+  if (!traits) {
+    throw new Error("Renderer missing static traits: " + type);
+  }
+  requiredTraitKeys.forEach(function(key) {
+    if (!(key in traits)) {
+      throw new Error("Renderer trait missing '" + key + "': " + type);
+    }
+  });
+
   rendererRegistry.set(type, RendererClass);
 }
 
@@ -72,4 +83,8 @@ export function registerBuiltInRenderers() {
   }
 
   return rendererRegistry;
+}
+
+export function listRenderers() {
+  return Array.from(rendererRegistry.values());
 }

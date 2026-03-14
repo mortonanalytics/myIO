@@ -18,7 +18,7 @@
 
 setTransitionSpeed <- function(myIO, speed){
 
-  myIO$x$options$transition$speed <- speed
+  myIO$x$config$transitions$speed <- speed
 
   return(myIO)
 }

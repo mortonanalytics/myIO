@@ -20,7 +20,7 @@ setReferenceLines <- function(myIO, xRef =  0, yRef =  0){
     y = yRef
     )
 
-  myIO$x$options$referenceLine <- final
+  myIO$x$config$referenceLines <- final
 
   return(myIO)
 }

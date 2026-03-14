@@ -1,5 +1,7 @@
+const MOBILE_BREAKPOINT = 600;
+
 export function isMobile(chart) {
-  return chart.totalWidth <= 600;
+  return chart.runtime.totalWidth <= MOBILE_BREAKPOINT;
 }
 
 export function responsiveValue(chart, desktop, mobile) {
@@ -19,9 +21,9 @@ export function tagName(type, elementId, label) {
 }
 
 export function isColorSchemeActive(chart) {
-  return chart.options.colorScheme[2] == "on";
+  return chart.config.scales.colorScheme.enabled === true;
 }
 
 export function resolveColor(chart, colorKeyValue, fallback) {
-  return isColorSchemeActive(chart) ? chart.colorScheme(colorKeyValue) : fallback;
+  return isColorSchemeActive(chart) ? chart.derived.colorDiscrete(colorKeyValue) : fallback;
 }

@@ -10,97 +10,74 @@
 #' @param elementId a unique id for the htmlwidget object
 #'
 #' @return the same myIO object
-#'
-#' @examples
-#' # Create a basic widget
-#' myIO()
-#'
-#' # Create with custom dimensions
-#' myIO(width = "50%", height = "300px")
-#'
-#' # Create with data attached
-#' myIO(data = mtcars)
-#'
 #' @export
 myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL) {
   validateCssDimension <- function(value, arg) {
-    if (is.null(value)) {
+    if (is.null(value) || (is.numeric(value) && length(value) == 1 && !is.na(value)) ||
+        (is.character(value) && length(value) == 1 && !is.na(value))) {
       return(invisible(NULL))
     }
-
-    if (is.numeric(value) && length(value) == 1 && !is.na(value)) {
-      return(invisible(NULL))
-    }
-
-    if (is.character(value) && length(value) == 1 && !is.na(value)) {
-      return(invisible(NULL))
-    }
-
-    stop(
-      "'", arg, "' must be NULL, a single number, or a single character CSS unit.",
-      call. = FALSE
-    )
+    stop("'", arg, "' must be NULL, a single number, or a single character CSS unit.", call. = FALSE)
   }
 
   validateCssDimension(width, "width")
   validateCssDimension(height, "height")
 
-  # forward options using x
-  x = list(
+  x <- list(
     data = data,
-    options = list(referenceLine = list(x = NULL, y = NULL),
-                   transition = list(speed = 1000),
-                   margin = list(top = 30,
-                                 bottom = 60,
-                                 left = 50,
-                                 right = 5),
-                   xlim = list(min = NULL,
-                               max = NULL),
-                   ylim = list(min = NULL,
-                                max = NULL),
-                   xAxisLabel = NULL,
-                   yAxisLabel = NULL,
-                   xAxisFormat = "s",
-                   yAxisFormat = "s",
-                   categoricalScale = list(xAxis = FALSE, yAxis = FALSE),
-                   suppressLegend = FALSE,
-                   colorScheme = list(c("steelblue", "orange"), c("none"), c("off")),
-                   toolTipOptions = list(suppressY = FALSE),
-                   suppressAxis = list(xAxis = FALSE, yAxis = FALSE)
-                   )
+    config = list(
+      layers = list(),
+      layout = list(
+        margin = list(top = 30, bottom = 60, left = 50, right = 5),
+        suppressLegend = FALSE,
+        suppressAxis = list(xAxis = FALSE, yAxis = FALSE)
+      ),
+      scales = list(
+        xlim = list(min = NULL, max = NULL),
+        ylim = list(min = NULL, max = NULL),
+        categoricalScale = list(xAxis = FALSE, yAxis = FALSE),
+        flipAxis = FALSE,
+        colorScheme = list(colors = c("steelblue", "orange"), domain = c("none"), enabled = FALSE)
+      ),
+      axes = list(
+        xAxisFormat = "s",
+        yAxisFormat = "s",
+        xAxisLabel = NULL,
+        yAxisLabel = NULL,
+        toolTipFormat = "s"
+      ),
+      interactions = list(
+        dragPoints = FALSE,
+        toggleY = list(variable = NULL, format = NULL),
+        toolTipOptions = list(suppressY = FALSE)
+      ),
+      transitions = list(speed = 1000),
+      referenceLines = list(x = NULL, y = NULL)
+    )
   )
 
-
-  # create widget
   htmlwidgets::createWidget(
-    name = 'myIO',
+    name = "myIO",
     x,
     width = width,
     height = height,
-    package = 'myIO',
+    package = "myIO",
     elementId = elementId
   )
 }
 
 #' Shiny bindings for myIO
 #'
-#' Output and render functions for using myIO within Shiny
-#' applications and interactive Rmd documents.
-#'
 #' @param outputId output variable to read from
-#' @param width,height Must be a valid CSS unit (like \code{'100\%'},
-#'   \code{'400px'}, \code{'auto'}) or a number, which will be coerced to a
-#'   string and have \code{'px'} appended.
+#' @param width,height Must be a valid CSS unit or a number.
 #' @param expr An expression that generates a myIO
 #' @param env The environment in which to evaluate \code{expr}.
-#' @param quoted Is \code{expr} a quoted expression (with \code{quote()})? This
-#'   is useful if you want to save an expression in a variable.
+#' @param quoted Is \code{expr} a quoted expression?
 #'
 #' @name myIO-shiny
-#'
 #' @export
-myIOOutput <- function(outputId, width = '100%', height = '400px'){
-  htmlwidgets::shinyWidgetOutput(outputId, 'myIO', width, height, package = 'myIO')
+myIOOutput <- function(outputId, width = "100%", height = "400px") {
+  htmlwidgets::shinyWidgetOutput(outputId, "myIO", width, height, package = "myIO")
 }
 
 #' @rdname myIO-shiny

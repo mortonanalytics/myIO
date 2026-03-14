@@ -14,7 +14,7 @@
 #' @export
 setToolTipOptions <- function(myIO, suppressY = NULL){
 
-  myIO$x$options$toolTipOptions$suppressY <- suppressY
+  myIO$x$config$interactions$toolTipOptions$suppressY <- suppressY
 
 
   return(myIO)

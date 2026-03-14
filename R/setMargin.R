@@ -20,17 +20,10 @@
 #' @export
 setMargin <- function(myIO, top = 20, bottom = 40, left = 50, right = 50){
 
-  myIO$x$options$margin$top <- top
-  myIO$x$options$margin$bottom <- bottom
-  myIO$x$options$margin$left <- left
-  myIO$x$options$margin$right <- right
+  myIO$x$config$layout$margin$top <- top
+  myIO$x$config$layout$margin$bottom <- bottom
+  myIO$x$config$layout$margin$left <- left
+  myIO$x$config$layout$margin$right <- right
 
   return(myIO)
-}
-
-#' @rdname setMargin
-#' @export
-setmargin <- function(...) {
-  .Deprecated("setMargin")
-  setMargin(...)
 }

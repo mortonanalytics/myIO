@@ -1,7 +1,7 @@
 Package: myIO
 Type: Package
 Title: d3.js Plotting Project
-Version: 0.2.0
+Version: 2.0.0
 Author: Ryan Morton
 Maintainer: Ryan Morton <mortonanalytics@gmail.com>
 Description: Open Source project to demonstrate R + d3.js combination

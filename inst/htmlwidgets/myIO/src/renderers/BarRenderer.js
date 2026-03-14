@@ -2,6 +2,8 @@ import { resolveColor, tagName } from "../utils/responsive.js";
 
 export class BarRenderer {
   static type = "bar";
+  static traits = { hasAxes: true, referenceLines: true, legendType: "layer", binning: false, rolloverStyle: "element", scaleCapabilities: { invertX: false } };
+  static dataContract = { x_var: { required: true }, y_var: { required: true, numeric: true } };
 
   render(chart, layer) {
     if (chart.options.flipAxis === true) {
@@ -10,6 +12,18 @@ export class BarRenderer {
     }
 
     renderVerticalBars(chart, layer);
+  }
+
+  getHoverSelector(chart, layer) {
+    return "." + tagName("bar", chart.dom.element.id, layer.label);
+  }
+
+  formatTooltip(chart, d, layer) {
+    return { title: layer.mapping.x_var + ": " + d[layer.mapping.x_var], body: layer.mapping.y_var + ": " + d[layer.mapping.y_var], color: layer.color, label: layer.label, value: d[layer.mapping.y_var], raw: d };
+  }
+
+  remove(chart, layer) {
+    chart.dom.chartArea.selectAll("." + tagName("bar", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
   }
 }
 

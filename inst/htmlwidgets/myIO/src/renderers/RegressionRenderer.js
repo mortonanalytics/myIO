@@ -3,6 +3,8 @@ import { tagName } from "../utils/responsive.js";
 
 export class RegressionRenderer {
   static type = "regression";
+  static traits = { hasAxes: true, referenceLines: false, legendType: "none", binning: false, rolloverStyle: "none", scaleCapabilities: { invertX: false } };
+  static dataContract = { x_var: { required: true, numeric: true }, y_var: { required: true, numeric: true } };
 
   renderFromPoints(chart, color, label) {
     var that = chart;
@@ -73,5 +75,9 @@ export class RegressionRenderer {
       .style("opacity", 1)
       .style("stroke", color)
       .attr("d", valueLine);
+  }
+
+  remove(chart, layer) {
+    chart.dom.chartArea.selectAll("." + tagName("regression-line", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
   }
 }

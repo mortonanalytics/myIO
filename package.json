@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "build": "esbuild inst/htmlwidgets/myIO/src/index.js --bundle --format=iife --outfile=inst/htmlwidgets/myIO/myIOapi.js",
-    "watch": "esbuild inst/htmlwidgets/myIO/src/index.js --bundle --format=iife --outfile=inst/htmlwidgets/myIO/myIOapi.js --watch"
+    "watch": "esbuild inst/htmlwidgets/myIO/src/index.js --bundle --format=iife --outfile=inst/htmlwidgets/myIO/myIOapi.js --watch",
+    "verify": "npm run build && node -e \"require('fs').readFileSync('inst/htmlwidgets/myIO/myIOapi.js','utf8')\" && echo 'Bundle OK'"
   },
   "devDependencies": {
     "esbuild": "^0.25.10"

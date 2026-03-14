@@ -21,8 +21,8 @@
 #' @export
 setAxisLimits <- function(myIO, xlim = list(min = NULL, max = NULL), ylim = list(min = NULL, max = NULL)){
 
-  myIO$x$options$xlim <- xlim
-  myIO$x$options$ylim <- ylim
+  myIO$x$config$scales$xlim <- xlim
+  myIO$x$config$scales$ylim <- ylim
 
   return(myIO)
 }

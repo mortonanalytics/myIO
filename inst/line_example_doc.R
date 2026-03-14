@@ -30,7 +30,7 @@ myIO()%>%
                # high_y = "Temp_high",
                group = "Month"
              )) %>%
-  setToggle(newY = "Percent", newScaleY = ".0%") %>%
+  setToggle(variable = "Percent", format = ".0%") %>%
   setAxisFormat(xAxis = ".0f",yAxis = ".0f") %>%
   setAxisLimits(xlim = list(max = "10"),ylim = list(min="0"))
 

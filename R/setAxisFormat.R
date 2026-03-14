@@ -21,11 +21,11 @@
 #' @export
 setAxisFormat <- function(myIO, xAxis = "s", yAxis = "s", toolTip = "s", xLabel = NULL, yLabel = NULL){
 
-  myIO$x$options$xAxisFormat <- xAxis
-  myIO$x$options$yAxisFormat <- yAxis
-  myIO$x$options$toolTipFormat <- toolTip
-  myIO$x$options$xAxisLabel <- xLabel
-  myIO$x$options$yAxisLabel <- yLabel
+  myIO$x$config$axes$xAxisFormat <- xAxis
+  myIO$x$config$axes$yAxisFormat <- yAxis
+  myIO$x$config$axes$toolTipFormat <- toolTip
+  myIO$x$config$axes$xAxisLabel <- xLabel
+  myIO$x$config$axes$yAxisLabel <- yLabel
 
   return(myIO)
 }

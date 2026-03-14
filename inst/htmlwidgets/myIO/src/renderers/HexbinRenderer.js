@@ -2,6 +2,8 @@ import { tagName } from "../utils/responsive.js";
 
 export class HexbinRenderer {
   static type = "hexbin";
+  static traits = { hasAxes: true, referenceLines: false, legendType: "continuous", binning: false, rolloverStyle: "hex", scaleCapabilities: { invertX: false } };
+  static dataContract = { x_var: { required: true, numeric: true }, y_var: { required: true, numeric: true }, radius: { required: true, numeric: true, positive: true } };
 
   render(chart, layer) {
     var transitionSpeed = chart.options.transition.speed;
@@ -10,8 +12,9 @@ export class HexbinRenderer {
     }).sort(function(d) { return d3.ascending(d.index); });
     var x_extent = d3.extent(layer.data, function(d) { return +d[layer.mapping.x_var]; });
     var y_extent = d3.extent(layer.data, function(d) { return +d[layer.mapping.y_var]; });
+    var radius = typeof layer.mapping.radius === "number" ? layer.mapping.radius : +layer.mapping.radius;
     var hexbin = d3.hexbin()
-      .radius(layer.mapping.radius * (Math.min(chart.width, chart.height) / 1000))
+      .radius(radius * (Math.min(chart.width, chart.height) / 1000))
       .extent([[x_extent[0], y_extent[0]], [x_extent[1], y_extent[1]]]);
     var binnedData = hexbin(points);
 
@@ -37,5 +40,17 @@ export class HexbinRenderer {
       .attr("d", hexbin.hexagon())
       .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
       .attr("fill", function(d) { return chart.colorContinuous(d.length); });
+  }
+
+  getHoverSelector(chart, layer) {
+    return "." + tagName("hexbin", chart.dom.element.id, layer.label);
+  }
+
+  formatTooltip(chart, d) {
+    return { title: "x: " + chart.derived.xScale.invert(d.x) + ", y: " + chart.derived.yScale.invert(d.y), body: "Count: " + d.length, color: chart.derived.colorContinuous(d.length), label: "count", value: d.length, raw: d };
+  }
+
+  remove(chart, layer) {
+    chart.dom.chartArea.selectAll("." + tagName("hexbin", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
   }
 }

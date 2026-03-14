@@ -2,6 +2,8 @@ import { pointRadius, resolveColor, tagName } from "../utils/responsive.js";
 
 export class PointRenderer {
   static type = "point";
+  static traits = { hasAxes: true, referenceLines: true, legendType: "layer", binning: false, rolloverStyle: "element", scaleCapabilities: { invertX: false } };
+  static dataContract = { x_var: { required: true, numeric: true }, y_var: { required: true, numeric: true } };
 
   render(chart, layer) {
     var transitionSpeed = chart.options.transition.speed;
@@ -61,6 +63,20 @@ export class PointRenderer {
         chart.updateRegression(color, layer.label);
       }, transitionSpeed);
     }
+  }
+
+  getHoverSelector(chart, layer) {
+    return "." + tagName("point", chart.dom.element.id, layer.label);
+  }
+
+  formatTooltip(chart, d, layer) {
+    return { title: layer.mapping.x_var + ": " + d[layer.mapping.x_var], body: layer.mapping.y_var + ": " + d[chart.runtime.activeY || layer.mapping.y_var], color: layer.color, label: layer.label, value: d[chart.runtime.activeY || layer.mapping.y_var], raw: d };
+  }
+
+  remove(chart, layer) {
+    chart.dom.chartArea.selectAll("." + tagName("point", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll("." + tagName("crosshairX", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll("." + tagName("crosshairY", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
   }
 }
 

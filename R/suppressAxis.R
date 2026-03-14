@@ -19,7 +19,7 @@
 suppressAxis <- function(myIO, xAxis = NULL, yAxis = NULL){
 
   suppressAxis <- list(xAxis = xAxis, yAxis = yAxis)
-  myIO$x$options$suppressAxis <- suppressAxis
+  myIO$x$config$layout$suppressAxis <- suppressAxis
 
   return(myIO)
 }

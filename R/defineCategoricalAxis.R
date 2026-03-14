@@ -17,7 +17,7 @@
 #'
 #' @export
 defineCategoricalAxis <- function(myIO, xAxis = TRUE, yAxis = FALSE){
-  myIO$x$options$categoricalScale$xAxis <- xAxis
-  myIO$x$options$categoricalScale$yAxis <- yAxis
+  myIO$x$config$scales$categoricalScale$xAxis <- xAxis
+  myIO$x$config$scales$categoricalScale$yAxis <- yAxis
   return(myIO)
 }

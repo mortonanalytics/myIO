@@ -1,7 +1,8 @@
 (() => {
   // inst/htmlwidgets/myIO/src/utils/responsive.js
+  var MOBILE_BREAKPOINT = 600;
   function isMobile(chart) {
-    return chart.totalWidth <= 600;
+    return chart.runtime.totalWidth <= MOBILE_BREAKPOINT;
   }
   function responsiveValue(chart, desktop, mobile) {
     return isMobile(chart) ? mobile : desktop;
@@ -16,15 +17,17 @@
     return "tag-" + type + "-" + elementId + "-" + String(label).replace(/\s+/g, "");
   }
   function isColorSchemeActive(chart) {
-    return chart.options.colorScheme[2] == "on";
+    return chart.config.scales.colorScheme.enabled === true;
   }
   function resolveColor(chart, colorKeyValue, fallback) {
-    return isColorSchemeActive(chart) ? chart.colorScheme(colorKeyValue) : fallback;
+    return isColorSchemeActive(chart) ? chart.derived.colorDiscrete(colorKeyValue) : fallback;
   }
 
   // inst/htmlwidgets/myIO/src/renderers/LineRenderer.js
   var LineRenderer = class {
     static type = "line";
+    static traits = { hasAxes: true, referenceLines: true, legendType: "layer", binning: false, rolloverStyle: "overlay", scaleCapabilities: { invertX: true } };
+    static dataContract = { x_var: { required: true, numeric: true, sorted: true }, y_var: { required: true, numeric: true } };
     render(chart, layer) {
       var data = layer.data;
       var key = layer.label;
@@ -64,11 +67,20 @@
         return chart.yScale(d[chart.newY ? chart.newY : layer.mapping.y_var]);
       }).attr("class", tagName("point", chart.element.id, layer.label)).transition().ease(d3.easeQuad).duration(transitionSpeed).style("opacity", 1);
     }
+    formatTooltip(chart, d, layer) {
+      return { title: layer.mapping.x_var + ": " + d[layer.mapping.x_var], body: layer.label + ": " + d[chart.runtime.activeY || layer.mapping.y_var], color: layer.color, label: layer.label, value: d[chart.runtime.activeY || layer.mapping.y_var], raw: d };
+    }
+    remove(chart, layer) {
+      chart.dom.chartArea.selectAll("." + tagName("line", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
+      chart.dom.chartArea.selectAll("." + tagName("point", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
+    }
   };
 
   // inst/htmlwidgets/myIO/src/renderers/PointRenderer.js
   var PointRenderer = class {
     static type = "point";
+    static traits = { hasAxes: true, referenceLines: true, legendType: "layer", binning: false, rolloverStyle: "element", scaleCapabilities: { invertX: false } };
+    static dataContract = { x_var: { required: true, numeric: true }, y_var: { required: true, numeric: true } };
     render(chart, layer) {
       var transitionSpeed = chart.options.transition.speed;
       if (layer.mapping.low_y) {
@@ -100,6 +112,17 @@
           chart.updateRegression(color, layer.label);
         }, transitionSpeed);
       }
+    }
+    getHoverSelector(chart, layer) {
+      return "." + tagName("point", chart.dom.element.id, layer.label);
+    }
+    formatTooltip(chart, d, layer) {
+      return { title: layer.mapping.x_var + ": " + d[layer.mapping.x_var], body: layer.mapping.y_var + ": " + d[chart.runtime.activeY || layer.mapping.y_var], color: layer.color, label: layer.label, value: d[chart.runtime.activeY || layer.mapping.y_var], raw: d };
+    }
+    remove(chart, layer) {
+      chart.dom.chartArea.selectAll("." + tagName("point", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
+      chart.dom.chartArea.selectAll("." + tagName("crosshairX", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
+      chart.dom.chartArea.selectAll("." + tagName("crosshairY", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
     }
   };
   function renderCrosshairsX(chart, layer) {
@@ -194,6 +217,8 @@
   // inst/htmlwidgets/myIO/src/renderers/RegressionRenderer.js
   var RegressionRenderer = class {
     static type = "regression";
+    static traits = { hasAxes: true, referenceLines: false, legendType: "none", binning: false, rolloverStyle: "none", scaleCapabilities: { invertX: false } };
+    static dataContract = { x_var: { required: true, numeric: true }, y_var: { required: true, numeric: true } };
     renderFromPoints(chart, color, label) {
       var that = chart;
       var transitionSpeed = chart.options.transition.speed / 2;
@@ -228,11 +253,16 @@
       var newLinePath = linePath.enter().append("path").attr("class", tagName("regression-line", chart.element.id, label)).attr("clip-path", "url(#" + chart.element.id + "clip)").style("fill", "none").style("stroke", color).style("stroke-width", 3).style("opacity", 0);
       linePath.merge(newLinePath).transition().ease(d3.easeQuad).duration(transitionSpeed).style("opacity", 1).style("stroke", color).attr("d", valueLine);
     }
+    remove(chart, layer) {
+      chart.dom.chartArea.selectAll("." + tagName("regression-line", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
+    }
   };
 
   // inst/htmlwidgets/myIO/src/renderers/AreaRenderer.js
   var AreaRenderer = class {
     static type = "area";
+    static traits = { hasAxes: true, referenceLines: true, legendType: "layer", binning: false, rolloverStyle: "overlay", scaleCapabilities: { invertX: true } };
+    static dataContract = { x_var: { required: true, numeric: true, sorted: true }, low_y: { required: true, numeric: true }, high_y: { required: true, numeric: true } };
     render(chart, layer) {
       var data = layer.data;
       var key = layer.label;
@@ -251,17 +281,34 @@
       }).style("opacity", 0).attr("class", tagName("area", chart.element.id, key));
       linePath.merge(newLinePath).attr("clip-path", "url(#" + chart.element.id + "clip)").transition().ease(d3.easeQuad).duration(transitionSpeed).attr("d", valueArea).style("opacity", 0.4);
     }
+    formatTooltip(chart, d, layer) {
+      return { title: layer.mapping.x_var + ": " + d[layer.mapping.x_var], body: layer.label + ": " + d[layer.mapping.high_y], color: layer.color, label: layer.label, value: d[layer.mapping.high_y], raw: d };
+    }
+    remove(chart, layer) {
+      chart.dom.chartArea.selectAll("." + tagName("area", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
+    }
   };
 
   // inst/htmlwidgets/myIO/src/renderers/BarRenderer.js
   var BarRenderer = class {
     static type = "bar";
+    static traits = { hasAxes: true, referenceLines: true, legendType: "layer", binning: false, rolloverStyle: "element", scaleCapabilities: { invertX: false } };
+    static dataContract = { x_var: { required: true }, y_var: { required: true, numeric: true } };
     render(chart, layer) {
       if (chart.options.flipAxis === true) {
         renderHorizontalBars(chart, layer);
         return;
       }
       renderVerticalBars(chart, layer);
+    }
+    getHoverSelector(chart, layer) {
+      return "." + tagName("bar", chart.dom.element.id, layer.label);
+    }
+    formatTooltip(chart, d, layer) {
+      return { title: layer.mapping.x_var + ": " + d[layer.mapping.x_var], body: layer.mapping.y_var + ": " + d[layer.mapping.y_var], color: layer.color, label: layer.label, value: d[layer.mapping.y_var], raw: d };
+    }
+    remove(chart, layer) {
+      chart.dom.chartArea.selectAll("." + tagName("bar", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
     }
   };
   function renderVerticalBars(chart, layer) {
@@ -370,12 +417,6 @@
       return;
     }
     renderAxes(chart, { isInitialRender: options && options.isInitialRender });
-  }
-  function addAxes(chart) {
-    renderAxes(chart, { isInitialRender: true });
-  }
-  function updateAxes(chart) {
-    renderAxes(chart);
   }
   function renderAxes(chart, options) {
     var m = chart.margin;
@@ -510,6 +551,8 @@
   // inst/htmlwidgets/myIO/src/renderers/GroupedBarRenderer.js
   var GroupedBarRenderer = class {
     static type = "groupedBar";
+    static traits = { hasAxes: true, referenceLines: true, legendType: "layer", binning: false, rolloverStyle: "element", scaleCapabilities: { invertX: false } };
+    static dataContract = { x_var: { required: true }, y_var: { required: true, numeric: true }, group: { required: true } };
     render(chart, layer, layers) {
       var lys = layers || [layer];
       var data = getGroupedDataObject(lys, chart);
@@ -535,19 +578,30 @@
         }
       });
     }
+    getHoverSelector() {
+      return ".tag-grouped-bar-g rect";
+    }
+    formatTooltip(chart, d, layer) {
+      return { title: layer.mapping.x_var + ": " + d.data[0], body: layer.mapping.y_var + ": " + (d[1] - d[0]), color: layer.color, label: layer.label, value: d[1] - d[0], raw: d };
+    }
+    remove(chart) {
+      chart.dom.chartArea.selectAll(".tag-grouped-bar-g").transition().duration(500).style("opacity", 0).remove();
+    }
   };
 
   // inst/htmlwidgets/myIO/src/renderers/HistogramRenderer.js
   var HistogramRenderer = class {
     static type = "histogram";
+    static traits = { hasAxes: true, referenceLines: false, legendType: "layer", binning: true, rolloverStyle: "element", scaleCapabilities: { invertX: false } };
+    static dataContract = { value: { required: true, numeric: true } };
     render(chart, layer) {
       var data = layer.bins;
       var key = layer.label;
       var transitionSpeed = chart.options.transition.speed;
       var bars = chart.chart.selectAll("." + tagName("bar", chart.element.id, key)).data(data);
       bars.exit().transition().duration(transitionSpeed).attr("y", chart.yScale(0)).remove();
-      var newBars = bars.enter().append("rect").attr("class", tagName("bar", chart.element.id, key)).attr("clip-path", "url(#" + chart.element.id + "clip)").style("fill", function(d) {
-        return resolveColor(chart, d[layer.mapping.x_var], layer.color);
+      var newBars = bars.enter().append("rect").attr("class", tagName("bar", chart.element.id, key)).attr("clip-path", "url(#" + chart.element.id + "clip)").style("fill", function() {
+        return resolveColor(chart, layer.label, layer.color);
       }).attr("x", function(d) {
         return chart.xScale(d.x0) + 1;
       }).attr("y", chart.yScale(0)).attr("width", function(d) {
@@ -563,11 +617,22 @@
         return chart.yScale(0) - chart.yScale(d.length);
       });
     }
+    getHoverSelector(chart, layer) {
+      return "." + tagName("bar", chart.dom.element.id, layer.label);
+    }
+    formatTooltip(chart, d, layer) {
+      return { title: "Bin: " + d.x0 + " to " + d.x1, body: "Count: " + d.length, color: layer.color, label: "count", value: d.length, raw: d };
+    }
+    remove(chart, layer) {
+      chart.dom.chartArea.selectAll("." + tagName("bar", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
+    }
   };
 
   // inst/htmlwidgets/myIO/src/renderers/HexbinRenderer.js
   var HexbinRenderer = class {
     static type = "hexbin";
+    static traits = { hasAxes: true, referenceLines: false, legendType: "continuous", binning: false, rolloverStyle: "hex", scaleCapabilities: { invertX: false } };
+    static dataContract = { x_var: { required: true, numeric: true }, y_var: { required: true, numeric: true }, radius: { required: true, numeric: true, positive: true } };
     render(chart, layer) {
       var transitionSpeed = chart.options.transition.speed;
       var points = layer.data.map(function(d) {
@@ -581,7 +646,8 @@
       var y_extent = d3.extent(layer.data, function(d) {
         return +d[layer.mapping.y_var];
       });
-      var hexbin = d3.hexbin().radius(layer.mapping.radius * (Math.min(chart.width, chart.height) / 1e3)).extent([[x_extent[0], y_extent[0]], [x_extent[1], y_extent[1]]]);
+      var radius = typeof layer.mapping.radius === "number" ? layer.mapping.radius : +layer.mapping.radius;
+      var hexbin = d3.hexbin().radius(radius * (Math.min(chart.width, chart.height) / 1e3)).extent([[x_extent[0], y_extent[0]], [x_extent[1], y_extent[1]]]);
       var binnedData = hexbin(points);
       chart.colorContinuous = d3.scaleSequential(d3.interpolateBuPu).domain([0, d3.max(binnedData, function(d) {
         return d.length;
@@ -597,11 +663,22 @@
         return chart.colorContinuous(d.length);
       });
     }
+    getHoverSelector(chart, layer) {
+      return "." + tagName("hexbin", chart.dom.element.id, layer.label);
+    }
+    formatTooltip(chart, d) {
+      return { title: "x: " + chart.derived.xScale.invert(d.x) + ", y: " + chart.derived.yScale.invert(d.y), body: "Count: " + d.length, color: chart.derived.colorContinuous(d.length), label: "count", value: d.length, raw: d };
+    }
+    remove(chart, layer) {
+      chart.dom.chartArea.selectAll("." + tagName("hexbin", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
+    }
   };
 
   // inst/htmlwidgets/myIO/src/renderers/TreemapRenderer.js
   var TreemapRenderer = class {
     static type = "treemap";
+    static traits = { hasAxes: false, referenceLines: false, legendType: "ordinal", binning: false, rolloverStyle: "none", scaleCapabilities: { invertX: false } };
+    static dataContract = { level_1: { required: true }, level_2: { required: true }, y_var: { required: false, numeric: true } };
     render(chart, layer) {
       var m = chart.margin;
       var format = d3.format(",d");
@@ -675,11 +752,16 @@
       });
       chart.updateOrdinalColorLegend(layer);
     }
+    remove(chart) {
+      chart.dom.chartArea.selectAll(".root").transition().duration(500).style("opacity", 0).remove();
+    }
   };
 
   // inst/htmlwidgets/myIO/src/renderers/DonutRenderer.js
   var DonutRenderer = class {
     static type = "donut";
+    static traits = { hasAxes: false, referenceLines: false, legendType: "ordinal", binning: false, rolloverStyle: "none", scaleCapabilities: { invertX: false } };
+    static dataContract = { x_var: { required: true }, y_var: { required: true, numeric: true } };
     render(chart, layer) {
       var m = chart.margin;
       var transitionSpeed = chart.options.transition.speed;
@@ -764,17 +846,28 @@
       polyline.exit().remove();
       chart.updateOrdinalColorLegend(layer);
     }
+    remove(chart) {
+      chart.dom.chartArea.selectAll(".donut, text, polyline").transition().duration(500).style("opacity", 0).remove();
+    }
   };
 
   // inst/htmlwidgets/myIO/src/renderers/GaugeRenderer.js
   var GaugeRenderer = class {
     static type = "gauge";
+    static traits = { hasAxes: false, referenceLines: false, legendType: "none", binning: false, rolloverStyle: "none", scaleCapabilities: { invertX: false } };
+    static dataContract = { value: { required: true, numeric: true } };
     render(chart, layer) {
       var transitionSpeed = chart.options.transition.speed;
       var tau = Math.PI;
       var radius = Math.max(Math.min(chart.width, getChartHeight(chart)) / 2, 30);
       var barWidth = 30;
-      var value = layer.data[0].value[0];
+      var firstDatum = Array.isArray(layer.data) && layer.data.length > 0 ? layer.data[0] : {};
+      var valueKey = layer.mapping.value;
+      var value = typeof valueKey === "string" ? +firstDatum[valueKey] : +valueKey;
+      if (!Number.isFinite(value)) {
+        value = 0;
+      }
+      value = Math.max(0, Math.min(1, value));
       var data = [value, 1 - value];
       var arc = d3.arc().innerRadius(radius - barWidth).outerRadius(radius).cornerRadius(10);
       var pie = d3.pie().sort(null).value(function(d) {
@@ -815,11 +908,16 @@
         return percentFormat(d);
       }).attr("text-anchor", "middle").attr("font-size", 20).attr("dy", "-0.45em");
     }
+    remove(chart) {
+      chart.dom.chartArea.selectAll(".myIO-gauge-background, .myIO-gauge-value, .gauge-text").transition().duration(500).style("opacity", 0).remove();
+    }
   };
 
   // inst/htmlwidgets/myIO/src/renderers/StatLineRenderer.js
   var StatLineRenderer = class extends LineRenderer {
     static type = "stat_line";
+    static traits = { hasAxes: true, referenceLines: true, legendType: "layer", binning: false, rolloverStyle: "overlay", scaleCapabilities: { invertX: true } };
+    static dataContract = { x_var: { required: true, numeric: true, sorted: true }, y_var: { required: true, numeric: true } };
   };
 
   // inst/htmlwidgets/myIO/src/registry.js
@@ -828,6 +926,16 @@
     if (rendererRegistry.has(type)) {
       throw new Error("Renderer already registered for type: " + type);
     }
+    var traits = RendererClass && RendererClass.constructor ? RendererClass.constructor.traits : null;
+    var requiredTraitKeys = ["hasAxes", "referenceLines", "legendType", "binning", "rolloverStyle"];
+    if (!traits) {
+      throw new Error("Renderer missing static traits: " + type);
+    }
+    requiredTraitKeys.forEach(function(key) {
+      if (!(key in traits)) {
+        throw new Error("Renderer trait missing '" + key + "': " + type);
+      }
+    });
     rendererRegistry.set(type, RendererClass);
   }
   function getRenderer(type) {
@@ -877,6 +985,9 @@
       registerRenderer(GaugeRenderer.type, new GaugeRenderer());
     }
     return rendererRegistry;
+  }
+  function listRenderers() {
+    return Array.from(rendererRegistry.values());
   }
 
   // inst/htmlwidgets/myIO/src/utils/export-csv.js
@@ -1155,9 +1266,10 @@
 
   // inst/htmlwidgets/myIO/src/tooltip.js
   function initializeTooltip(chart) {
-    chart.tooltip = d3.select(chart.element).append("div").attr("class", "toolTip");
-    chart.toolTipTitle = chart.tooltip.append("div").attr("class", "toolTipTitle").style("background-color", "lightgray");
-    chart.toolTipBody = chart.tooltip.append("div").attr("class", "toolTipBody");
+    chart.dom.tooltip = d3.select(chart.dom.element).append("div").attr("class", "toolTip");
+    chart.dom.tooltipTitle = chart.dom.tooltip.append("div").attr("class", "toolTipTitle").style("background-color", "lightgray");
+    chart.dom.tooltipBody = chart.dom.tooltip.append("div").attr("class", "toolTipBody");
+    chart.captureLegacyAliases();
   }
   function removeHoverOverlay(chart) {
     d3.select(chart.element).select(".toolTipBox").remove();
@@ -1386,6 +1498,8 @@
   }
 
   // inst/htmlwidgets/myIO/src/derive/scales.js
+  var X_DOMAIN_BUFFER = 0.05;
+  var Y_DOMAIN_BUFFER = 0.15;
   function createBins(chart, lys) {
     var m = chart.margin;
     var chartHeight = getChartHeight(chart);
@@ -1412,8 +1526,8 @@
         return bin.length;
       });
     });
-    chart.xScale = x;
-    chart.yScale = d3.scaleLinear().domain([0, d3.max(lys, function(d) {
+    chart.derived.xScale = x;
+    chart.derived.yScale = d3.scaleLinear().domain([0, d3.max(lys, function(d) {
       return d.max_value;
     })]).nice().range([chartHeight - (m.top + m.bottom), 0]);
   }
@@ -1462,17 +1576,17 @@
     var x_check2 = d3.max(x_extents, function(d) {
       return d[1];
     });
-    chart.x_check = (x_check1 == 0 & x_check2 == 0) == 1;
+    chart.derived.xCheck = x_check1 === 0 && x_check2 === 0;
     if (x_min == x_max) {
       x_min = x_min - 1;
       x_max = x_max + 1;
     }
-    var x_buffer = Math.max(Math.abs(x_max - x_min) * 0.05, 0.5);
+    var x_buffer = Math.max(Math.abs(x_max - x_min) * X_DOMAIN_BUFFER, 0.5);
     var xExtent = [
-      chart.options.xlim.min ? +chart.options.xlim.min : x_min - x_buffer,
-      chart.options.xlim.max ? +chart.options.xlim.max : x_max + x_buffer
+      chart.config.scales.xlim.min ? +chart.config.scales.xlim.min : x_min - x_buffer,
+      chart.config.scales.xlim.max ? +chart.config.scales.xlim.max : x_max + x_buffer
     ];
-    chart.x_banded = [].concat.apply([], x_bands).map(function(d) {
+    chart.derived.xBanded = [].concat.apply([], x_bands).map(function(d) {
       try {
         return d[0];
       } catch (err) {
@@ -1489,12 +1603,12 @@
       y_min = y_min - 1;
       y_max = y_max + 1;
     }
-    var y_buffer = Math.abs(y_max - y_min) * 0.15;
+    var y_buffer = Math.abs(y_max - y_min) * Y_DOMAIN_BUFFER;
     var yExtent = [
-      chart.options.ylim.min ? +chart.options.ylim.min : y_min - y_buffer,
-      chart.options.ylim.max ? +chart.options.ylim.max : y_max + y_buffer
+      chart.config.scales.ylim.min ? +chart.config.scales.ylim.min : y_min - y_buffer,
+      chart.config.scales.ylim.max ? +chart.config.scales.ylim.max : y_max + y_buffer
     ];
-    chart.y_banded = [].concat.apply([], y_bands).map(function(d) {
+    chart.derived.yBanded = [].concat.apply([], y_bands).map(function(d) {
       try {
         return d[0];
       } catch (err) {
@@ -1502,61 +1616,53 @@
       }
     }).filter(onlyUnique);
     var chartHeight = getChartHeight(chart);
-    switch (chart.options.categoricalScale.xAxis) {
+    switch (chart.config.scales.categoricalScale.xAxis) {
       case true:
-        chart.xScale = d3.scaleBand().range([0, chart.width - (m.left + m.right)]).domain(chart.options.flipAxis == true ? chart.y_banded : chart.x_banded);
+        chart.derived.xScale = d3.scaleBand().range([0, chart.width - (m.left + m.right)]).domain(chart.config.scales.flipAxis === true ? chart.derived.yBanded : chart.derived.xBanded);
         break;
       case false:
-        chart.xScale = d3.scaleLinear().range([0, chart.width - (m.right + m.left)]).domain(chart.options.flipAxis == true ? yExtent : xExtent);
+        chart.derived.xScale = d3.scaleLinear().range([0, chart.width - (m.right + m.left)]).domain(chart.config.scales.flipAxis === true ? yExtent : xExtent);
     }
-    switch (chart.options.categoricalScale.yAxis) {
+    switch (chart.config.scales.categoricalScale.yAxis) {
       case true:
-        chart.yScale = d3.scaleBand().range([chartHeight - (m.top + m.bottom), 0]).domain(chart.options.flipAxis == true ? chart.x_banded : chart.y_banded);
+        chart.derived.yScale = d3.scaleBand().range([chartHeight - (m.top + m.bottom), 0]).domain(chart.config.scales.flipAxis === true ? chart.derived.xBanded : chart.derived.yBanded);
         break;
       case false:
-        chart.yScale = d3.scaleLinear().range([chartHeight - (m.top + m.bottom), 0]).domain(chart.options.flipAxis == true ? xExtent : yExtent);
+        chart.derived.yScale = d3.scaleLinear().range([chartHeight - (m.top + m.bottom), 0]).domain(chart.config.scales.flipAxis === true ? xExtent : yExtent);
     }
-    if (chart.options.colorScheme) {
-      chart.colorDiscrete = d3.scaleOrdinal().range(chart.options.colorScheme[0]).domain(chart.options.colorScheme[1]);
-      chart.colorContinuous = d3.scaleLinear().range(chart.options.colorScheme[0]).domain(chart.options.colorScheme[1]);
+    if (chart.config.scales.colorScheme && chart.config.scales.colorScheme.enabled) {
+      chart.derived.colorDiscrete = d3.scaleOrdinal().range(chart.config.scales.colorScheme.colors).domain(chart.config.scales.colorScheme.domain);
+      chart.derived.colorContinuous = d3.scaleLinear().range(chart.config.scales.colorScheme.colors).domain(chart.config.scales.colorScheme.domain);
     }
+    chart.captureLegacyAliases();
   }
   function onlyUnique(value, index, self2) {
     return self2.indexOf(value) === index;
   }
 
   // inst/htmlwidgets/myIO/src/derive/chart-render.js
-  function getPrimaryType(chart) {
-    return chart.currentLayers && chart.currentLayers[0] ? chart.currentLayers[0].type : null;
-  }
-  function isAxesChart(type) {
-    return ["treemap", "gauge", "donut"].indexOf(type) === -1;
-  }
-  function usesHistogramBins(type) {
-    return type === "histogram";
-  }
-  function usesContinuousLegend(type) {
-    return type === "hexbin";
-  }
-  function usesOrdinalLegend(type) {
-    return type === "treemap" || type === "donut";
-  }
-  function needsReferenceLines(type) {
-    return ["bar", "groupedBar", "line", "point", "area", "stat_line"].indexOf(type) > -1;
-  }
   function deriveChartRender(chart) {
-    var layers = chart.currentLayers || [];
-    var types = layers.map(function(layer) {
-      return layer.type;
+    var layers = chart.derived.currentLayers || [];
+    var traits = layers.map(function(layer) {
+      return getRendererForLayer(layer).constructor.traits;
     });
-    var primaryType = getPrimaryType(chart);
+    var primaryType = layers[0] ? layers[0].type : null;
+    var legendTypes = Array.from(new Set(traits.map(function(trait) {
+      return trait.legendType;
+    })));
     return {
       type: primaryType,
-      axesChart: types.every(isAxesChart),
-      histogram: types.length > 0 && types.every(usesHistogramBins),
-      continuousLegend: types.length > 0 && types.every(usesContinuousLegend),
-      ordinalLegend: types.length === 1 && usesOrdinalLegend(primaryType),
-      referenceLines: types.some(needsReferenceLines)
+      axesChart: traits.every(function(trait) {
+        return trait.hasAxes;
+      }),
+      histogram: traits.length > 0 && traits.every(function(trait) {
+        return trait.binning;
+      }),
+      continuousLegend: legendTypes.length === 1 && legendTypes[0] === "continuous",
+      ordinalLegend: legendTypes.length === 1 && legendTypes[0] === "ordinal",
+      referenceLines: traits.some(function(trait) {
+        return trait.referenceLines;
+      })
     };
   }
   function applyDerivedScales(chart, renderState) {
@@ -1564,10 +1670,136 @@
       return;
     }
     if (renderState.histogram) {
-      createBins(chart, chart.currentLayers);
+      createBins(chart, chart.derived.currentLayers);
     } else {
-      processScales(chart, chart.currentLayers);
+      processScales(chart, chart.derived.currentLayers);
     }
+  }
+
+  // inst/htmlwidgets/myIO/src/derive/validate.js
+  var COMPAT_GROUP = {
+    line: "axes-continuous",
+    stat_line: "axes-continuous",
+    point: "axes-continuous",
+    area: "axes-continuous",
+    bar: "axes-categorical",
+    groupedBar: "axes-categorical",
+    histogram: "axes-continuous",
+    hexbin: "axes-continuous",
+    regression: "axes-continuous",
+    treemap: "standalone-treemap",
+    donut: "standalone-donut",
+    gauge: "standalone-gauge"
+  };
+  var CROSS_GROUP_ALLOWED = /* @__PURE__ */ new Set(["axes-continuous:axes-categorical", "axes-categorical:axes-continuous"]);
+  function validateComposition(layers) {
+    const errors = [];
+    const groups = layers.map(function(layer) {
+      return COMPAT_GROUP[layer.type] || "unknown";
+    });
+    const standalone = groups.filter(function(group) {
+      return group.startsWith("standalone");
+    });
+    if (standalone.length > 0 && layers.length > 1) {
+      errors.push("Cannot mix standalone chart types with other layers.");
+    }
+    if (standalone.length > 1) {
+      errors.push("Standalone chart types must be used alone.");
+    }
+    const uniqueGroups = Array.from(new Set(groups));
+    if (uniqueGroups.length > 1) {
+      uniqueGroups.forEach(function(group, index) {
+        uniqueGroups.slice(index + 1).forEach(function(other) {
+          if (!CROSS_GROUP_ALLOWED.has(group + ":" + other)) {
+            errors.push("Cannot mix layer groups '" + group + "' and '" + other + "'.");
+          }
+        });
+      });
+    }
+    return { valid: errors.length === 0, errors };
+  }
+  function validateAgainstContract(layer, contract) {
+    const errors = [];
+    const warnings = [];
+    if (!contract) {
+      return { errors, warnings };
+    }
+    Object.entries(contract).forEach(function(entry) {
+      const field = entry[0];
+      const rules = entry[1];
+      const mapped = layer.mapping ? layer.mapping[field] : null;
+      if (rules.required && !mapped) {
+        errors.push("Layer '" + layer.label + "' is missing required mapping '" + field + "'.");
+        return;
+      }
+      if (!mapped) {
+        return;
+      }
+      const values = Array.isArray(layer.data) ? typeof mapped === "string" ? layer.data.map(function(row) {
+        return row[mapped];
+      }) : layer.data.map(function() {
+        return mapped;
+      }) : [];
+      if (rules.numeric) {
+        const invalid = values.find(function(value) {
+          return Number.isNaN(+value);
+        });
+        if (invalid !== void 0) {
+          errors.push("Layer '" + layer.label + "' field '" + mapped + "' must be numeric.");
+        }
+      }
+      if (rules.positive) {
+        const invalid = values.find(function(value) {
+          return +value <= 0;
+        });
+        if (invalid !== void 0) {
+          errors.push("Layer '" + layer.label + "' field '" + mapped + "' must be positive.");
+        }
+      }
+      if (rules.sorted) {
+        for (let i = 1; i < values.length; i += 1) {
+          if (+values[i] < +values[i - 1]) {
+            warnings.push("Layer '" + layer.label + "' field '" + mapped + "' is not sorted.");
+            break;
+          }
+        }
+      }
+      if (rules.unique && new Set(values).size !== values.length) {
+        warnings.push("Layer '" + layer.label + "' field '" + mapped + "' contains duplicate values.");
+      }
+      const nullCount = values.filter(function(value) {
+        return value === null || value === void 0 || Number.isNaN(value);
+      }).length;
+      if (nullCount > 0) {
+        warnings.push("Layer '" + layer.label + "' field '" + mapped + "' contains " + nullCount + " null/NaN values.");
+      }
+    });
+    return { errors, warnings };
+  }
+  function validateLayers(chart) {
+    const layers = chart.config.layers || [];
+    const composition = validateComposition(layers);
+    if (!composition.valid) {
+      composition.errors.forEach(function(message) {
+        chart.emit("error", { message });
+      });
+      return [];
+    }
+    return layers.filter(function(layer) {
+      const renderer = getRendererForLayer(layer);
+      const contract = renderer.constructor.dataContract;
+      const result = validateAgainstContract(layer, contract);
+      result.warnings.forEach(function(message) {
+        console.warn(message);
+      });
+      if (result.errors.length > 0) {
+        result.errors.forEach(function(message) {
+          chart.emit("error", { message, layer });
+        });
+        return false;
+      }
+      return true;
+    });
   }
 
   // inst/htmlwidgets/myIO/src/layout/legend.js
@@ -1771,71 +2003,186 @@
   }
 
   // inst/htmlwidgets/myIO/src/Chart.js
+  var MIN_CHART_WIDTH = 280;
+  var PLOT_WIDTH_RATIO = 0.8;
+  var RESIZE_DEBOUNCE_MS = 100;
+  var EventEmitter = {
+    on(event, handler) {
+      this._listeners = this._listeners || {};
+      this._listeners[event] = this._listeners[event] || [];
+      this._listeners[event].push(handler);
+      return this;
+    },
+    off(event, handler) {
+      if (!this._listeners || !this._listeners[event]) {
+        return this;
+      }
+      this._listeners[event] = handler ? this._listeners[event].filter(function(candidate) {
+        return candidate !== handler;
+      }) : [];
+      return this;
+    },
+    emit(event, payload) {
+      if (!this._listeners || !this._listeners[event]) {
+        return this;
+      }
+      this._listeners[event].forEach(function(handler) {
+        handler(payload);
+      });
+      return this;
+    }
+  };
   var myIOchart = class {
     constructor(opts) {
-      this.element = opts.element;
-      this.plotLayers = opts.plotLayers;
-      this.options = opts.options;
-      this.margin = this.options.margin;
-      this.totalWidth = Math.max(opts.width, 280);
-      this.width = !isMobile(this) && this.options.suppressLegend == false ? this.totalWidth * 0.8 : this.totalWidth;
-      this.height = opts.height;
+      Object.assign(this, EventEmitter);
+      this._listeners = {};
+      this.config = opts.config;
+      this.dom = { element: opts.element };
+      this.derived = {};
+      this.runtime = {
+        renderGen: 0,
+        resizeTimer: null,
+        width: Math.max(opts.width, MIN_CHART_WIDTH),
+        height: opts.height,
+        totalWidth: Math.max(opts.width, MIN_CHART_WIDTH),
+        layout: "grouped",
+        activeY: null,
+        activeYFormat: null
+      };
+      this.runtime.width = !isMobile(this) && !this.config.layout.suppressLegend ? this.runtime.totalWidth * PLOT_WIDTH_RATIO : this.runtime.totalWidth;
+      this.syncLegacyAliases();
       this.draw();
     }
-    get opts() {
-      return this.options;
+    syncLegacyAliases() {
+      this.element = this.dom ? this.dom.element : null;
+      this.svg = this.dom ? this.dom.svg : null;
+      this.plot = this.dom ? this.dom.plot : null;
+      this.chart = this.dom ? this.dom.chartArea : null;
+      this.legendArea = this.dom ? this.dom.legendArea : null;
+      this.clipPath = this.dom ? this.dom.clipPath : null;
+      this.tooltip = this.dom ? this.dom.tooltip : null;
+      this.toolTipTitle = this.dom ? this.dom.tooltipTitle : null;
+      this.toolTipBody = this.dom ? this.dom.tooltipBody : null;
+      this.plotLayers = this.config ? this.config.layers : null;
+      this.options = this.config ? this.config : null;
+      this.margin = this.config ? this.config.layout.margin : null;
+      this.width = this.runtime ? this.runtime.width : null;
+      this.height = this.runtime ? this.runtime.height : null;
+      this.totalWidth = this.runtime ? this.runtime.totalWidth : null;
+      this.layout = this.runtime ? this.runtime.layout : null;
+      this.newY = this.runtime ? this.runtime.activeY : null;
+      this.newScaleY = this.runtime ? this.runtime.activeYFormat : null;
+      this.toolLine = this.runtime ? this.runtime.toolLine : null;
+      this.toolTipBox = this.runtime ? this.runtime.toolTipBox : null;
+      this.xScale = this.derived ? this.derived.xScale : null;
+      this.yScale = this.derived ? this.derived.yScale : null;
+      this.colorDiscrete = this.derived ? this.derived.colorDiscrete : null;
+      this.colorContinuous = this.derived ? this.derived.colorContinuous : null;
+      this.x_banded = this.derived ? this.derived.xBanded : null;
+      this.y_banded = this.derived ? this.derived.yBanded : null;
+      this.x_check = this.derived ? this.derived.xCheck : null;
+      this.currentLayers = this.derived ? this.derived.currentLayers : null;
+      this.layerIndex = this.derived ? this.derived.layerIndex : null;
     }
-    set opts(x) {
-      this.options = x;
+    captureLegacyAliases() {
+      if (!this.dom || !this.runtime || !this.derived) {
+        return;
+      }
+      this.dom.svg = this.svg || this.dom.svg;
+      this.dom.plot = this.plot || this.dom.plot;
+      this.dom.chartArea = this.chart || this.dom.chartArea;
+      this.dom.legendArea = this.legendArea || this.dom.legendArea;
+      this.dom.clipPath = this.clipPath || this.dom.clipPath;
+      this.dom.tooltip = this.tooltip || this.dom.tooltip;
+      this.dom.tooltipTitle = this.toolTipTitle || this.dom.tooltipTitle;
+      this.dom.tooltipBody = this.toolTipBody || this.dom.tooltipBody;
+      this.runtime.layout = this.layout || this.runtime.layout;
+      this.runtime.activeY = this.newY || this.runtime.activeY;
+      this.runtime.activeYFormat = this.newScaleY || this.runtime.activeYFormat;
+      this.runtime.toolLine = this.toolLine || this.runtime.toolLine;
+      this.runtime.toolTipBox = this.toolTipBox || this.runtime.toolTipBox;
+      this.derived.xScale = this.xScale || this.derived.xScale;
+      this.derived.yScale = this.yScale || this.derived.yScale;
+      this.derived.colorDiscrete = this.colorDiscrete || this.derived.colorDiscrete;
+      this.derived.colorContinuous = this.colorContinuous || this.derived.colorContinuous;
+      this.derived.xBanded = this.x_banded || this.derived.xBanded;
+      this.derived.yBanded = this.y_banded || this.derived.yBanded;
+      this.derived.xCheck = this.x_check || this.derived.xCheck;
+      this.derived.currentLayers = this.currentLayers || this.derived.currentLayers;
+      this.derived.layerIndex = this.layerIndex || this.derived.layerIndex;
+      this.syncLegacyAliases();
     }
     draw() {
       initializeScaffold(this);
+      this.captureLegacyAliases();
       this.initialize();
     }
     initialize() {
-      this.currentLayers = this.plotLayers;
-      this.addButtons(this.currentLayers);
+      this.derived.currentLayers = this.config.layers;
+      this.syncLegacyAliases();
+      this.addButtons(this.derived.currentLayers);
       initializeTooltip(this);
-      if (this.currentLayers.length > 0) {
-        this.setClipPath(this.currentLayers[0].type);
+      this.captureLegacyAliases();
+      if (this.derived.currentLayers.length > 0) {
+        this.setClipPath(this.derived.currentLayers[0].type);
       }
       this.renderCurrentLayers({ isInitialRender: true });
     }
     renderCurrentLayers(opts) {
-      var options = opts || {};
-      var state = deriveChartRender(this);
-      applyDerivedScales(this, state);
-      syncAxes(this, state, options);
-      this.routeLayers(this.currentLayers);
-      syncReferenceLines(this, state, options);
-      syncLegend(this, state);
-      bindRollover(this);
+      const options = opts || {};
+      const generation = ++this.runtime.renderGen;
+      const isCurrent = () => this.runtime && this.runtime.renderGen === generation;
+      try {
+        if (this.dom.chartArea) {
+          this.dom.chartArea.selectAll("*").interrupt();
+        }
+        this.emit("beforeRender", { options });
+        this.derived.currentLayers = validateLayers(this);
+        this.syncLegacyAliases();
+        if (!isCurrent()) {
+          return;
+        }
+        const state = deriveChartRender(this);
+        applyDerivedScales(this, state);
+        this.captureLegacyAliases();
+        if (!isCurrent()) {
+          return;
+        }
+        this.emit("afterScales", { state });
+        syncAxes(this, state, options);
+        this.routeLayers(this.derived.currentLayers);
+        syncReferenceLines(this, state, options);
+        syncLegend(this, state);
+        bindRollover(this);
+        this.emit("afterRender", { state });
+      } catch (error) {
+        this.emit("error", { message: error.message, error });
+        throw error;
+      }
     }
-    addButtons(lys) {
-      addButtons(this, lys);
+    addButtons(layers) {
+      addButtons(this, layers);
     }
     toggleVarY(newY) {
-      this.newY = newY[0];
-      this.newScaleY = newY[1];
-      this.processScales(this.currentLayers);
-      this.updateAxes();
-      this.routeLayers(this.currentLayers);
-      bindRollover(this, this.currentLayers);
-      if (this.options.suppressLegend == false) this.updateLegend();
+      this.runtime.activeY = newY[0];
+      this.runtime.activeYFormat = newY[1];
+      this.syncLegacyAliases();
+      this.renderCurrentLayers();
     }
-    toggleGroupedLayout(lys) {
-      var data = getGroupedDataObject(lys, this);
-      var colors = lys.map(function(layer) {
+    toggleGroupedLayout(layers) {
+      var data = getGroupedDataObject(layers, this);
+      var colors = layers.map(function(layer) {
         return layer.color;
       });
-      var bandwidth = (this.width - (this.margin.right + this.margin.left)) / (data[0].length + 1) / colors.length;
-      if (this.layout === "stacked") {
+      var bandwidth = (this.runtime.width - (this.config.layout.margin.right + this.config.layout.margin.left)) / (data[0].length + 1) / colors.length;
+      if (this.runtime.layout === "stacked") {
         transitionGrouped(this, data, colors, bandwidth);
-        this.layout = "grouped";
+        this.runtime.layout = "grouped";
       } else {
         transitionStacked(this, data, colors, bandwidth);
-        this.layout = "stacked";
+        this.runtime.layout = "stacked";
       }
+      this.syncLegacyAliases();
     }
     setClipPath(type) {
       switch (type) {
@@ -1844,84 +2191,91 @@
           break;
         default:
           var chartHeight = getChartHeight(this);
-          this.clipPath = this.chart.append("defs").append("svg:clipPath").attr("id", this.element.id + "clip").append("svg:rect").attr("x", 0).attr("y", 0).attr("width", this.width - (this.margin.left + this.margin.right)).attr("height", chartHeight - (this.margin.top + this.margin.bottom));
-          this.chart.attr("clip-path", "url(#" + this.element.id + "clip)");
+          this.dom.clipPath = this.dom.chartArea.append("defs").append("svg:clipPath").attr("id", this.dom.element.id + "clip").append("svg:rect").attr("x", 0).attr("y", 0).attr("width", this.runtime.width - (this.config.layout.margin.left + this.config.layout.margin.right)).attr("height", chartHeight - (this.config.layout.margin.top + this.config.layout.margin.bottom));
+          this.dom.chartArea.attr("clip-path", "url(#" + this.dom.element.id + "clip)");
+          this.syncLegacyAliases();
       }
     }
-    createBins(lys) {
-      createBins(this, lys);
-    }
-    processScales(lys) {
-      processScales(this, lys);
-    }
-    addAxes() {
-      addAxes(this);
-    }
-    updateAxes() {
-      updateAxes(this);
-    }
-    routeLayers(lys) {
+    routeLayers(layers) {
       var that = this;
-      this.layerIndex = this.plotLayers.map(function(d) {
+      this.derived.layerIndex = this.config.layers.map(function(d) {
         return d.label;
       });
-      lys.forEach(function(d) {
-        var renderer = getRendererForLayer(d);
+      this.syncLegacyAliases();
+      layers.forEach(function(layer) {
+        var renderer = getRendererForLayer(layer);
         if (renderer && typeof renderer.render === "function") {
-          renderer.render(that, d, lys);
+          renderer.render(that, layer, layers);
+          that.captureLegacyAliases();
         }
       });
     }
-    removeLayers(lys) {
-      var elementId = this.element.id;
-      var tagPrefixes = ["line", "bar", "point", "regression-line", "hexbin", "area", "crosshairY", "crosshairX"];
-      lys.forEach(function(d) {
-        tagPrefixes.forEach(function(prefix) {
-          d3.selectAll("." + tagName(prefix, elementId, d)).transition().duration(500).style("opacity", 0).remove();
-        });
+    removeLayers(labels) {
+      labels.forEach((label) => {
+        listRenderers().forEach(function(renderer) {
+          if (typeof renderer.remove === "function") {
+            renderer.remove(this, { label });
+          } else {
+            ["line", "bar", "point", "regression-line", "hexbin", "area", "crosshairY", "crosshairX"].forEach(function(prefix) {
+              d3.selectAll("." + tagName(prefix, this.dom.element.id, label)).transition().duration(500).style("opacity", 0).remove();
+            }, this);
+          }
+        }, this);
       });
     }
-    dragPoints(ly) {
-      bindPointDrag(this, ly);
+    dragPoints(layer) {
+      bindPointDrag(this, layer);
     }
     updateRegression(color, label) {
       getRenderer("regression").renderFromPoints(this, color, label);
     }
-    updateReferenceLines() {
-      updateReferenceLines(this);
-    }
-    updateLegend() {
-      updateLegend(this);
-    }
-    updateOrdinalColorLegend(ly) {
-      updateOrdinalColorLegend(this, ly);
-    }
-    updateContinuousColorLegend() {
-      updateContinuousColorLegend(this);
-    }
-    updateChart(x) {
-      this.options = x.options;
-      this.plotLayers = x.layers;
-      this.currentLayers = this.plotLayers;
-      var newLayers = x.layers.map((d) => d.label);
-      var oldLayers = [];
-      this.layerIndex.forEach(function(d) {
-        var x2 = newLayers.indexOf(d);
-        if (x2 < 0) {
-          oldLayers.push(d);
-        }
+    updateChart(newConfig) {
+      this.config = newConfig;
+      const newLabels = this.config.layers.map(function(layer) {
+        return layer.label;
       });
+      const oldLabels = this.derived.layerIndex || [];
+      const removed = oldLabels.filter(function(label) {
+        return !newLabels.includes(label);
+      });
+      this.syncLegacyAliases();
       this.renderCurrentLayers();
-      this.removeLayers(oldLayers);
+      this.removeLayers(removed);
     }
     resize(width, height) {
-      this.totalWidth = Math.max(width, 280);
-      this.width = !isMobile(this) && this.options.suppressLegend == false ? this.totalWidth * 0.8 : this.totalWidth;
-      this.height = height;
-      updateScaffoldLayout(this);
-      var buttons2Use = d3.select(this.element).select(".buttonDiv").selectAll(".button").data();
-      d3.select(this.element).select(".buttonDiv").style("left", this.width - (40 + 40 * buttons2Use.length) + "px").style("top", "0px");
-      this.renderCurrentLayers();
+      this.runtime.totalWidth = Math.max(width, MIN_CHART_WIDTH);
+      this.runtime.width = !isMobile(this) && !this.config.layout.suppressLegend ? this.runtime.totalWidth * PLOT_WIDTH_RATIO : this.runtime.totalWidth;
+      this.runtime.height = height;
+      this.syncLegacyAliases();
+      clearTimeout(this.runtime.resizeTimer);
+      this.runtime.resizeTimer = setTimeout(() => {
+        updateScaffoldLayout(this);
+        this.captureLegacyAliases();
+        this.renderCurrentLayers();
+        this.emit("resize", { width: this.runtime.width, height: this.runtime.height });
+      }, RESIZE_DEBOUNCE_MS);
+    }
+    destroy() {
+      this.emit("destroy", {});
+      clearTimeout(this.runtime && this.runtime.resizeTimer);
+      if (this.dom && this.dom.chartArea) {
+        this.dom.chartArea.selectAll("*").interrupt();
+      }
+      if (this.dom && this.dom.svg) {
+        this.dom.svg.remove();
+      }
+      if (this.dom && this.dom.tooltip) {
+        this.dom.tooltip.remove();
+      }
+      if (this.dom && this.dom.element) {
+        d3.select(this.dom.element).select(".buttonDiv").remove();
+      }
+      removeHoverOverlay(this);
+      this._listeners = {};
+      this.config = null;
+      this.derived = null;
+      this.dom = null;
+      this.runtime = null;
     }
   };
 
