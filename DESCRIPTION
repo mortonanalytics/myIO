@@ -1,16 +1,19 @@
 Package: myIO
 Type: Package
-Title: d3.js Plotting Project
-Version: 2.0.0
-Author: Ryan Morton
-Maintainer: Ryan Morton <mortonanalytics@gmail.com>
-Description: Open Source project to demonstrate R + d3.js combination
-License: MIT
+Title: Interactive Data Visualizations Using 'd3.js'
+Version: 1.0.0
+Authors@R: person("Ryan", "Morton", email = "morton@myma.us",
+    role = c("aut", "cre"))
+Description: Create interactive data visualizations powered by 'd3.js' directly
+    from R. Provides a layered grammar for bindings composition, supporting
+    bar charts, line charts, scatter plots, histograms, treemaps, gauges,
+    hexbin plots, and more. Includes built-in statistical layers, tooltips,
+    responsive sizing, and 'Shiny' integration.
+License: MIT + file LICENSE
 URL: https://github.com/mortonanalytics/myIO
 BugReports: https://github.com/mortonanalytics/myIO/issues
 Depends: R (>= 4.1.0)
 Encoding: UTF-8
-LazyData: true
 RoxygenNote: 7.3.2
 Suggests:
   testthat (>= 3.0.0),
