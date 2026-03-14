@@ -6,4 +6,9 @@ node_modules/
 ..Rcheck/
 myIO.Rcheck/
 *.tar.gz
-inst/appTester/e2e_output/
+inst/appTester/
+inst/test_rmarkdown.html
+inst/test_rmarkdown.Rmd
+inst/line_example_doc.R
+inst/myIOsticker.png
+/docs
