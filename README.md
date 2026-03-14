@@ -1,10 +1,11 @@
 <img src="man/figures/myIOsticker.png" width = "200px" height = "200px">
 
 [![R-CMD-check](https://github.com/mortonanalytics/myIO/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/mortonanalytics/myIO/actions/workflows/R-CMD-check.yaml)
-![coverage](man/figures/coverage-badge.svg)
+![R coverage](man/figures/coverage-badge.svg)
+![JS coverage](man/figures/js-coverage-badge.svg)
 [![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitHub R package version](https://img.shields.io/github/r-package/v/mortonanalytics/myIO)](https://github.com/mortonanalytics/myIO)
+![version](https://img.shields.io/badge/version-1.0.0-blue)
 
 # myIO
 
