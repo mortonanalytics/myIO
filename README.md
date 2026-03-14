@@ -77,10 +77,13 @@ Customize plots by chaining additional functions:
 
 - `setAxisFormat()` — Set d3.js axis formats and labels
 - `setAxisLimits()` — Set axis ranges
+- `defineCategoricalAxis()` — Define a categorical axis
 - `setMargin()` — Adjust chart margins
 - `setColorScheme()` — Apply a custom color palette
 - `setTheme()` — Set theme tokens (colors, font, background)
 - `setTransitionSpeed()` — Control animation duration
+- `setToolTipOptions()` — Configure tooltip behavior
+- `setToggle()` — Enable layer toggle controls
 - `flipAxis()` — Swap x and y axes
 - `suppressAxis()` — Hide axes
 - `suppressLegend()` — Hide the legend

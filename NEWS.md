@@ -1,4 +1,4 @@
-# myIO 2.0.0
+# myIO 1.0.0
 
 ## Features
 
@@ -7,13 +7,14 @@
 * Chart types: bar, grouped bar, line, area, scatter, histogram, hexbin,
   treemap, gauge, and donut charts.
 * Versioned widget spec with per-layer ids, transform metadata, and source-key provenance.
-* Interactive tooltips with automatic formatting.
+* Interactive tooltips with automatic formatting via `setToolTipOptions()`.
 * Responsive sizing that adapts to container dimensions.
 * CSV and SVG export buttons.
-* Reference lines support via `ioReferenceLine()`.
-* Drag interaction support.
+* Reference lines support via `setReferenceLines()`.
+* Drag interaction support via `dragPoints()`.
 * Shiny integration with `myIOOutput()` and `renderMyIO()`.
-* Pipe-friendly API supporting both `%>%` and native `|>`.
-* Comprehensive option setters: `ioTitle()`, `ioXlab()`, `ioYlab()`,
-  `ioWidth()`, `ioHeight()`, `ioMargin()`, `ioColorPalette()`,
-  `ioLegend()`, `ioAnimationDuration()`.
+* Pipe-friendly API using native `|>`.
+* Option setters: `setAxisFormat()`, `setAxisLimits()`, `setMargin()`,
+  `setColorScheme()`, `setTheme()`, `setTransitionSpeed()`,
+  `defineCategoricalAxis()`, `setToggle()`, `flipAxis()`,
+  `suppressAxis()`, `suppressLegend()`.
