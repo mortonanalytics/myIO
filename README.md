@@ -1,5 +1,3 @@
-<img src="man/figures/myIOsticker.png" width = "200px" height = "200px">
-
 [![R-CMD-check](https://github.com/mortonanalytics/myIO/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/mortonanalytics/myIO/actions/workflows/R-CMD-check.yaml)
 ![R coverage](man/figures/coverage-badge.svg)
 ![JS coverage](man/figures/js-coverage-badge.svg)

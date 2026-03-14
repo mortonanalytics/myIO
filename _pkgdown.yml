@@ -7,7 +7,7 @@ template:
   bootstrap: 5
   bootswatch: cosmo
   bslib:
-    primary: "#E69F00"
+    primary: "#6A5ACD"
     font_scale: 1.05
     base_font:
       google: Inter
