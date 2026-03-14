@@ -3,8 +3,7 @@
 ![](reference/figures/myIOsticker.png)
 
 [![R-CMD-check](https://github.com/mortonanalytics/myIO/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/mortonanalytics/myIO/actions/workflows/R-CMD-check.yaml)
-[![codecov](https://codecov.io/gh/mortonanalytics/myIO/branch/main/graph/badge.svg)](https://codecov.io/gh/mortonanalytics/myIO)
-[![Lifecycle:
+![coverage](reference/figures/coverage-badge.svg)[![Lifecycle:
 stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 [![License:
 MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
