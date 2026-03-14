@@ -7,10 +7,14 @@
 #'
 #' @return the same myIO object
 #'
+#' @examples
+#' # Hide the legend
+#' myIO() |> suppressLegend()
+#'
 #' @export
 suppressLegend <- function(myIO, suppressLegend = TRUE){
 
-  myIO$x$options$suppressLegend <- suppressLegend
+  myIO$x$config$layout$suppressLegend <- suppressLegend
 
   return(myIO)
 }

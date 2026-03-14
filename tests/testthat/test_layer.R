@@ -1,32 +1,89 @@
-# test IO layer
-context("layer_functions")
-test_object <- myIO::addIoLayer(myIO::myIO(),
-                 type = "line",
-                 label = "test_line",
-                 color = "red",
-                 data = mtcars,
-                 mapping = list(x_var = "wt",
-                                y_var = "mpg"))
+test_that("addIoLayer creates a single identity layer with spec fields", {
+  widget <- myIO::addIoLayer(
+    myIO::myIO(),
+    type = "line",
+    label = "test_line",
+    color = "red",
+    data = datasets::mtcars,
+    mapping = list(x_var = "wt", y_var = "mpg")
+  )
 
-testthat::test_that("add layer creates a list of one", {
-  expect_output(str(test_object$x$layers), "List of 1")
+  layer <- widget$x$config$layers[[1]]
+  expect_equal(layer$type, "line")
+  expect_equal(layer$label, "test_line")
+  expect_equal(layer$transform, "identity")
+  expect_equal(layer$id, "layer_001")
+  expect_equal(layer$sourceKey, "_source_key")
+  expect_true(isTRUE(layer$visibility))
 })
 
-#test drag points with previous layer
-test_object <- myIO::dragPoints(test_object)
+test_that("addIoLayer supports lm transform through the unified API", {
+  widget <- myIO::addIoLayer(
+    myIO::myIO(),
+    type = "line",
+    transform = "lm",
+    label = "linear_test",
+    color = "red",
+    data = datasets::mtcars,
+    mapping = list(x_var = "wt", y_var = "mpg")
+  )
 
-testthat::test_that("dragPoints adds option to list", {
-  expect_output(str(test_object$x$options$dragPoints), "TRUE")
+  layer <- widget$x$config$layers[[1]]
+  expect_equal(layer$type, "line")
+  expect_equal(layer$transform, "lm")
+  expect_equal(layer$transformMeta$name, "lm")
+  xs <- vapply(layer$data, function(row) row$wt, numeric(1))
+  expect_equal(xs, sort(xs))
 })
 
-#test IO Stat layer
-test_stat_object <- myIO::addIoStatLayer(myIO::myIO(),
-                                         type = "lm",
-                                         label = "linear_test",
-                                         color = "red",
-                                         data = mtcars,
-                                         mapping = list(x_var = "wt",
-                                                        y_var = "mpg"))
-testthat::test_that("add stat layer creates a list of one", {
-  expect_output(str(test_stat_object$x$layers), "List of 1")
+test_that("addIoLayer rejects unknown transform and invalid type/transform pair", {
+  expect_error(
+    myIO::addIoLayer(myIO::myIO(), type = "line", transform = "unknown", label = "test", data = mtcars, mapping = list(x_var = "wt", y_var = "mpg")),
+    "Unknown transform"
+  )
+
+  expect_error(
+    myIO::addIoLayer(myIO::myIO(), type = "point", transform = "lm", label = "test", data = mtcars, mapping = list(x_var = "wt", y_var = "mpg")),
+    "not valid"
+  )
+})
+
+test_that("addIoLayer rejects missing mapping variable", {
+  expect_error(
+    myIO::addIoLayer(myIO::myIO(), type = "line", label = "test", data = mtcars, mapping = list(x_var = "nonexistent", y_var = "mpg")),
+    "not found in data"
+  )
+})
+
+test_that("addIoLayer rejects duplicate label", {
+  w <- myIO::addIoLayer(myIO::myIO(), type = "point", label = "pts", color = "red", data = mtcars, mapping = list(x_var = "wt", y_var = "mpg"))
+  expect_error(
+    myIO::addIoLayer(w, type = "line", label = "pts", color = "blue", data = mtcars, mapping = list(x_var = "wt", y_var = "mpg")),
+    "already exists"
+  )
+})
+
+test_that("addIoLayer validates compatibility groups", {
+  w <- myIO::addIoLayer(myIO::myIO(), type = "donut", label = "d", color = "red", data = data.frame(x = "A", y = 1), mapping = list(x_var = "x", y_var = "y"))
+  expect_error(
+    myIO::addIoLayer(w, type = "bar", label = "b", color = "blue", data = mtcars, mapping = list(x_var = "cyl", y_var = "mpg")),
+    "layer groups"
+  )
+})
+
+test_that("grouped layers use the default Okabe-Ito palette", {
+  df <- datasets::airquality
+  df$Month <- as.character(df$Month)
+
+  widget <- myIO::addIoLayer(
+    myIO::myIO(),
+    type = "line",
+    label = "temp",
+    data = df,
+    mapping = list(x_var = "Day", y_var = "Temp", group = "Month")
+  )
+
+  colors <- vapply(widget$x$config$layers, function(layer) layer$color, character(1))
+  expect_equal(colors[[1]], "#E69F00")
+  expect_equal(colors[[2]], "#56B4E9")
 })

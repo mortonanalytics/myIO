@@ -1,3 +1,15 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^\.travis\.yml$
+^node_modules$
+^package\.json$
+^package-lock\.json$
+^vitest\.config\.js$
+^tests/js$
+^inst/appTester/e2e_output$
+^docs$
+^\.github$
+^_pkgdown\.yml$
+^pkgdown$
+^LICENSE\.md$
+^cran-comments\.md$

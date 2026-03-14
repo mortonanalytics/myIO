@@ -1,3 +1,14 @@
-.Rproj.user
+.Rproj.user/
 .Rhistory
 .RData
+.DS_Store
+node_modules/
+..Rcheck/
+myIO.Rcheck/
+*.tar.gz
+inst/appTester/
+inst/test_rmarkdown.html
+inst/test_rmarkdown.Rmd
+inst/line_example_doc.R
+inst/myIOsticker.png
+/docs

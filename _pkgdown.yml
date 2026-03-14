@@ -1,0 +1,57 @@
+url: https://mortonanalytics.github.io/myIO/
+
+template:
+  bootstrap: 5
+  bootswatch: cosmo
+
+home:
+  title: myIO - Interactive D3.js Visualizations from R
+
+navbar:
+  structure:
+    left: [intro, reference, articles]
+    right: [search, github]
+  components:
+    github:
+      icon: fa-github
+      href: https://github.com/mortonanalytics/myIO
+
+articles:
+  - title: Get Started
+    navbar: ~
+    contents:
+      - getting-started
+  - title: Guides
+    contents:
+      - chart-types
+      - transforms-and-theming
+
+reference:
+  - title: Core
+    desc: Create widgets and add layers
+    contents:
+      - myIO
+      - addIoLayer
+  - title: Axes & Scales
+    contents:
+      - setAxisFormat
+      - setAxisLimits
+      - defineCategoricalAxis
+      - flipAxis
+      - suppressAxis
+  - title: Appearance
+    contents:
+      - setMargin
+      - setColorScheme
+      - setTheme
+      - setTransitionSpeed
+      - suppressLegend
+  - title: Interactions
+    contents:
+      - dragPoints
+      - setReferenceLines
+      - setToggle
+      - setToolTipOptions
+  - title: Shiny
+    contents:
+      - starts_with("myIO-shiny")

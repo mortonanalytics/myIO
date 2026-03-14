@@ -1,63 +1,48 @@
-#test option functions
-context("option_functions")
-test_object_opt <- myIO::addIoLayer(myIO::myIO(),
-                                type = "point",
-                                label = "test_line",
-                                color = "red",
-                                data = mtcars,
-                                mapping = list(x_var = "wt",
-                                               y_var = "mpg")) %>%
-              myIO::setAxisFormat(xAxis = ".0f", yAxis = ".1f") %>%
-              myIO::dragPoints() %>%
-              myIO::flipAxis() %>%
-              myIO::defineCategoricalAxis() %>%
-              myIO::setmargin(top = 100) %>%
-              myIO::setAxisLimits(xlim = list(min = 0)) %>%
-              myIO::suppressAxis(xAxis = TRUE, yAxis = TRUE) %>%
-              myIO::suppressLegend()
-
-testthat::test_that("axis options get set", {
-  testthat::equals(test_object_opt$x$options$xAxisFormat, ".0f")
-  testthat::equals(test_object_opt$x$options$yAxisFormat, ".1f")
+test_that("setAxisFormat sets axis formats", {
+  widget <- myIO::setAxisFormat(myIO::myIO(), xAxis = ".0f", yAxis = ".1f")
+  expect_equal(widget$x$config$axes$xAxisFormat, ".0f")
+  expect_equal(widget$x$config$axes$yAxisFormat, ".1f")
 })
 
-testthat::test_that("drag points options get set to TRUE", {
-  testthat::equals(test_object_opt$x$options$dragPoints, TRUE)
-
+test_that("layout and scale helpers update config", {
+  widget <- myIO::myIO() |>
+    myIO::defineCategoricalAxis(xAxis = TRUE, yAxis = TRUE) |>
+    myIO::flipAxis() |>
+    myIO::setMargin(top = 100) |>
+    myIO::suppressLegend()
+  expect_true(widget$x$config$scales$categoricalScale$xAxis)
+  expect_true(widget$x$config$scales$flipAxis)
+  expect_equal(widget$x$config$layout$margin$top, 100)
+  expect_true(widget$x$config$layout$suppressLegend)
 })
 
-testthat::test_that("flipAxis options get set to TRUE", {
-  testthat::equals(test_object_opt$x$options$flipAxis, TRUE)
-
+test_that("setAxisLimits and transitions update config", {
+  widget <- myIO::myIO() |>
+    myIO::setAxisLimits(xlim = list(min = 0, max = 10), ylim = list(min = -5, max = 100)) |>
+    myIO::setTransitionSpeed(speed = 1500)
+  expect_equal(widget$x$config$scales$xlim$max, 10)
+  expect_equal(widget$x$config$scales$ylim$min, -5)
+  expect_equal(widget$x$config$transitions$speed, 1500)
 })
 
-testthat::test_that("suppress xAxis option get set to TRUE", {
-  testthat::equals(test_object_opt$x$options$suppressAxis$xAxis, TRUE)
-
+test_that("setColorScheme uses named structure", {
+  widget <- myIO::setColorScheme(myIO::myIO(), colorScheme = list("red", "blue"), setCategories = c("A", "B"))
+  expect_equal(widget$x$config$scales$colorScheme$colors, c("red", "blue"))
+  expect_equal(widget$x$config$scales$colorScheme$domain, c("A", "B"))
+  expect_true(widget$x$config$scales$colorScheme$enabled)
 })
 
-testthat::test_that("suppress yAxis option get set to TRUE", {
-  testthat::equals(test_object_opt$x$options$suppressAxis$yAxis, TRUE)
-
+test_that("interaction options update config", {
+  widget <- myIO::myIO() |>
+    myIO::setToolTipOptions(suppressY = TRUE) |>
+    myIO::setToggle(variable = "Percent", format = ".0%")
+  expect_true(widget$x$config$interactions$toolTipOptions$suppressY)
+  expect_equal(widget$x$config$interactions$toggleY$variable, "Percent")
+  expect_equal(widget$x$config$interactions$toggleY$format, ".0%")
 })
 
-testthat::test_that("suppress legend option get set to TRUE", {
-  testthat::equals(test_object_opt$x$options$suppressLegend, TRUE)
-
+test_that("reference lines update config", {
+  widget <- myIO::setReferenceLines(myIO::myIO(), xRef = 5, yRef = 10)
+  expect_equal(widget$x$config$referenceLines$x, 5)
+  expect_equal(widget$x$config$referenceLines$y, 10)
 })
-
-testthat::test_that("categoricalScale options get set to TRUE", {
-  testthat::equals(test_object_opt$x$options$categoricalScale, TRUE)
-
-})
-
-testthat::test_that("margins are set to user inputs", {
-  testthat::equals(test_object_opt$x$options$margin$top, 100)
-
-})
-
-testthat::test_that("x axis set to user inputs", {
-  testthat::equals(test_object_opt$x$options$xlim$min, 10)
-
-})
-

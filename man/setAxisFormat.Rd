@@ -6,9 +6,9 @@
 \usage{
 setAxisFormat(
   myIO,
-  xAxis = NULL,
-  yAxis = NULL,
-  toolTip = NULL,
+  xAxis = "s",
+  yAxis = "s",
+  toolTip = "s",
   xLabel = NULL,
   yLabel = NULL
 )
@@ -31,4 +31,12 @@ the same myIO object with options set for the tooltip formats
 }
 \description{
 Sets axis for x axis, y axis, and/or tool tip
+}
+\examples{
+# Set axis formats using d3.js format strings
+myIO() |> setAxisFormat(xAxis = ".0f", yAxis = ".1f")
+
+# Set axis labels
+myIO() |> setAxisFormat(xLabel = "Weight (lbs)", yLabel = "MPG")
+
 }

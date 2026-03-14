@@ -19,3 +19,11 @@ the same myIO object
 \description{
 Suppresses axes from printing
 }
+\examples{
+# Suppress both axes
+myIO() |> suppressAxis(xAxis = TRUE, yAxis = TRUE)
+
+# Suppress only the x axis
+myIO() |> suppressAxis(xAxis = TRUE)
+
+}

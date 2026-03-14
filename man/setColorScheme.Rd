@@ -4,12 +4,12 @@
 \alias{setColorScheme}
 \title{setColorScheme()}
 \usage{
-setColorScheme(myIO, colorShceme, setCategories = NULL)
+setColorScheme(myIO, colorScheme = NULL, setCategories = NULL)
 }
 \arguments{
 \item{myIO}{an htmlwidget object created by the myIO() function}
 
-\item{colorShceme}{a vector of colors in the order you want them used}
+\item{colorScheme}{a vector of colors in the order you want them used}
 
 \item{setCategories}{an optional vector of names that will be mapped to the corresponding color in the colorScheme}
 }
@@ -18,4 +18,15 @@ the same myIO object
 }
 \description{
 Sets color scheme for a chart and the category names (optional)
+}
+\examples{
+# Set a custom color scheme
+myIO() |> setColorScheme(colorScheme = list("red", "blue", "green"))
+
+# Set colors with category labels
+myIO() |> setColorScheme(
+  colorScheme = list("steelblue", "orange"),
+  setCategories = c("Group A", "Group B")
+)
+
 }

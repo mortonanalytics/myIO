@@ -4,7 +4,7 @@
 \alias{myIO}
 \title{myIO}
 \usage{
-myIO(data = NULL, width = NULL, height = NULL, elementId = NULL)
+myIO(data = NULL, width = "100\%", height = "400px", elementId = NULL)
 }
 \arguments{
 \item{data}{an optional point of entry for the data frame or vector}

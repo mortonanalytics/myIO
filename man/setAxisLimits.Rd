@@ -23,3 +23,14 @@ the same myIO object
 \description{
 Sets margins for the top, bottom, left, and right sides of the chart
 }
+\examples{
+# Set x axis limits
+myIO() |> setAxisLimits(xlim = list(min = 0, max = 100))
+
+# Set both axis limits
+myIO() |> setAxisLimits(
+  xlim = list(min = 0, max = 50),
+  ylim = list(min = -10, max = 200)
+)
+
+}

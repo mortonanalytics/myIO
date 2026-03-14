@@ -4,16 +4,23 @@
 \alias{setToggle}
 \title{setToggle()}
 \usage{
-setToggle(myIO, newY, newScaleY = NULL)
+setToggle(myIO, variable, format = NULL)
 }
 \arguments{
 \item{myIO}{an htmlwidget object created by the myIO() function}
 
-\item{newY}{a string indicating the variable name in data for toggle}
+\item{variable}{a string indicating the variable name in data for toggle}
+
+\item{format}{a string indicating the format for the toggled variable}
 }
 \value{
 the same myIO object
 }
 \description{
 Sets toggle options for y_var and adds a toggle button for chart
+}
+\examples{
+# Add a toggle button to switch y variable
+myIO() |> setToggle(variable = "Percent", format = ".0\%")
+
 }

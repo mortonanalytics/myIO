@@ -13,18 +13,14 @@ renderMyIO(expr, env = parent.frame(), quoted = FALSE)
 \arguments{
 \item{outputId}{output variable to read from}
 
-\item{width, height}{Must be a valid CSS unit (like \code{'100\%'},
-\code{'400px'}, \code{'auto'}) or a number, which will be coerced to a
-string and have \code{'px'} appended.}
+\item{width, height}{Must be a valid CSS unit or a number.}
 
 \item{expr}{An expression that generates a myIO}
 
 \item{env}{The environment in which to evaluate \code{expr}.}
 
-\item{quoted}{Is \code{expr} a quoted expression (with \code{quote()})? This
-is useful if you want to save an expression in a variable.}
+\item{quoted}{Is \code{expr} a quoted expression?}
 }
 \description{
-Output and render functions for using myIO within Shiny
-applications and interactive Rmd documents.
+Shiny bindings for myIO
 }

@@ -17,3 +17,8 @@ the same myIO object with options set for the tooltip formats
 \description{
 Generic function for setting tool tip options for a chart
 }
+\examples{
+# Suppress the y value in tooltips
+myIO() |> setToolTipOptions(suppressY = TRUE)
+
+}

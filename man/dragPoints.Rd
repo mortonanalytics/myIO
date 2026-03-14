@@ -17,3 +17,13 @@ the same myIO object
 \description{
 Function to make points draggable
 }
+\examples{
+# Enable draggable points
+myIO() |>
+  addIoLayer(
+    type = "point", color = "red", label = "pts",
+    data = mtcars, mapping = list(x_var = "wt", y_var = "mpg")
+  ) |>
+  dragPoints()
+
+}

@@ -8,11 +8,18 @@
 #'
 #' @return the same myIO object
 #'
+#' @examples
+#' # Suppress both axes
+#' myIO() |> suppressAxis(xAxis = TRUE, yAxis = TRUE)
+#'
+#' # Suppress only the x axis
+#' myIO() |> suppressAxis(xAxis = TRUE)
+#'
 #' @export
 suppressAxis <- function(myIO, xAxis = NULL, yAxis = NULL){
 
   suppressAxis <- list(xAxis = xAxis, yAxis = yAxis)
-  myIO$x$options$suppressAxis <- suppressAxis
+  myIO$x$config$layout$suppressAxis <- suppressAxis
 
   return(myIO)
 }
