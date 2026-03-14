@@ -43,12 +43,9 @@ navbar:
       href: https://github.com/mortonanalytics/myIO
 
 articles:
-  - title: Get Started
-    navbar: ~
+  - title: Articles
     contents:
       - getting-started
-  - title: Guides
-    contents:
       - chart-types
       - transforms-and-theming
       - shiny-integration
