@@ -1,17 +1,43 @@
 url: https://mortonanalytics.github.io/myIO/
 
+development:
+  mode: auto
+
 template:
   bootstrap: 5
   bootswatch: cosmo
+  bslib:
+    primary: "#E69F00"
+    font_scale: 1.05
+    base_font:
+      google: Inter
+    heading_font:
+      google: Inter
+    code_font:
+      google: Fira Code
 
 home:
   title: myIO - Interactive D3.js Visualizations from R
+  links:
+    - text: Live demo (Shiny app)
+      href: http://www.morton-analytics.com/shiny/myio_demo/
+    - text: D3.js documentation
+      href: https://d3js.org/
+    - text: htmlwidgets framework
+      href: https://www.htmlwidgets.org/
+
+authors:
+  Ryan Morton:
+    href: https://github.com/mortonanalytics
 
 navbar:
   structure:
-    left: [intro, reference, articles]
+    left: [intro, reference, articles, news]
     right: [search, github]
   components:
+    intro:
+      text: Get Started
+      href: articles/getting-started.html
     github:
       icon: fa-github
       href: https://github.com/mortonanalytics/myIO
@@ -25,14 +51,17 @@ articles:
     contents:
       - chart-types
       - transforms-and-theming
+      - shiny-integration
+      - gallery
 
 reference:
   - title: Core
-    desc: Create widgets and add layers
+    desc: Create widgets and add visualization layers
     contents:
       - myIO
       - addIoLayer
   - title: Axes & Scales
+    desc: Control axis formatting, limits, and orientation
     contents:
       - setAxisFormat
       - setAxisLimits
@@ -40,6 +69,7 @@ reference:
       - flipAxis
       - suppressAxis
   - title: Appearance
+    desc: Customize colors, margins, themes, and visual elements
     contents:
       - setMargin
       - setColorScheme
@@ -47,11 +77,13 @@ reference:
       - setTransitionSpeed
       - suppressLegend
   - title: Interactions
+    desc: Add interactive behaviors like tooltips, drag, and toggles
     contents:
       - dragPoints
       - setReferenceLines
       - setToggle
       - setToolTipOptions
   - title: Shiny
+    desc: Use myIO widgets in Shiny applications
     contents:
       - starts_with("myIO-shiny")
