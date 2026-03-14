@@ -1,12 +1,9 @@
 # Articles
 
-### Get Started
+### Articles
 
 - [Getting Started with
   myIO](https://mortonanalytics.github.io/myIO/articles/getting-started.md):
-
-### Guides
-
 - [Chart
   Types](https://mortonanalytics.github.io/myIO/articles/chart-types.md):
 - [Transforms &
