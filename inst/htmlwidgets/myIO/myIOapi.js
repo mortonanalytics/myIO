@@ -2064,7 +2064,26 @@
       this.toolTipTitle = this.dom ? this.dom.tooltipTitle : null;
       this.toolTipBody = this.dom ? this.dom.tooltipBody : null;
       this.plotLayers = this.config ? this.config.layers : null;
-      this.options = this.config ? this.config : null;
+      this.options = this.config ? {
+        margin: this.config.layout.margin,
+        suppressLegend: this.config.layout.suppressLegend,
+        suppressAxis: this.config.layout.suppressAxis,
+        xlim: this.config.scales.xlim,
+        ylim: this.config.scales.ylim,
+        categoricalScale: this.config.scales.categoricalScale,
+        flipAxis: this.config.scales.flipAxis,
+        colorScheme: this.config.scales.colorScheme && this.config.scales.colorScheme.enabled ? [this.config.scales.colorScheme.colors, this.config.scales.colorScheme.domain, ["on"]] : [this.config.scales.colorScheme.colors, this.config.scales.colorScheme.domain, ["off"]],
+        xAxisFormat: this.config.axes.xAxisFormat,
+        yAxisFormat: this.config.axes.yAxisFormat,
+        toolTipFormat: this.config.axes.toolTipFormat,
+        xAxisLabel: this.config.axes.xAxisLabel,
+        yAxisLabel: this.config.axes.yAxisLabel,
+        dragPoints: this.config.interactions.dragPoints,
+        toggleY: this.config.interactions.toggleY && this.config.interactions.toggleY.variable ? [this.config.interactions.toggleY.variable, this.config.interactions.toggleY.format] : null,
+        toolTipOptions: this.config.interactions.toolTipOptions,
+        transition: this.config.transitions,
+        referenceLine: this.config.referenceLines
+      } : null;
       this.margin = this.config ? this.config.layout.margin : null;
       this.width = this.runtime ? this.runtime.width : null;
       this.height = this.runtime ? this.runtime.height : null;
