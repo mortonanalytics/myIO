@@ -7,8 +7,8 @@ const COMPAT_GROUP = {
   area: "axes-continuous",
   bar: "axes-categorical",
   groupedBar: "axes-categorical",
-  histogram: "axes-continuous",
-  hexbin: "axes-continuous",
+  histogram: "axes-binned",
+  hexbin: "axes-hex",
   regression: "axes-continuous",
   treemap: "standalone-treemap",
   donut: "standalone-donut",
@@ -18,6 +18,7 @@ const COMPAT_GROUP = {
 const CROSS_GROUP_ALLOWED = new Set(["axes-continuous:axes-categorical", "axes-categorical:axes-continuous"]);
 
 export function validateComposition(layers) {
+  if (layers.length <= 1) return { valid: true, errors: [] };
   const errors = [];
   const groups = layers.map(function(layer) {
     return COMPAT_GROUP[layer.type] || "unknown";

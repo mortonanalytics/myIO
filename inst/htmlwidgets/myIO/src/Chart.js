@@ -6,7 +6,7 @@ import { deriveChartRender, applyDerivedScales } from "./derive/chart-render.js"
 import { validateLayers } from "./derive/validate.js";
 import { transitionGrouped, transitionStacked, getGroupedDataObject } from "./renderers/groupedBarHelpers.js";
 import { syncAxes } from "./layout/axes.js";
-import { syncLegend } from "./layout/legend.js";
+import { syncLegend, updateOrdinalColorLegend as updateOrdinalColorLegendImpl } from "./layout/legend.js";
 import { syncReferenceLines } from "./layout/reference-lines.js";
 import { getChartHeight, initializeScaffold, updateScaffoldLayout } from "./layout/scaffold.js";
 import { initializeTooltip, removeHoverOverlay } from "./tooltip.js";
@@ -86,9 +86,11 @@ export class myIOchart {
       ylim: this.config.scales.ylim,
       categoricalScale: this.config.scales.categoricalScale,
       flipAxis: this.config.scales.flipAxis,
-      colorScheme: this.config.scales.colorScheme && this.config.scales.colorScheme.enabled
-        ? [this.config.scales.colorScheme.colors, this.config.scales.colorScheme.domain, ["on"]]
-        : [this.config.scales.colorScheme.colors, this.config.scales.colorScheme.domain, ["off"]],
+      colorScheme: this.config.scales.colorScheme
+        ? (this.config.scales.colorScheme.enabled
+            ? [this.config.scales.colorScheme.colors, this.config.scales.colorScheme.domain, "on"]
+            : [this.config.scales.colorScheme.colors, this.config.scales.colorScheme.domain, "off"])
+        : null,
       xAxisFormat: this.config.axes.xAxisFormat,
       yAxisFormat: this.config.axes.yAxisFormat,
       toolTipFormat: this.config.axes.toolTipFormat,
@@ -278,6 +280,10 @@ export class myIOchart {
 
   dragPoints(layer) {
     bindPointDrag(this, layer);
+  }
+
+  updateOrdinalColorLegend(ly) {
+    updateOrdinalColorLegendImpl(this, ly);
   }
 
   updateRegression(color, label) {

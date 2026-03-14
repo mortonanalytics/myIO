@@ -1684,8 +1684,8 @@
     area: "axes-continuous",
     bar: "axes-categorical",
     groupedBar: "axes-categorical",
-    histogram: "axes-continuous",
-    hexbin: "axes-continuous",
+    histogram: "axes-binned",
+    hexbin: "axes-hex",
     regression: "axes-continuous",
     treemap: "standalone-treemap",
     donut: "standalone-donut",
@@ -1693,6 +1693,7 @@
   };
   var CROSS_GROUP_ALLOWED = /* @__PURE__ */ new Set(["axes-continuous:axes-categorical", "axes-categorical:axes-continuous"]);
   function validateComposition(layers) {
+    if (layers.length <= 1) return { valid: true, errors: [] };
     const errors = [];
     const groups = layers.map(function(layer) {
       return COMPAT_GROUP[layer.type] || "unknown";
@@ -2072,7 +2073,7 @@
         ylim: this.config.scales.ylim,
         categoricalScale: this.config.scales.categoricalScale,
         flipAxis: this.config.scales.flipAxis,
-        colorScheme: this.config.scales.colorScheme && this.config.scales.colorScheme.enabled ? [this.config.scales.colorScheme.colors, this.config.scales.colorScheme.domain, ["on"]] : [this.config.scales.colorScheme.colors, this.config.scales.colorScheme.domain, ["off"]],
+        colorScheme: this.config.scales.colorScheme ? this.config.scales.colorScheme.enabled ? [this.config.scales.colorScheme.colors, this.config.scales.colorScheme.domain, "on"] : [this.config.scales.colorScheme.colors, this.config.scales.colorScheme.domain, "off"] : null,
         xAxisFormat: this.config.axes.xAxisFormat,
         yAxisFormat: this.config.axes.yAxisFormat,
         toolTipFormat: this.config.axes.toolTipFormat,
@@ -2244,6 +2245,9 @@
     }
     dragPoints(layer) {
       bindPointDrag(this, layer);
+    }
+    updateOrdinalColorLegend(ly) {
+      updateOrdinalColorLegend(this, ly);
     }
     updateRegression(color, label) {
       getRenderer("regression").renderFromPoints(this, color, label);
