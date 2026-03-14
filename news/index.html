@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">myIO</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,20 +38,20 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="2.0.0" id="myio-200">myIO 2.0.0<a class="anchor" aria-label="anchor" href="#myio-200"></a></h2>
+<h2 class="pkg-version" data-toc-text="1.0.0" id="myio-100">myIO 1.0.0<a class="anchor" aria-label="anchor" href="#myio-100"></a></h2>
 <div class="section level3">
-<h3 id="features-2-0-0">Features<a class="anchor" aria-label="anchor" href="#features-2-0-0"></a></h3>
+<h3 id="features-1-0-0">Features<a class="anchor" aria-label="anchor" href="#features-1-0-0"></a></h3>
 <ul><li>Layered grammar for composing visualizations with transform-aware <code><a href="../reference/addIoLayer.html">addIoLayer()</a></code>, including <code>transform = "lm"</code> for derived line layers.</li>
 <li>Chart types: bar, grouped bar, line, area, scatter, histogram, hexbin, treemap, gauge, and donut charts.</li>
 <li>Versioned widget spec with per-layer ids, transform metadata, and source-key provenance.</li>
-<li>Interactive tooltips with automatic formatting.</li>
+<li>Interactive tooltips with automatic formatting via <code><a href="../reference/setToolTipOptions.html">setToolTipOptions()</a></code>.</li>
 <li>Responsive sizing that adapts to container dimensions.</li>
 <li>CSV and SVG export buttons.</li>
-<li>Reference lines support via <code>ioReferenceLine()</code>.</li>
-<li>Drag interaction support.</li>
+<li>Reference lines support via <code><a href="../reference/setReferenceLines.html">setReferenceLines()</a></code>.</li>
+<li>Drag interaction support via <code><a href="../reference/dragPoints.html">dragPoints()</a></code>.</li>
 <li>Shiny integration with <code><a href="../reference/myIO-shiny.html">myIOOutput()</a></code> and <code><a href="../reference/myIO-shiny.html">renderMyIO()</a></code>.</li>
-<li>Pipe-friendly API supporting both <code>%&gt;%</code> and native <code>|&gt;</code>.</li>
-<li>Comprehensive option setters: <code>ioTitle()</code>, <code>ioXlab()</code>, <code>ioYlab()</code>, <code>ioWidth()</code>, <code>ioHeight()</code>, <code>ioMargin()</code>, <code>ioColorPalette()</code>, <code>ioLegend()</code>, <code>ioAnimationDuration()</code>.</li>
+<li>Pipe-friendly API using native <code>|&gt;</code>.</li>
+<li>Option setters: <code><a href="../reference/setAxisFormat.html">setAxisFormat()</a></code>, <code><a href="../reference/setAxisLimits.html">setAxisLimits()</a></code>, <code><a href="../reference/setMargin.html">setMargin()</a></code>, <code><a href="../reference/setColorScheme.html">setColorScheme()</a></code>, <code><a href="../reference/setTheme.html">setTheme()</a></code>, <code><a href="../reference/setTransitionSpeed.html">setTransitionSpeed()</a></code>, <code><a href="../reference/defineCategoricalAxis.html">defineCategoricalAxis()</a></code>, <code><a href="../reference/setToggle.html">setToggle()</a></code>, <code><a href="../reference/flipAxis.html">flipAxis()</a></code>, <code><a href="../reference/suppressAxis.html">suppressAxis()</a></code>, <code><a href="../reference/suppressLegend.html">suppressLegend()</a></code>.</li>
 </ul></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

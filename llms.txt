@@ -85,6 +85,8 @@ Customize plots by chaining additional functions:
   — Set d3.js axis formats and labels
 - [`setAxisLimits()`](https://mortonanalytics.github.io/myIO/reference/setAxisLimits.md)
   — Set axis ranges
+- [`defineCategoricalAxis()`](https://mortonanalytics.github.io/myIO/reference/defineCategoricalAxis.md)
+  — Define a categorical axis
 - [`setMargin()`](https://mortonanalytics.github.io/myIO/reference/setMargin.md)
   — Adjust chart margins
 - [`setColorScheme()`](https://mortonanalytics.github.io/myIO/reference/setColorScheme.md)
@@ -93,6 +95,10 @@ Customize plots by chaining additional functions:
   — Set theme tokens (colors, font, background)
 - [`setTransitionSpeed()`](https://mortonanalytics.github.io/myIO/reference/setTransitionSpeed.md)
   — Control animation duration
+- [`setToolTipOptions()`](https://mortonanalytics.github.io/myIO/reference/setToolTipOptions.md)
+  — Configure tooltip behavior
+- [`setToggle()`](https://mortonanalytics.github.io/myIO/reference/setToggle.md)
+  — Enable layer toggle controls
 - [`flipAxis()`](https://mortonanalytics.github.io/myIO/reference/flipAxis.md)
   — Swap x and y axes
 - [`suppressAxis()`](https://mortonanalytics.github.io/myIO/reference/suppressAxis.md)
