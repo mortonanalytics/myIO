@@ -7,6 +7,10 @@
 #'
 #' @return the same myIO object
 #'
+#' @examples
+#' # Add a toggle button to switch y variable
+#' myIO() |> setToggle(newY = "Percent", newScaleY = ".0%")
+#'
 #' @export
 
 setToggle <- function(myIO, newY, newScaleY = NULL){

@@ -35,3 +35,19 @@ the same myIO object with the new layer attached to the message for the browser 
 \description{
 Adds individual layer to a myIO widget
 }
+\examples{
+# Add a line layer
+myIO() |>
+  addIoLayer(
+    type = "line", color = "steelblue", label = "mpg_line",
+    data = mtcars, mapping = list(x_var = "wt", y_var = "mpg")
+  )
+
+# Add a point layer
+myIO() |>
+  addIoLayer(
+    type = "point", color = "red", label = "mpg_points",
+    data = mtcars, mapping = list(x_var = "wt", y_var = "mpg")
+  )
+
+}

@@ -7,6 +7,15 @@
 #'
 #' @return the same myIO object
 #'
+#' @examples
+#' # Flip the axes for a horizontal bar chart
+#' myIO() |>
+#'   addIoLayer(
+#'     type = "bar", color = "steelblue", label = "bars",
+#'     data = mtcars, mapping = list(x_var = "wt", y_var = "mpg")
+#'   ) |>
+#'   flipAxis()
+#'
 #' @export
 flipAxis <- function(myIO, flipAxis = TRUE){
   myIO$x$options$flipAxis <- flipAxis

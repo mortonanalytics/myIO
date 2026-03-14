@@ -17,3 +17,13 @@ the same myIO object
 \description{
 Function to flip the x and y axes
 }
+\examples{
+# Flip the axes for a horizontal bar chart
+myIO() |>
+  addIoLayer(
+    type = "bar", color = "steelblue", label = "bars",
+    data = mtcars, mapping = list(x_var = "wt", y_var = "mpg")
+  ) |>
+  flipAxis()
+
+}

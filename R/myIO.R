@@ -11,6 +11,16 @@
 #'
 #' @return the same myIO object
 #'
+#' @examples
+#' # Create a basic widget
+#' myIO()
+#'
+#' # Create with custom dimensions
+#' myIO(width = "50%", height = "300px")
+#'
+#' # Create with data attached
+#' myIO(data = mtcars)
+#'
 #' @export
 myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL) {
   validateCssDimension <- function(value, arg) {

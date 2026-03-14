@@ -11,6 +11,13 @@
 #'
 #' @return the same myIO object with options set for the tooltip formats
 #'
+#' @examples
+#' # Set axis formats using d3.js format strings
+#' myIO() |> setAxisFormat(xAxis = ".0f", yAxis = ".1f")
+#'
+#' # Set axis labels
+#' myIO() |> setAxisFormat(xLabel = "Weight (lbs)", yLabel = "MPG")
+#'
 #' @export
 setAxisFormat <- function(myIO, xAxis = "s", yAxis = "s", toolTip = "s", xLabel = NULL, yLabel = NULL){
 

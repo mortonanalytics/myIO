@@ -7,6 +7,15 @@
 #'
 #' @return the same myIO object
 #'
+#' @examples
+#' # Enable draggable points
+#' myIO() |>
+#'   addIoLayer(
+#'     type = "point", color = "red", label = "pts",
+#'     data = mtcars, mapping = list(x_var = "wt", y_var = "mpg")
+#'   ) |>
+#'   dragPoints()
+#'
 #' @export
 dragPoints <- function(myIO, dragPoints = TRUE){
   myIO$x$options$dragPoints <- dragPoints

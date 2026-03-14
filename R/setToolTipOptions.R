@@ -7,6 +7,10 @@
 #'
 #' @return the same myIO object with options set for the tooltip formats
 #'
+#' @examples
+#' # Suppress the y value in tooltips
+#' myIO() |> setToolTipOptions(suppressY = TRUE)
+#'
 #' @export
 setToolTipOptions <- function(myIO, suppressY = NULL){
 

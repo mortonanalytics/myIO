@@ -13,6 +13,18 @@
 #'
 #' @return the same myIO object with the new layer attached to the message for the browser (myIO$x$layers)
 #'
+#' @examples
+#' # Add a linear model trend line over points
+#' myIO() |>
+#'   addIoLayer(
+#'     type = "point", color = "steelblue", label = "pts",
+#'     data = mtcars, mapping = list(x_var = "wt", y_var = "mpg")
+#'   ) |>
+#'   addIoStatLayer(
+#'     type = "lm", color = "red", label = "trend",
+#'     data = mtcars, mapping = list(x_var = "wt", y_var = "mpg")
+#'   )
+#'
 #' @export
 
 addIoStatLayer <- function(myIO,

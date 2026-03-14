@@ -26,3 +26,14 @@ the same myIO object
 \description{
 Sets color scheme for a chart and the category names (optional)
 }
+\examples{
+# Set a custom color scheme
+myIO() |> setColorScheme(colorScheme = list("red", "blue", "green"))
+
+# Set colors with category labels
+myIO() |> setColorScheme(
+  colorScheme = list("steelblue", "orange"),
+  setCategories = c("Group A", "Group B")
+)
+
+}

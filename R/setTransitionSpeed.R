@@ -7,6 +7,13 @@
 #'
 #' @return the same myIO object
 #'
+#' @examples
+#' # Set transition speed to 500ms
+#' myIO() |> setTransitionSpeed(speed = 500)
+#'
+#' # Disable transitions
+#' myIO() |> setTransitionSpeed(speed = 0)
+#'
 #' @export
 
 setTransitionSpeed <- function(myIO, speed){

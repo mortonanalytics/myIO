@@ -21,3 +21,14 @@ the same myIO object
 \description{
 myIO R + d3.js project
 }
+\examples{
+# Create a basic widget
+myIO()
+
+# Create with custom dimensions
+myIO(width = "50\%", height = "300px")
+
+# Create with data attached
+myIO(data = mtcars)
+
+}

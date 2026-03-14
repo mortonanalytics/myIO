@@ -1,0 +1,212 @@
+---
+title: "Chart Types"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Chart Types}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(myIO)
+```
+
+## Overview
+
+myIO supports 12 chart types via the `type` argument in `addIoLayer()`. This
+vignette shows an example of each.
+
+All examples use built-in R datasets so you can copy and run them directly.
+
+## Line Chart
+
+```{r line, eval = FALSE}
+myIO() |>
+  addIoLayer(
+    type = "line",
+    color = "steelblue",
+    label = "temperature",
+    data = airquality,
+    mapping = list(x_var = "Day", y_var = "Temp")
+  )
+```
+
+## Point (Scatter) Chart
+
+```{r point, eval = FALSE}
+myIO() |>
+  addIoLayer(
+    type = "point",
+    color = "coral",
+    label = "scatter",
+    data = mtcars,
+    mapping = list(x_var = "wt", y_var = "mpg")
+  )
+```
+
+## Bar Chart
+
+```{r bar, eval = FALSE}
+myIO() |>
+  addIoLayer(
+    type = "bar",
+    color = "steelblue",
+    label = "bars",
+    data = mtcars,
+    mapping = list(x_var = "cyl", y_var = "mpg")
+  ) |>
+  defineCategoricalAxis(xAxis = TRUE)
+```
+
+## Area Chart
+
+```{r area, eval = FALSE}
+myIO() |>
+  addIoLayer(
+    type = "area",
+    color = "lightsteelblue",
+    label = "area",
+    data = airquality,
+    mapping = list(x_var = "Day", y_var = "Temp")
+  )
+```
+
+## Grouped Bar Chart
+
+```{r grouped-bar, eval = FALSE}
+myIO() |>
+  addIoLayer(
+    type = "groupedBar",
+    color = "steelblue",
+    label = "grouped",
+    data = mtcars,
+    mapping = list(x_var = "cyl", y_var = "mpg")
+  ) |>
+  defineCategoricalAxis(xAxis = TRUE)
+```
+
+## Histogram
+
+```{r histogram, eval = FALSE}
+myIO() |>
+  addIoLayer(
+    type = "histogram",
+    color = "steelblue",
+    label = "hist",
+    data = mtcars,
+    mapping = list(x_var = "mpg", y_var = "mpg")
+  )
+```
+
+## Density Plot
+
+```{r density, eval = FALSE}
+myIO() |>
+  addIoLayer(
+    type = "density",
+    color = "purple",
+    label = "density",
+    data = mtcars,
+    mapping = list(x_var = "mpg", y_var = "mpg")
+  )
+```
+
+## Ridgeline Plot
+
+```{r ridgeline, eval = FALSE}
+myIO() |>
+  addIoLayer(
+    type = "ridgeline",
+    color = "steelblue",
+    label = "ridges",
+    data = mtcars,
+    mapping = list(x_var = "mpg", y_var = "mpg")
+  )
+```
+
+## Donut Chart
+
+```{r donut, eval = FALSE}
+myIO() |>
+  addIoLayer(
+    type = "donut",
+    color = "steelblue",
+    label = "donut",
+    data = mtcars,
+    mapping = list(x_var = "cyl", y_var = "mpg")
+  )
+```
+
+## Gauge Chart
+
+```{r gauge, eval = FALSE}
+myIO() |>
+  addIoLayer(
+    type = "gauge",
+    color = "steelblue",
+    label = "gauge",
+    data = data.frame(value = 75, max = 100),
+    mapping = list(x_var = "value", y_var = "max")
+  )
+```
+
+## Hexbin Chart
+
+```{r hexbin, eval = FALSE}
+myIO() |>
+  addIoLayer(
+    type = "hexbin",
+    color = "steelblue",
+    label = "hexbin",
+    data = mtcars,
+    mapping = list(x_var = "wt", y_var = "mpg")
+  )
+```
+
+## Treemap
+
+Treemaps use a different mapping with `level_1` and `level_2` instead of
+`x_var` and `y_var`:
+
+```{r treemap, eval = FALSE}
+myIO() |>
+  addIoLayer(
+    type = "treemap",
+    label = "cars",
+    data = mtcars,
+    mapping = list(level_1 = "vs", level_2 = "cyl")
+  )
+```
+
+## Combining Chart Types
+
+You can overlay multiple chart types on a single widget:
+
+```{r combined, eval = FALSE}
+myIO() |>
+  addIoLayer(
+    type = "point",
+    color = "steelblue",
+    label = "points",
+    data = mtcars,
+    mapping = list(x_var = "wt", y_var = "mpg")
+  ) |>
+  addIoLayer(
+    type = "line",
+    color = "orange",
+    label = "line",
+    data = mtcars,
+    mapping = list(x_var = "wt", y_var = "mpg")
+  ) |>
+  addIoStatLayer(
+    type = "lm",
+    color = "red",
+    label = "trend",
+    data = mtcars,
+    mapping = list(x_var = "wt", y_var = "mpg")
+  )
+```

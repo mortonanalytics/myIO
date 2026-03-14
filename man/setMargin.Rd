@@ -28,3 +28,8 @@ the same myIO object
 \description{
 Sets margins for the top, bottom, left, and right sides of the chart
 }
+\examples{
+# Set custom margins
+myIO() |> setMargin(top = 50, bottom = 80, left = 60, right = 20)
+
+}

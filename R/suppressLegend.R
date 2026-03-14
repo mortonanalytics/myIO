@@ -7,6 +7,10 @@
 #'
 #' @return the same myIO object
 #'
+#' @examples
+#' # Hide the legend
+#' myIO() |> suppressLegend()
+#'
 #' @export
 suppressLegend <- function(myIO, suppressLegend = TRUE){
 

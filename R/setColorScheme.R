@@ -9,6 +9,16 @@
 #'
 #' @return the same myIO object
 #'
+#' @examples
+#' # Set a custom color scheme
+#' myIO() |> setColorScheme(colorScheme = list("red", "blue", "green"))
+#'
+#' # Set colors with category labels
+#' myIO() |> setColorScheme(
+#'   colorScheme = list("steelblue", "orange"),
+#'   setCategories = c("Group A", "Group B")
+#' )
+#'
 #' @export
 
 setColorScheme <- function(myIO, colorScheme = NULL, colorShceme = NULL, setCategories = NULL){

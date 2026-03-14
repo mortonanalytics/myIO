@@ -8,6 +8,16 @@
 #'
 #' @return the same myIO object
 #'
+#' @examples
+#' # Set x axis limits
+#' myIO() |> setAxisLimits(xlim = list(min = 0, max = 100))
+#'
+#' # Set both axis limits
+#' myIO() |> setAxisLimits(
+#'   xlim = list(min = 0, max = 50),
+#'   ylim = list(min = -10, max = 200)
+#' )
+#'
 #' @export
 setAxisLimits <- function(myIO, xlim = list(min = NULL, max = NULL), ylim = list(min = NULL, max = NULL)){
 

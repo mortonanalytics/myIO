@@ -1,0 +1,153 @@
+---
+title: "Getting Started with myIO"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting Started with myIO}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(myIO)
+```
+
+## Overview
+
+myIO is an R package that combines R and D3.js to create interactive data
+visualizations using the `htmlwidgets` framework. Charts built with myIO work
+in RStudio, Shiny apps, and R Markdown documents.
+
+The core workflow is simple:
+
+1. Create a widget with `myIO()`
+2. Add layers with `addIoLayer()` or `addIoStatLayer()`
+3. Customize with option functions
+
+## Your First Chart
+
+Create a scatter plot of `mtcars` data:
+
+```{r basic-scatter, eval = FALSE}
+myIO() |>
+  addIoLayer(
+    type = "point",
+    color = "steelblue",
+    label = "mpg_vs_wt",
+    data = mtcars,
+    mapping = list(x_var = "wt", y_var = "mpg")
+  )
+```
+
+## Adding Multiple Layers
+
+You can stack layers on a single chart. Here we add points and a linear
+model trend line:
+
+```{r multi-layer, eval = FALSE}
+myIO() |>
+  addIoLayer(
+    type = "point",
+    color = "steelblue",
+    label = "points",
+    data = mtcars,
+    mapping = list(x_var = "wt", y_var = "mpg")
+  ) |>
+  addIoStatLayer(
+    type = "lm",
+    color = "red",
+    label = "trend",
+    data = mtcars,
+    mapping = list(x_var = "wt", y_var = "mpg")
+  )
+```
+
+## Customizing the Chart
+
+Option functions let you control axes, margins, legends, and more. They
+all follow the same pipe-friendly pattern:
+
+```{r customize, eval = FALSE}
+myIO() |>
+  addIoLayer(
+    type = "bar",
+    color = "orange",
+    label = "bars",
+    data = mtcars,
+    mapping = list(x_var = "cyl", y_var = "mpg")
+  ) |>
+  defineCategoricalAxis(xAxis = TRUE) |>
+  setAxisFormat(xAxis = ".0f", yAxis = ".0f") |>
+  setAxisFormat(xLabel = "Cylinders", yLabel = "Miles per Gallon") |>
+  setMargin(top = 40, bottom = 70, left = 60, right = 10) |>
+  setTransitionSpeed(speed = 500)
+```
+
+## Grouped Data
+
+When your data has a grouping variable, pass it in the `mapping` to
+automatically create one layer per group:
+
+```{r grouped, eval = FALSE}
+aq <- airquality
+aq$Month <- paste0("M", aq$Month)
+
+myIO() |>
+  addIoLayer(
+    type = "line",
+    color = c("steelblue", "orange", "green", "red", "purple"),
+    label = "Month",
+    data = aq,
+    mapping = list(x_var = "Day", y_var = "Temp", group = "Month")
+  )
+```
+
+## Using in Shiny
+
+myIO provides standard Shiny bindings:
+- `myIOOutput()` for the UI
+- `renderMyIO()` for the server
+
+```{r shiny, eval = FALSE}
+library(shiny)
+
+ui <- fluidPage(
+  myIOOutput("my_chart", width = "100%", height = "400px")
+)
+
+server <- function(input, output) {
+  output$my_chart <- renderMyIO({
+    myIO() |>
+      addIoLayer(
+        type = "point",
+        color = "steelblue",
+        label = "scatter",
+        data = mtcars,
+        mapping = list(x_var = "wt", y_var = "mpg")
+      )
+  })
+}
+
+shinyApp(ui, server)
+```
+
+## Available Option Functions
+
+| Function | Purpose |
+|----------|---------|
+| `setAxisFormat()` | Set d3.js axis and tooltip formats, axis labels |
+| `setAxisLimits()` | Set min/max for x and y axes |
+| `setMargin()` | Set chart margins (top, bottom, left, right) |
+| `setColorScheme()` | Set color palette and category labels |
+| `setTransitionSpeed()` | Set animation speed (0 to disable) |
+| `setReferenceLines()` | Add x and y reference lines |
+| `setToggle()` | Add a toggle button to switch y variable |
+| `setToolTipOptions()` | Configure tooltip behavior |
+| `defineCategoricalAxis()` | Treat axes as categorical |
+| `flipAxis()` | Swap x and y axes |
+| `dragPoints()` | Make points draggable |
+| `suppressAxis()` | Hide x and/or y axes |
+| `suppressLegend()` | Hide the legend |

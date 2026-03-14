@@ -8,6 +8,13 @@
 #'
 #' @return the same myIO object
 #'
+#' @examples
+#' # Suppress both axes
+#' myIO() |> suppressAxis(xAxis = TRUE, yAxis = TRUE)
+#'
+#' # Suppress only the x axis
+#' myIO() |> suppressAxis(xAxis = TRUE)
+#'
 #' @export
 suppressAxis <- function(myIO, xAxis = NULL, yAxis = NULL){
 

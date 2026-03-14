@@ -8,6 +8,13 @@
 #'
 #' @return the same myIO object
 #'
+#' @examples
+#' # Define x axis as categorical
+#' myIO() |> defineCategoricalAxis(xAxis = TRUE)
+#'
+#' # Define both axes as categorical
+#' myIO() |> defineCategoricalAxis(xAxis = TRUE, yAxis = TRUE)
+#'
 #' @export
 defineCategoricalAxis <- function(myIO, xAxis = TRUE, yAxis = FALSE){
   myIO$x$options$categoricalScale$xAxis <- xAxis

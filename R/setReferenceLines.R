@@ -8,6 +8,10 @@
 #'
 #' @return the same myIO object
 #'
+#' @examples
+#' # Add reference lines at x=5 and y=20
+#' myIO() |> setReferenceLines(xRef = 5, yRef = 20)
+#'
 #' @export
 setReferenceLines <- function(myIO, xRef =  0, yRef =  0){
 

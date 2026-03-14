@@ -13,6 +13,10 @@
 #'
 #' @return the same myIO object
 #'
+#' @examples
+#' # Set custom margins
+#' myIO() |> setMargin(top = 50, bottom = 80, left = 60, right = 20)
+#'
 #' @export
 setMargin <- function(myIO, top = 20, bottom = 40, left = 50, right = 50){
 
