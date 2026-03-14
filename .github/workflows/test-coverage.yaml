@@ -13,6 +13,9 @@ jobs:
   test-coverage:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
@@ -35,12 +38,32 @@ jobs:
             clean = FALSE,
             install_path = file.path(normalizePath(Sys.getenv("RUNNER_TEMP"), winslash = "/"), "package")
           )
-          covr::to_cobertura(cov)
+          pct <- round(covr::percent_coverage(cov), 1)
+          writeLines(as.character(pct), "coverage-pct.txt")
         shell: Rscript {0}
 
-      - uses: codecov/codecov-action@v4
-        with:
-          fail_ci_if_error: ${{ github.event_name != 'pull_request' && true || false }}
-          file: ./cobertura.xml
-          plugin: noop
-          token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Generate coverage badge
+        if: github.event_name == 'push'
+        run: |
+          PCT=$(cat coverage-pct.txt)
+          # Choose color based on coverage percentage
+          if [ "$(echo "$PCT >= 90" | bc)" -eq 1 ]; then
+            COLOR="brightgreen"
+          elif [ "$(echo "$PCT >= 75" | bc)" -eq 1 ]; then
+            COLOR="green"
+          elif [ "$(echo "$PCT >= 60" | bc)" -eq 1 ]; then
+            COLOR="yellow"
+          else
+            COLOR="red"
+          fi
+          curl -s -o man/figures/coverage-badge.svg \
+            "https://img.shields.io/badge/coverage-${PCT}%25-${COLOR}"
+
+      - name: Commit badge
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add man/figures/coverage-badge.svg
+          git diff --staged --quiet || git commit -m "Update coverage badge [skip ci]"
+          git push
