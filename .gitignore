@@ -5,3 +5,4 @@
 ..Rcheck/00install.out
 /docs
 node_modules/
+/inst/appTester/e2e_output

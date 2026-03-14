@@ -84,5 +84,8 @@ myIOOutput <- function(outputId, width = "100%", height = "400px") {
 #' @rdname myIO-shiny
 #' @export
 renderMyIO <- function(expr, env = parent.frame(), quoted = FALSE) {
-  htmlwidgets::shinyRenderWidget(expr, myIOOutput, env, quoted = quoted)
+  if (!quoted) {
+    expr <- substitute(expr)
+  }
+  htmlwidgets::shinyRenderWidget(expr, myIOOutput, env, quoted = TRUE)
 }

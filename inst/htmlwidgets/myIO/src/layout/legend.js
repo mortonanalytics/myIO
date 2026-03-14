@@ -131,7 +131,6 @@ export function updateLegend(chart) {
 
     chart.derived.currentLayers = filteredLayers;
     chart.syncLegacyAliases();
-    chart.removeLayers(removedLayers);
     chart.renderCurrentLayers();
   }
 

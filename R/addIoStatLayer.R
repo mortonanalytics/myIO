@@ -30,7 +30,9 @@ addIoStatLayer <- function(myIO,
     type <- "stat_line"
   }
 
-  data <- unname(split(data, seq_len(nrow(data))))
+  data <- lapply(seq_len(nrow(data)), function(i) {
+    lapply(data[i, , drop = FALSE], function(col) col[[1]])
+  })
   layer <- list(type = type, color = color, label = label, data = data, mapping = mapping)
   myIO$x$config$layers <- c(myIO$x$config$layers, list(layer))
   myIO

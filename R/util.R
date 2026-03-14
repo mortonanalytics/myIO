@@ -9,7 +9,9 @@ build_tree <- function(df, layerLabel, level_1, level_2) {
     # final recursion is to set names properly
     my_list <- lapply(names(list_split), function(e){
       this_df <- list_split[[e]]
-      this_df <- unname(split(this_df, 1:nrow(this_df)))
+      this_df <- lapply(seq_len(nrow(this_df)), function(i) {
+        lapply(this_df[i, , drop = FALSE], function(col) col[[1]])
+      })
       list(name = e, children = this_df)
     })
     list(name = d, children = my_list)

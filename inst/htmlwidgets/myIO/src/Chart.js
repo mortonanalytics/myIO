@@ -191,6 +191,15 @@ export class myIOchart {
     try {
       if (this.dom.chartArea) {
         this.dom.chartArea.selectAll("*").interrupt();
+        var activeLabels = this.derived.currentLayers.map(function(l) { return l.label; });
+        var allLabels = this.config.layers.map(function(l) { return l.label; });
+        var chartArea = this.dom.chartArea;
+        allLabels.forEach(function(label) {
+          if (activeLabels.indexOf(label) === -1) {
+            var safeName = String(label).replace(/\s+/g, "");
+            chartArea.selectAll("[class*='tag-'][class*='-" + safeName + "']").remove();
+          }
+        });
       }
       this.emit("beforeRender", { options });
       this.derived.currentLayers = validateLayers(this);
@@ -205,7 +214,7 @@ export class myIOchart {
       }
       const state = deriveChartRender(this);
       applyDerivedScales(this, state);
-      this.captureLegacyAliases();
+      this.syncLegacyAliases();
       if (!isCurrent()) {
         return;
       }
@@ -345,13 +354,14 @@ export class myIOchart {
   }
 
   updateChart(newConfig) {
-    this.config = newConfig;
-    const newLabels = this.config.layers.map(function(layer) { return layer.label; });
     const oldLabels = this.derived.layerIndex || [];
-    const removed = oldLabels.filter(function(label) { return !newLabels.includes(label); });
+    this.config = newConfig;
+    this.derived.currentLayers = this.config.layers;
     this.syncLegacyAliases();
-    this.renderCurrentLayers();
+    const newLabels = this.config.layers.map(function(layer) { return layer.label; });
+    const removed = oldLabels.filter(function(label) { return !newLabels.includes(label); });
     this.removeLayers(removed);
+    this.renderCurrentLayers();
   }
 
   resize(width, height) {

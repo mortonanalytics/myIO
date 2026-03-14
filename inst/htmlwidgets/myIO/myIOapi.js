@@ -1798,7 +1798,7 @@
     ];
     chart.derived.xBanded = [].concat.apply([], x_bands).map(function(d) {
       try {
-        return d[0];
+        return Array.isArray(d) ? d[0] : d;
       } catch (err) {
         return void 0;
       }
@@ -1820,7 +1820,7 @@
     ];
     chart.derived.yBanded = [].concat.apply([], y_bands).map(function(d) {
       try {
-        return d[0];
+        return Array.isArray(d) ? d[0] : d;
       } catch (err) {
         return void 0;
       }
@@ -1844,7 +1844,7 @@
       chart.derived.colorDiscrete = d3.scaleOrdinal().range(chart.config.scales.colorScheme.colors).domain(chart.config.scales.colorScheme.domain);
       chart.derived.colorContinuous = d3.scaleLinear().range(chart.config.scales.colorScheme.colors).domain(chart.config.scales.colorScheme.domain);
     }
-    chart.captureLegacyAliases();
+    chart.syncLegacyAliases();
   }
   function onlyUnique(value, index, self2) {
     return self2.indexOf(value) === index;
@@ -2100,7 +2100,6 @@
       });
       chart.derived.currentLayers = filteredLayers;
       chart.syncLegacyAliases();
-      chart.removeLayers(removedLayers);
       chart.renderCurrentLayers();
     }
     function hoverLegend() {
@@ -2400,6 +2399,19 @@
       try {
         if (this.dom.chartArea) {
           this.dom.chartArea.selectAll("*").interrupt();
+          var activeLabels = this.derived.currentLayers.map(function(l) {
+            return l.label;
+          });
+          var allLabels = this.config.layers.map(function(l) {
+            return l.label;
+          });
+          var chartArea = this.dom.chartArea;
+          allLabels.forEach(function(label) {
+            if (activeLabels.indexOf(label) === -1) {
+              var safeName = String(label).replace(/\s+/g, "");
+              chartArea.selectAll("[class*='tag-'][class*='-" + safeName + "']").remove();
+            }
+          });
         }
         this.emit("beforeRender", { options });
         this.derived.currentLayers = validateLayers(this);
@@ -2414,7 +2426,7 @@
         }
         const state = deriveChartRender(this);
         applyDerivedScales(this, state);
-        this.captureLegacyAliases();
+        this.syncLegacyAliases();
         if (!isCurrent()) {
           return;
         }
@@ -2533,17 +2545,18 @@
       getRenderer("regression").renderFromPoints(this, color, label);
     }
     updateChart(newConfig) {
+      const oldLabels = this.derived.layerIndex || [];
       this.config = newConfig;
+      this.derived.currentLayers = this.config.layers;
+      this.syncLegacyAliases();
       const newLabels = this.config.layers.map(function(layer) {
         return layer.label;
       });
-      const oldLabels = this.derived.layerIndex || [];
       const removed = oldLabels.filter(function(label) {
         return !newLabels.includes(label);
       });
-      this.syncLegacyAliases();
-      this.renderCurrentLayers();
       this.removeLayers(removed);
+      this.renderCurrentLayers();
     }
     resize(width, height) {
       this.runtime.totalWidth = Math.max(width, MIN_CHART_WIDTH);

@@ -100,7 +100,7 @@ export function processScales(chart, lys) {
   ];
 
   chart.derived.xBanded = [].concat.apply([], x_bands).map(function(d) {
-    try { return d[0]; } catch (err) { return void 0; }
+    try { return Array.isArray(d) ? d[0] : d; } catch (err) { return void 0; }
   }).filter(onlyUnique);
 
   var y_min = d3.min(y_extents, function(d) { return d[0]; });
@@ -117,7 +117,7 @@ export function processScales(chart, lys) {
   ];
 
   chart.derived.yBanded = [].concat.apply([], y_bands).map(function(d) {
-    try { return d[0]; } catch (err) { return void 0; }
+    try { return Array.isArray(d) ? d[0] : d; } catch (err) { return void 0; }
   }).filter(onlyUnique);
 
   var chartHeight = getChartHeight(chart);
@@ -154,7 +154,7 @@ export function processScales(chart, lys) {
       .range(chart.config.scales.colorScheme.colors)
       .domain(chart.config.scales.colorScheme.domain);
   }
-  chart.captureLegacyAliases();
+  chart.syncLegacyAliases();
 }
 
 function onlyUnique(value, index, self) {

@@ -41,6 +41,7 @@ addIoLayer <- function(myIO,
     treemap = c("level_1", "level_2"),
     gauge = c("value"),
     histogram = c("value"),
+    area = c("x_var", "low_y", "high_y"),
     c("x_var", "y_var")
   )
   missing_map <- setdiff(required_map, names(mapping))
@@ -48,13 +49,13 @@ addIoLayer <- function(myIO,
     stop("Missing required mapping: ", paste(missing_map, collapse = ", "), call. = FALSE)
   }
 
-  for (field in intersect(c("x_var", "y_var", "group", "level_1", "level_2", "value"), names(mapping))) {
+  for (field in intersect(c("x_var", "y_var", "group", "level_1", "level_2", "value", "low_y", "high_y"), names(mapping))) {
     if (!mapping[[field]] %in% colnames(data)) {
       stop("Mapping variable '", mapping[[field]], "' not found in data.", call. = FALSE)
     }
   }
 
-  numeric_field <- intersect(c("y_var", "value"), names(mapping))
+  numeric_field <- intersect(c("y_var", "value", "low_y", "high_y"), names(mapping))
   if (type %in% c("line", "point", "bar", "hexbin", "area", "groupedBar", "histogram", "gauge", "donut") &&
       length(numeric_field) > 0 &&
       !is.numeric(data[[mapping[[numeric_field[1]]]]])) {
@@ -77,7 +78,9 @@ addIoLayer <- function(myIO,
     if (type == "treemap") {
       data <- build_tree(data, label, mapping$level_1, mapping$level_2)
     } else {
-      data <- unname(split(data, seq_len(nrow(data))))
+      data <- lapply(seq_len(nrow(data)), function(i) {
+        lapply(data[i, , drop = FALSE], function(col) col[[1]])
+      })
     }
 
     layer <- list(type = type, color = color, label = label, data = data, mapping = mapping, options = options)
