@@ -18,6 +18,7 @@
 #'
 #' @export
 dragPoints <- function(myIO, dragPoints = TRUE){
+  assert_myIO(myIO)
   myIO$x$config$interactions$dragPoints <- dragPoints
   return(myIO)
 }

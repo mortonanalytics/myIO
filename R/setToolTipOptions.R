@@ -13,6 +13,7 @@
 #'
 #' @export
 setToolTipOptions <- function(myIO, suppressY = NULL){
+  assert_myIO(myIO)
 
   myIO$x$config$interactions$toolTipOptions$suppressY <- suppressY
 

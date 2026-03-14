@@ -13,14 +13,14 @@ test_that("Grouped Bar renders with correct grouped layers", {
   df <- datasets::airquality
   df$Month <- as.character(df$Month)
 
-  w <- myIO() %>%
+  w <- myIO() |>
     addIoLayer(
       type = "groupedBar",
       color = c("#4E79A7", "#F28E2B", "#E15759", "#76B7B2", "#59A14F"),
       label = "Temperature by Month",
       data = df,
       mapping = list(x_var = "Day", y_var = "Temp", group = "Month")
-    ) %>%
+    ) |>
     setAxisFormat(xAxis = ".0f", yAxis = ".0f", xLabel = "Day", yLabel = "Temperature (F)")
 
   layers <- w$x$config$layers
@@ -34,14 +34,14 @@ test_that("Line chart renders with grouped layers", {
   df <- datasets::airquality
   df$Month <- as.character(df$Month)
 
-  w <- myIO() %>%
+  w <- myIO() |>
     addIoLayer(
       type = "line",
       color = c("#4E79A7", "#F28E2B", "#E15759", "#76B7B2", "#59A14F"),
       label = "Temp",
       data = df,
       mapping = list(x_var = "Day", y_var = "Temp", group = "Month")
-    ) %>%
+    ) |>
     setAxisFormat(xAxis = ".0f", yAxis = ".0f", xLabel = "Day", yLabel = "Temperature")
 
   layers <- w$x$config$layers
@@ -53,14 +53,14 @@ test_that("Line chart renders with grouped layers", {
 test_that("Point + LM renders with scatter and transformed line layers", {
   df <- datasets::mtcars
 
-  w <- myIO() %>%
+  w <- myIO() |>
     addIoLayer(
       type = "point",
       color = "#4E79A7",
       label = "Cars",
       data = df,
       mapping = list(x_var = "wt", y_var = "mpg")
-    ) %>%
+    ) |>
     addIoLayer(
       type = "line",
       transform = "lm",
@@ -68,7 +68,7 @@ test_that("Point + LM renders with scatter and transformed line layers", {
       label = "Linear Fit",
       data = df,
       mapping = list(x_var = "wt", y_var = "mpg")
-    ) %>%
+    ) |>
     setAxisFormat(xLabel = "Weight (1000 lbs)", yLabel = "Miles per Gallon")
 
   layers <- w$x$config$layers
@@ -86,15 +86,15 @@ test_that("Bar chart renders with categorical x", {
     stringsAsFactors = FALSE
   )
 
-  w <- myIO() %>%
+  w <- myIO() |>
     addIoLayer(
       type = "bar",
       color = "#59A14F",
       label = "Values",
       data = df,
       mapping = list(x_var = "category", y_var = "value")
-    ) %>%
-    defineCategoricalAxis(xAxis = TRUE) %>%
+    ) |>
+    defineCategoricalAxis(xAxis = TRUE) |>
     setAxisFormat(yAxis = ".0f", xLabel = "Category", yLabel = "Value")
 
   layers <- w$x$config$layers
@@ -112,16 +112,16 @@ test_that("Horizontal bar renders with flipped axis", {
     stringsAsFactors = FALSE
   )
 
-  w <- myIO() %>%
+  w <- myIO() |>
     addIoLayer(
       type = "bar",
       color = "#F28E2B",
       label = "Sales",
       data = df,
       mapping = list(x_var = "region", y_var = "sales")
-    ) %>%
-    defineCategoricalAxis(xAxis = FALSE, yAxis = TRUE) %>%
-    flipAxis() %>%
+    ) |>
+    defineCategoricalAxis(xAxis = FALSE, yAxis = TRUE) |>
+    flipAxis() |>
     setAxisFormat(xAxis = ".0f", xLabel = "Sales ($K)", yLabel = "Region")
 
   expect_true(w$x$config$scales$flipAxis)
@@ -141,14 +141,14 @@ test_that("Area chart renders with low_y/high_y bands", {
     stringsAsFactors = FALSE
   )
 
-  w <- myIO() %>%
+  w <- myIO() |>
     addIoLayer(
       type = "area",
       color = c("#4E79A7", "#F28E2B"),
       label = "Forecast",
       data = df,
       mapping = list(x_var = "month", low_y = "low", high_y = "high", group = "band")
-    ) %>%
+    ) |>
     setAxisFormat(xAxis = ".0f", yAxis = "$,.0f", xLabel = "Month", yLabel = "Revenue")
 
   layers <- w$x$config$layers
@@ -161,14 +161,14 @@ test_that("Histogram renders with value mapping", {
   set.seed(1)
   df <- data.frame(value = rnorm(200, mean = 50, sd = 15))
 
-  w <- myIO() %>%
+  w <- myIO() |>
     addIoLayer(
       type = "histogram",
       color = "#76B7B2",
       label = "Distribution",
       data = df,
       mapping = list(value = "value")
-    ) %>%
+    ) |>
     setAxisFormat(xAxis = ".0f", yAxis = ".0f", xLabel = "Value", yLabel = "Count")
 
   layers <- w$x$config$layers
@@ -185,7 +185,7 @@ test_that("Donut chart renders with segments", {
     stringsAsFactors = FALSE
   )
 
-  w <- myIO() %>%
+  w <- myIO() |>
     addIoLayer(
       type = "donut",
       color = c("#4E79A7", "#F28E2B", "#E15759", "#76B7B2"),
@@ -202,15 +202,15 @@ test_that("Donut chart renders with segments", {
 })
 
 test_that("Gauge renders with value", {
-  w <- myIO() %>%
+  w <- myIO() |>
     addIoLayer(
       type = "gauge",
       color = "#E15759",
       label = "Completion",
       data = data.frame(value = 0.65),
       mapping = list(value = "value")
-    ) %>%
-    suppressAxis(xAxis = TRUE, yAxis = TRUE) %>%
+    ) |>
+    suppressAxis(xAxis = TRUE, yAxis = TRUE) |>
     suppressLegend()
 
   layers <- w$x$config$layers
@@ -228,7 +228,7 @@ test_that("Treemap renders with hierarchy and y_var", {
     stringsAsFactors = FALSE
   )
 
-  w <- myIO() %>%
+  w <- myIO() |>
     addIoLayer(
       type = "treemap",
       color = c("#4E79A7", "#F28E2B", "#E15759"),
@@ -254,14 +254,14 @@ test_that("Hexbin renders with radius mapping", {
     y = c(rnorm(200, 5, 1), rnorm(200, 8, 1.2))
   )
 
-  w <- myIO() %>%
+  w <- myIO() |>
     addIoLayer(
       type = "hexbin",
       color = "#4E79A7",
       label = "Density",
       data = df,
       mapping = list(x_var = "x", y_var = "y", radius = 20)
-    ) %>%
+    ) |>
     setAxisFormat(xLabel = "X", yLabel = "Y")
 
   layers <- w$x$config$layers
@@ -276,16 +276,16 @@ test_that("Theme demo renders with custom theme and reference line", {
   df <- datasets::mtcars
   df$cyl <- as.character(df$cyl)
 
-  w <- myIO() %>%
+  w <- myIO() |>
     addIoLayer(
       type = "point",
       color = c("#FF6B6B", "#4ECDC4", "#45B7D1"),
       label = "MPG by HP",
       data = df,
       mapping = list(x_var = "hp", y_var = "mpg", group = "cyl")
-    ) %>%
-    setTheme(text_color = "#e0e0e0", grid_color = "#333333", bg = "#1a1a2e", font = "monospace") %>%
-    setAxisFormat(xLabel = "Horsepower", yLabel = "MPG") %>%
+    ) |>
+    setTheme(text_color = "#e0e0e0", grid_color = "#333333", bg = "#1a1a2e", font = "monospace") |>
+    setAxisFormat(xLabel = "Horsepower", yLabel = "MPG") |>
     setReferenceLines(yRef = mean(df$mpg))
 
   expect_equal(w$x$config$theme[["chart-text-color"]], "#e0e0e0")

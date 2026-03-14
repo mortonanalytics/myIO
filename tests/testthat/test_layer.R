@@ -67,7 +67,7 @@ test_that("addIoLayer validates compatibility groups", {
   w <- myIO::addIoLayer(myIO::myIO(), type = "donut", label = "d", color = "red", data = data.frame(x = "A", y = 1), mapping = list(x_var = "x", y_var = "y"))
   expect_error(
     myIO::addIoLayer(w, type = "bar", label = "b", color = "blue", data = mtcars, mapping = list(x_var = "cyl", y_var = "mpg")),
-    "layer groups"
+    "Compatible layer types here are"
   )
 })
 
@@ -86,4 +86,36 @@ test_that("grouped layers use the default Okabe-Ito palette", {
   colors <- vapply(widget$x$config$layers, function(layer) layer$color, character(1))
   expect_equal(colors[[1]], "#E69F00")
   expect_equal(colors[[2]], "#56B4E9")
+})
+
+test_that("grouped layers with overlapping group values keep unique labels", {
+  df <- datasets::airquality
+  df$Month <- as.character(df$Month)
+
+  widget <- myIO::myIO() |>
+    myIO::addIoLayer(
+      type = "line",
+      label = "Temp",
+      data = df,
+      mapping = list(x_var = "Day", y_var = "Temp", group = "Month")
+    ) |>
+    myIO::addIoLayer(
+      type = "line",
+      label = "Wind",
+      data = df,
+      mapping = list(x_var = "Day", y_var = "Wind", group = "Month")
+    )
+
+  labels <- vapply(widget$x$config$layers, function(layer) layer$label, character(1))
+  expect_equal(length(labels), length(unique(labels)))
+  expect_true(all(grepl("^Temp .+|^Wind .+", labels)))
+})
+
+test_that("addIoLayer falls back to widget default data for multiple layers", {
+  widget <- myIO::myIO(data = datasets::mtcars) |>
+    myIO::addIoLayer(type = "point", label = "points", color = "red", mapping = list(x_var = "wt", y_var = "mpg")) |>
+    myIO::addIoLayer(type = "line", label = "trend", color = "blue", mapping = list(x_var = "wt", y_var = "disp"))
+
+  expect_length(widget$x$config$layers[[1]]$data, nrow(datasets::mtcars))
+  expect_length(widget$x$config$layers[[2]]$data, nrow(datasets::mtcars))
 })

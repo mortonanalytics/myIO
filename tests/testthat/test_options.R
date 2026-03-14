@@ -25,6 +25,11 @@ test_that("setAxisLimits and transitions update config", {
   expect_equal(widget$x$config$transitions$speed, 1500)
 })
 
+test_that("setTransitionSpeed stores zero to disable animation", {
+  widget <- myIO::setTransitionSpeed(myIO::myIO(), speed = 0)
+  expect_equal(widget$x$config$transitions$speed, 0)
+})
+
 test_that("setColorScheme uses named structure", {
   widget <- myIO::setColorScheme(myIO::myIO(), colorScheme = list("red", "blue"), setCategories = c("A", "B"))
   expect_equal(widget$x$config$scales$colorScheme$colors, c("red", "blue"))
@@ -45,4 +50,11 @@ test_that("reference lines update config", {
   widget <- myIO::setReferenceLines(myIO::myIO(), xRef = 5, yRef = 10)
   expect_equal(widget$x$config$referenceLines$x, 5)
   expect_equal(widget$x$config$referenceLines$y, 10)
+})
+
+test_that("setTheme prefixes extra CSS custom properties", {
+  widget <- myIO::setTheme(myIO::myIO(), text_color = "#111111", accent = "#ff6600", border = "1px solid")
+  expect_equal(widget$x$config$theme$`chart-text-color`, "#111111")
+  expect_equal(widget$x$config$theme$`chart-accent`, "#ff6600")
+  expect_equal(widget$x$config$theme$`chart-border`, "1px solid")
 })

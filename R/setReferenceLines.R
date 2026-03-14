@@ -14,6 +14,7 @@
 #'
 #' @export
 setReferenceLines <- function(myIO, xRef =  0, yRef =  0){
+  assert_myIO(myIO)
 
   final <- list(
     x = xRef,

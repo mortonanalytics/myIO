@@ -17,6 +17,7 @@
 #'
 #' @export
 defineCategoricalAxis <- function(myIO, xAxis = TRUE, yAxis = FALSE){
+  assert_myIO(myIO)
   myIO$x$config$scales$categoricalScale$xAxis <- xAxis
   myIO$x$config$scales$categoricalScale$yAxis <- yAxis
   return(myIO)

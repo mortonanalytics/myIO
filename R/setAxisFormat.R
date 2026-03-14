@@ -20,6 +20,7 @@
 #'
 #' @export
 setAxisFormat <- function(myIO, xAxis = "s", yAxis = "s", toolTip = "s", xLabel = NULL, yLabel = NULL){
+  assert_myIO(myIO)
 
   myIO$x$config$axes$xAxisFormat <- xAxis
   myIO$x$config$axes$yAxisFormat <- yAxis

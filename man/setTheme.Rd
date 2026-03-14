@@ -4,10 +4,17 @@
 \alias{setTheme}
 \title{setTheme()}
 \usage{
-setTheme(io, text_color = NULL, grid_color = NULL, bg = NULL, font = NULL, ...)
+setTheme(
+  myIO,
+  text_color = NULL,
+  grid_color = NULL,
+  bg = NULL,
+  font = NULL,
+  ...
+)
 }
 \arguments{
-\item{io}{an htmlwidget object created by the myIO() function}
+\item{myIO}{an htmlwidget object created by the myIO() function}
 
 \item{text_color}{text and label color}
 

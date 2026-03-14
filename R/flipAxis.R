@@ -18,6 +18,7 @@
 #'
 #' @export
 flipAxis <- function(myIO, flipAxis = TRUE){
+  assert_myIO(myIO)
   myIO$x$config$scales$flipAxis <- flipAxis
   return(myIO)
 }

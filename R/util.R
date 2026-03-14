@@ -24,8 +24,56 @@ OKABE_ITO_PALETTE <- c(
   "#0072B2", "#D55E00", "#CC79A7", "#999999"
 )
 
+ALLOWED_TYPES <- c(
+  "line", "point", "bar", "hexbin", "treemap", "gauge",
+  "donut", "area", "groupedBar", "histogram"
+)
+
+COMPATIBILITY_GROUPS <- list(
+  line = "axes-continuous",
+  point = "axes-continuous",
+  area = "axes-continuous",
+  bar = "axes-categorical",
+  groupedBar = "axes-categorical",
+  histogram = "axes-binned",
+  hexbin = "axes-hex",
+  treemap = "standalone-treemap",
+  donut = "standalone-donut",
+  gauge = "standalone-gauge"
+)
+
+GROUP_MATRIX <- list(
+  "axes-continuous" = c("axes-continuous", "axes-categorical", "axes-binned"),
+  "axes-categorical" = c("axes-continuous", "axes-categorical"),
+  "axes-binned" = c("axes-continuous", "axes-binned"),
+  "axes-hex" = c("axes-hex"),
+  "standalone-treemap" = c("standalone-treemap"),
+  "standalone-donut" = c("standalone-donut"),
+  "standalone-gauge" = c("standalone-gauge")
+)
+
+VALID_COMBINATIONS <- list(
+  line = c("identity", "lm"),
+  point = c("identity"),
+  area = c("identity"),
+  bar = c("identity"),
+  groupedBar = c("identity"),
+  histogram = c("identity"),
+  hexbin = c("identity"),
+  treemap = c("identity"),
+  donut = c("identity"),
+  gauge = c("identity")
+)
+
 `%||%` <- function(x, y) {
   if (is.null(x)) y else x
+}
+
+assert_myIO <- function(x) {
+  if (!inherits(x, "myIO")) {
+    stop("Expected a myIO widget, got '", paste(class(x), collapse = "/"), "'.", call. = FALSE)
+  }
+  invisible(x)
 }
 
 as_layer_rows <- function(data) {
@@ -40,7 +88,7 @@ ensure_source_key <- function(data) {
   }
 
   if (!("_source_key" %in% colnames(data))) {
-    data[["_source_key"]] <- sprintf("row_%03d", seq_len(nrow(data)))
+    data[["_source_key"]] <- sprintf("row_%d", seq_len(nrow(data)))
   } else {
     data[["_source_key"]] <- as.character(data[["_source_key"]])
   }
@@ -54,36 +102,4 @@ next_layer_id <- function(layers, prefix = "layer") {
 
 new_transform_meta <- function(name, details = list()) {
   utils::modifyList(list(name = name, sourceKeys = NULL, derivedFrom = NULL), details)
-}
-
-buildLayers <- function(x, group, grouping, color, data, type, mapping, options,
-                        transform = "identity", transformMeta = NULL,
-                        sourceKey = "_source_key", derivedFrom = NULL,
-                        parentComposite = NULL, compositeRole = NULL){
-
-  #subset data for each layer
-  temp_df <- data[data[[mapping$group]] == x, ]
-
-  ##create layer element
-  layer <- list(
-    type = type,
-    color = color[match(x, grouping)],
-    label = x,
-    mapping = mapping,
-    data = as_layer_rows(temp_df),
-    options = options,
-    transform = transform,
-    transformMeta = transformMeta,
-    sourceKey = sourceKey,
-    derivedFrom = derivedFrom,
-    encoding = list(),
-    visibility = TRUE
-  )
-
-  if (!is.null(parentComposite)) {
-    layer$`_composite` <- parentComposite
-    layer$`_compositeRole` <- compositeRole
-  }
-
-  layer
 }

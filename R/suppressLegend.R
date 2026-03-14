@@ -13,6 +13,7 @@
 #'
 #' @export
 suppressLegend <- function(myIO, suppressLegend = TRUE){
+  assert_myIO(myIO)
 
   myIO$x$config$layout$suppressLegend <- suppressLegend
 

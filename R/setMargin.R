@@ -17,6 +17,7 @@
 #'
 #' @export
 setMargin <- function(myIO, top = 20, bottom = 40, left = 50, right = 50){
+  assert_myIO(myIO)
 
   myIO$x$config$layout$margin$top <- top
   myIO$x$config$layout$margin$bottom <- bottom

@@ -17,6 +17,7 @@
 #'
 #' @export
 suppressAxis <- function(myIO, xAxis = NULL, yAxis = NULL){
+  assert_myIO(myIO)
 
   suppressAxis <- list(xAxis = xAxis, yAxis = yAxis)
   myIO$x$config$layout$suppressAxis <- suppressAxis

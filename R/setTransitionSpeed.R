@@ -17,6 +17,7 @@
 #' @export
 
 setTransitionSpeed <- function(myIO, speed){
+  assert_myIO(myIO)
 
   myIO$x$config$transitions$speed <- speed
 

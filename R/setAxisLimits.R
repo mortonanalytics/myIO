@@ -20,6 +20,7 @@
 #'
 #' @export
 setAxisLimits <- function(myIO, xlim = list(min = NULL, max = NULL), ylim = list(min = NULL, max = NULL)){
+  assert_myIO(myIO)
 
   myIO$x$config$scales$xlim <- xlim
   myIO$x$config$scales$ylim <- ylim

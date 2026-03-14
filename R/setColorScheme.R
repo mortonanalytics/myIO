@@ -21,6 +21,8 @@
 #' @export
 
 setColorScheme <- function(myIO, colorScheme = NULL, setCategories = NULL){
+  assert_myIO(myIO)
+
   if (is.null(colorScheme)) {
     stop("'colorScheme' must be provided.", call. = FALSE)
   }

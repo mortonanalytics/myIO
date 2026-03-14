@@ -26,5 +26,5 @@ test_that("source keys are created and preserved in serialized rows", {
     )
 
   keys <- vapply(widget$x$config$layers[[1]]$data, function(row) row$`_source_key`, character(1))
-  expect_equal(keys, c("row_001", "row_002", "row_003"))
+  expect_equal(keys, c("row_1", "row_2", "row_3"))
 })

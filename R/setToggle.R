@@ -15,6 +15,7 @@
 #' @export
 
 setToggle <- function(myIO, variable, format = NULL){
+  assert_myIO(myIO)
 
   final <- list(variable = variable, format = format)
 

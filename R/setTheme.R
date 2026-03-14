@@ -2,7 +2,7 @@
 #'
 #' Sets chart theme tokens using CSS custom properties
 #'
-#' @param io an htmlwidget object created by the myIO() function
+#' @param myIO an htmlwidget object created by the myIO() function
 #' @param text_color text and label color
 #' @param grid_color grid line color
 #' @param bg background color
@@ -11,7 +11,9 @@
 #'
 #' @return the same myIO object
 #' @export
-setTheme <- function(io, text_color = NULL, grid_color = NULL, bg = NULL, font = NULL, ...) {
+setTheme <- function(myIO, text_color = NULL, grid_color = NULL, bg = NULL, font = NULL, ...) {
+  assert_myIO(myIO)
+
   theme <- list(
     "chart-text-color" = text_color,
     "chart-grid-color" = grid_color,
@@ -26,6 +28,6 @@ setTheme <- function(io, text_color = NULL, grid_color = NULL, bg = NULL, font =
     }
   }
 
-  io$x$config$theme <- Filter(Negate(is.null), theme)
-  io
+  myIO$x$config$theme <- Filter(Negate(is.null), theme)
+  myIO
 }
