@@ -7,14 +7,14 @@ ui <- fluidPage(
   tabsetPanel(
     tabPanel("Grouped Bar",
       fluidRow(
-        column(4, sliderInput("gb_scale", "Temperature Scale", min = 0.5, max = 2, value = 1, step = 0.1)),
+        column(4, sliderInput("gb_noise", "Noise", min = 0, max = 50, value = 0, step = 5)),
         column(4, checkboxGroupInput("gb_months", "Months", choices = 5:9, selected = 5:9, inline = TRUE))
       ),
       myIOOutput("groupedBar", height = "400px")
     ),
     tabPanel("Line",
       fluidRow(
-        column(4, sliderInput("line_scale", "Temperature Scale", min = 0.5, max = 2, value = 1, step = 0.1))
+        column(4, sliderInput("line_noise", "Noise", min = 0, max = 50, value = 0, step = 5))
       ),
       myIOOutput("linePlot", height = "400px")
     ),
@@ -38,7 +38,7 @@ ui <- fluidPage(
     ),
     tabPanel("Donut",
       fluidRow(
-        column(4, sliderInput("donut_scale", "Scale", min = 0.5, max = 3, value = 1, step = 0.25))
+        column(4, sliderInput("donut_noise", "Noise", min = 0, max = 30, value = 0, step = 5))
       ),
       myIOOutput("donutPlot", height = "400px")
     ),
@@ -68,7 +68,7 @@ server <- function(input, output) {
       mutate(Month = as.character(Month)) %>%
       filter(Month %in% input$gb_months)
 
-    df$Temp <- df$Temp * input$gb_scale
+    df$Temp <- df$Temp + runif(nrow(df), -input$gb_noise, input$gb_noise)
 
     myIO() %>%
       addIoLayer(
@@ -78,7 +78,7 @@ server <- function(input, output) {
         data = df,
         mapping = list(x_var = "Day", y_var = "Temp", group = "Month")
       ) %>%
-      setAxisLimits(ylim = list(min = 0, max = 200)) %>%
+      setAxisLimits(ylim = list(min = 0)) %>%
       setAxisFormat(xAxis = ".0f", yAxis = ".0f", xLabel = "Day", yLabel = "Temperature (F)")
   })
 
@@ -87,7 +87,7 @@ server <- function(input, output) {
     df <- datasets::airquality %>%
       mutate(Month = as.character(Month))
 
-    df$Temp <- df$Temp * input$line_scale
+    df$Temp <- df$Temp + runif(nrow(df), -input$line_noise, input$line_noise)
 
     myIO() %>%
       addIoLayer(
@@ -97,7 +97,7 @@ server <- function(input, output) {
         data = df,
         mapping = list(x_var = "Day", y_var = "Temp", group = "Month")
       ) %>%
-      setAxisLimits(ylim = list(min = 0, max = 200)) %>%
+      setAxisLimits(ylim = list(min = 0)) %>%
       setAxisFormat(xAxis = ".0f", yAxis = ".0f", xLabel = "Day", yLabel = "Temperature")
   })
 
@@ -208,7 +208,7 @@ server <- function(input, output) {
   output$donutPlot <- renderMyIO({
     df <- data.frame(
       segment = c("Desktop", "Mobile", "Tablet", "Other"),
-      traffic = c(45, 35, 15, 5) * input$donut_scale,
+      traffic = pmax(1, c(45, 35, 15, 5) + runif(4, -input$donut_noise, input$donut_noise)),
       stringsAsFactors = FALSE
     )
 

@@ -158,6 +158,10 @@ export function updateLegend(chart) {
 }
 
 export function updateOrdinalColorLegend(chart, ly) {
+  if (chart.runtime._suppressOrdinalLegendRebuild) {
+    return;
+  }
+
   var m = chart.margin;
 
   d3.select(chart.element).select(".legend-box").remove();
@@ -182,8 +186,14 @@ export function updateOrdinalColorLegend(chart, ly) {
     colorKey = ly.data.map(function(d) { return d[ly.mapping.x_var]; });
   }
 
+  if (!chart.runtime._hiddenOrdinalSegments) {
+    chart.runtime._hiddenOrdinalSegments = [];
+  }
+  var hidden = chart.runtime._hiddenOrdinalSegments;
+
   colorKey.forEach(function(d, i) {
-    var swatchColor = ly.type === "treemap" ? chart.colorDiscrete("treemap." + d) : chart.colorDiscrete(i);
+    var swatchColor = ly.type === "treemap" ? chart.colorDiscrete("treemap." + d) : chart.colorDiscrete(d);
+    var isVisible = hidden.indexOf(d) === -1;
     var legendElement = svg.append("g")
       .attr("class", "legendElements")
       .selectAll(".legendElement")
@@ -192,13 +202,33 @@ export function updateOrdinalColorLegend(chart, ly) {
       .append("g")
       .attr("class", "legendElement")
       .attr("tabindex", 0)
+      .attr("role", "switch")
+      .attr("aria-checked", isVisible ? "true" : "false")
       .attr("transform", function() {
         return "translate(" + i % n * itemWidth + "," + Math.floor(i / n) * itemHeight + ")";
       })
       .attr("text-anchor", "start")
-      .attr("font-size", responsiveValue(chart, 12, 10));
+      .attr("font-size", responsiveValue(chart, 12, 10))
+      .style("cursor", "pointer")
+      .on("click", function() {
+        var segment = d3.select(this).data()[0];
+        var idx = hidden.indexOf(segment);
+        if (idx === -1) {
+          hidden.push(segment);
+        } else {
+          hidden.splice(idx, 1);
+        }
+        var nowVisible = hidden.indexOf(segment) === -1;
+        d3.select(this).attr("aria-checked", nowVisible ? "true" : "false");
+        applyLegendState(d3.select(this), nowVisible);
+
+        chart.runtime._suppressOrdinalLegendRebuild = true;
+        chart.routeLayers([ly]);
+        chart.runtime._suppressOrdinalLegendRebuild = false;
+      });
 
     legendElement.append("rect")
+      .attr("class", "legend-swatch")
       .attr("x", 5)
       .attr("width", 12)
       .attr("height", 12)
@@ -210,7 +240,16 @@ export function updateOrdinalColorLegend(chart, ly) {
       .attr("y", 10.5)
       .attr("dy", "0.35em")
       .text(d);
+
+    applyLegendState(legendElement, isVisible);
   });
+
+  function applyLegendState(selection, isVisible) {
+    selection.select(".legend-swatch")
+      .style("opacity", isVisible ? 1 : "var(--chart-legend-inactive-opacity)");
+    selection.select("text")
+      .style("text-decoration", isVisible ? "none" : null);
+  }
 }
 
 export function updateContinuousColorLegend(chart) {

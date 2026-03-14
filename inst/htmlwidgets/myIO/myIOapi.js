@@ -781,52 +781,68 @@
       var m = chart.margin;
       var transitionSpeed = chart.options.transition.speed;
       var radius = Math.min(chart.width - (m.right + m.left), chart.height - (m.top + m.bottom)) / 2;
-      var pie = d3.pie().sort(null).value(function(d) {
-        return d[layer.mapping.y_var];
-      });
-      var arc = d3.arc().innerRadius(radius * 0.8).outerRadius(radius * 0.4);
-      var outerArc = d3.arc().innerRadius(radius * 0.9).outerRadius(radius * 0.9);
-      var data = layer.data;
+      var xVar = layer.mapping.x_var;
+      var yVar = layer.mapping.y_var;
       if (isColorSchemeActive(chart)) {
         chart.colorDiscrete = d3.scaleOrdinal().range(chart.options.colorScheme[0]).domain(chart.options.colorScheme[1]);
         chart.colorContinuous = d3.scaleLinear().range(chart.options.colorScheme[0]).domain(chart.options.colorScheme[1]);
       } else {
         chart.colorDiscrete = d3.scaleOrdinal().range(layer.color).domain(layer.data.map(function(d) {
-          return d[layer.mapping.x_var];
+          return d[xVar];
         }));
       }
-      var path = chart.chart.selectAll(".donut").data(pie(data));
-      path.exit().remove();
-      var newPath = path.enter().append("path").attr("class", "donut").attr("fill", function(d, i) {
-        return chart.colorDiscrete(i);
-      }).attr("d", arc).each(function() {
-        this._current = 0;
+      var hidden = chart.runtime._hiddenOrdinalSegments || [];
+      var data = layer.data.filter(function(d) {
+        return hidden.indexOf(d[xVar]) === -1;
       });
-      path.merge(newPath).transition().duration(transitionSpeed).ease(d3.easeQuad).attr("fill", function(d, i) {
-        return chart.colorDiscrete(i);
+      var pie = d3.pie().sort(null).value(function(d) {
+        return d[yVar];
+      });
+      var arc = d3.arc().innerRadius(radius * 0.8).outerRadius(radius * 0.4);
+      var outerArc = d3.arc().innerRadius(radius * 0.9).outerRadius(radius * 0.9);
+      var path = chart.chart.selectAll(".donut").data(pie(data), function(d) {
+        return d.data[xVar];
+      });
+      path.exit().transition().duration(transitionSpeed).ease(d3.easeQuad).attrTween("d", function(a) {
+        var end = { startAngle: a.endAngle, endAngle: a.endAngle };
+        var i = d3.interpolate(a, end);
+        return function(t) {
+          return arc(i(t));
+        };
+      }).remove();
+      var newPath = path.enter().append("path").attr("class", "donut").attr("fill", function(d) {
+        return chart.colorDiscrete(d.data[xVar]);
+      }).attr("d", arc).each(function(d) {
+        this._current = d;
+      });
+      path.merge(newPath).transition().duration(transitionSpeed).ease(d3.easeQuad).attr("fill", function(d) {
+        return chart.colorDiscrete(d.data[xVar]);
       }).attrTween("d", function(a) {
         this._current = this._current || a;
         var i = d3.interpolate(this._current, a);
-        this._current = i(0);
+        this._current = i(1);
         return function(t) {
           return arc(i(t));
         };
       });
-      var textLabel = chart.chart.selectAll("text").data(pie(data));
-      var newText = textLabel.enter().append("text").attr("class", "inner-text").style("font-size", "12px").style("opacity", 0).attr("dy", ".35em").text(function(d) {
-        return d.data[layer.mapping.x_var];
-      });
       function midAngle(d) {
         return d.startAngle + (d.endAngle - d.startAngle) / 2;
       }
+      var textLabel = chart.chart.selectAll(".inner-text").data(pie(data), function(d) {
+        return d.data[xVar];
+      });
+      textLabel.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
+      var newText = textLabel.enter().append("text").attr("class", "inner-text").style("font-size", "12px").style("opacity", 0).attr("dy", ".35em").text(function(d) {
+        return d.data[xVar];
+      });
       textLabel.merge(newText).transition().duration(transitionSpeed).ease(d3.easeQuad).text(function(d) {
-        return d.data[layer.mapping.x_var];
+        return d.data[xVar];
       }).style("opacity", function(d) {
         return Math.abs(d.endAngle - d.startAngle) > 0.3 ? 1 : 0;
       }).attrTween("transform", function(d) {
         this._current = this._current || d;
         var interpolate = d3.interpolate(this._current, d);
-        this._current = interpolate(0);
+        this._current = interpolate(1);
         return function(t) {
           var d2 = interpolate(t);
           var pos = outerArc.centroid(d2);
@@ -836,21 +852,23 @@
       }).styleTween("text-anchor", function(d) {
         this._current = this._current || d;
         var interpolate = d3.interpolate(this._current, d);
-        this._current = interpolate(0);
+        this._current = interpolate(1);
         return function(t) {
           var d2 = interpolate(t);
           return midAngle(d2) < Math.PI ? "start" : "end";
         };
       });
-      textLabel.exit().remove();
-      var polyline = chart.chart.selectAll("polyline").data(pie(data));
+      var polyline = chart.chart.selectAll("polyline").data(pie(data), function(d) {
+        return d.data[xVar];
+      });
+      polyline.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
       var newPolyline = polyline.enter().append("polyline").style("fill", "none").style("stroke-width", "1px").style("opacity", 0).style("stroke", "gray");
       polyline.merge(newPolyline).transition().duration(transitionSpeed).ease(d3.easeQuad).style("opacity", function(d) {
         return Math.abs(d.endAngle - d.startAngle) > 0.3 ? 1 : 0;
       }).attrTween("points", function(d) {
         this._current = this._current || d;
         var interpolate = d3.interpolate(this._current, d);
-        this._current = interpolate(0);
+        this._current = interpolate(1);
         return function(t) {
           var d2 = interpolate(t);
           var pos = outerArc.centroid(d2);
@@ -858,11 +876,10 @@
           return [arc.centroid(d2), outerArc.centroid(d2), pos];
         };
       });
-      polyline.exit().remove();
       chart.updateOrdinalColorLegend(layer);
     }
     remove(chart) {
-      chart.dom.chartArea.selectAll(".donut, text, polyline").transition().duration(500).style("opacity", 0).remove();
+      chart.dom.chartArea.selectAll(".donut, .inner-text, polyline").transition().duration(500).style("opacity", 0).remove();
     }
   };
 
@@ -2117,6 +2134,9 @@
     }
   }
   function updateOrdinalColorLegend(chart, ly) {
+    if (chart.runtime._suppressOrdinalLegendRebuild) {
+      return;
+    }
     var m = chart.margin;
     d3.select(chart.element).select(".legend-box").remove();
     d3.select(chart.element).selectAll(".legendElements").remove();
@@ -2135,14 +2155,38 @@
         return d[ly.mapping.x_var];
       });
     }
+    if (!chart.runtime._hiddenOrdinalSegments) {
+      chart.runtime._hiddenOrdinalSegments = [];
+    }
+    var hidden = chart.runtime._hiddenOrdinalSegments;
     colorKey.forEach(function(d, i) {
-      var swatchColor = ly.type === "treemap" ? chart.colorDiscrete("treemap." + d) : chart.colorDiscrete(i);
-      var legendElement = svg.append("g").attr("class", "legendElements").selectAll(".legendElement").data([d]).enter().append("g").attr("class", "legendElement").attr("tabindex", 0).attr("transform", function() {
+      var swatchColor = ly.type === "treemap" ? chart.colorDiscrete("treemap." + d) : chart.colorDiscrete(d);
+      var isVisible = hidden.indexOf(d) === -1;
+      var legendElement = svg.append("g").attr("class", "legendElements").selectAll(".legendElement").data([d]).enter().append("g").attr("class", "legendElement").attr("tabindex", 0).attr("role", "switch").attr("aria-checked", isVisible ? "true" : "false").attr("transform", function() {
         return "translate(" + i % n * itemWidth + "," + Math.floor(i / n) * itemHeight + ")";
-      }).attr("text-anchor", "start").attr("font-size", responsiveValue(chart, 12, 10));
-      legendElement.append("rect").attr("x", 5).attr("width", 12).attr("height", 12).attr("fill", swatchColor).attr("stroke", swatchColor);
+      }).attr("text-anchor", "start").attr("font-size", responsiveValue(chart, 12, 10)).style("cursor", "pointer").on("click", function() {
+        var segment = d3.select(this).data()[0];
+        var idx = hidden.indexOf(segment);
+        if (idx === -1) {
+          hidden.push(segment);
+        } else {
+          hidden.splice(idx, 1);
+        }
+        var nowVisible = hidden.indexOf(segment) === -1;
+        d3.select(this).attr("aria-checked", nowVisible ? "true" : "false");
+        applyLegendState(d3.select(this), nowVisible);
+        chart.runtime._suppressOrdinalLegendRebuild = true;
+        chart.routeLayers([ly]);
+        chart.runtime._suppressOrdinalLegendRebuild = false;
+      });
+      legendElement.append("rect").attr("class", "legend-swatch").attr("x", 5).attr("width", 12).attr("height", 12).attr("fill", swatchColor).attr("stroke", swatchColor);
       legendElement.append("text").attr("x", 20).attr("y", 10.5).attr("dy", "0.35em").text(d);
+      applyLegendState(legendElement, isVisible);
     });
+    function applyLegendState(selection, isVisible) {
+      selection.select(".legend-swatch").style("opacity", isVisible ? 1 : "var(--chart-legend-inactive-opacity)");
+      selection.select("text").style("text-decoration", isVisible ? "none" : null);
+    }
   }
   function updateContinuousColorLegend(chart) {
     var m = chart.margin;
