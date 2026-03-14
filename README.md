@@ -8,7 +8,7 @@
 
 # myIO
 
-An R package for creating interactive `d3.js` visualizations using `htmlwidgets`. Supports 12 chart types including scatter plots, line charts, bar charts, treemaps, and more — all composable through a piped API.
+An R package for creating interactive `d3.js` visualizations using `htmlwidgets`. Supports 10 chart types including scatter plots, line charts, bar charts, treemaps, and more — all composable through a piped API.
 
 [Live Demo](http://www.morton-analytics.com/shiny/myio_demo/)
 
@@ -54,8 +54,6 @@ myIO() |>
 | Grouped bar chart | `"groupedBar"` |
 | Area chart | `"area"` |
 | Histogram | `"histogram"` |
-| Density plot | `"density"` |
-| Ridgeline plot | `"ridgeline"` |
 | Donut chart | `"donut"` |
 | Gauge chart | `"gauge"` |
 | Hexbin plot | `"hexbin"` |
@@ -80,6 +78,7 @@ Customize plots by chaining additional functions:
 - `setAxisLimits()` — Set axis ranges
 - `setMargin()` — Adjust chart margins
 - `setColorScheme()` — Apply a custom color palette
+- `setTheme()` — Set theme tokens (colors, font, background)
 - `setTransitionSpeed()` — Control animation duration
 - `flipAxis()` — Swap x and y axes
 - `suppressAxis()` — Hide axes
@@ -87,4 +86,4 @@ Customize plots by chaining additional functions:
 - `dragPoints()` — Enable draggable points
 - `setReferenceLines()` — Add reference lines
 
-See the [Getting Started](https://github.com/mortonanalytics/myIO/blob/main/vignettes/getting-started.Rmd) and [Chart Types](https://github.com/mortonanalytics/myIO/blob/main/vignettes/chart-types.Rmd) vignettes for full examples.
+See the [Getting Started](https://mortonanalytics.github.io/myIO/articles/getting-started.html), [Chart Types](https://mortonanalytics.github.io/myIO/articles/chart-types.html), and [Transforms & Theming](https://mortonanalytics.github.io/myIO/articles/transforms-and-theming.html) vignettes for full examples.

@@ -17,7 +17,7 @@ library(myIO)
 
 ## Overview
 
-myIO supports multiple chart types via the `type` argument in `addIoLayer()`.
+myIO supports 10 chart types via the `type` argument in `addIoLayer()`.
 This vignette shows an example of each.
 
 All examples use built-in R datasets so you can copy and run them directly.
@@ -113,6 +113,8 @@ myIO() |>
 
 ## Histogram
 
+Histograms use a `value` mapping instead of `x_var`/`y_var`:
+
 ```{r histogram, eval = FALSE}
 myIO() |>
   addIoLayer(
@@ -120,7 +122,7 @@ myIO() |>
     color = "steelblue",
     label = "hist",
     data = mtcars,
-    mapping = list(x_var = "mpg", y_var = "mpg")
+    mapping = list(value = "mpg")
   )
 ```
 
@@ -139,14 +141,16 @@ myIO() |>
 
 ## Gauge Chart
 
+Gauges use a `value` mapping:
+
 ```{r gauge, eval = FALSE}
 myIO() |>
   addIoLayer(
     type = "gauge",
     color = "steelblue",
     label = "gauge",
-    data = data.frame(value = 75, max = 100),
-    mapping = list(x_var = "value", y_var = "max")
+    data = data.frame(value = 0.75),
+    mapping = list(value = "value")
   )
 ```
 
