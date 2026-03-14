@@ -1,0 +1,114 @@
+# myIO
+
+![](reference/figures/myIOsticker.png)
+
+[![R-CMD-check](https://github.com/mortonanalytics/myIO/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/mortonanalytics/myIO/actions/workflows/R-CMD-check.yaml)
+[![codecov](https://codecov.io/gh/mortonanalytics/myIO/branch/main/graph/badge.svg)](https://codecov.io/gh/mortonanalytics/myIO)
+[![Lifecycle:
+stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
+[![License:
+MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub R package
+version](https://img.shields.io/github/r-package/v/mortonanalytics/myIO)](https://github.com/mortonanalytics/myIO)
+
+An R package for creating interactive `d3.js` visualizations using
+`htmlwidgets`. Supports 10 chart types including scatter plots, line
+charts, bar charts, treemaps, and more — all composable through a piped
+API.
+
+[Live Demo](http://www.morton-analytics.com/shiny/myio_demo/)
+
+## Installation
+
+``` r
+# install.packages("devtools")
+devtools::install_github("mortonanalytics/myIO")
+```
+
+## Usage
+
+Build plots by piping layers together with
+[`myIO()`](https://mortonanalytics.github.io/myIO/reference/myIO.md) and
+[`addIoLayer()`](https://mortonanalytics.github.io/myIO/reference/addIoLayer.md):
+
+``` r
+library(myIO)
+
+myIO() |>
+  addIoLayer(
+    type = "point",
+    color = "#E69F00",
+    label = "points",
+    data = mtcars,
+    mapping = list(x_var = "wt", y_var = "mpg")
+  ) |>
+  addIoLayer(
+    type = "line",
+    transform = "lm",
+    color = "red",
+    label = "trend",
+    data = mtcars,
+    mapping = list(x_var = "wt", y_var = "mpg")
+  )
+```
+
+## Supported Chart Types
+
+| Type              | `type` value   |
+|-------------------|----------------|
+| Scatter plot      | `"point"`      |
+| Line chart        | `"line"`       |
+| Bar chart         | `"bar"`        |
+| Grouped bar chart | `"groupedBar"` |
+| Area chart        | `"area"`       |
+| Histogram         | `"histogram"`  |
+| Donut chart       | `"donut"`      |
+| Gauge chart       | `"gauge"`      |
+| Hexbin plot       | `"hexbin"`     |
+| Treemap           | `"treemap"`    |
+
+## `addIoLayer()`
+
+| Argument    | Description                                                      |
+|-------------|------------------------------------------------------------------|
+| `type`      | Chart type (see table above)                                     |
+| `color`     | Any CSS color string                                             |
+| `label`     | Unique identifier for the layer                                  |
+| `data`      | A data frame                                                     |
+| `mapping`   | List mapping variables, e.g. `list(x_var = "wt", y_var = "mpg")` |
+| `transform` | Optional derived-data transform, e.g. `"identity"` or `"lm"`     |
+
+## Customization
+
+Customize plots by chaining additional functions:
+
+- [`setAxisFormat()`](https://mortonanalytics.github.io/myIO/reference/setAxisFormat.md)
+  — Set d3.js axis formats and labels
+- [`setAxisLimits()`](https://mortonanalytics.github.io/myIO/reference/setAxisLimits.md)
+  — Set axis ranges
+- [`setMargin()`](https://mortonanalytics.github.io/myIO/reference/setMargin.md)
+  — Adjust chart margins
+- [`setColorScheme()`](https://mortonanalytics.github.io/myIO/reference/setColorScheme.md)
+  — Apply a custom color palette
+- [`setTheme()`](https://mortonanalytics.github.io/myIO/reference/setTheme.md)
+  — Set theme tokens (colors, font, background)
+- [`setTransitionSpeed()`](https://mortonanalytics.github.io/myIO/reference/setTransitionSpeed.md)
+  — Control animation duration
+- [`flipAxis()`](https://mortonanalytics.github.io/myIO/reference/flipAxis.md)
+  — Swap x and y axes
+- [`suppressAxis()`](https://mortonanalytics.github.io/myIO/reference/suppressAxis.md)
+  — Hide axes
+- [`suppressLegend()`](https://mortonanalytics.github.io/myIO/reference/suppressLegend.md)
+  — Hide the legend
+- [`dragPoints()`](https://mortonanalytics.github.io/myIO/reference/dragPoints.md)
+  — Enable draggable points
+- [`setReferenceLines()`](https://mortonanalytics.github.io/myIO/reference/setReferenceLines.md)
+  — Add reference lines
+
+See the [Getting
+Started](https://mortonanalytics.github.io/myIO/articles/getting-started.html),
+[Chart
+Types](https://mortonanalytics.github.io/myIO/articles/chart-types.html),
+and [Transforms &
+Theming](https://mortonanalytics.github.io/myIO/articles/transforms-and-theming.html)
+vignettes for full examples.
