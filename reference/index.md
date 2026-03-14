@@ -2,7 +2,7 @@
 
 ## Core
 
-Create widgets and add layers
+Create widgets and add visualization layers
 
 - [`myIO()`](https://mortonanalytics.github.io/myIO/reference/myIO.md) :
   myIO
@@ -10,6 +10,8 @@ Create widgets and add layers
   : addLayer()
 
 ## Axes & Scales
+
+Control axis formatting, limits, and orientation
 
 - [`setAxisFormat()`](https://mortonanalytics.github.io/myIO/reference/setAxisFormat.md)
   : setAxisFormat()
@@ -24,6 +26,8 @@ Create widgets and add layers
 
 ## Appearance
 
+Customize colors, margins, themes, and visual elements
+
 - [`setMargin()`](https://mortonanalytics.github.io/myIO/reference/setMargin.md)
   : setMargin()
 - [`setColorScheme()`](https://mortonanalytics.github.io/myIO/reference/setColorScheme.md)
@@ -37,6 +41,8 @@ Create widgets and add layers
 
 ## Interactions
 
+Add interactive behaviors like tooltips, drag, and toggles
+
 - [`dragPoints()`](https://mortonanalytics.github.io/myIO/reference/dragPoints.md)
   : dragPoints()
 - [`setReferenceLines()`](https://mortonanalytics.github.io/myIO/reference/setReferenceLines.md)
@@ -47,6 +53,8 @@ Create widgets and add layers
   : setToolTipOptions()
 
 ## Shiny
+
+Use myIO widgets in Shiny applications
 
 - [`myIOOutput()`](https://mortonanalytics.github.io/myIO/reference/myIO-shiny.md)
   [`renderMyIO()`](https://mortonanalytics.github.io/myIO/reference/myIO-shiny.md)

@@ -8,11 +8,14 @@
 <title>myIO - Interactive D3.js Visualizations from R • myIO</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/Inter-0.4.10/font.css" rel="stylesheet">
+<link href="deps/Fira_Code-0.4.10/font.css" rel="stylesheet">
+<link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="myIO - Interactive D3.js Visualizations from R">
 <meta name="description" content="Create interactive data visualizations powered by d3.js directly from R. Provides a layered grammar for bindings composition, supporting bar charts, line charts, scatter plots, histograms, treemaps, gauges, hexbin plots, and more. Includes transform-driven derived layers, tooltips, responsive sizing, and Shiny integration.">
 <meta property="og:description" content="Create interactive data visualizations powered by d3.js directly from R. Provides a layered grammar for bindings composition, supporting bar charts, line charts, scatter plots, histograms, treemaps, gauges, hexbin plots, and more. Includes transform-driven derived layers, tooltips, responsive sizing, and Shiny integration.">
+<meta property="og:image" content="https://mortonanalytics.github.io/myIO/logo.png">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -22,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="index.html">myIO</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -31,6 +34,7 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="articles/getting-started.html">Get Started</a></li>
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
@@ -40,6 +44,7 @@
     <li><a class="dropdown-item" href="articles/index.html">More articles...</a></li>
   </ul>
 </li>
+<li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -56,8 +61,10 @@
   <main id="main" class="col-md-9"><p><img src="reference/figures/myIOsticker.png" width="200px" height="200px"></p>
 <p><a href="https://github.com/mortonanalytics/myIO/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/mortonanalytics/myIO/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a> <img src="reference/figures/coverage-badge.svg" alt="R coverage"><img src="reference/figures/js-coverage-badge.svg" alt="JS coverage"><a href="https://lifecycle.r-lib.org/articles/stages.html#stable" class="external-link"><img src="https://img.shields.io/badge/lifecycle-stable-brightgreen.svg" alt="Lifecycle: stable"></a> <a href="https://opensource.org/licenses/MIT" class="external-link"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a> <img src="https://img.shields.io/badge/version-1.0.0-blue" alt="version"></p>
 <div class="section level1">
-<div class="page-header"><h1 id="myio">myIO<a class="anchor" aria-label="anchor" href="#myio"></a>
-</h1></div>
+<div class="page-header">
+<img src="logo.png" class="logo" alt=""><h1 id="myio">myIO<a class="anchor" aria-label="anchor" href="#myio"></a>
+</h1>
+</div>
 <p>An R package for creating interactive <code>d3.js</code> visualizations using <code>htmlwidgets</code>. Supports 10 chart types including scatter plots, line charts, bar charts, treemaps, and more — all composable through a piped API.</p>
 <p><a href="http://www.morton-analytics.com/shiny/myio_demo/" class="external-link">Live Demo</a></p>
 <div class="section level2">
@@ -230,6 +237,9 @@
 <ul class="list-unstyled">
 <li><a href="https://github.com/mortonanalytics/myIO/" class="external-link">Browse source code</a></li>
 <li><a href="https://github.com/mortonanalytics/myIO/issues" class="external-link">Report a bug</a></li>
+<li><a href="http://www.morton-analytics.com/shiny/myio_demo/" class="external-link">Live demo (Shiny app)</a></li>
+<li><a href="https://d3js.org/" class="external-link">D3.js documentation</a></li>
+<li><a href="https://www.htmlwidgets.org/" class="external-link">htmlwidgets framework</a></li>
 </ul>
 </div>
 
@@ -252,7 +262,8 @@
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Ryan Morton <br><small class="roles"> Author, maintainer </small>   </li>
+<li>
+<a href="https://github.com/mortonanalytics" class="external-link">Ryan Morton</a> <br><small class="roles"> Author, maintainer </small>   </li>
 </ul>
 </div>
 
@@ -263,7 +274,7 @@
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Ryan Morton.</p>
+  <p>Developed by <a href="https://github.com/mortonanalytics" class="external-link">Ryan Morton</a>.</p>
 </div>
 
 <div class="pkgdown-footer-right">

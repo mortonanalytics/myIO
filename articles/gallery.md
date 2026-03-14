@@ -1,0 +1,211 @@
+# Gallery
+
+## Overview
+
+This gallery showcases what you can build with myIO. Each example is
+self-contained and uses built-in R datasets.
+
+## Scatter Plot with Trend Line
+
+Overlay raw data with a linear model fit:
+
+``` r
+myIO() |>
+  addIoLayer(
+    type = "point",
+    color = "#E69F00",
+    label = "observations",
+    data = mtcars,
+    mapping = list(x_var = "wt", y_var = "mpg")
+  ) |>
+  addIoLayer(
+    type = "line",
+    transform = "lm",
+    color = "#D55E00",
+    label = "trend",
+    data = mtcars,
+    mapping = list(x_var = "wt", y_var = "mpg")
+  ) |>
+  setAxisFormat(xLabel = "Weight (1000 lbs)", yLabel = "Miles per Gallon") |>
+  setMargin(top = 20, bottom = 70, left = 60, right = 10)
+```
+
+## Multi-Series Line Chart
+
+Track temperature across months using grouped data:
+
+``` r
+aq <- airquality
+aq$Month <- paste0("M", aq$Month)
+
+myIO() |>
+  addIoLayer(
+    type = "line",
+    color = c("#0072B2", "#E69F00", "#009E73", "#D55E00", "#CC79A7"),
+    label = "Month",
+    data = aq,
+    mapping = list(x_var = "Day", y_var = "Temp", group = "Month")
+  ) |>
+  setAxisFormat(xLabel = "Day of Month", yLabel = "Temperature (F)") |>
+  setMargin(top = 20, bottom = 70, left = 60, right = 10)
+```
+
+## Categorical Bar Chart
+
+Aggregate data across categories with custom formatting:
+
+``` r
+myIO() |>
+  addIoLayer(
+    type = "bar",
+    color = "#56B4E9",
+    label = "avg_mpg",
+    data = mtcars,
+    mapping = list(x_var = "cyl", y_var = "mpg")
+  ) |>
+  defineCategoricalAxis(xAxis = TRUE) |>
+  setAxisFormat(
+    xAxis = ".0f", yAxis = ".1f",
+    xLabel = "Cylinders", yLabel = "Miles per Gallon"
+  ) |>
+  setMargin(top = 20, bottom = 70, left = 60, right = 10)
+```
+
+## Area Chart with Confidence Band
+
+Visualize a range using low and high y values:
+
+``` r
+aq <- airquality[complete.cases(airquality), ]
+aq$TempLow <- aq$Temp - 8
+aq$TempHigh <- aq$Temp + 8
+
+myIO() |>
+  addIoLayer(
+    type = "area",
+    color = "#56B4E9",
+    label = "range",
+    data = aq,
+    mapping = list(x_var = "Day", low_y = "TempLow", high_y = "TempHigh")
+  ) |>
+  addIoLayer(
+    type = "line",
+    color = "#0072B2",
+    label = "actual",
+    data = aq,
+    mapping = list(x_var = "Day", y_var = "Temp")
+  ) |>
+  setAxisFormat(xLabel = "Day", yLabel = "Temperature (F)") |>
+  setMargin(top = 20, bottom = 70, left = 60, right = 10)
+```
+
+## Dark Mode Dashboard
+
+Combine theming with custom colors for a dark aesthetic:
+
+``` r
+myIO() |>
+  addIoLayer(
+    type = "point",
+    color = "#48dbfb",
+    label = "scatter",
+    data = mtcars,
+    mapping = list(x_var = "hp", y_var = "qsec")
+  ) |>
+  addIoLayer(
+    type = "line",
+    transform = "lm",
+    color = "#ff6b6b",
+    label = "trend",
+    data = mtcars,
+    mapping = list(x_var = "hp", y_var = "qsec")
+  ) |>
+  setTheme(
+    text_color = "#b0b0b0",
+    grid_color = "#2d2d2d",
+    bg = "#0d1117",
+    font = "Inter, system-ui, sans-serif"
+  ) |>
+  setAxisFormat(xLabel = "Horsepower", yLabel = "Quarter Mile Time (s)") |>
+  setMargin(top = 20, bottom = 70, left = 60, right = 10)
+```
+
+## Donut Chart
+
+Summarize proportions with a donut:
+
+``` r
+myIO() |>
+  addIoLayer(
+    type = "donut",
+    color = c("#E69F00", "#56B4E9", "#009E73"),
+    label = "cylinders",
+    data = mtcars,
+    mapping = list(x_var = "cyl", y_var = "mpg")
+  )
+```
+
+## Hexbin Density Plot
+
+Visualize point density in large datasets:
+
+``` r
+myIO() |>
+  addIoLayer(
+    type = "hexbin",
+    color = "#0072B2",
+    label = "density",
+    data = mtcars,
+    mapping = list(x_var = "wt", y_var = "mpg")
+  ) |>
+  setAxisFormat(xLabel = "Weight (1000 lbs)", yLabel = "Miles per Gallon") |>
+  setMargin(top = 20, bottom = 70, left = 60, right = 10)
+```
+
+## Histogram with Reference Line
+
+Show a distribution with a mean reference line:
+
+``` r
+myIO() |>
+  addIoLayer(
+    type = "histogram",
+    color = "#CC79A7",
+    label = "distribution",
+    data = mtcars,
+    mapping = list(value = "mpg")
+  ) |>
+  setReferenceLines(x = mean(mtcars$mpg))
+```
+
+## Interactive Scatter with Draggable Points
+
+Enable drag interactions for exploratory analysis:
+
+``` r
+myIO() |>
+  addIoLayer(
+    type = "point",
+    color = "#009E73",
+    label = "draggable",
+    data = mtcars[1:10, ],
+    mapping = list(x_var = "wt", y_var = "mpg")
+  ) |>
+  dragPoints() |>
+  setAxisFormat(xLabel = "Weight", yLabel = "MPG") |>
+  setMargin(top = 20, bottom = 70, left = 60, right = 10)
+```
+
+## Treemap
+
+Explore hierarchical data:
+
+``` r
+myIO() |>
+  addIoLayer(
+    type = "treemap",
+    label = "cars",
+    data = mtcars,
+    mapping = list(level_1 = "vs", level_2 = "cyl")
+  )
+```

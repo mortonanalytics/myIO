@@ -2,7 +2,8 @@
 
 ## Authors
 
-- **Ryan Morton**. Author, maintainer.
+- **[Ryan Morton](https://github.com/mortonanalytics)**. Author,
+  maintainer.
 
 ## Citation
 

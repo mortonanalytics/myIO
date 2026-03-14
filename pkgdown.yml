@@ -3,9 +3,11 @@ pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
   chart-types: chart-types.html
+  gallery: gallery.html
   getting-started: getting-started.html
+  shiny-integration: shiny-integration.html
   transforms-and-theming: transforms-and-theming.html
-last_built: 2026-03-14T21:23Z
+last_built: 2026-03-14T21:33Z
 urls:
   reference: https://mortonanalytics.github.io/myIO/reference
   article: https://mortonanalytics.github.io/myIO/articles
