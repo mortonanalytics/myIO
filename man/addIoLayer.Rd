@@ -35,3 +35,10 @@ addIoLayer(
 \description{
 Adds individual layer to a myIO widget
 }
+\examples{
+myIO(data = mtcars) |>
+  addIoLayer(
+    type = "point", label = "points",
+    mapping = list(x_var = "wt", y_var = "mpg")
+  )
+}

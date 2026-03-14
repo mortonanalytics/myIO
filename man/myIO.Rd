@@ -21,3 +21,7 @@ the same myIO object
 \description{
 myIO R + d3.js project
 }
+\examples{
+myIO(data = mtcars) |>
+  setMargin(top = 40, bottom = 80, left = 60, right = 10)
+}

@@ -10,6 +10,10 @@
 #' @param ... additional CSS custom property overrides without the `chart-` prefix
 #'
 #' @return the same myIO object
+#' @examples
+#' myIO() |>
+#'   setTheme(text_color = "#222222", grid_color = "#d9d9d9")
+#'
 #' @export
 setTheme <- function(myIO, text_color = NULL, grid_color = NULL, bg = NULL, font = NULL, ...) {
   assert_myIO(myIO)

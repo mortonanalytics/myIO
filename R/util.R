@@ -65,8 +65,8 @@ VALID_COMBINATIONS <- list(
   gauge = c("identity")
 )
 
-`%||%` <- function(x, y) {
-  if (is.null(x)) y else x
+composite_registry <- function() {
+  list()
 }
 
 assert_myIO <- function(x) {

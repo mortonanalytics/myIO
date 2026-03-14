@@ -10,6 +10,10 @@
 #' @param elementId a unique id for the htmlwidget object
 #'
 #' @return the same myIO object
+#' @examples
+#' myIO(data = mtcars) |>
+#'   setMargin(top = 40, bottom = 80, left = 60, right = 10)
+#'
 #' @export
 myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL) {
   validateCssDimension <- function(value, arg) {

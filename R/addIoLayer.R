@@ -11,6 +11,13 @@
 #' @param transform transform name applied before serialization
 #' @param options layer options passed through to the widget config
 #'
+#' @examples
+#' myIO(data = mtcars) |>
+#'   addIoLayer(
+#'     type = "point", label = "points",
+#'     mapping = list(x_var = "wt", y_var = "mpg")
+#'   )
+#'
 #' @export
 addIoLayer <- function(myIO,
                        type,
@@ -31,12 +38,6 @@ addIoLayer <- function(myIO,
   data <- ensure_source_key(data)
 
   validate_layer_inputs(type, transform, mapping, label, data, existing_layers)
-
-  if (type %in% names(composite_registry())) {
-    composite_layers <- expandComposite(type, label, data, mapping, options, color, existing_layers)
-    myIO$x$config$layers <- c(myIO$x$config$layers, composite_layers)
-    return(myIO)
-  }
 
   presets <- list(barSize = "large", toolTipOptions = list(suppressY = FALSE))
   if (is.null(options)) {
@@ -157,11 +158,13 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
     }
   }
 
-  numeric_field <- intersect(c("y_var", "value", "low_y", "high_y"), names(mapping))
-  if (type %in% c("line", "point", "bar", "hexbin", "area", "groupedBar", "histogram", "gauge", "donut") &&
-      length(numeric_field) > 0 &&
-      !is.numeric(data[[mapping[[numeric_field[1]]]]])) {
-    stop("Mapped field '", mapping[[numeric_field[1]]], "' must be numeric for type '", type, "'.", call. = FALSE)
+  numeric_fields <- intersect(c("y_var", "value", "low_y", "high_y"), names(mapping))
+  if (type %in% c("line", "point", "bar", "hexbin", "area", "groupedBar", "histogram", "gauge", "donut")) {
+    for (nf in numeric_fields) {
+      if (!is.numeric(data[[mapping[[nf]]]])) {
+        stop("Mapped field '", mapping[[nf]], "' must be numeric for type '", type, "'.", call. = FALSE)
+      }
+    }
   }
 
   invisible(NULL)

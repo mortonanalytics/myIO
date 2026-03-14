@@ -32,3 +32,7 @@ the same myIO object
 \description{
 Sets chart theme tokens using CSS custom properties
 }
+\examples{
+myIO() |>
+  setTheme(text_color = "#222222", grid_color = "#d9d9d9")
+}

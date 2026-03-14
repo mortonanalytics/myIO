@@ -12,3 +12,4 @@ inst/test_rmarkdown.Rmd
 inst/line_example_doc.R
 inst/myIOsticker.png
 /docs
+coverage/
