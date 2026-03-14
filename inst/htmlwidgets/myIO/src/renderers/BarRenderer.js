@@ -1,3 +1,5 @@
+import { resolveColor, tagName } from "../utils/responsive.js";
+
 export class BarRenderer {
   static type = "bar";
 
@@ -20,17 +22,17 @@ function renderVerticalBars(chart, layer) {
   var transitionSpeed = chart.options.transition.speed;
 
   var bars = chart.chart
-    .selectAll(".tag-bar-" + chart.element.id + "-" + key.replace(/\s+/g, ""))
+    .selectAll("." + tagName("bar", chart.element.id, key))
     .data(data);
 
   bars.exit().transition().duration(transitionSpeed).attr("y", chart.yScale(0)).remove();
 
   var newBars = bars.enter()
     .append("rect")
-    .attr("class", "tag-bar-" + chart.element.id + "-" + key.replace(/\s+/g, ""))
+    .attr("class", tagName("bar", chart.element.id, key))
     .attr("clip-path", "url(#" + chart.element.id + "clip)")
     .style("fill", function(d) {
-      return chart.options.colorScheme[2] == "on" ? chart.colorScheme(d[layer.mapping.x_var]) : layer.color;
+      return resolveColor(chart, d[layer.mapping.x_var], layer.color);
     })
     .attr("x", function(d) {
       return defineVerticalScale(chart, d, layer, bandwidth, barSize, chart.options.categoricalScale.xAxis);
@@ -73,17 +75,17 @@ function renderHorizontalBars(chart, layer) {
   var transitionSpeed = chart.options.transition.speed;
 
   var bars = chart.chart
-    .selectAll(".tag-bar-" + chart.element.id + "-" + key.replace(/\s+/g, ""))
+    .selectAll("." + tagName("bar", chart.element.id, key))
     .data(data);
 
   bars.exit().transition().duration(transitionSpeed).attr("width", 0).remove();
 
   var newBars = bars.enter()
     .append("rect")
-    .attr("class", "tag-bar-" + chart.element.id + "-" + key.replace(/\s+/g, ""))
+    .attr("class", tagName("bar", chart.element.id, key))
     .attr("clip-path", "url(#" + chart.element.id + "clip)")
     .style("fill", function(d) {
-      return chart.options.colorScheme[2] == "on" ? chart.colorScheme(d[layer.mapping.x_var]) : layer.color;
+      return resolveColor(chart, d[layer.mapping.x_var], layer.color);
     })
     .attr("y", function(d) {
       return barSize == 1 ? chart.yScale(d[layer.mapping.x_var]) : chart.yScale(d[layer.mapping.x_var]) + bandwidth / 4;

@@ -1,4 +1,5 @@
 import { getGroupedDataObject, transitionGrouped, transitionStacked } from "./groupedBarHelpers.js";
+import { resolveColor } from "../utils/responsive.js";
 
 export class GroupedBarRenderer {
   static type = "groupedBar";
@@ -17,11 +18,11 @@ export class GroupedBarRenderer {
     bars.exit().remove();
     bars.enter()
       .append("g")
-      .style("fill", function(d, i) { return chart.options.colorScheme[2] == "on" ? chart.colorScheme(d[layer.mapping.group]) : colors[i]; })
+      .style("fill", function(d, i) { return resolveColor(chart, d[layer.mapping.group], colors[i]); })
       .attr("class", "tag-grouped-bar-g");
 
     bars.merge(bars)
-      .style("fill", function(d, i) { return chart.options.colorScheme[2] == "on" ? chart.colorScheme(d[layer.mapping.group]) : colors[i]; })
+      .style("fill", function(d, i) { return resolveColor(chart, d[layer.mapping.group], colors[i]); })
       .call(function() {
         if (chart.layout === "grouped") {
           transitionGrouped(chart, data, colors, bandwidth);

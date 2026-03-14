@@ -1,20 +1,23 @@
+import { isMobile, responsiveValue } from "../utils/responsive.js";
+
 export function getChartHeight(chart) {
   if (chart.options.suppressLegend == false) {
-    return chart.totalWidth > 600 ? chart.height : chart.height * 0.8;
+    return responsiveValue(chart, chart.height, chart.height * 0.8);
   }
 
   return chart.height;
 }
 
 export function initializeScaffold(chart) {
-  chart.element.innerHTML = "";
+  d3.select(chart.element).selectAll(".myIO-svg, .buttonDiv, .toolTip").remove();
 
   chart.svg = d3.select(chart.element)
     .append("svg")
     .attr("class", "myIO-svg")
     .attr("id", "myIO-svg" + chart.element.id)
     .attr("width", chart.totalWidth)
-    .attr("height", chart.height);
+    .attr("height", chart.height)
+    .attr("viewBox", "0 0 " + chart.totalWidth + " " + chart.height);
 
   applyPlotTransform(chart);
 
@@ -23,20 +26,21 @@ export function initializeScaffold(chart) {
     .attr("class", "myIO-chart-area");
 
   if (chart.options.suppressLegend == false) {
-    chart.legendTranslate = chart.totalWidth > 600 ? "translate(" + chart.width + ",0)" : "translate(" + chart.margin.left + "," + chart.height * 0.8 + ")";
+    chart.legendTranslate = isMobile(chart) ? "translate(" + chart.margin.left + "," + chart.height * 0.8 + ")" : "translate(" + chart.width + ",0)";
     chart.legendArea = chart.svg
       .append("g")
       .attr("class", "myIO-legend-area")
       .attr("transform", chart.legendTranslate)
-      .style("height", chart.totalWidth > 600 ? chart.height : chart.height * 0.2)
-      .style("width", chart.totalWidth > 600 ? chart.totalWidth - chart.width : chart.totalWidth - chart.margin.left);
+      .style("height", responsiveValue(chart, chart.height, chart.height * 0.2))
+      .style("width", responsiveValue(chart, chart.totalWidth - chart.width, chart.totalWidth - chart.margin.left));
   }
 }
 
 export function updateScaffoldLayout(chart) {
   chart.svg
     .attr("width", chart.totalWidth)
-    .attr("height", chart.height);
+    .attr("height", chart.height)
+    .attr("viewBox", "0 0 " + chart.totalWidth + " " + chart.height);
 
   applyPlotTransform(chart);
 
@@ -49,11 +53,11 @@ export function updateScaffoldLayout(chart) {
   }
 
   if (chart.options.suppressLegend == false && chart.legendArea) {
-    chart.legendTranslate = chart.totalWidth > 600 ? "translate(" + chart.width + ",0)" : "translate(" + chart.margin.left + "," + chart.height * 0.8 + ")";
+    chart.legendTranslate = isMobile(chart) ? "translate(" + chart.margin.left + "," + chart.height * 0.8 + ")" : "translate(" + chart.width + ",0)";
     chart.legendArea
       .attr("transform", chart.legendTranslate)
-      .style("height", chart.totalWidth > 600 ? chart.height : chart.height * 0.2)
-      .style("width", chart.totalWidth > 600 ? chart.totalWidth - chart.width : chart.totalWidth - chart.margin.left);
+      .style("height", responsiveValue(chart, chart.height, chart.height * 0.2))
+      .style("width", responsiveValue(chart, chart.totalWidth - chart.width, chart.totalWidth - chart.margin.left));
   }
 }
 
@@ -64,20 +68,19 @@ function applyPlotTransform(chart) {
     case "gauge":
       chart.plot = chart.plot || chart.svg.append("g");
       chart.plot
-        .attr("transform", "translate(" + chart.width / 2 + "," + (chart.totalWidth > 600 ? chart.height * 0.8 : chart.height * 0.6) + ")")
+        .attr("transform", "translate(" + chart.width / 2 + "," + responsiveValue(chart, chart.height * 0.8, chart.height * 0.6) + ")")
         .attr("class", "myIO-chart-offset");
       break;
     case "donut":
       chart.plot = chart.plot || chart.svg.append("g");
       chart.plot
-        .attr("transform", "translate(" + chart.width / 2 + "," + (chart.totalWidth > 600 ? chart.height : chart.height * 0.8) / 2 + ")")
+        .attr("transform", "translate(" + chart.width / 2 + "," + responsiveValue(chart, chart.height, chart.height * 0.8) / 2 + ")")
         .attr("class", "myIO-chart-offset");
       break;
     default:
       chart.plot = chart.plot || chart.svg.append("g");
       chart.plot
         .attr("transform", "translate(" + chart.margin.left + "," + chart.margin.top + ")")
-        .style("width", chart.width - chart.margin.right)
         .attr("class", "myIO-chart-offset");
   }
 }

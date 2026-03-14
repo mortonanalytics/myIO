@@ -1,4 +1,5 @@
 import { linearRegression } from "../utils/math.js";
+import { tagName } from "../utils/responsive.js";
 
 export class RegressionRenderer {
   static type = "regression";
@@ -18,7 +19,7 @@ export class RegressionRenderer {
     var points = [];
 
     chart.chart
-      .selectAll(".tag-point-" + chart.element.id + "-" + label.replace(/\s+/g, ""))
+      .selectAll("." + tagName("point", chart.element.id, label))
       .each(function() {
         var x = that.xScale.invert(this.getAttribute("cx"));
         var y = that.yScale.invert(this.getAttribute("cy"));
@@ -47,7 +48,7 @@ export class RegressionRenderer {
       });
 
     var linePath = chart.chart
-      .selectAll(".tag-regression-line-" + chart.element.id + "-" + label.replace(/\s+/g, ""))
+      .selectAll("." + tagName("regression-line", chart.element.id, label))
       .data([finalPoints]);
 
     linePath.exit()
@@ -58,7 +59,7 @@ export class RegressionRenderer {
 
     var newLinePath = linePath.enter()
       .append("path")
-      .attr("class", "tag-regression-line-" + chart.element.id + "-" + label.replace(/\s+/g, ""))
+      .attr("class", tagName("regression-line", chart.element.id, label))
       .attr("clip-path", "url(#" + chart.element.id + "clip)")
       .style("fill", "none")
       .style("stroke", color)

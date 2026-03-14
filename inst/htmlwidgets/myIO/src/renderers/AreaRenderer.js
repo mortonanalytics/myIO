@@ -1,3 +1,5 @@
+import { resolveColor, tagName } from "../utils/responsive.js";
+
 export class AreaRenderer {
   static type = "area";
 
@@ -19,7 +21,7 @@ export class AreaRenderer {
       });
 
     var linePath = chart.chart
-      .selectAll(".tag-area-" + chart.element.id + "-" + key.replace(/\s+/g, ""))
+      .selectAll("." + tagName("area", chart.element.id, key))
       .data([data]);
 
     linePath.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
@@ -27,10 +29,10 @@ export class AreaRenderer {
     var newLinePath = linePath.enter().append("path")
       .attr("clip-path", "url(#" + chart.element.id + "clip)")
       .style("fill", function(d) {
-        return chart.options.colorScheme[2] == "on" ? chart.colorScheme(d[0][layer.mapping.group]) : layer.color;
+        return resolveColor(chart, d[0][layer.mapping.group], layer.color);
       })
       .style("opacity", 0)
-      .attr("class", "tag-area-" + chart.element.id + "-" + key.replace(/\s+/g, ""));
+      .attr("class", tagName("area", chart.element.id, key));
 
     linePath.merge(newLinePath)
       .attr("clip-path", "url(#" + chart.element.id + "clip)")

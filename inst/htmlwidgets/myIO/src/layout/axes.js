@@ -5,71 +5,36 @@ export function syncAxes(chart, state, options) {
     return;
   }
 
-  if (options && options.isInitialRender) {
-    addAxes(chart);
-  } else {
-    updateAxes(chart);
-  }
+  renderAxes(chart, { isInitialRender: options && options.isInitialRender });
 }
 
 export function addAxes(chart) {
-  var m = chart.margin;
-  var chartHeight = getChartHeight(chart);
-  var xFormat = chart.options.xAxisFormat === "yearMon" ? d3.format("s") : d3.format(chart.options.xAxisFormat);
-  var yFormat = d3.format(chart.options.yAxisFormat);
-
-  switch (chart.options.categoricalScale.xAxis) {
-    case true:
-      chart.plot.append("g")
-        .attr("class", "x-axis")
-        .attr("transform", "translate(0," + (chartHeight - (m.top + m.bottom)) + ")")
-        .call(d3.axisBottom(chart.xScale))
-        .selectAll("text")
-        .attr("class", "x-label")
-        .attr("dx", "-.25em")
-        .attr("text-anchor", chart.width < 550 ? "end" : "center")
-        .attr("transform", chart.width < 550 ? "rotate(-65)" : "rotate(-0)");
-      break;
-    case false:
-      chart.plot.append("g")
-        .attr("class", "x-axis")
-        .attr("transform", "translate(0," + (chartHeight - (m.top + m.bottom)) + ")")
-        .call(d3.axisBottom(chart.xScale).ticks(chart.width < 550 ? 5 : 10, xFormat).tickSize(-(chart.height - (m.top + m.bottom))))
-        .selectAll("text")
-        .attr("class", "x-label")
-        .attr("dy", "1.25em")
-        .attr("text-anchor", chart.width < 550 ? "end" : "center")
-        .attr("transform", chart.width < 550 ? "rotate(-65)" : "rotate(-0)");
-  }
-
-  chart.plot.selectAll(".x-axis").selectAll(".domain").attr("class", "x-axis-line");
-  chart.plot.selectAll(".x-axis").selectAll(".tick line").attr("class", "x-grid");
-  chart.plot.selectAll(".x-axis").selectAll("text").attr("class", "x-label");
-
-  var currentFormatY = chart.newScaleY ? chart.newScaleY : yFormat;
-  chart.plot.append("g")
-    .attr("class", "y-axis")
-    .call(d3.axisLeft(chart.yScale).ticks(chartHeight < 450 ? 5 : 10, currentFormatY).tickSize(-(chart.width - (m.right + m.left))))
-    .selectAll("text")
-    .attr("class", "y-label")
-    .attr("dx", "-.25em");
-
-  chart.plot.selectAll(".y-axis").selectAll(".domain").attr("class", "y-axis-line");
-  chart.plot.selectAll(".y-axis").selectAll(".tick line").attr("class", "y-grid");
-  chart.plot.selectAll(".y-axis").selectAll("text").attr("class", "y-label");
+  renderAxes(chart, { isInitialRender: true });
 }
 
 export function updateAxes(chart) {
+  renderAxes(chart);
+}
+
+export function renderAxes(chart, options) {
   var m = chart.margin;
   var chartHeight = getChartHeight(chart);
   var transitionSpeed = chart.options.transition.speed;
-  var xFormat = chart.options.xAxisFormat === "yearMon" ? d3.format("s") : d3.format(chart.options.xAxisFormat);
+  var xFormat = chart.options.xAxisFormat === "yearMon" ? function(x) { return x; } : d3.format(chart.options.xAxisFormat);
   var yFormat = d3.format(chart.options.yAxisFormat);
+  var xAxis = chart.plot.selectAll(".x-axis")
+    .data([null])
+    .join("g")
+    .attr("class", "x-axis");
+  var yAxis = chart.plot.selectAll(".y-axis")
+    .data([null])
+    .join("g")
+    .attr("class", "y-axis");
+  var xAxisSelection = options && options.isInitialRender ? xAxis : xAxis.transition().ease(d3.easeQuad).duration(transitionSpeed);
 
   switch (chart.options.categoricalScale.xAxis) {
     case true:
-      chart.svg.selectAll(".x-axis")
-        .transition().ease(d3.easeQuad).duration(transitionSpeed)
+      xAxisSelection
         .attr("transform", "translate(0," + (chartHeight - (m.top + m.bottom)) + ")")
         .call(d3.axisBottom(chart.xScale))
         .selectAll("text")
@@ -78,8 +43,7 @@ export function updateAxes(chart) {
         .attr("transform", chart.width < 550 ? "rotate(-65)" : "rotate(-0)");
       break;
     case false:
-      chart.svg.selectAll(".x-axis")
-        .transition().ease(d3.easeQuad).duration(transitionSpeed)
+      xAxisSelection
         .attr("transform", "translate(0," + (chartHeight - (m.top + m.bottom)) + ")")
         .call(d3.axisBottom(chart.xScale).ticks(chart.width < 550 ? 5 : 10, xFormat).tickSize(-(chartHeight - (m.top + m.bottom))))
         .selectAll("text")
@@ -88,18 +52,28 @@ export function updateAxes(chart) {
         .attr("transform", chart.width < 550 ? "rotate(-65)" : "rotate(-0)");
   }
 
-  chart.plot.selectAll(".x-axis").selectAll(".domain").attr("class", "x-axis-line");
-  chart.plot.selectAll(".x-axis").selectAll(".tick line").attr("class", "x-grid");
-  chart.plot.selectAll(".x-axis").selectAll("text").attr("class", "x-label");
+  applyAxisStyles(xAxis, "x");
+  updateYAxis(chart, chart.yScale, yAxis, options);
+}
 
+export function updateYAxis(chart, yScale, yAxisSelection, options) {
+  var yFormat = d3.format(chart.options.yAxisFormat);
+  var chartHeight = getChartHeight(chart);
+  var transitionSpeed = chart.options.transition.speed;
   var currentFormatY = chart.newScaleY ? chart.newScaleY : yFormat;
-  chart.svg.selectAll(".y-axis")
-    .transition().ease(d3.easeQuad).duration(transitionSpeed)
-    .call(d3.axisLeft(chart.yScale).ticks(chartHeight < 450 ? 5 : 10, currentFormatY).tickSize(-(chart.width - (m.right + m.left))))
+  var yAxis = yAxisSelection || chart.plot.selectAll(".y-axis");
+  var axisCall = options && options.isInitialRender ? yAxis : yAxis.transition().ease(d3.easeQuad).duration(transitionSpeed);
+
+  axisCall
+    .call(d3.axisLeft(yScale).ticks(chartHeight < 450 ? 5 : 10, currentFormatY).tickSize(-(chart.width - (chart.margin.right + chart.margin.left))))
     .selectAll("text")
     .attr("dx", "-.25em");
 
-  chart.plot.selectAll(".y-axis").selectAll(".domain").attr("class", "y-axis-line");
-  chart.plot.selectAll(".y-axis").selectAll(".tick line").attr("class", "y-grid");
-  chart.plot.selectAll(".y-axis").selectAll("text").attr("class", "y-label");
+  applyAxisStyles(chart.plot.selectAll(".y-axis"), "y");
+}
+
+function applyAxisStyles(axis, axisType) {
+  axis.selectAll(".domain").attr("class", axisType + "-axis-line");
+  axis.selectAll(".tick line").attr("class", axisType + "-grid");
+  axis.selectAll("text").attr("class", axisType + "-label");
 }

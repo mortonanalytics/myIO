@@ -1,3 +1,5 @@
+import { pointRadius, resolveColor, tagName } from "../utils/responsive.js";
+
 export class PointRenderer {
   static type = "point";
 
@@ -12,7 +14,7 @@ export class PointRenderer {
     }
 
     var points = chart.chart
-      .selectAll(".tag-point-" + chart.element.id + "-" + layer.label.replace(/\s+/g, ""))
+      .selectAll("." + tagName("point", chart.element.id, layer.label))
       .data(layer.data);
 
     points.exit().transition().remove();
@@ -21,9 +23,9 @@ export class PointRenderer {
       .transition()
       .ease(d3.easeQuad)
       .duration(transitionSpeed)
-      .attr("r", chart.totalWidth > 600 ? 5 : 3)
+      .attr("r", pointRadius(chart))
       .style("fill", function(d) {
-        return chart.options.colorScheme[2] == "on" ? chart.colorScheme(d[layer.mapping.group]) : layer.color;
+        return resolveColor(chart, d[layer.mapping.group], layer.color);
       })
       .attr("cx", function(d) {
         return chart.xScale(d[layer.mapping.x_var]);
@@ -34,9 +36,9 @@ export class PointRenderer {
 
     points.enter()
       .append("circle")
-      .attr("r", chart.totalWidth > 600 ? 5 : 3)
+      .attr("r", pointRadius(chart))
       .style("fill", function(d) {
-        return chart.options.colorScheme[2] == "on" ? chart.colorScheme(d[layer.mapping.group]) : layer.color;
+        return resolveColor(chart, d[layer.mapping.group], layer.color);
       })
       .style("opacity", 0)
       .attr("clip-path", "url(#" + chart.element.id + "clip)")
@@ -46,7 +48,7 @@ export class PointRenderer {
       .attr("cy", function(d) {
         return chart.yScale(d[chart.newY ? chart.newY : layer.mapping.y_var]);
       })
-      .attr("class", "tag-point-" + chart.element.id + "-" + layer.label.replace(/\s+/g, ""))
+      .attr("class", tagName("point", chart.element.id, layer.label))
       .transition()
       .ease(d3.easeQuad)
       .duration(transitionSpeed)
@@ -54,7 +56,7 @@ export class PointRenderer {
 
     if (chart.options.dragPoints == true) {
       chart.dragPoints(layer);
-      var color = chart.options.colorScheme[2] == "on" ? chart.colorScheme(layer.data[layer.mapping.group]) : layer.color;
+      var color = resolveColor(chart, layer.data[layer.mapping.group], layer.color);
       setTimeout(function() {
         chart.updateRegression(color, layer.label);
       }, transitionSpeed);
@@ -65,7 +67,7 @@ export class PointRenderer {
 function renderCrosshairsX(chart, layer) {
   var transitionSpeed = chart.options.transition.speed;
   var crosshairsX = chart.chart
-    .selectAll(".tag-crosshairX-" + chart.element.id + "-" + layer.label.replace(/\s+/g, ""))
+    .selectAll("." + tagName("crosshairX", chart.element.id, layer.label))
     .data(layer.data);
 
   crosshairsX.exit().transition().remove();
@@ -88,7 +90,7 @@ function renderCrosshairsX(chart, layer) {
     .attr("x2", function(d) { return chart.xScale(d[layer.mapping.x_var]); })
     .attr("y1", function(d) { return chart.yScale(d[layer.mapping.y_var]); })
     .attr("y2", function(d) { return chart.yScale(d[layer.mapping.y_var]); })
-    .attr("class", "tag-crosshairX-" + chart.element.id + "-" + layer.label.replace(/\s+/g, ""))
+    .attr("class", tagName("crosshairX", chart.element.id, layer.label))
     .transition()
     .delay(transitionSpeed)
     .duration(transitionSpeed)
@@ -100,7 +102,7 @@ function renderCrosshairsX(chart, layer) {
 function renderCrosshairsY(chart, layer) {
   var transitionSpeed = chart.options.transition.speed;
   var crosshairsY = chart.chart
-    .selectAll(".tag-crosshairY-" + chart.element.id + "-" + layer.label.replace(/\s+/g, ""))
+    .selectAll("." + tagName("crosshairY", chart.element.id, layer.label))
     .data(layer.data);
 
   crosshairsY.exit().transition().remove();
@@ -123,7 +125,7 @@ function renderCrosshairsY(chart, layer) {
     .attr("x2", function(d) { return chart.xScale(d[layer.mapping.x_var]); })
     .attr("y1", function(d) { return chart.yScale(d[layer.mapping.y_var]); })
     .attr("y2", function(d) { return chart.yScale(d[layer.mapping.y_var]); })
-    .attr("class", "tag-crosshairY-" + chart.element.id + "-" + layer.label.replace(/\s+/g, ""))
+    .attr("class", tagName("crosshairY", chart.element.id, layer.label))
     .transition()
     .delay(transitionSpeed)
     .ease(d3.easeQuad)

@@ -1,4 +1,5 @@
 import { createHoverOverlay, hideTooltip, removeHoverOverlay, setTooltipContent, showTooltip } from "../tooltip.js";
+import { resolveColor, tagName } from "../utils/responsive.js";
 
 export function bindRollover(chart, layers) {
   var lys = layers || chart.currentLayers;
@@ -15,31 +16,29 @@ export function bindRollover(chart, layers) {
   removeHoverOverlay(chart);
 
   lys.forEach(function(layer) {
-    var labelKey = layer.label.replace(/\s+/g, "");
-
     if (layer.type === "bar") {
-      chart.chart.selectAll(".tag-bar-" + chart.element.id + "-" + labelKey)
+      chart.chart.selectAll("." + tagName("bar", chart.element.id, layer.label))
         .on("mouseout", hoverTipHide)
         .on("mouseover", hoverTip)
         .on("mousemove", hoverTip);
     }
 
     if (layer.type === "histogram") {
-      chart.chart.selectAll(".tag-bar-" + chart.element.id + "-" + labelKey)
+      chart.chart.selectAll("." + tagName("bar", chart.element.id, layer.label))
         .on("mouseout", hoverHistogramHide)
         .on("mouseover", hoverHistogram)
         .on("mousemove", hoverHistogram);
     }
 
     if (layer.type === "point") {
-      chart.chart.selectAll(".tag-point-" + chart.element.id + "-" + labelKey)
+      chart.chart.selectAll("." + tagName("point", chart.element.id, layer.label))
         .on("mouseout", hoverTipHide)
         .on("mouseover", hoverTip)
         .on("mousemove", hoverTip);
     }
 
     if (layer.type === "hexbin") {
-      chart.chart.selectAll(".tag-hexbin-" + chart.element.id + "-" + labelKey)
+      chart.chart.selectAll("." + tagName("hexbin", chart.element.id, layer.label))
         .on("mouseout", hoverHexHide)
         .on("mouseover", hoverHex)
         .on("mousemove", hoverHex);
@@ -71,7 +70,7 @@ export function bindRollover(chart, layers) {
     var xData = xFormat(data[thisLayer[0].mapping.x_var]);
     var yData = yFormat(data[thisLayer[0].mapping.y_var]);
     var groupData = thisLayer[0].label;
-    var color = that.options.colorScheme[2] == "on" ? that.colorScheme(groupData) : thisLayer[0].color;
+    var color = resolveColor(that, groupData, thisLayer[0].color);
 
     if (HTMLWidgets.shinyMode) {
       Shiny.onInputChange("myIO-" + that.element.id + "-rollover", JSON.stringify(data));
@@ -201,7 +200,7 @@ export function bindRollover(chart, layers) {
     var xData = xFormat(data.data[0]);
     var yData = currentFormatY(data[1] - data[0]);
     var groupData = thisLayer.label;
-    var color = that.options.colorScheme[2] == "on" ? that.colorScheme(groupData) : thisLayer.color;
+    var color = resolveColor(that, groupData, thisLayer.color);
 
     if (HTMLWidgets.shinyMode) {
       Shiny.onInputChange("myIO-" + that.element.id + "-rollover", JSON.stringify(data.data.values));

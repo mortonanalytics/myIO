@@ -1,3 +1,5 @@
+import { isColorSchemeActive } from "../utils/responsive.js";
+
 export class DonutRenderer {
   static type = "donut";
 
@@ -10,7 +12,7 @@ export class DonutRenderer {
     var outerArc = d3.arc().innerRadius(radius * 0.9).outerRadius(radius * 0.9);
     var data = layer.data;
 
-    if (chart.options.colorScheme[2] == "on") {
+    if (isColorSchemeActive(chart)) {
       chart.colorDiscrete = d3.scaleOrdinal().range(chart.options.colorScheme[0]).domain(chart.options.colorScheme[1]);
       chart.colorContinuous = d3.scaleLinear().range(chart.options.colorScheme[0]).domain(chart.options.colorScheme[1]);
     } else {

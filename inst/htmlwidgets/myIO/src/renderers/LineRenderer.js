@@ -1,3 +1,5 @@
+import { pointRadius, resolveColor, strokeWidth, tagName } from "../utils/responsive.js";
+
 export class LineRenderer {
   static type = "line";
 
@@ -17,7 +19,7 @@ export class LineRenderer {
       });
 
     var linePath = chart.chart
-      .selectAll(".tag-line-" + chart.element.id + "-" + key.replace(/\s+/g, ""))
+      .selectAll("." + tagName("line", chart.element.id, key))
       .data([data]);
 
     linePath.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
@@ -27,20 +29,20 @@ export class LineRenderer {
       .attr("fill", "none")
       .attr("clip-path", "url(#" + chart.element.id + "clip)")
       .style("stroke", function(d) {
-        return chart.options.colorScheme[2] == "on" ? chart.colorScheme(d[layer.mapping.group]) : layer.color;
+        return resolveColor(chart, d[layer.mapping.group], layer.color);
       })
-      .style("stroke-width", chart.totalWidth > 600 ? 3 : 1)
+      .style("stroke-width", strokeWidth(chart))
       .style("opacity", 0)
-      .attr("class", "tag-line-" + chart.element.id + "-" + key.replace(/\s+/g, ""));
+      .attr("class", tagName("line", chart.element.id, key));
 
     linePath.merge(newLinePath)
       .transition()
       .ease(d3.easeQuad)
       .duration(transitionSpeed)
       .style("opacity", 1)
-      .style("stroke-width", chart.totalWidth > 600 ? 3 : 1)
+      .style("stroke-width", strokeWidth(chart))
       .style("stroke", function(d) {
-        return chart.options.colorScheme[2] == "on" ? chart.colorScheme(d[0][layer.mapping.group]) : layer.color;
+        return resolveColor(chart, d[0][layer.mapping.group], layer.color);
       })
       .attr("d", valueLine);
 
@@ -51,7 +53,7 @@ export class LineRenderer {
     var transitionSpeed = chart.options.transition.speed;
 
     var points = chart.chart
-      .selectAll(".tag-point-" + chart.element.id + "-" + layer.label.replace(/\s+/g, ""))
+      .selectAll("." + tagName("point", chart.element.id, layer.label))
       .data(layer.data);
 
     points.exit().transition().remove();
@@ -60,9 +62,9 @@ export class LineRenderer {
       .transition()
       .ease(d3.easeQuad)
       .duration(transitionSpeed)
-      .attr("r", chart.totalWidth > 600 ? 5 : 3)
+      .attr("r", pointRadius(chart))
       .style("fill", function(d) {
-        return chart.options.colorScheme[2] == "on" ? chart.colorScheme(d[layer.mapping.group]) : layer.color;
+        return resolveColor(chart, d[layer.mapping.group], layer.color);
       })
       .attr("cx", function(d) {
         return chart.xScale(d[layer.mapping.x_var]);
@@ -73,9 +75,9 @@ export class LineRenderer {
 
     points.enter()
       .append("circle")
-      .attr("r", chart.totalWidth > 600 ? 5 : 3)
+      .attr("r", pointRadius(chart))
       .style("fill", function(d) {
-        return chart.options.colorScheme[2] == "on" ? chart.colorScheme(d[layer.mapping.group]) : layer.color;
+        return resolveColor(chart, d[layer.mapping.group], layer.color);
       })
       .style("opacity", 0)
       .attr("clip-path", "url(#" + chart.element.id + "clip)")
@@ -85,7 +87,7 @@ export class LineRenderer {
       .attr("cy", function(d) {
         return chart.yScale(d[chart.newY ? chart.newY : layer.mapping.y_var]);
       })
-      .attr("class", "tag-point-" + chart.element.id + "-" + layer.label.replace(/\s+/g, ""))
+      .attr("class", tagName("point", chart.element.id, layer.label))
       .transition()
       .ease(d3.easeQuad)
       .duration(transitionSpeed)

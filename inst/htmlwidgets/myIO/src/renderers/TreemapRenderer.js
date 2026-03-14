@@ -1,3 +1,6 @@
+import { getChartHeight } from "../layout/scaffold.js";
+import { isColorSchemeActive, tagName } from "../utils/responsive.js";
+
 export class TreemapRenderer {
   static type = "treemap";
 
@@ -6,7 +9,7 @@ export class TreemapRenderer {
     var format = d3.format(",d");
     var key = layer.label;
 
-    if (chart.options.colorScheme[2] == "on") {
+    if (isColorSchemeActive(chart)) {
       chart.colorDiscrete = d3.scaleOrdinal().range(chart.options.colorScheme[0]).domain(chart.options.colorScheme[1]);
       chart.colorContinuous = d3.scaleLinear().range(chart.options.colorScheme[0]).domain(chart.options.colorScheme[1]);
     } else {
@@ -21,7 +24,7 @@ export class TreemapRenderer {
 
     d3.treemap()
       .tile(d3.treemapResquarify)
-      .size([chart.width - (m.left + m.right), (chart.totalWidth > 600 ? chart.height : chart.height * 0.8) - (m.top + m.bottom)])
+      .size([chart.width - (m.left + m.right), getChartHeight(chart) - (m.top + m.bottom)])
       .round(true)
       .paddingInner(1)(root);
 
@@ -33,7 +36,7 @@ export class TreemapRenderer {
       .attr("transform", function(d) { return "translate(" + d.x0 + "," + d.y0 + ")"; });
 
     newCell.append("rect")
-      .attr("class", "tag-tree-" + chart.element.id + "-" + key.replace(/\s+/g, ""))
+      .attr("class", tagName("tree", chart.element.id, key))
       .attr("id", function(d) { return d.data.id; })
       .attr("width", function(d) { return d.x1 - d.x0; })
       .attr("height", function(d) { return d.y1 - d.y0; })
@@ -74,8 +77,7 @@ export class TreemapRenderer {
       .attr("fill", "black")
       .text(function(d) { return d; });
 
-    cell.selectAll("title").remove();
-    cell.append("title")
+    cell.select("title")
       .text(function(d) {
         return d.data[layer.mapping.level_1] + "  \n" + d.data[layer.mapping.level_2] + "  \n" + d.data[layer.mapping.x_var] + "  \n" + format(d.value);
       });

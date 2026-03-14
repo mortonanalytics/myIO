@@ -1,5 +1,7 @@
+import { resolveColor, tagName } from "../utils/responsive.js";
+
 export function bindPointDrag(chart, layer) {
-  var color = chart.options.colorScheme[2] == "on" ? chart.colorScheme(layer.data[layer.mapping.group]) : layer.color;
+  var color = resolveColor(chart, layer.data[layer.mapping.group], layer.color);
 
   var drag = d3.drag()
     .on("start", function() {
@@ -19,6 +21,6 @@ export function bindPointDrag(chart, layer) {
     });
 
   chart.chart
-    .selectAll(".tag-point-" + chart.element.id + "-" + layer.label.replace(/\s+/g, ""))
+    .selectAll("." + tagName("point", chart.element.id, layer.label))
     .call(drag);
 }

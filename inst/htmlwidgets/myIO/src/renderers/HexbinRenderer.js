@@ -1,3 +1,5 @@
+import { tagName } from "../utils/responsive.js";
+
 export class HexbinRenderer {
   static type = "hexbin";
 
@@ -18,14 +20,14 @@ export class HexbinRenderer {
 
     var bins = chart.chart
       .attr("clip-path", "url(#" + chart.element.id + "clip)")
-      .selectAll(".tag-hexbin-" + chart.element.id + "-" + layer.label.replace(/\s+/g, ""))
+      .selectAll("." + tagName("hexbin", chart.element.id, layer.label))
       .data(binnedData);
 
     bins.exit().transition().duration(transitionSpeed).remove();
 
     var newbins = bins.enter()
       .append("path")
-      .attr("class", "tag-hexbin-" + chart.element.id + "-" + layer.label.replace(/\s+/g, ""))
+      .attr("class", tagName("hexbin", chart.element.id, layer.label))
       .attr("d", hexbin.hexagon())
       .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
       .attr("fill", "white");

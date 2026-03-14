@@ -1,3 +1,5 @@
+import { isMobile, responsiveValue } from "../utils/responsive.js";
+
 export function syncLegend(chart, state) {
   if (chart.options.suppressLegend == true) {
     return;
@@ -33,14 +35,14 @@ export function updateLegend(chart) {
   var labelIndex = chart.plotLayers.map(function(d) { return d.label; });
   var currentLayerIndex = activeLayers.map(function(d) { return d.label; });
   var hiddenLayers = labelIndex.filter(function(d) { return currentLayerIndex.indexOf(d) < 0; });
-  var itemWidth = chart.totalWidth > 600 ? 140 : 125;
-  var itemHeight = chart.totalWidth > 600 ? 25 : 22;
-  var n = chart.totalWidth > 600 ? 1 : Math.floor(chart.totalWidth / itemWidth);
+  var itemWidth = responsiveValue(chart, 140, 125);
+  var itemHeight = responsiveValue(chart, 25, 22);
+  var n = isMobile(chart) ? Math.floor(chart.totalWidth / itemWidth) : 1;
 
   svg.append("rect")
     .attr("class", "legend-box")
-    .attr("transform", "translate(5," + (chart.totalWidth > 600 ? m.top : 0) + ")")
-    .style("width", chart.totalWidth > 600 ? chart.totalWidth - chart.width : chart.totalWidth - chart.margin.left)
+    .attr("transform", "translate(5," + responsiveValue(chart, m.top, 0) + ")")
+    .style("width", responsiveValue(chart, chart.totalWidth - chart.width, chart.totalWidth - chart.margin.left))
     .style("fill", "white")
     .style("opacity", 0.75);
 
@@ -56,7 +58,7 @@ export function updateLegend(chart) {
         return "translate(" + i % n * itemWidth + "," + Math.floor(i / n) * itemHeight + ")";
       })
       .attr("text-anchor", "start")
-      .attr("font-size", chart.totalWidth > 600 ? 12 : 10)
+      .attr("font-size", responsiveValue(chart, 12, 10))
       .style("opacity", currentLayerIndex.indexOf(layer.label) > -1 ? 1 : 0.5)
       .on("click", toggleLine);
 
@@ -127,15 +129,15 @@ export function updateOrdinalColorLegend(chart, ly) {
   d3.select(chart.element).selectAll(".legendElements").remove();
 
   var svg = chart.legendArea;
-  var itemWidth = chart.totalWidth > 600 ? 140 : 125;
-  var itemHeight = chart.totalWidth > 600 ? 25 : 22;
-  var n = chart.totalWidth > 600 ? 1 : Math.floor(chart.totalWidth / itemWidth);
+  var itemWidth = responsiveValue(chart, 140, 125);
+  var itemHeight = responsiveValue(chart, 25, 22);
+  var n = isMobile(chart) ? Math.floor(chart.totalWidth / itemWidth) : 1;
   var colorKey = [];
 
   svg.append("rect")
     .attr("class", "legend-box")
-    .attr("transform", "translate(5," + (chart.totalWidth > 600 ? m.top : 0) + ")")
-    .style("width", chart.totalWidth > 600 ? chart.totalWidth - chart.width : chart.totalWidth - chart.margin.left)
+    .attr("transform", "translate(5," + responsiveValue(chart, m.top, 0) + ")")
+    .style("width", responsiveValue(chart, chart.totalWidth - chart.width, chart.totalWidth - chart.margin.left))
     .style("fill", "white")
     .style("opacity", 0.75);
 
@@ -157,7 +159,7 @@ export function updateOrdinalColorLegend(chart, ly) {
         return "translate(" + i % n * itemWidth + "," + Math.floor(i / n) * itemHeight + ")";
       })
       .attr("text-anchor", "start")
-      .attr("font-size", chart.totalWidth > 600 ? 12 : 10);
+      .attr("font-size", responsiveValue(chart, 12, 10));
 
     legendElement.append("rect")
       .attr("x", 5)
@@ -187,12 +189,12 @@ export function updateContinuousColorLegend(chart) {
 
   svg.append("rect")
     .attr("class", "legend-box")
-    .attr("transform", "translate(5," + (chart.totalWidth > 600 ? m.top : 0) + ")")
-    .style("width", chart.totalWidth > 600 ? chart.totalWidth - chart.width : chart.totalWidth - chart.margin.left)
+    .attr("transform", "translate(5," + responsiveValue(chart, m.top, 0) + ")")
+    .style("width", responsiveValue(chart, chart.totalWidth - chart.width, chart.totalWidth - chart.margin.left))
     .style("fill", "white")
     .style("opacity", 0.75);
 
-  if (chart.totalWidth > 600) {
+  if (!isMobile(chart)) {
     buildVerticalLegend();
   } else {
     buildHorizontalLegend();

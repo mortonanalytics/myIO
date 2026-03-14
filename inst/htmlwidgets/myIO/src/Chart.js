@@ -8,8 +8,9 @@ import { transitionGrouped, transitionStacked, getGroupedDataObject } from "./re
 import { syncAxes, addAxes as addAxesImpl, updateAxes as updateAxesImpl } from "./layout/axes.js";
 import { syncLegend, updateLegend as updateLegendImpl, updateOrdinalColorLegend as updateOrdinalColorLegendImpl, updateContinuousColorLegend as updateContinuousColorLegendImpl } from "./layout/legend.js";
 import { syncReferenceLines, updateReferenceLines as updateReferenceLinesImpl } from "./layout/reference-lines.js";
-import { initializeScaffold, updateScaffoldLayout } from "./layout/scaffold.js";
+import { getChartHeight, initializeScaffold, updateScaffoldLayout } from "./layout/scaffold.js";
 import { initializeTooltip } from "./tooltip.js";
+import { isMobile, tagName } from "./utils/responsive.js";
 
 export class myIOchart {
 	
@@ -19,7 +20,7 @@ export class myIOchart {
 		this.options = opts.options;
 		this.margin = this.options.margin;
 		this.totalWidth = Math.max(opts.width, 280);
-		this.width = this.totalWidth > 600 && this.options.suppressLegend == false ? this.totalWidth * 0.8 : this.totalWidth;
+		this.width = !isMobile(this) && this.options.suppressLegend == false ? this.totalWidth * 0.8 : this.totalWidth;
 		this.height = opts.height;
 		this.draw();
     }
@@ -102,12 +103,7 @@ export class myIOchart {
 				break;
 			
 			default:
-				if(this.options.suppressLegend == false){
-					var chartHeight = this.totalWidth > 600 ? this.height : this.height * 0.8 ;
-				} else {
-					var chartHeight = this.height ;
-				}
-				
+				var chartHeight = getChartHeight(this);
 				
 				this.clipPath = this.chart.append('defs').append('svg:clipPath')
 					.attr('id', this.element.id + 'clip')
@@ -153,19 +149,14 @@ export class myIOchart {
 	}
 	
 	removeLayers(lys){
-		var that = this;
+		var elementId = this.element.id;
+		var tagPrefixes = ["line", "bar", "point", "regression-line", "hexbin", "area", "crosshairY", "crosshairX"];
 	
 		lys.forEach(function(d) {
-			
-			d3.selectAll( '.tag-line-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
-			d3.selectAll( '.tag-bar-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
-			d3.selectAll( '.tag-point-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
-			d3.selectAll( '.tag-regression-line-' + that.element.id + '-'  + d.replace(/\s+/g, '') ).transition().duration(500).style('opacity', 0).remove() ;
-			d3.selectAll( '.tag-hexbin-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
-			d3.selectAll( '.tag-area-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
-			d3.selectAll( '.tag-crosshairY-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
-			d3.selectAll( '.tag-crosshairX-' + that.element.id + '-'  + d.replace(/\s+/g, '')).transition().duration(500).style('opacity', 0).remove() ;
-		})
+			tagPrefixes.forEach(function(prefix) {
+				d3.selectAll("." + tagName(prefix, elementId, d)).transition().duration(500).style('opacity', 0).remove();
+			});
+		});
 	}
 	
 	dragPoints(ly){
@@ -213,7 +204,7 @@ export class myIOchart {
 	resize(width, height){
 		
 		this.totalWidth = Math.max(width, 280);
-		this.width = this.totalWidth > 600 && this.options.suppressLegend == false ? this.totalWidth * 0.8 : this.totalWidth;
+		this.width = !isMobile(this) && this.options.suppressLegend == false ? this.totalWidth * 0.8 : this.totalWidth;
 		this.height = height;
 		
 		updateScaffoldLayout(this);

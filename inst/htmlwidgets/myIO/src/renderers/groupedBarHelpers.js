@@ -1,20 +1,8 @@
+import { updateYAxis } from "../layout/axes.js";
+
 export function transitionGrouped(chart, data, colors, bandwidth) {
-  var m = chart.margin;
   var transitionSpeed = chart.options.transition.speed;
-  var chartHeight = chart.options.suppressLegend == false ? (chart.totalWidth > 600 ? chart.height : chart.height * 0.8) : chart.height;
-  var yFormat = d3.format(chart.options.yAxisFormat);
-  var currentFormatY = chart.newScaleY ? chart.newScaleY : yFormat;
-
-  chart.svg.selectAll(".y-axis")
-    .transition().ease(d3.easeQuad)
-    .duration(transitionSpeed)
-    .call(d3.axisLeft(chart.yScale).ticks(chartHeight < 450 ? 5 : 10, currentFormatY).tickSize(-(chart.width - (m.right + m.left))))
-    .selectAll("text")
-    .attr("dx", "-.25em");
-
-  chart.plot.selectAll(".y-axis").selectAll(".domain").attr("class", "y-axis-line");
-  chart.plot.selectAll(".y-axis").selectAll(".tick line").attr("class", "y-grid");
-  chart.plot.selectAll(".y-axis").selectAll("text").attr("class", "y-label");
+  updateYAxis(chart, chart.yScale);
 
   const barsNew = d3.select(chart.element).selectAll(".tag-grouped-bar-g").selectAll("rect").data(function(d) { return d; });
 
@@ -45,25 +33,11 @@ export function transitionGrouped(chart, data, colors, bandwidth) {
 }
 
 export function transitionStacked(chart, data, colors, bandwidth) {
-  var m = chart.margin;
   var transitionSpeed = chart.options.transition.speed;
-  var chartHeight = chart.options.suppressLegend == false ? (chart.totalWidth > 600 ? chart.height : chart.height * 0.8) : chart.height;
   var yScale = d3.scaleLinear().range(chart.yScale.range());
   var yMax = getStackedMax(data);
   yScale.domain([0, yMax * 1.1]);
-  var yFormat = d3.format(chart.options.yAxisFormat);
-  var currentFormatY = chart.newScaleY ? chart.newScaleY : yFormat;
-
-  chart.svg.selectAll(".y-axis")
-    .transition().ease(d3.easeQuad)
-    .duration(transitionSpeed)
-    .call(d3.axisLeft(yScale).ticks(chartHeight < 450 ? 5 : 10, currentFormatY).tickSize(-(chart.width - (m.right + m.left))))
-    .selectAll("text")
-    .attr("dx", "-.25em");
-
-  chart.plot.selectAll(".y-axis").selectAll(".domain").attr("class", "y-axis-line");
-  chart.plot.selectAll(".y-axis").selectAll(".tick line").attr("class", "y-grid");
-  chart.plot.selectAll(".y-axis").selectAll("text").attr("class", "y-label");
+  updateYAxis(chart, yScale);
 
   const barsNew = d3.select(chart.element).selectAll(".tag-grouped-bar-g").selectAll("rect").data(function(d) { return d; });
 

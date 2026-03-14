@@ -1,10 +1,12 @@
+import { getChartHeight } from "../layout/scaffold.js";
+
 export class GaugeRenderer {
   static type = "gauge";
 
   render(chart, layer) {
     var transitionSpeed = chart.options.transition.speed;
     var tau = Math.PI;
-    var radius = Math.max(Math.min(chart.width, (chart.totalWidth > 600 ? chart.height : chart.height * 0.8)) / 2, 30);
+    var radius = Math.max(Math.min(chart.width, getChartHeight(chart)) / 2, 30);
     var barWidth = 30;
     var value = layer.data[0].value[0];
     var data = [value, 1 - value];
@@ -50,10 +52,11 @@ export class GaugeRenderer {
         return function(t) { return arc(i(t)); };
       });
 
-    chart.chart.selectAll(".gauge-text").remove();
-    chart.chart.append("g").append("text")
+    chart.chart.selectAll(".gauge-text")
+      .data([data[0]])
+      .join("text")
       .attr("class", "gauge-text")
-      .text(percentFormat(data[0]))
+      .text(function(d) { return percentFormat(d); })
       .attr("text-anchor", "middle")
       .attr("font-size", 20)
       .attr("dy", "-0.45em");
