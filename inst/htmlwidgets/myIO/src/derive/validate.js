@@ -8,6 +8,7 @@ const COMPAT_GROUP = {
   groupedBar: "axes-categorical",
   histogram: "axes-binned",
   heatmap: "axes-matrix",
+  candlestick: "axes-continuous",
   hexbin: "axes-hex",
   treemap: "standalone-treemap",
   donut: "standalone-donut",

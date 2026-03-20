@@ -45,7 +45,7 @@ describe("Renderer static properties", function() {
   });
 
   test("all 11 renderer types are registered", function() {
-    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge", "heatmap"];
+    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge", "heatmap", "candlestick"];
     types.forEach(function(type) {
       var renderer = getRenderer(type);
       expect(renderer).toBeDefined();
@@ -54,7 +54,7 @@ describe("Renderer static properties", function() {
   });
 
   test("each renderer has traits and dataContract", function() {
-    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge", "heatmap"];
+    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge", "heatmap", "candlestick"];
     types.forEach(function(type) {
       var renderer = getRenderer(type);
       expect(renderer.constructor.traits).toBeDefined();
@@ -70,7 +70,7 @@ describe("Renderer static properties", function() {
   });
 
   test("axes types have hasAxes=true", function() {
-    ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "heatmap"].forEach(function(type) {
+    ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "heatmap", "candlestick"].forEach(function(type) {
       expect(getRenderer(type).constructor.traits.hasAxes).toBe(true);
     });
   });
@@ -145,6 +145,17 @@ describe("Renderer formatTooltip methods", function() {
     expect(result.value).toBe(9);
   });
 
+  test("CandlestickRenderer.formatTooltip returns open/high/low/close data", function() {
+    var renderer = getRenderer("candlestick");
+    var chart = {};
+    var layer = { mapping: { x_var: "x", open: "open", high: "high", low: "low", close: "close" }, color: "blue", label: "candles" };
+    var d = { x: 1, open: 10, high: 15, low: 5, close: 14 };
+    var result = renderer.formatTooltip(chart, d, layer);
+    expect(result.title).toBe("x: 1");
+    expect(result.value).toBe(14);
+    expect(result.body).toContain("O: 10");
+  });
+
   test("HeatmapRenderer.render creates rect cells and a continuous color scale", function() {
     var renderer = getRenderer("heatmap");
     document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
@@ -171,6 +182,36 @@ describe("Renderer formatTooltip methods", function() {
 
     expect(chart.derived.colorContinuous).toBeDefined();
     expect(document.querySelectorAll("rect." + "tag-heatmap-chart-cells").length).toBe(2);
+  });
+
+  test("CandlestickRenderer.render creates wick and body elements", function() {
+    var renderer = getRenderer("candlestick");
+    document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
+    var el = document.getElementById("chart");
+    var chart = {
+      element: el,
+      chart: d3.select(el).select(".myIO-chart-area"),
+      derived: {},
+      options: { transition: { speed: 0 } },
+      margin: { top: 30, bottom: 60, left: 50, right: 5 },
+      xScale: d3.scaleLinear().domain([0, 3]).range([0, 120]),
+      yScale: d3.scaleLinear().domain([0, 40]).range([120, 0])
+    };
+    var layer = {
+      label: "candles",
+      color: "blue",
+      mapping: { x_var: "x", open: "open", high: "high", low: "low", close: "close" },
+      data: [
+        { x: 1, open: 10, high: 15, low: 5, close: 12 },
+        { x: 2, open: 20, high: 30, low: 18, close: 22 }
+      ]
+    };
+
+    renderer.render(chart, layer);
+
+    expect(document.querySelectorAll("g." + "tag-candlestick-chart-candles").length).toBe(2);
+    expect(document.querySelectorAll("g." + "tag-candlestick-chart-candles line.wick").length).toBe(2);
+    expect(document.querySelectorAll("g." + "tag-candlestick-chart-candles rect.body").length).toBe(2);
   });
 
   test("HistogramRenderer.formatTooltip shows bin range", function() {

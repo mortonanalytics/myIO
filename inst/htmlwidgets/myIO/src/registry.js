@@ -11,6 +11,7 @@ import { TreemapRenderer } from "./renderers/TreemapRenderer.js";
 import { DonutRenderer } from "./renderers/DonutRenderer.js";
 import { GaugeRenderer } from "./renderers/GaugeRenderer.js";
 import { HeatmapRenderer } from "./renderers/HeatmapRenderer.js";
+import { CandlestickRenderer } from "./renderers/CandlestickRenderer.js";
 
 export function registerRenderer(type, RendererClass) {
   if (rendererRegistry.has(type)) {
@@ -76,6 +77,9 @@ export function registerBuiltInRenderers() {
   }
   if (!rendererRegistry.has(HeatmapRenderer.type)) {
     registerRenderer(HeatmapRenderer.type, new HeatmapRenderer());
+  }
+  if (!rendererRegistry.has(CandlestickRenderer.type)) {
+    registerRenderer(CandlestickRenderer.type, new CandlestickRenderer());
   }
 
   return rendererRegistry;

@@ -60,6 +60,7 @@ describe("chart-render utility functions", function() {
     expect(needsReferenceLines("line")).toBe(true);
     expect(needsReferenceLines("point")).toBe(true);
     expect(needsReferenceLines("area")).toBe(true);
+    expect(needsReferenceLines("candlestick")).toBe(true);
     expect(needsReferenceLines("treemap")).toBe(false);
     expect(needsReferenceLines("donut")).toBe(false);
     expect(needsReferenceLines("gauge")).toBe(false);

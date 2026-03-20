@@ -167,6 +167,7 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
     gauge = c("value"),
     histogram = c("value"),
     heatmap = c("x_var", "y_var", "value"),
+    candlestick = c("x_var", "open", "high", "low", "close"),
     area = c("x_var", "low_y", "high_y"),
     hexbin = c("x_var", "y_var", "radius"),
     c("x_var", "y_var")
@@ -176,15 +177,15 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
     stop("Missing required mapping: ", paste(missing_map, collapse = ", "), call. = FALSE)
   }
 
-  mapped_fields <- intersect(c("x_var", "y_var", "group", "level_1", "level_2", "value", "low_y", "high_y"), names(mapping))
+  mapped_fields <- intersect(c("x_var", "y_var", "group", "level_1", "level_2", "value", "low_y", "high_y", "open", "high", "low", "close"), names(mapping))
   for (field in mapped_fields) {
     if (!mapping[[field]] %in% colnames(data)) {
       stop("Mapping variable '", mapping[[field]], "' not found in data.", call. = FALSE)
     }
   }
 
-  numeric_fields <- intersect(c("y_var", "value", "low_y", "high_y"), names(mapping))
-  if (type %in% c("line", "point", "bar", "hexbin", "area", "groupedBar", "histogram", "gauge", "donut")) {
+  numeric_fields <- intersect(c("y_var", "value", "low_y", "high_y", "open", "high", "low", "close"), names(mapping))
+  if (type %in% c("line", "point", "bar", "hexbin", "area", "groupedBar", "histogram", "gauge", "donut", "candlestick")) {
     for (nf in numeric_fields) {
       if (!is.numeric(data[[mapping[[nf]]]])) {
         stop("Mapped field '", mapping[[nf]], "' must be numeric for type '", type, "'.", call. = FALSE)
