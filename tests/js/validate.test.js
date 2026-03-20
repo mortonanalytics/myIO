@@ -6,6 +6,8 @@ describe("validate", function() {
   test("compatibility matrix allows and blocks expected combos", function() {
     expect(validateComposition([{ type: "line" }, { type: "point" }]).valid).toBe(true);
     expect(validateComposition([{ type: "histogram" }, { type: "line" }]).valid).toBe(true);
+    expect(validateComposition([{ type: "boxplot" }]).valid).toBe(true);
+    expect(validateComposition([{ type: "boxplot" }, { type: "line" }]).valid).toBe(true);
     expect(validateComposition([{ type: "treemap" }, { type: "bar" }]).valid).toBe(false);
   });
 

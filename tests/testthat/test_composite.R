@@ -1,4 +1,5 @@
-test_that("is_composite returns false for primitive and unknown types", {
+test_that("is_composite returns true for registered composites and false for primitives", {
+  expect_true(myIO:::is_composite("boxplot"))
   expect_false(myIO:::is_composite("line"))
   expect_false(myIO:::is_composite("banana"))
 })
