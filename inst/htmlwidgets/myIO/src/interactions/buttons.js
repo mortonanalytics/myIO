@@ -1,5 +1,6 @@
 import { exportToCsv } from "../utils/export-csv.js";
 import { getSVGString, svgString2Image } from "../utils/export-svg.js";
+import { injectExportLegend } from "../utils/export-legend.js";
 import { saveAs } from "../utils/file-saver.js";
 
 export const BUTTON_LABELS = {
@@ -54,8 +55,11 @@ export function addButtons(chart, layers) {
 
 export function handleAction(chart, layers, name) {
   if (name === "image") {
+    var legend = injectExportLegend(chart);
+    var exportHeight = chart.height + legend.extraHeight;
     var svgString = getSVGString(chart.svg.node());
-    svgString2Image(svgString, 2 * chart.width, 2 * chart.height, "png", function(dataBlob) {
+    legend.cleanup();
+    svgString2Image(svgString, 2 * chart.width, 2 * exportHeight, "png", function(dataBlob) {
       saveAs(dataBlob, chart.element.id + ".png");
     });
     return;
