@@ -7,12 +7,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
   && rm -rf /var/lib/apt/lists/*
 
-RUN R -e "install.packages(c('dplyr', 'bslib', 'remotes'), repos = 'https://cloud.r-project.org')"
+RUN R -e "install.packages(c('dplyr', 'bslib', 'fontawesome', 'remotes'), repos = 'https://cloud.r-project.org')"
 RUN R -e "remotes::install_github('mortonanalytics/myIO')"
 
 COPY app/ /srv/shiny-server/
 
 RUN rm -rf /srv/shiny-server/sample-apps /srv/shiny-server/index.html
+
+# Verify all packages load
+RUN R -e "library(shiny); library(bslib); library(dplyr); library(myIO); cat('All packages OK\n')"
 
 EXPOSE 3838
 
