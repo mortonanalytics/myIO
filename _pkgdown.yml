@@ -20,7 +20,7 @@ home:
   title: myIO - Interactive D3.js Visualizations from R
   links:
     - text: Live demo (Shiny app)
-      href: http://www.morton-analytics.com/shiny/myio_demo/
+      href: https://www.morton-analytics.com/myio/
     - text: D3.js documentation
       href: https://d3js.org/
     - text: htmlwidgets framework
