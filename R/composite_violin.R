@@ -27,7 +27,7 @@ composite_violin <- function(data, mapping, label, color, options) {
       data = density_data,
       mapping = list(x_var = "x_var", low_y = "low_y", high_y = "high_y", group = "group"),
       transform = "identity",
-      label = paste0(label, " — ", group_label, " — density"),
+      label = paste0(label, " - ", group_label, " - density"),
       color = group_colors[[i]],
       role = "density_area"
     )
@@ -55,7 +55,7 @@ composite_violin <- function(data, mapping, label, color, options) {
       data = box_data,
       mapping = list(x_var = "x_var", low_y = "low_y", high_y = "high_y", group = "group"),
       transform = "identity",
-      label = paste0(label, " — iqr_box"),
+      label = paste0(label, " - iqr_box"),
       color = group_colors[[1]],
       role = "iqr_box"
     )
@@ -77,7 +77,7 @@ composite_violin <- function(data, mapping, label, color, options) {
       data = median_points,
       mapping = list(x_var = "x_var", y_var = "y_var", group = "group"),
       transform = "identity",
-      label = paste0(label, " — median"),
+      label = paste0(label, " - median"),
       color = group_colors[[1]],
       role = "median"
     )
@@ -111,7 +111,7 @@ composite_violin <- function(data, mapping, label, color, options) {
         data = raw_points,
         mapping = list(x_var = "x_var", y_var = "y_var", group = "group"),
         transform = "identity",
-        label = paste0(label, " — points"),
+        label = paste0(label, " - points"),
         color = group_colors[[1]],
         role = "points"
       )

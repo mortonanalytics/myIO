@@ -19,7 +19,13 @@ transform_cumulative <- function(data, mapping, options = list()) {
   y_values[is.na(y_values)] <- 0
 
   cumulative_y <- cumsum(y_values)
-  base_y <- c(0, head(cumulative_y, -1L))
+  base_y <- if (length(cumulative_y) == 0L) {
+    numeric(0)
+  } else if (length(cumulative_y) == 1L) {
+    0
+  } else {
+    c(0, cumulative_y[-length(cumulative_y)])
+  }
   is_total <- rep(FALSE, nrow(data))
 
   if (!is.null(mapping$total)) {

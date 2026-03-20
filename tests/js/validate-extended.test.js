@@ -38,6 +38,7 @@ describe("validateComposition extended", function() {
   test("continuous + binned is valid", function() {
     expect(validateComposition([{ type: "line" }, { type: "histogram" }]).valid).toBe(true);
     expect(validateComposition([{ type: "histogram" }, { type: "point" }]).valid).toBe(true);
+    expect(validateComposition([{ type: "ridgeline" }, { type: "line" }]).valid).toBe(true);
   });
 
   test("hexbin + other axes types is invalid", function() {

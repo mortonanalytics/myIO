@@ -45,7 +45,7 @@ describe("Renderer static properties", function() {
     registerBuiltInRenderers();
   });
 
-  test("all 11 renderer types are registered", function() {
+  test("all 14 renderer types are registered", function() {
     var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge", "heatmap", "candlestick", "waterfall", "sankey"];
     types.forEach(function(type) {
       var renderer = getRenderer(type);
@@ -65,7 +65,7 @@ describe("Renderer static properties", function() {
   });
 
   test("standalone types have hasAxes=false", function() {
-    ["treemap", "donut", "gauge"].forEach(function(type) {
+    ["treemap", "donut", "gauge", "sankey"].forEach(function(type) {
       expect(getRenderer(type).constructor.traits.hasAxes).toBe(false);
     });
   });
@@ -74,6 +74,28 @@ describe("Renderer static properties", function() {
     ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "heatmap", "candlestick", "waterfall"].forEach(function(type) {
       expect(getRenderer(type).constructor.traits.hasAxes).toBe(true);
     });
+  });
+
+  test("new renderers expose scale hints", function() {
+    expect(getRenderer("heatmap").constructor.scaleHints).toEqual({
+      xScaleType: "band",
+      yScaleType: "band",
+      yExtentFields: ["value"],
+      domainMerge: "union"
+    });
+    expect(getRenderer("candlestick").constructor.scaleHints).toEqual({
+      xScaleType: "linear",
+      yScaleType: "linear",
+      yExtentFields: ["open", "high", "low", "close"],
+      domainMerge: "union"
+    });
+    expect(getRenderer("waterfall").constructor.scaleHints).toEqual({
+      xScaleType: "band",
+      yScaleType: "linear",
+      yExtentFields: ["_base_y", "_cumulative_y"],
+      domainMerge: "union"
+    });
+    expect(getRenderer("sankey").constructor.scaleHints).toBeNull();
   });
 });
 

@@ -81,7 +81,7 @@ composite_boxplot <- function(data, mapping, label, color, options) {
       data = box_data,
       mapping = list(x_var = "x_var", low_y = "low_y", high_y = "high_y", group = "group"),
       transform = "identity",
-      label = paste0(label, " — iqr_box"),
+      label = paste0(label, " - iqr_box"),
       color = base_color,
       role = "iqr_box"
     ),
@@ -90,7 +90,7 @@ composite_boxplot <- function(data, mapping, label, color, options) {
       data = whisker_low_data,
       mapping = list(x_var = "x_var", y_var = "y_var", group = "group"),
       transform = "identity",
-      label = paste0(label, " — whisker_low"),
+      label = paste0(label, " - whisker_low"),
       color = base_color,
       role = "whisker_low"
     ),
@@ -99,7 +99,7 @@ composite_boxplot <- function(data, mapping, label, color, options) {
       data = whisker_high_data,
       mapping = list(x_var = "x_var", y_var = "y_var", group = "group"),
       transform = "identity",
-      label = paste0(label, " — whisker_high"),
+      label = paste0(label, " - whisker_high"),
       color = base_color,
       role = "whisker_high"
     ),
@@ -108,7 +108,7 @@ composite_boxplot <- function(data, mapping, label, color, options) {
       data = median_plot_data,
       mapping = list(x_var = "x_var", y_var = "y_var", group = "group"),
       transform = "identity",
-      label = paste0(label, " — median"),
+      label = paste0(label, " - median"),
       color = base_color,
       role = "median"
     )
@@ -120,7 +120,7 @@ composite_boxplot <- function(data, mapping, label, color, options) {
       data = outlier_plot_data,
       mapping = list(x_var = "x_var", y_var = "y_var", group = "group"),
       transform = "identity",
-      label = paste0(label, " — outliers"),
+      label = paste0(label, " - outliers"),
       color = base_color,
       role = "outliers"
     )

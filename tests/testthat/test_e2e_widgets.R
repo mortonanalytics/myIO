@@ -272,6 +272,176 @@ test_that("Hexbin renders with radius mapping", {
   save_widget(w, "11_hexbin")
 })
 
+test_that("Heatmap widget builds with matrix axes", {
+  df <- data.frame(
+    x = c("A", "B", "A", "B"),
+    y = c("Low", "Low", "High", "High"),
+    value = c(1, 2, 3, 4),
+    stringsAsFactors = FALSE
+  )
+
+  w <- myIO() |>
+    addIoLayer(
+      type = "heatmap",
+      color = "#4E79A7",
+      label = "Heat",
+      data = df,
+      mapping = list(x_var = "x", y_var = "y", value = "value")
+    ) |>
+    defineCategoricalAxis(xAxis = TRUE, yAxis = TRUE)
+
+  layers <- w$x$config$layers
+  expect_length(layers, 1)
+  expect_equal(layers[[1]]$type, "heatmap")
+  save_widget(w, "13_heatmap")
+})
+
+test_that("Candlestick widget builds with OHLC data", {
+  df <- data.frame(
+    x = 1:3,
+    open = c(10, 12, 14),
+    high = c(15, 16, 18),
+    low = c(8, 11, 13),
+    close = c(13, 14, 17),
+    stringsAsFactors = FALSE
+  )
+
+  w <- myIO() |>
+    addIoLayer(
+      type = "candlestick",
+      color = "#4E79A7",
+      label = "Candles",
+      data = df,
+      mapping = list(x_var = "x", open = "open", high = "high", low = "low", close = "close")
+    ) |>
+    setAxisFormat(xLabel = "Session", yLabel = "Price")
+
+  layers <- w$x$config$layers
+  expect_length(layers, 1)
+  expect_equal(layers[[1]]$type, "candlestick")
+  save_widget(w, "14_candlestick")
+})
+
+test_that("Waterfall widget auto-applies the cumulative transform", {
+  df <- data.frame(
+    step = c("Start", "Add", "Subtract"),
+    value = c(100, 25, -10),
+    stringsAsFactors = FALSE
+  )
+
+  w <- myIO() |>
+    addIoLayer(
+      type = "waterfall",
+      color = "#59A14F",
+      label = "Flow",
+      data = df,
+      mapping = list(x_var = "step", y_var = "value")
+    ) |>
+    defineCategoricalAxis(xAxis = TRUE)
+
+  layers <- w$x$config$layers
+  expect_length(layers, 1)
+  expect_equal(layers[[1]]$type, "waterfall")
+  expect_equal(layers[[1]]$transform, "cumulative")
+  save_widget(w, "15_waterfall")
+})
+
+test_that("Sankey widget builds with source-target-value data", {
+  df <- data.frame(
+    source = c("A", "A", "B"),
+    target = c("B", "C", "D"),
+    value = c(5, 3, 2),
+    stringsAsFactors = FALSE
+  )
+
+  w <- myIO() |>
+    addIoLayer(
+      type = "sankey",
+      color = c("#4E79A7", "#F28E2B", "#E15759", "#76B7B2"),
+      label = "Flow",
+      data = df,
+      mapping = list(source = "source", target = "target", value = "value")
+    )
+
+  layers <- w$x$config$layers
+  expect_length(layers, 1)
+  expect_equal(layers[[1]]$type, "sankey")
+  save_widget(w, "16_sankey")
+})
+
+test_that("Boxplot widget expands into primitive layers", {
+  df <- data.frame(
+    group = c("A", "A", "A", "B", "B", "B", "B"),
+    value = c(1, 2, 3, 10, 11, 12, 13),
+    stringsAsFactors = FALSE
+  )
+
+  w <- myIO() |>
+    addIoLayer(
+      type = "boxplot",
+      color = "#4E79A7",
+      label = "Box",
+      data = df,
+      mapping = list(x_var = "group", y_var = "value"),
+      options = list(showOutliers = FALSE)
+    ) |>
+    defineCategoricalAxis(xAxis = TRUE)
+
+  layers <- w$x$config$layers
+  expect_length(layers, 4)
+  expect_true(all(sapply(layers, function(l) l$type %in% c("area", "point"))))
+  save_widget(w, "17_boxplot")
+})
+
+test_that("Violin widget expands into density and summary layers", {
+  df <- data.frame(
+    group = c("A", "A", "A", "B", "B", "B"),
+    value = c(1, 2, 3, 10, 11, 12),
+    stringsAsFactors = FALSE
+  )
+
+  w <- myIO() |>
+    addIoLayer(
+      type = "violin",
+      color = "#59A14F",
+      label = "Violin",
+      data = df,
+      mapping = list(x_var = "group", y_var = "value"),
+      options = list(showBox = TRUE, showMedian = TRUE, showPoints = FALSE)
+    ) |>
+    defineCategoricalAxis(xAxis = TRUE)
+
+  layers <- w$x$config$layers
+  expect_length(layers, 4)
+  expect_true(any(sapply(layers, function(l) l$`_compositeRole` == "density_area")))
+  save_widget(w, "18_violin")
+})
+
+test_that("Ridgeline widget expands to one density area per group", {
+  df <- data.frame(
+    value = c(1, 2, 3, 1, 2, 3),
+    aux = c(10, 20, 30, 40, 50, 60),
+    group = c("A", "A", "A", "B", "B", "B"),
+    stringsAsFactors = FALSE
+  )
+
+  w <- myIO() |>
+    addIoLayer(
+      type = "ridgeline",
+      color = c("#4E79A7", "#F28E2B"),
+      label = "Ridge",
+      data = df,
+      mapping = list(x_var = "value", y_var = "aux", group = "group"),
+      options = list(overlap = 0.5)
+    ) |>
+    setAxisFormat(xLabel = "Value", yLabel = "Density")
+
+  layers <- w$x$config$layers
+  expect_length(layers, 2)
+  expect_true(all(sapply(layers, function(l) l$type == "area")))
+  save_widget(w, "19_ridgeline")
+})
+
 test_that("Theme demo renders with custom theme and reference line", {
   df <- datasets::mtcars
   df$cyl <- as.character(df$cyl)

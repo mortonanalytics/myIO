@@ -59,7 +59,7 @@ composite_ridgeline <- function(data, mapping, label, color, options) {
       data = density_data,
       mapping = list(x_var = "x_var", low_y = "low_y", high_y = "high_y", group = "group"),
       transform = "identity",
-      label = paste0(label, " — ", group_labels[[i]], " — density"),
+      label = paste0(label, " - ", group_labels[[i]], " - density"),
       color = group_colors[[i]],
       role = "density_area"
     )

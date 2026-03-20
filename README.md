@@ -9,7 +9,7 @@
 
 An R package for creating interactive `d3.js` visualizations using `htmlwidgets`. Supports 10 chart types including scatter plots, line charts, bar charts, treemaps, and more — all composable through a piped API.
 
-[Live Demo](http://www.morton-analytics.com/shiny/myio_demo/)
+[Live Demo](https://mortonanalytics.github.io/myIO/)
 
 ## Installation
 
