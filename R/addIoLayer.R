@@ -46,11 +46,34 @@ addIoLayer <- function(myIO,
 
   check_layer_compatibility(type, existing_layers)
 
+  layer_id <- next_layer_id(existing_layers)
+
+  if (is_composite(type)) {
+    sub_layers <- expandComposite(type, data, mapping, label, color, options)
+    for (i in seq_along(sub_layers)) {
+      sl <- sub_layers[[i]]
+      transform_fn <- get_transform(sl$transform)
+      transformed <- transform_fn(sl$data, sl$mapping, options)
+      myIO$x$config$layers <- c(
+        myIO$x$config$layers,
+        list(build_layer(
+          layer_type = sl$type, layer_label = sl$label,
+          layer_data = as_layer_rows(transformed$data),
+          layer_mapping = sl$mapping, layer_color = sl$color,
+          layer_transform_meta = transformed$meta,
+          options = options, transform = sl$transform,
+          layer_id = layer_id, order = i,
+          composite = type, composite_role = sl$role
+        ))
+      )
+    }
+    return(myIO)
+  }
+
   transform_fn <- get_transform(transform)
   if (!(transform %in% VALID_COMBINATIONS[[type]])) {
     stop("Transform '", transform, "' is not valid for layer type '", type, "'.", call. = FALSE)
   }
-  layer_id <- next_layer_id(existing_layers)
 
   if (length(grep("group", names(mapping))) == 0) {
     transformed <- transform_fn(data, mapping, options)
