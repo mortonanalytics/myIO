@@ -8,7 +8,8 @@ transform_registry <- function() {
     cumulative = transform_cumulative,
     quantiles = transform_quantiles,
     median = transform_median,
-    outliers = transform_outliers
+    outliers = transform_outliers,
+    density = transform_density
   )
 }
 

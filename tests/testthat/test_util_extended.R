@@ -116,12 +116,14 @@ test_that("transform_registry contains identity and lm", {
   expect_true("quantiles" %in% names(reg))
   expect_true("median" %in% names(reg))
   expect_true("outliers" %in% names(reg))
+  expect_true("density" %in% names(reg))
   expect_true(is.function(reg$identity))
   expect_true(is.function(reg$lm))
   expect_true(is.function(reg$cumulative))
   expect_true(is.function(reg$quantiles))
   expect_true(is.function(reg$median))
   expect_true(is.function(reg$outliers))
+  expect_true(is.function(reg$density))
 })
 
 test_that("assert_myIO accepts widgets and rejects plain lists", {
