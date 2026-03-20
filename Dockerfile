@@ -8,7 +8,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   && rm -rf /var/lib/apt/lists/*
 
 RUN R -e "install.packages(c('dplyr', 'bslib', 'fontawesome', 'remotes'), repos = 'https://cloud.r-project.org')"
-RUN R -e "remotes::install_github('mortonanalytics/myIO')"
+
+# Install myIO from local source (not GitHub) so Docker always uses the current commit
+COPY . /tmp/myIO
+RUN R -e "remotes::install_local('/tmp/myIO')" && rm -rf /tmp/myIO
 
 COPY app/ /srv/shiny-server/
 
