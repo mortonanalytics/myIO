@@ -58,6 +58,8 @@ composite_boxplot <- function(data, mapping, label, color, options) {
   median_plot_data <- data.frame(
     x_var = positions,
     y_var = median_df[[mapping$y_var]],
+    low_y = median_df[[mapping$y_var]],
+    high_y = median_df[[mapping$y_var]],
     group = groups,
     stringsAsFactors = FALSE,
     check.names = FALSE
@@ -106,7 +108,7 @@ composite_boxplot <- function(data, mapping, label, color, options) {
     list(
       type = "point",
       data = median_plot_data,
-      mapping = list(x_var = "x_var", y_var = "y_var", group = "group"),
+      mapping = list(x_var = "x_var", y_var = "y_var", low_y = "low_y", high_y = "high_y", group = "group"),
       transform = "identity",
       label = paste0(label, " - median"),
       color = base_color,

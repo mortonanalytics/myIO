@@ -17,3 +17,4 @@ inst/myIOsticker.png
 coverage/
 /.claude
 .mcp.json
+/.playwright-mcp

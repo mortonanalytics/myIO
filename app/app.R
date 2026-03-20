@@ -373,7 +373,7 @@ server <- function(input, output) {
     myIO() %>%
       addIoLayer(type = "boxplot", color = "#4E79A7", label = "Sepal Length",
         data = iris, mapping = list(x_var = "Species", y_var = "Sepal.Length"),
-        options = list(showOutliers = FALSE)) %>%
+        options = list(showOutliers = TRUE)) %>%
       setAxisFormat(xLabel = "Species", yLabel = "Sepal Length")
   })
 
