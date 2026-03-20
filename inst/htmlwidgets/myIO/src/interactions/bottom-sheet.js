@@ -1,4 +1,5 @@
 import { BUTTON_LABELS, handleAction, iconCamera, iconFileDown, iconLayers, iconPercent } from "./buttons.js";
+import { buildLegendData } from "../layout/legend-data.js";
 import { isMobile } from "../utils/responsive.js";
 
 const PANEL_OPEN_CLASS = "myIO-panel--open";
@@ -411,112 +412,12 @@ function toggleOrdinalSegment(chart, item) {
   chart.runtime._suppressOrdinalLegendRebuild = false;
 }
 
-function buildLegendData(chart) {
-  if (!chart || !chart.plotLayers || chart.plotLayers.length === 0) {
-    return null;
-  }
-
-  var layers = chart.currentLayers || chart.derived && chart.derived.currentLayers || chart.plotLayers;
-  var primaryLayer = layers[0] || chart.plotLayers[0];
-  var primaryType = primaryLayer ? primaryLayer.type : null;
-
-  if (primaryType === "donut" || primaryType === "treemap") {
-    return buildOrdinalLegendData(chart, primaryLayer);
-  }
-
-  if (primaryType === "hexbin") {
-    return buildContinuousLegendData(chart);
-  }
-
-  return buildLayerLegendData(chart);
-}
-
-function buildLayerLegendData(chart) {
-  var currentLayers = chart.currentLayers || chart.derived && chart.derived.currentLayers || [];
-  var visibleKeys = currentLayers.map(function(layer) {
-    return layer._composite || layer.label;
-  });
-  var hiddenKeys = Array.isArray(chart.runtime && chart.runtime._hiddenLayerKeys) ? chart.runtime._hiddenLayerKeys : [];
-
-  return {
-    type: "layer",
-    items: (chart.plotLayers || []).map(function(layer) {
-      var key = layer._composite || layer.label;
-      return {
-        key: key,
-        label: layer.label,
-        color: layer.color || "#6b7280",
-        visible: visibleKeys.indexOf(key) > -1 && hiddenKeys.indexOf(key) === -1,
-        kind: layer.type
-      };
-    })
-  };
-}
-
-function buildOrdinalLegendData(chart, layer) {
-  if (!layer) {
-    return null;
-  }
-
-  if (!chart.runtime) {
-    chart.runtime = {};
-  }
-
-  if (!Array.isArray(chart.runtime._hiddenOrdinalSegments)) {
-    chart.runtime._hiddenOrdinalSegments = [];
-  }
-
-  var hidden = chart.runtime._hiddenOrdinalSegments;
-  var keys = [];
-
-  if (layer.type === "treemap" && layer.data && layer.data.children) {
-    keys = layer.data.children.map(function(d) {
-      return d.name;
-    });
-  } else if (layer.type === "donut" && Array.isArray(layer.data)) {
-    keys = layer.data.map(function(d) {
-      return d[layer.mapping.x_var];
-    });
-  }
-
-  return {
-    type: "ordinal",
-    items: keys.map(function(key) {
-      var swatchColor = "#6b7280";
-      if (typeof chart.colorDiscrete === "function") {
-        swatchColor = layer.type === "treemap" ? chart.colorDiscrete("treemap." + key) : chart.colorDiscrete(key);
-      }
-      if (!swatchColor) {
-        swatchColor = "#6b7280";
-      }
-      return {
-        key: key,
-        label: key,
-        color: swatchColor,
-        visible: hidden.indexOf(key) === -1,
-        kind: "segment"
-      };
-    })
-  };
-}
-
-function buildContinuousLegendData(chart) {
-  return {
-    type: "continuous",
-    items: [],
-    colorScale: chart.colorContinuous || null,
-    domain: chart.colorContinuous && typeof chart.colorContinuous.domain === "function"
-      ? chart.colorContinuous.domain()
-      : null
-  };
-}
-
 function getLegendData(chart) {
   if (chart.runtime && chart.runtime._legendData) {
     return chart.runtime._legendData;
   }
 
-  return buildLegendData(chart);
+  return buildLegendData(chart, chart.runtime && chart.runtime._legendState);
 }
 
 function syncFABState(chart) {

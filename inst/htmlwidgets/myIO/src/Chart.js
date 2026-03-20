@@ -6,7 +6,7 @@ import { deriveChartRender, applyDerivedScales } from "./derive/chart-render.js"
 import { validateLayers } from "./derive/validate.js";
 import { transitionGrouped, transitionStacked, getGroupedDataObject } from "./renderers/groupedBarHelpers.js";
 import { syncAxes } from "./layout/axes.js";
-import { syncLegend, updateOrdinalColorLegend as updateOrdinalColorLegendImpl } from "./layout/legend.js";
+import { syncLegend, syncOrdinalLegendData } from "./layout/legend.js";
 import { syncReferenceLines } from "./layout/reference-lines.js";
 import { getChartHeight, initializeScaffold, updateScaffoldLayout } from "./layout/scaffold.js";
 import { hideChartTooltip, initializeTooltip, removeHoverOverlay } from "./tooltip.js";
@@ -344,7 +344,7 @@ export class myIOchart {
   }
 
   updateOrdinalColorLegend(ly) {
-    updateOrdinalColorLegendImpl(this, ly);
+    syncOrdinalLegendData(this, ly);
   }
 
   updateRegression(color, label) {
