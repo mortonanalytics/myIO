@@ -49,8 +49,9 @@ composite_ridgeline <- function(data, mapping, label, color, options) {
     if (is.null(density_data) || nrow(density_data) == 0L) next
 
     baseline <- i
+    density_data$density <- density_data$high_y
     density_data$low_y <- baseline
-    density_data$high_y <- baseline + density_data$high_y * scale_factor
+    density_data$high_y <- baseline + density_data$density * scale_factor
 
     layers[[length(layers) + 1L]] <- list(
       type = "area",

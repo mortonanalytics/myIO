@@ -53,15 +53,28 @@ export function processScales(chart, lys, semantics) {
   var x_bands = [];
   var y_bands = [];
   var scaleSemantics = semantics || {};
+  var globalXExtentFields = scaleSemantics.xExtentFields || ["x_var"];
   var yExtentFields = scaleSemantics.yExtentFields || ["y_var"];
 
   lys.forEach(function(d) {
-    var x_var = d.mapping.x_var;
-    var x = d3.extent(d.data, function(e) {
-      return +e[x_var];
+    var layerXFields = (d.scaleHints && Array.isArray(d.scaleHints.xExtentFields))
+      ? d.scaleHints.xExtentFields
+      : globalXExtentFields;
+    var xValues = [];
+    layerXFields.forEach(function(field) {
+      var dataField = d.mapping[field] || field;
+      var values = d.data.map(function(e) {
+        return +e[dataField];
+      });
+      xValues = xValues.concat(values);
     });
+    var xLayerExtent = d3.extent(xValues.length > 0 ? xValues : [0]);
+
+    var layerYFields = (d.scaleHints && Array.isArray(d.scaleHints.yExtentFields))
+      ? d.scaleHints.yExtentFields
+      : yExtentFields;
     var yValues = [];
-    yExtentFields.forEach(function(field) {
+    layerYFields.forEach(function(field) {
       var dataField = d.mapping[field] || field;
       var values = d.data.map(function(e) {
         return +e[dataField];
@@ -72,11 +85,12 @@ export function processScales(chart, lys, semantics) {
       return e;
     });
 
-    x_extents.push(x);
+    x_extents.push(xLayerExtent);
     y_extents.push([
       yExtent[0],
       yExtent[1]
     ]);
+    var x_var = d.mapping.x_var;
     x_bands.push(d.data.map(function(e) {
       return e[x_var];
     }));

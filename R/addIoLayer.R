@@ -58,6 +58,7 @@ addIoLayer <- function(myIO,
       sl <- sub_layers[[i]]
       transform_fn <- get_transform(sl$transform)
       transformed <- transform_fn(sl$data, sl$mapping, options)
+      layer_options <- if (!is.null(sl$options)) modifyList(options, sl$options) else options
       myIO$x$config$layers <- c(
         myIO$x$config$layers,
         list(build_layer(
@@ -65,9 +66,10 @@ addIoLayer <- function(myIO,
           layer_data = as_layer_rows(transformed$data),
           layer_mapping = sl$mapping, layer_color = sl$color,
           layer_transform_meta = transformed$meta,
-          options = options, transform = sl$transform,
+          options = layer_options, transform = sl$transform,
           layer_id = layer_id, order = i,
-          composite = type, composite_role = sl$role
+          composite = type, composite_role = sl$role,
+          scale_hints = sl$scaleHints
         ))
       )
     }
@@ -117,7 +119,8 @@ addIoLayer <- function(myIO,
 
 build_layer <- function(layer_type, layer_label, layer_data, layer_mapping, layer_color,
                         layer_transform_meta, options, transform, layer_id, order,
-                        derived_from = NULL, composite = NULL, composite_role = NULL) {
+                        derived_from = NULL, composite = NULL, composite_role = NULL,
+                        scale_hints = NULL) {
   layer <- list(
     id = if (order == 1L) layer_id else sprintf("%s_sub_%02d", layer_id, order),
     type = layer_type,
@@ -137,6 +140,9 @@ build_layer <- function(layer_type, layer_label, layer_data, layer_mapping, laye
   if (!is.null(composite)) {
     layer$`_composite` <- composite
     layer$`_compositeRole` <- composite_role
+  }
+  if (!is.null(scale_hints)) {
+    layer$scaleHints <- scale_hints
   }
   layer
 }

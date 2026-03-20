@@ -13,23 +13,56 @@ composite_violin <- function(data, mapping, label, color, options) {
   position_lookup <- stats::setNames(positions, group_labels)
   group_colors <- if (is.null(color)) rep_len(OKABE_ITO_PALETTE, length(group_labels)) else rep_len(color, length(group_labels))
 
+  # Compute density for each group and find global max for scaling
+  density_list <- vector("list", length(group_values))
+  max_density <- 0
+  for (i in seq_along(group_values)) {
+    group_value <- group_values[[i]]
+    group_data <- data[data[[mapping$x_var]] == group_value, , drop = FALSE]
+    dens <- transform_density(group_data, mapping, list(mirror = FALSE, bandwidth = bandwidth))$data
+    if (nrow(dens) > 0) {
+      max_density <- max(max_density, max(dens$high_y, na.rm = TRUE))
+    }
+    density_list[[i]] <- dens
+  }
+
+  # Scale density so the maximum width fills the box half-width
+  scale_factor <- if (max_density > 0) box_half_width / max_density else 1
+
   layers <- list()
 
   for (i in seq_along(group_values)) {
-    group_value <- group_values[[i]]
     group_label <- group_labels[[i]]
-    group_data <- data[data[[mapping$x_var]] == group_value, , drop = FALSE]
-    density_data <- transform_density(group_data, mapping, list(mirror = TRUE, bandwidth = bandwidth))$data
-    density_data[["group"]] <- group_label
+    dens <- density_list[[i]]
+    if (is.null(dens) || nrow(dens) == 0) next
+
+    pos <- positions[[i]]
+    violin_data <- data.frame(
+      x_var = rep(pos, nrow(dens)),
+      y_var = dens$x_var,
+      low_x = pos - dens$high_y * scale_factor,
+      high_x = pos + dens$high_y * scale_factor,
+      density = dens$high_y,
+      group = rep(group_label, nrow(dens)),
+      stringsAsFactors = FALSE,
+      check.names = FALSE
+    )
 
     layers[[length(layers) + 1L]] <- list(
       type = "area",
-      data = density_data,
-      mapping = list(x_var = "x_var", low_y = "low_y", high_y = "high_y", group = "group"),
+      data = violin_data,
+      mapping = list(x_var = "x_var", y_var = "y_var", low_x = "low_x", high_x = "high_x", group = "group"),
       transform = "identity",
       label = paste0(label, " - ", group_label, " - density"),
       color = group_colors[[i]],
-      role = "density_area"
+      role = "density_area",
+      options = list(orientation = "vertical"),
+      scaleHints = list(
+        xScaleType = "linear",
+        yScaleType = "linear",
+        xExtentFields = list("low_x", "high_x"),
+        yExtentFields = list("y_var")
+      )
     )
   }
 

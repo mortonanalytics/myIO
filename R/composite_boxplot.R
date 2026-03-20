@@ -38,6 +38,8 @@ composite_boxplot <- function(data, mapping, label, color, options) {
   whisker_low_data <- data.frame(
     x_var = positions,
     y_var = whisker_df$whisker_low,
+    low_y = whisker_df$whisker_low,
+    high_y = quantiles$q1,
     group = groups,
     stringsAsFactors = FALSE,
     check.names = FALSE
@@ -46,6 +48,8 @@ composite_boxplot <- function(data, mapping, label, color, options) {
   whisker_high_data <- data.frame(
     x_var = positions,
     y_var = whisker_df$whisker_high,
+    low_y = quantiles$q3,
+    high_y = whisker_df$whisker_high,
     group = groups,
     stringsAsFactors = FALSE,
     check.names = FALSE
@@ -84,7 +88,7 @@ composite_boxplot <- function(data, mapping, label, color, options) {
     list(
       type = "point",
       data = whisker_low_data,
-      mapping = list(x_var = "x_var", y_var = "y_var", group = "group"),
+      mapping = list(x_var = "x_var", y_var = "y_var", low_y = "low_y", high_y = "high_y", group = "group"),
       transform = "identity",
       label = paste0(label, " - whisker_low"),
       color = base_color,
@@ -93,7 +97,7 @@ composite_boxplot <- function(data, mapping, label, color, options) {
     list(
       type = "point",
       data = whisker_high_data,
-      mapping = list(x_var = "x_var", y_var = "y_var", group = "group"),
+      mapping = list(x_var = "x_var", y_var = "y_var", low_y = "low_y", high_y = "high_y", group = "group"),
       transform = "identity",
       label = paste0(label, " - whisker_high"),
       color = base_color,

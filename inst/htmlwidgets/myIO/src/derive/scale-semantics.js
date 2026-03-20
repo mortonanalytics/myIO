@@ -3,6 +3,7 @@ import { getRendererForLayer } from "../registry.js";
 const DEFAULT_SCALE_HINTS = {
   xScaleType: "linear",
   yScaleType: "linear",
+  xExtentFields: ["x_var"],
   yExtentFields: ["y_var"],
   domainMerge: "union"
 };
@@ -40,6 +41,7 @@ export function resolveScaleSemantics(chart, layers) {
   var flipAxis = !!(chart && chart.config && chart.config.scales && chart.config.scales.flipAxis);
   var xTypes = new Set();
   var yTypes = new Set();
+  var xExtentFields = new Set();
   var yExtentFields = new Set();
   var domainMerge = "union";
 
@@ -52,6 +54,11 @@ export function resolveScaleSemantics(chart, layers) {
 
     xTypes.add(resolvedX);
     yTypes.add(resolvedY);
+
+    var xFields = hints && Array.isArray(hints.xExtentFields) ? hints.xExtentFields : DEFAULT_SCALE_HINTS.xExtentFields;
+    xFields.forEach(function(field) {
+      xExtentFields.add(field);
+    });
 
     var fields = hints && Array.isArray(hints.yExtentFields) ? hints.yExtentFields : DEFAULT_SCALE_HINTS.yExtentFields;
     fields.forEach(function(field) {
@@ -73,6 +80,7 @@ export function resolveScaleSemantics(chart, layers) {
   return {
     xScaleType: xTypes.size > 0 ? Array.from(xTypes)[0] : resolveFallbackScaleType(chart, "x"),
     yScaleType: yTypes.size > 0 ? Array.from(yTypes)[0] : resolveFallbackScaleType(chart, "y"),
+    xExtentFields: Array.from(xExtentFields).length > 0 ? Array.from(xExtentFields) : DEFAULT_SCALE_HINTS.xExtentFields,
     yExtentFields: Array.from(yExtentFields).length > 0 ? Array.from(yExtentFields) : DEFAULT_SCALE_HINTS.yExtentFields,
     domainMerge: domainMerge
   };
