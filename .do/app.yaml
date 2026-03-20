@@ -10,5 +10,9 @@ services:
     http_port: 3838
     instance_count: 1
     instance_size_slug: basic-xxs
+    envs:
+      - key: PROXY_SECRET
+        value: ae536a852eb7111946bfe8ae0b48013232ace79bc6cdcbf57108a2d16490da15
+        type: SECRET
     routes:
       - path: /

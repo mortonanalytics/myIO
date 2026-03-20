@@ -3,6 +3,20 @@ library(bslib)
 library(dplyr)
 library(myIO)
 
+# -- Proxy auth filter ----------------------------------------------------
+proxy_secret <- Sys.getenv("PROXY_SECRET", "")
+
+auth_filter <- function(req) {
+  # Health checks from DO use GET / with no headers — allow them
+
+  if (identical(req$HTTP_USER_AGENT, "DigitalOcean Health Check")) return(NULL)
+  secret <- req$HTTP_X_PROXY_SECRET
+  if (nzchar(proxy_secret) && !identical(secret, proxy_secret)) {
+    return(httpResponse(status = 403L, content = "Forbidden"))
+  }
+  NULL
+}
+
 # -- Landing page --------------------------------------------------------
 home_tab <- nav_panel(
   title = "Home",
@@ -366,4 +380,4 @@ server <- function(input, output) {
   })
 }
 
-shinyApp(ui = ui, server = server)
+shinyApp(ui = ui, server = server, options = list(filter = auth_filter))
