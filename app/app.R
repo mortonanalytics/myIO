@@ -68,7 +68,7 @@ chart_panel <- function(title, output_id, height = "500px", ...) {
   nav_panel(
     title = title,
     layout_sidebar(
-      sidebar = sidebar(width = 260, ...),
+      sidebar = sidebar(width = "260px", ...),
       card(
         full_screen = TRUE,
         card_body(
@@ -107,8 +107,7 @@ ui <- page_navbar(
     fg = "#212529",
     font_scale = 0.95
   ),
-  bg = "#1a1a2e",
-  inverse = TRUE,
+  navbar_options = navbar_options(bg = "#1a1a2e", theme = "dark"),
 
   home_tab,
 
