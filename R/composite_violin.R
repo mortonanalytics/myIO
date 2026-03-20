@@ -37,21 +37,17 @@ composite_violin <- function(data, mapping, label, color, options) {
     quantiles <- transform_quantiles(data, mapping, options)$data
     quantile_groups <- as.character(quantiles[[mapping$x_var]])
 
-    box_data <- do.call(rbind, lapply(seq_along(quantile_groups), function(i) {
-      group_label <- quantile_groups[[i]]
-      pos <- position_lookup[[group_label]]
-      data.frame(
-        x_var = c(pos - box_half_width, pos + box_half_width),
-        low_y = c(quantiles$q1[[i]], quantiles$q1[[i]]),
-        high_y = c(quantiles$q3[[i]], quantiles$q3[[i]]),
-        group = c(group_label, group_label),
-        stringsAsFactors = FALSE,
-        check.names = FALSE
-      )
-    }))
+    box_data <- data.frame(
+      x_var = unname(position_lookup[quantile_groups]),
+      low_y = quantiles$q1,
+      high_y = quantiles$q3,
+      group = quantile_groups,
+      stringsAsFactors = FALSE,
+      check.names = FALSE
+    )
 
     layers[[length(layers) + 1L]] <- list(
-      type = "area",
+      type = "rangeBar",
       data = box_data,
       mapping = list(x_var = "x_var", low_y = "low_y", high_y = "high_y", group = "group"),
       transform = "identity",

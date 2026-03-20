@@ -13,6 +13,7 @@ const COMPAT_GROUP = {
   candlestick: "axes-continuous",
   waterfall: "axes-categorical",
   ridgeline: "axes-binned",
+  rangeBar: "axes-continuous",
   sankey: "standalone-flow",
   hexbin: "axes-hex",
   treemap: "standalone-treemap",

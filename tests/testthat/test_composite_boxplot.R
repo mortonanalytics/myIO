@@ -18,7 +18,7 @@ test_that("boxplot expands to box, whisker, median, and outlier layers", {
   expect_length(layers, 4)
   expect_true(all(vapply(layers, function(layer) identical(layer$`_composite`, "boxplot"), logical(1))))
   expect_true(all(vapply(layers, function(layer) !is.null(layer$`_compositeRole`), logical(1))))
-  expect_true(any(vapply(layers, function(layer) layer$type == "area" && layer$`_compositeRole` == "iqr_box", logical(1))))
+  expect_true(any(vapply(layers, function(layer) layer$type == "rangeBar" && layer$`_compositeRole` == "iqr_box", logical(1))))
   expect_true(any(vapply(layers, function(layer) layer$type == "point" && layer$`_compositeRole` == "median", logical(1))))
 })
 

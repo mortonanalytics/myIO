@@ -177,6 +177,7 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
     boxplot = c("x_var", "y_var"),
     violin = c("x_var", "y_var"),
     ridgeline = c("x_var", "y_var", "group"),
+    rangeBar = c("x_var", "low_y", "high_y"),
     area = c("x_var", "low_y", "high_y"),
     hexbin = c("x_var", "y_var", "radius"),
     c("x_var", "y_var")

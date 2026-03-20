@@ -28,7 +28,7 @@ ALLOWED_TYPES <- c(
   "line", "point", "bar", "hexbin", "treemap", "gauge",
   "donut", "area", "groupedBar", "histogram", "heatmap",
   "candlestick", "waterfall", "sankey", "boxplot", "violin",
-  "ridgeline"
+  "ridgeline", "rangeBar"
 )
 
 COMPATIBILITY_GROUPS <- list(
@@ -45,6 +45,7 @@ COMPATIBILITY_GROUPS <- list(
   boxplot = "axes-categorical",
   violin = "axes-categorical",
   ridgeline = "axes-binned",
+  rangeBar = "axes-continuous",
   hexbin = "axes-hex",
   treemap = "standalone-treemap",
   donut = "standalone-donut",
@@ -77,6 +78,7 @@ VALID_COMBINATIONS <- list(
   boxplot = c("identity"),
   violin = c("identity"),
   ridgeline = c("identity"),
+  rangeBar = c("identity"),
   hexbin = c("identity"),
   treemap = c("identity"),
   donut = c("identity"),

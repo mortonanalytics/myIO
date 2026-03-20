@@ -26,18 +26,14 @@ composite_boxplot <- function(data, mapping, label, color, options) {
   median_df <- transform_median(data, mapping, options)$data
   outliers_df <- transform_outliers(data, mapping, options)$data
 
-  box_data <- do.call(rbind, lapply(seq_along(groups), function(i) {
-    group_value <- groups[[i]]
-    pos <- positions[[i]]
-    data.frame(
-      x_var = c(pos - box_half_width, pos + box_half_width),
-      low_y = c(quantiles$q1[[i]], quantiles$q1[[i]]),
-      high_y = c(quantiles$q3[[i]], quantiles$q3[[i]]),
-      group = c(group_value, group_value),
-      stringsAsFactors = FALSE,
-      check.names = FALSE
-    )
-  }))
+  box_data <- data.frame(
+    x_var = positions,
+    low_y = quantiles$q1,
+    high_y = quantiles$q3,
+    group = groups,
+    stringsAsFactors = FALSE,
+    check.names = FALSE
+  )
 
   whisker_low_data <- data.frame(
     x_var = positions,
@@ -77,7 +73,7 @@ composite_boxplot <- function(data, mapping, label, color, options) {
 
   layers <- list(
     list(
-      type = "area",
+      type = "rangeBar",
       data = box_data,
       mapping = list(x_var = "x_var", low_y = "low_y", high_y = "high_y", group = "group"),
       transform = "identity",

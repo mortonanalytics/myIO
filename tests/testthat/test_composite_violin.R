@@ -16,7 +16,10 @@ test_that("violin expands to density, box, and median layers", {
 
   layers <- w$x$config$layers
   expect_length(layers, 4)
-  expect_true(sum(vapply(layers, function(layer) layer$type == "area", logical(1))) >= 2)
+  area_count <- sum(vapply(layers, function(layer) layer$type == "area", logical(1)))
+  range_count <- sum(vapply(layers, function(layer) layer$type == "rangeBar", logical(1)))
+  expect_true(area_count >= 1)
+  expect_true(range_count >= 1)
   expect_true(any(vapply(layers, function(layer) layer$`_compositeRole` == "density_area", logical(1))))
   expect_true(any(vapply(layers, function(layer) layer$`_compositeRole` == "iqr_box", logical(1))))
   expect_true(any(vapply(layers, function(layer) layer$`_compositeRole` == "median", logical(1))))

@@ -389,7 +389,7 @@ test_that("Boxplot widget expands into primitive layers", {
 
   layers <- w$x$config$layers
   expect_length(layers, 4)
-  expect_true(all(sapply(layers, function(l) l$type %in% c("area", "point"))))
+  expect_true(all(sapply(layers, function(l) l$type %in% c("rangeBar", "point"))))
   save_widget(w, "17_boxplot")
 })
 
