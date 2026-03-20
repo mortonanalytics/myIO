@@ -49,7 +49,9 @@ export class LineRenderer {
       })
       .attr("d", valueLine);
 
-    this.renderPoints(chart, layer);
+    if (layer.transform !== "lm") {
+      this.renderPoints(chart, layer);
+    }
   }
 
   renderPoints(chart, layer) {

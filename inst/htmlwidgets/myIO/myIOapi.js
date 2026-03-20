@@ -47,7 +47,9 @@
       linePath.merge(newLinePath).transition().ease(d3.easeQuad).duration(transitionSpeed).style("opacity", 1).style("stroke-width", strokeWidth(chart)).style("stroke", function(d) {
         return resolveColor(chart, d[0][layer.mapping.group], layer.color);
       }).attr("d", valueLine);
-      this.renderPoints(chart, layer);
+      if (layer.transform !== "lm") {
+        this.renderPoints(chart, layer);
+      }
     }
     renderPoints(chart, layer) {
       var transitionSpeed = chart.options.transition.speed;
