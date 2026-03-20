@@ -465,7 +465,7 @@
     });
     var flattenedData = [].concat.apply([], data);
     var nestedData = d3.group(flattenedData, function(d) {
-      return d[x_var[0]][0];
+      return d[x_var[0]];
     });
     var groupedKeys = [...Array(keys.length).keys()];
     var currentY = chart.newY ? chart.newY : y_var[0];
