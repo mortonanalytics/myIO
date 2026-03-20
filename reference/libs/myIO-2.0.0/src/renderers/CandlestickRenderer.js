@@ -19,7 +19,8 @@ export class CandlestickRenderer {
     var highVar = layer.mapping.high;
     var lowVar = layer.mapping.low;
     var closeVar = layer.mapping.close;
-    var width = Math.max(4, Math.min(12, (chart.width - (chart.margin.left + chart.margin.right)) / Math.max(layer.data.length * 3, 1)));
+    var chartWidth = chart.width - (chart.margin.left + chart.margin.right);
+    var width = Math.max(6, Math.min(40, chartWidth / Math.max(layer.data.length * 2.5, 1)));
     var self = this;
 
     var candle = chart.chart

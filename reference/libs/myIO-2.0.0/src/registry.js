@@ -14,6 +14,7 @@ import { HeatmapRenderer } from "./renderers/HeatmapRenderer.js";
 import { CandlestickRenderer } from "./renderers/CandlestickRenderer.js";
 import { WaterfallRenderer } from "./renderers/WaterfallRenderer.js";
 import { SankeyRenderer } from "./renderers/SankeyRenderer.js";
+import { RangeBarRenderer } from "./renderers/RangeBarRenderer.js";
 
 export function registerRenderer(type, RendererClass) {
   if (rendererRegistry.has(type)) {
@@ -88,6 +89,9 @@ export function registerBuiltInRenderers() {
   }
   if (!rendererRegistry.has(SankeyRenderer.type)) {
     registerRenderer(SankeyRenderer.type, new SankeyRenderer());
+  }
+  if (!rendererRegistry.has(RangeBarRenderer.type)) {
+    registerRenderer(RangeBarRenderer.type, new RangeBarRenderer());
   }
 
   return rendererRegistry;

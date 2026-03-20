@@ -47,7 +47,9 @@
       linePath.merge(newLinePath).transition().ease(d3.easeQuad).duration(transitionSpeed).style("opacity", 1).style("stroke-width", strokeWidth(chart)).style("stroke", function(d) {
         return resolveColor(chart, d[0][layer.mapping.group], layer.color);
       }).attr("d", valueLine);
-      this.renderPoints(chart, layer);
+      if (layer.transform !== "lm") {
+        this.renderPoints(chart, layer);
+      }
     }
     renderPoints(chart, layer) {
       var transitionSpeed = chart.options.transition.speed;
@@ -1675,7 +1677,13 @@
       cells.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
       var cellWidth = chart.xScale.bandwidth ? chart.xScale.bandwidth() : 0;
       var cellHeight = chart.yScale.bandwidth ? chart.yScale.bandwidth() : 0;
-      var newCells = cells.enter().append("rect").attr("class", tagName("heatmap", chart.element.id, layer.label)).attr("clip-path", "url(#" + chart.element.id + "clip)").style("opacity", 0);
+      var newCells = cells.enter().append("rect").attr("class", tagName("heatmap", chart.element.id, layer.label)).attr("clip-path", "url(#" + chart.element.id + "clip)").attr("x", function(d) {
+        return chart.xScale(d[xVar]);
+      }).attr("y", function(d) {
+        return chart.yScale(d[yVar]);
+      }).attr("width", cellWidth).attr("height", cellHeight).attr("fill", function(d) {
+        return chart.colorContinuous(+d[valueVar]);
+      }).style("opacity", 0);
       cells.merge(newCells).transition().ease(d3.easeQuad).duration(transitionSpeed).attr("x", function(d) {
         return chart.xScale(d[xVar]);
       }).attr("y", function(d) {
@@ -1721,7 +1729,8 @@
       var highVar = layer.mapping.high;
       var lowVar = layer.mapping.low;
       var closeVar = layer.mapping.close;
-      var width = Math.max(4, Math.min(12, (chart.width - (chart.margin.left + chart.margin.right)) / Math.max(layer.data.length * 3, 1)));
+      var chartWidth = chart.width - (chart.margin.left + chart.margin.right);
+      var width = Math.max(6, Math.min(40, chartWidth / Math.max(layer.data.length * 2.5, 1)));
       var self2 = this;
       var candle = chart.chart.selectAll("." + tagName("candlestick", chart.element.id, layer.label)).data(layer.data);
       candle.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
@@ -1775,7 +1784,21 @@
       var hasColorArray = Array.isArray(layer.color);
       var bars = chart.chart.selectAll("." + tagName("waterfall", chart.element.id, layer.label)).data(layer.data);
       bars.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
-      var newBars = bars.enter().append("rect").attr("class", tagName("waterfall", chart.element.id, layer.label)).attr("clip-path", "url(#" + chart.element.id + "clip)").style("opacity", 0);
+      var newBars = bars.enter().append("rect").attr("class", tagName("waterfall", chart.element.id, layer.label)).attr("clip-path", "url(#" + chart.element.id + "clip)").attr("x", function(d) {
+        return chart.xScale(d[xVar]);
+      }).attr("width", bandwidth).attr("y", function(d) {
+        return chart.yScale(Math.max(+d._base_y, +d._cumulative_y));
+      }).attr("height", function(d) {
+        return Math.abs(chart.yScale(+d._base_y) - chart.yScale(+d._cumulative_y));
+      }).attr("fill", function(d, i) {
+        if (hasColorArray) {
+          return layer.color[i % layer.color.length];
+        }
+        if (d._is_total) {
+          return "#888";
+        }
+        return +d._cumulative_y >= +d._base_y ? "#4CAF50" : "#F44336";
+      }).style("opacity", 0);
       bars.merge(newBars).transition().ease(d3.easeQuad).duration(transitionSpeed).style("opacity", 1).attr("x", function(d) {
         return chart.xScale(d[xVar]);
       }).attr("width", bandwidth).attr("y", function(d) {
@@ -1794,7 +1817,15 @@
       var connectors = layer.data.slice(0, Math.max(layer.data.length - 1, 0));
       var connectorLines = chart.chart.selectAll("." + tagName("waterfall-connector", chart.element.id, layer.label)).data(connectors);
       connectorLines.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
-      var newConnectors = connectorLines.enter().append("line").attr("class", tagName("waterfall-connector", chart.element.id, layer.label)).attr("clip-path", "url(#" + chart.element.id + "clip)").style("stroke", "#666").style("stroke-width", 1.5).style("opacity", 0);
+      var newConnectors = connectorLines.enter().append("line").attr("class", tagName("waterfall-connector", chart.element.id, layer.label)).attr("clip-path", "url(#" + chart.element.id + "clip)").style("stroke", "#666").style("stroke-width", 1.5).style("stroke-dasharray", "4 2").attr("x1", function(d, i) {
+        return chart.xScale(layer.data[i][xVar]) + bandwidth;
+      }).attr("x2", function(d, i) {
+        return chart.xScale(layer.data[i + 1][xVar]);
+      }).attr("y1", function(d) {
+        return chart.yScale(+d._cumulative_y);
+      }).attr("y2", function(d) {
+        return chart.yScale(+d._cumulative_y);
+      }).style("opacity", 0);
       connectorLines.merge(newConnectors).transition().ease(d3.easeQuad).duration(transitionSpeed).style("opacity", 1).attr("x1", function(d, i) {
         return chart.xScale(layer.data[i][xVar]) + bandwidth;
       }).attr("x2", function(d, i) {
@@ -1861,18 +1892,19 @@
       chart.colorDiscrete = chart.derived.colorDiscrete;
       var link = chart.chart.selectAll("." + tagName("sankey", chart.element.id, layer.label)).data(graph.links);
       link.exit().transition().duration(chart.options.transition.speed).style("opacity", 0).remove();
-      var newLink = link.enter().append("path").attr("class", tagName("sankey", chart.element.id, layer.label)).attr("fill", "none").attr("stroke", "#888").attr("stroke-opacity", 0.4).attr("clip-path", "url(#" + chart.element.id + "clip)");
-      link.merge(newLink).transition().ease(d3.easeQuad).duration(chart.options.transition.speed).attr("d", d3.sankeyLinkHorizontal()).attr("stroke-width", function(d) {
+      var newLink = link.enter().append("path").attr("class", tagName("sankey", chart.element.id, layer.label)).attr("fill", "none").attr("stroke-opacity", 0.4).attr("clip-path", "url(#" + chart.element.id + "clip)").attr("d", d3.sankeyLinkHorizontal()).attr("stroke-width", function(d) {
+        return Math.max(1, d.width);
+      }).attr("stroke", function(d) {
+        return chart.colorDiscrete(d.source.name);
+      }).style("opacity", 0);
+      link.merge(newLink).transition().ease(d3.easeQuad).duration(chart.options.transition.speed).style("opacity", 1).attr("d", d3.sankeyLinkHorizontal()).attr("stroke-width", function(d) {
         return Math.max(1, d.width);
       }).attr("stroke", function(d) {
         return chart.colorDiscrete(d.source.name);
       });
       var node = chart.chart.selectAll("." + tagName("sankey-node", chart.element.id, layer.label)).data(graph.nodes);
       node.exit().transition().duration(chart.options.transition.speed).style("opacity", 0).remove();
-      var newNode = node.enter().append("rect").attr("class", tagName("sankey-node", chart.element.id, layer.label)).attr("clip-path", "url(#" + chart.element.id + "clip)").attr("fill", function(d) {
-        return chart.colorDiscrete(d.name);
-      });
-      node.merge(newNode).transition().ease(d3.easeQuad).duration(chart.options.transition.speed).attr("x", function(d) {
+      var newNode = node.enter().append("rect").attr("class", tagName("sankey-node", chart.element.id, layer.label)).attr("clip-path", "url(#" + chart.element.id + "clip)").attr("x", function(d) {
         return d.x0;
       }).attr("y", function(d) {
         return d.y0;
@@ -1882,6 +1914,23 @@
         return Math.max(1, d.y1 - d.y0);
       }).attr("fill", function(d) {
         return chart.colorDiscrete(d.name);
+      }).style("opacity", 0);
+      node.merge(newNode).transition().ease(d3.easeQuad).duration(chart.options.transition.speed).style("opacity", 1).attr("x", function(d) {
+        return d.x0;
+      }).attr("y", function(d) {
+        return d.y0;
+      }).attr("width", function(d) {
+        return d.x1 - d.x0;
+      }).attr("height", function(d) {
+        return Math.max(1, d.y1 - d.y0);
+      }).attr("fill", function(d) {
+        return chart.colorDiscrete(d.name);
+      });
+      var labelClass = tagName("sankey-label", chart.element.id, layer.label);
+      chart.chart.selectAll("." + labelClass).remove();
+      graph.nodes.forEach(function(d) {
+        var isLeft = d.x0 < width / 2;
+        chart.chart.append("text").attr("class", labelClass).attr("x", isLeft ? d.x1 + 6 : d.x0 - 6).attr("y", (d.y0 + d.y1) / 2).attr("dy", "0.35em").attr("text-anchor", isLeft ? "start" : "end").style("font-size", "12px").style("fill", "var(--chart-text-color, #333)").text(d.name);
       });
     }
     formatTooltip(chart, d, layer) {
@@ -1907,6 +1956,64 @@
     remove(chart, layer) {
       chart.dom.chartArea.selectAll("." + tagName("sankey", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
       chart.dom.chartArea.selectAll("." + tagName("sankey-node", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
+      chart.dom.chartArea.selectAll("." + tagName("sankey-label", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
+    }
+  };
+
+  // inst/htmlwidgets/myIO/src/renderers/RangeBarRenderer.js
+  var RangeBarRenderer = class {
+    static type = "rangeBar";
+    static traits = { hasAxes: true, referenceLines: false, legendType: "layer", binning: false, rolloverStyle: "element", scaleCapabilities: { invertX: false } };
+    static scaleHints = { xScaleType: "linear", yScaleType: "linear", yExtentFields: ["low_y", "high_y"], domainMerge: "union" };
+    static dataContract = { x_var: { required: true, numeric: true }, low_y: { required: true, numeric: true }, high_y: { required: true, numeric: true } };
+    render(chart, layer) {
+      var transitionSpeed = chart.options.transition.speed;
+      var xVar = layer.mapping.x_var;
+      var lowVar = layer.mapping.low_y;
+      var highVar = layer.mapping.high_y;
+      var barWidth = layer.options && layer.options.rangeBarWidth ? layer.options.rangeBarWidth : Math.max(6, Math.min(60, (chart.width - (chart.margin.left + chart.margin.right)) / Math.max(layer.data.length * 3, 1)));
+      var bars = chart.chart.selectAll("." + tagName("rangeBar", chart.element.id, layer.label)).data(layer.data);
+      bars.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
+      var newBars = bars.enter().append("rect").attr("class", tagName("rangeBar", chart.element.id, layer.label)).attr("clip-path", "url(#" + chart.element.id + "clip)").attr("x", function(d) {
+        return chart.xScale(+d[xVar]) - barWidth / 2;
+      }).attr("y", function(d) {
+        return chart.yScale(Math.max(+d[lowVar], +d[highVar]));
+      }).attr("width", barWidth).attr("height", function(d) {
+        return Math.abs(chart.yScale(+d[lowVar]) - chart.yScale(+d[highVar]));
+      }).attr("fill", function(d) {
+        if (typeof chart.colorDiscrete === "function" && d[layer.mapping.group]) {
+          return chart.colorDiscrete(d[layer.mapping.group]);
+        }
+        return layer.color || "#6b7280";
+      }).style("opacity", 0);
+      bars.merge(newBars).transition().ease(d3.easeQuad).duration(transitionSpeed).attr("x", function(d) {
+        return chart.xScale(+d[xVar]) - barWidth / 2;
+      }).attr("y", function(d) {
+        return chart.yScale(Math.max(+d[lowVar], +d[highVar]));
+      }).attr("width", barWidth).attr("height", function(d) {
+        return Math.abs(chart.yScale(+d[lowVar]) - chart.yScale(+d[highVar]));
+      }).attr("fill", function(d) {
+        if (typeof chart.colorDiscrete === "function" && d[layer.mapping.group]) {
+          return chart.colorDiscrete(d[layer.mapping.group]);
+        }
+        return layer.color || "#6b7280";
+      }).style("opacity", 1);
+    }
+    getHoverSelector(chart, layer) {
+      return "." + tagName("rangeBar", chart.dom.element.id, layer.label);
+    }
+    formatTooltip(chart, d, layer) {
+      return {
+        title: layer.mapping.x_var + ": " + d[layer.mapping.x_var],
+        body: layer.mapping.low_y + ": " + d[layer.mapping.low_y] + ", " + layer.mapping.high_y + ": " + d[layer.mapping.high_y],
+        color: layer.color,
+        label: layer.label,
+        value: d[layer.mapping.high_y],
+        raw: d
+      };
+    }
+    remove(chart, layer) {
+      chart.dom.chartArea.selectAll("." + tagName("rangeBar", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
     }
   };
 
@@ -1979,6 +2086,9 @@
     }
     if (!rendererRegistry.has(SankeyRenderer.type)) {
       registerRenderer(SankeyRenderer.type, new SankeyRenderer());
+    }
+    if (!rendererRegistry.has(RangeBarRenderer.type)) {
+      registerRenderer(RangeBarRenderer.type, new RangeBarRenderer());
     }
     return rendererRegistry;
   }
@@ -2661,6 +2771,7 @@
     candlestick: "axes-continuous",
     waterfall: "axes-categorical",
     ridgeline: "axes-binned",
+    rangeBar: "axes-continuous",
     sankey: "standalone-flow",
     hexbin: "axes-hex",
     treemap: "standalone-treemap",
