@@ -46,39 +46,43 @@ export function createBins(chart, lys) {
     .range([chartHeight - (m.top + m.bottom), 0]);
 }
 
-export function processScales(chart, lys) {
+export function processScales(chart, lys, semantics) {
   var m = chart.margin;
   var x_extents = [];
   var y_extents = [];
   var x_bands = [];
   var y_bands = [];
+  var scaleSemantics = semantics || {};
+  var yExtentFields = scaleSemantics.yExtentFields || ["y_var"];
 
   lys.forEach(function(d) {
-    var currentY = chart.newY ? chart.newY : d.mapping.y_var;
     var x_var = d.mapping.x_var;
-    var y_var = currentY;
-    var low_y = d.mapping.low_y;
-    var high_y = d.mapping.high_y;
     var x = d3.extent(d.data, function(e) {
       return +e[x_var];
     });
-    var y = d3.extent(d.data, function(e) {
-      return +e[y_var];
+    var yValues = [];
+    yExtentFields.forEach(function(field) {
+      var dataField = d.mapping[field] || field;
+      var values = d.data.map(function(e) {
+        return +e[dataField];
+      });
+      yValues = yValues.concat(values);
     });
-    var y1 = d3.extent(d.data, function(e) {
-      return +e[low_y];
-    });
-    var y2 = d3.extent(d.data, function(e) {
-      return +e[high_y];
+    var yExtent = d3.extent(yValues.length > 0 ? yValues : [0], function(e) {
+      return e;
     });
 
     x_extents.push(x);
-    y_extents.push([d3.min([y[0], y1[0], y2[0]]), d3.max([y[1], y1[1], y2[1]])]);
+    y_extents.push([
+      yExtent[0],
+      yExtent[1]
+    ]);
     x_bands.push(d.data.map(function(e) {
       return e[x_var];
     }));
     y_bands.push(d.data.map(function(e) {
-      return e[y_var];
+      var dataField = d.mapping.y_var || "y_var";
+      return e[dataField];
     }));
   });
 
@@ -122,25 +126,25 @@ export function processScales(chart, lys) {
 
   var chartHeight = getChartHeight(chart);
 
-  switch (chart.config.scales.categoricalScale.xAxis) {
-    case true:
+  switch (scaleSemantics.xScaleType) {
+    case "band":
       chart.derived.xScale = d3.scaleBand()
         .range([0, chart.width - (m.left + m.right)])
         .domain(chart.config.scales.flipAxis === true ? chart.derived.yBanded : chart.derived.xBanded);
       break;
-    case false:
+    default:
       chart.derived.xScale = d3.scaleLinear()
         .range([0, chart.width - (m.right + m.left)])
         .domain(chart.config.scales.flipAxis === true ? yExtent : xExtent);
   }
 
-  switch (chart.config.scales.categoricalScale.yAxis) {
-    case true:
+  switch (scaleSemantics.yScaleType) {
+    case "band":
       chart.derived.yScale = d3.scaleBand()
         .range([chartHeight - (m.top + m.bottom), 0])
         .domain(chart.config.scales.flipAxis === true ? chart.derived.xBanded : chart.derived.yBanded);
       break;
-    case false:
+    default:
       chart.derived.yScale = d3.scaleLinear()
         .range([chartHeight - (m.top + m.bottom), 0])
         .domain(chart.config.scales.flipAxis === true ? xExtent : yExtent);

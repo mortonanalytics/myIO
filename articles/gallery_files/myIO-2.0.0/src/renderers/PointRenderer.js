@@ -3,6 +3,7 @@ import { pointRadius, resolveColor, tagName } from "../utils/responsive.js";
 export class PointRenderer {
   static type = "point";
   static traits = { hasAxes: true, referenceLines: true, legendType: "layer", binning: false, rolloverStyle: "element", scaleCapabilities: { invertX: false } };
+  static scaleHints = { xScaleType: "linear", yScaleType: "linear", yExtentFields: ["y_var"], domainMerge: "union" };
   static dataContract = { x_var: { required: true, numeric: true }, y_var: { required: true, numeric: true } };
 
   render(chart, layer) {

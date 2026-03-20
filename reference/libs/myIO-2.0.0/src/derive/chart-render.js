@@ -1,4 +1,5 @@
 import { createBins, processScales } from "./scales.js";
+import { resolveScaleSemantics } from "./scale-semantics.js";
 import { getRendererForLayer } from "../registry.js";
 
 export function getPrimaryType(chart) {
@@ -6,7 +7,7 @@ export function getPrimaryType(chart) {
 }
 
 export function isAxesChart(type) {
-  return ["treemap", "gauge", "donut"].indexOf(type) === -1;
+  return ["treemap", "gauge", "donut", "sankey"].indexOf(type) === -1;
 }
 
 export function usesHistogramBins(type) {
@@ -14,15 +15,15 @@ export function usesHistogramBins(type) {
 }
 
 export function usesContinuousLegend(type) {
-  return type === "hexbin";
+  return type === "hexbin" || type === "heatmap";
 }
 
 export function usesOrdinalLegend(type) {
-  return type === "treemap" || type === "donut";
+  return type === "treemap" || type === "donut" || type === "sankey";
 }
 
 export function needsReferenceLines(type) {
-  return ["bar", "groupedBar", "line", "point", "area"].indexOf(type) > -1;
+  return ["bar", "groupedBar", "line", "point", "area", "candlestick", "waterfall"].indexOf(type) > -1;
 }
 
 export function deriveChartRender(chart) {
@@ -51,6 +52,7 @@ export function applyDerivedScales(chart, renderState) {
   if (renderState.histogram) {
     createBins(chart, chart.derived.currentLayers);
   } else {
-    processScales(chart, chart.derived.currentLayers);
+    var semantics = resolveScaleSemantics(chart, chart.derived.currentLayers);
+    processScales(chart, chart.derived.currentLayers, semantics);
   }
 }

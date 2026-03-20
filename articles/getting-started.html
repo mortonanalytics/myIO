@@ -212,6 +212,56 @@ for the UI - <code><a href="../reference/myIO-shiny.html">renderMyIO()</a></code
 <span><span class="fu">shinyApp</span><span class="op">(</span><span class="va">ui</span>, <span class="va">server</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="chart-types">Chart Types<a class="anchor" aria-label="anchor" href="#chart-types"></a>
+</h2>
+<p>myIO supports 17 chart types. See the <a href="chart-types.html">Chart Types</a> vignette for examples of
+each.</p>
+<table class="table">
+<thead><tr class="header">
+<th>Category</th>
+<th>Types</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Basic</td>
+<td>
+<code>line</code>, <code>point</code>, <code>bar</code>,
+<code>area</code>, <code>groupedBar</code>
+</td>
+</tr>
+<tr class="even">
+<td>Statistical</td>
+<td>
+<code>histogram</code>, <code>hexbin</code>
+</td>
+</tr>
+<tr class="odd">
+<td>Standalone</td>
+<td>
+<code>donut</code>, <code>gauge</code>, <code>treemap</code>,
+<code>sankey</code>
+</td>
+</tr>
+<tr class="even">
+<td>Financial</td>
+<td>
+<code>candlestick</code>, <code>waterfall</code>,
+<code>heatmap</code>
+</td>
+</tr>
+<tr class="odd">
+<td>Composite</td>
+<td>
+<code>boxplot</code>, <code>violin</code>,
+<code>ridgeline</code>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Composite types automatically expand into multiple sub-layers using
+the appropriate transforms (density, quantiles, etc.).</p>
+</div>
+<div class="section level2">
 <h2 id="available-option-functions">Available Option Functions<a class="anchor" aria-label="anchor" href="#available-option-functions"></a>
 </h2>
 <table class="table">

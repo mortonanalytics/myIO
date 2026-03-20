@@ -1,15 +1,11 @@
-import { isMobile, responsiveValue } from "../utils/responsive.js";
+import { responsiveValue } from "../utils/responsive.js";
 
 export function getChartHeight(chart) {
-  if (chart.options.suppressLegend == false) {
-    return responsiveValue(chart, chart.height, chart.height * 0.8);
-  }
-
   return chart.height;
 }
 
 export function initializeScaffold(chart) {
-  d3.select(chart.element).selectAll(".myIO-svg, .buttonDiv, .toolTip").remove();
+  d3.select(chart.element).selectAll(".myIO-svg, .buttonDiv, .toolTip, .myIO-fab, .myIO-panel, .myIO-sheet-backdrop").remove();
   d3.select(chart.element).style("position", "relative");
 
   chart.svg = d3.select(chart.element)
@@ -27,16 +23,6 @@ export function initializeScaffold(chart) {
   chart.chart = chart.plot
     .append("g")
     .attr("class", "myIO-chart-area");
-
-  if (chart.options.suppressLegend == false) {
-    chart.legendTranslate = isMobile(chart) ? "translate(" + chart.margin.left + "," + chart.height * 0.8 + ")" : "translate(" + chart.width + ",0)";
-    chart.legendArea = chart.svg
-      .append("g")
-      .attr("class", "myIO-legend-area")
-      .attr("transform", chart.legendTranslate)
-      .style("height", responsiveValue(chart, chart.height, chart.height * 0.2))
-      .style("width", responsiveValue(chart, chart.totalWidth - chart.width, chart.totalWidth - chart.margin.left));
-  }
 }
 
 function buildAriaLabel(chart) {
@@ -66,14 +52,6 @@ export function updateScaffoldLayout(chart) {
       .attr("y", 0)
       .attr("width", chart.width - (chart.margin.left + chart.margin.right))
       .attr("height", getChartHeight(chart) - (chart.margin.top + chart.margin.bottom));
-  }
-
-  if (chart.options.suppressLegend == false && chart.legendArea) {
-    chart.legendTranslate = isMobile(chart) ? "translate(" + chart.margin.left + "," + chart.height * 0.8 + ")" : "translate(" + chart.width + ",0)";
-    chart.legendArea
-      .attr("transform", chart.legendTranslate)
-      .style("height", responsiveValue(chart, chart.height, chart.height * 0.2))
-      .style("width", responsiveValue(chart, chart.totalWidth - chart.width, chart.totalWidth - chart.margin.left));
   }
 }
 

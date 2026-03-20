@@ -8,10 +8,19 @@ specify a transform with the `transform` argument in
 
 ### Available Transforms
 
-| Transform    | Description                                    |
-|--------------|------------------------------------------------|
-| `"identity"` | Default. Passes data through unchanged.        |
-| `"lm"`       | Fits a linear model and returns fitted values. |
+| Transform      | Description                                                                               | Used by                          |
+|----------------|-------------------------------------------------------------------------------------------|----------------------------------|
+| `"identity"`   | Default. Passes data through unchanged.                                                   | All types                        |
+| `"lm"`         | Fits a linear model and returns fitted values.                                            | `line`                           |
+| `"cumulative"` | Computes running totals with base/cumulative columns.                                     | `waterfall` (auto-applied)       |
+| `"quantiles"`  | Computes Q1, median, Q3, whisker bounds per group.                                        | `boxplot` (internal)             |
+| `"median"`     | Computes group medians.                                                                   | `boxplot`, `violin` (internal)   |
+| `"outliers"`   | Returns rows beyond 1.5x IQR fences.                                                      | `boxplot` (internal)             |
+| `"density"`    | Kernel density estimation via [`stats::density()`](https://rdrr.io/r/stats/density.html). | `violin`, `ridgeline` (internal) |
+
+Transforms marked “internal” are applied automatically by composite
+chart types. You typically use `"identity"` (default) or `"lm"`
+directly.
 
 ### Linear Model Trend Line
 
@@ -42,23 +51,54 @@ The `lm` transform fits `y ~ x` using
 values with the fitted values. The resulting line is sorted by x so it
 renders as a smooth trend.
 
+### Cumulative Transform (Waterfall)
+
+The `"cumulative"` transform is auto-applied when you use
+`type = "waterfall"`. It computes running totals and produces `_base_y`
+and `_cumulative_y` columns that the waterfall renderer uses for
+floating bars:
+
+``` r
+df <- data.frame(
+  step  = c("Start", "Sales", "Returns", "Total"),
+  value = c(100, 50, -20, NA),
+  is_total = c(FALSE, FALSE, FALSE, TRUE)
+)
+
+myIO() |>
+  addIoLayer(
+    type = "waterfall",
+    label = "bridge",
+    data = df,
+    mapping = list(x_var = "step", y_var = "value", total = "is_total")
+  ) |>
+  defineCategoricalAxis(xAxis = TRUE)
+```
+
 ### Transform + Type Compatibility
 
 Not every transform works with every chart type. The table below shows
 valid combinations:
 
-| Type           | Supported Transforms |
-|----------------|----------------------|
-| `"line"`       | `"identity"`, `"lm"` |
-| `"point"`      | `"identity"`         |
-| `"bar"`        | `"identity"`         |
-| `"area"`       | `"identity"`         |
-| `"groupedBar"` | `"identity"`         |
-| `"histogram"`  | `"identity"`         |
-| `"hexbin"`     | `"identity"`         |
-| `"treemap"`    | `"identity"`         |
-| `"donut"`      | `"identity"`         |
-| `"gauge"`      | `"identity"`         |
+| Type            | Supported Transforms         |
+|-----------------|------------------------------|
+| `"line"`        | `"identity"`, `"lm"`         |
+| `"point"`       | `"identity"`                 |
+| `"bar"`         | `"identity"`                 |
+| `"area"`        | `"identity"`                 |
+| `"groupedBar"`  | `"identity"`                 |
+| `"histogram"`   | `"identity"`                 |
+| `"hexbin"`      | `"identity"`                 |
+| `"treemap"`     | `"identity"`                 |
+| `"donut"`       | `"identity"`                 |
+| `"gauge"`       | `"identity"`                 |
+| `"heatmap"`     | `"identity"`                 |
+| `"candlestick"` | `"identity"`                 |
+| `"waterfall"`   | `"identity"`, `"cumulative"` |
+| `"sankey"`      | `"identity"`                 |
+| `"boxplot"`     | `"identity"`                 |
+| `"violin"`      | `"identity"`                 |
+| `"ridgeline"`   | `"identity"`                 |
 
 If you pass an incompatible combination,
 [`addIoLayer()`](https://mortonanalytics.github.io/myIO/reference/addIoLayer.md)

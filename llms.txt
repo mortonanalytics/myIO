@@ -1,11 +1,11 @@
 # myIO
 
 An R package for creating interactive `d3.js` visualizations using
-`htmlwidgets`. Supports 10 chart types including scatter plots, line
+`htmlwidgets`. Supports 17 chart types including scatter plots, line
 charts, bar charts, treemaps, and more — all composable through a piped
 API.
 
-[Live Demo](http://www.morton-analytics.com/shiny/myio_demo/)
+[Live Demo](https://mortonanalytics.github.io/myIO/)
 
 ## Installation
 
@@ -43,18 +43,25 @@ myIO() |>
 
 ## Supported Chart Types
 
-| Type              | `type` value   |
-|-------------------|----------------|
-| Scatter plot      | `"point"`      |
-| Line chart        | `"line"`       |
-| Bar chart         | `"bar"`        |
-| Grouped bar chart | `"groupedBar"` |
-| Area chart        | `"area"`       |
-| Histogram         | `"histogram"`  |
-| Donut chart       | `"donut"`      |
-| Gauge chart       | `"gauge"`      |
-| Hexbin plot       | `"hexbin"`     |
-| Treemap           | `"treemap"`    |
+| Type              | `type` value    |
+|-------------------|-----------------|
+| Scatter plot      | `"point"`       |
+| Line chart        | `"line"`        |
+| Bar chart         | `"bar"`         |
+| Grouped bar chart | `"groupedBar"`  |
+| Area chart        | `"area"`        |
+| Histogram         | `"histogram"`   |
+| Heatmap           | `"heatmap"`     |
+| Candlestick       | `"candlestick"` |
+| Waterfall         | `"waterfall"`   |
+| Sankey            | `"sankey"`      |
+| Boxplot           | `"boxplot"`     |
+| Violin            | `"violin"`      |
+| Ridgeline         | `"ridgeline"`   |
+| Donut chart       | `"donut"`       |
+| Gauge chart       | `"gauge"`       |
+| Hexbin plot       | `"hexbin"`      |
+| Treemap           | `"treemap"`     |
 
 ## `addIoLayer()`
 

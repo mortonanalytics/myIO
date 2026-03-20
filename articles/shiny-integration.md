@@ -194,6 +194,13 @@ myIOOutput("chart1", width = "600px", height = "400px")
 myIOOutput("chart2", width = "100%", height = "500px")
 ```
 
+## Live Demo
+
+The full myIO chart gallery is deployed as a Shiny app. Try all 17 chart
+types interactively:
+
+[Open in new tab](https://www.morton-analytics.com/myio/)
+
 ## Tips
 
 - **Transitions**: Use `setTransitionSpeed(speed = 0)` to disable

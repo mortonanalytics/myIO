@@ -160,6 +160,23 @@ server <- function(input, output) {
 shinyApp(ui, server)
 ```
 
+## Chart Types
+
+myIO supports 17 chart types. See the [Chart
+Types](https://mortonanalytics.github.io/myIO/articles/chart-types.md)
+vignette for examples of each.
+
+| Category    | Types                                        |
+|-------------|----------------------------------------------|
+| Basic       | `line`, `point`, `bar`, `area`, `groupedBar` |
+| Statistical | `histogram`, `hexbin`                        |
+| Standalone  | `donut`, `gauge`, `treemap`, `sankey`        |
+| Financial   | `candlestick`, `waterfall`, `heatmap`        |
+| Composite   | `boxplot`, `violin`, `ridgeline`             |
+
+Composite types automatically expand into multiple sub-layers using the
+appropriate transforms (density, quantiles, etc.).
+
 ## Available Option Functions
 
 | Function                                                                                               | Purpose                                         |

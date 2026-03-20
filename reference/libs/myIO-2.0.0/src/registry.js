@@ -10,6 +10,10 @@ import { HexbinRenderer } from "./renderers/HexbinRenderer.js";
 import { TreemapRenderer } from "./renderers/TreemapRenderer.js";
 import { DonutRenderer } from "./renderers/DonutRenderer.js";
 import { GaugeRenderer } from "./renderers/GaugeRenderer.js";
+import { HeatmapRenderer } from "./renderers/HeatmapRenderer.js";
+import { CandlestickRenderer } from "./renderers/CandlestickRenderer.js";
+import { WaterfallRenderer } from "./renderers/WaterfallRenderer.js";
+import { SankeyRenderer } from "./renderers/SankeyRenderer.js";
 
 export function registerRenderer(type, RendererClass) {
   if (rendererRegistry.has(type)) {
@@ -72,6 +76,18 @@ export function registerBuiltInRenderers() {
   }
   if (!rendererRegistry.has(GaugeRenderer.type)) {
     registerRenderer(GaugeRenderer.type, new GaugeRenderer());
+  }
+  if (!rendererRegistry.has(HeatmapRenderer.type)) {
+    registerRenderer(HeatmapRenderer.type, new HeatmapRenderer());
+  }
+  if (!rendererRegistry.has(CandlestickRenderer.type)) {
+    registerRenderer(CandlestickRenderer.type, new CandlestickRenderer());
+  }
+  if (!rendererRegistry.has(WaterfallRenderer.type)) {
+    registerRenderer(WaterfallRenderer.type, new WaterfallRenderer());
+  }
+  if (!rendererRegistry.has(SankeyRenderer.type)) {
+    registerRenderer(SankeyRenderer.type, new SankeyRenderer());
   }
 
   return rendererRegistry;

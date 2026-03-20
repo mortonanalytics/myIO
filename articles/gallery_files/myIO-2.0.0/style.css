@@ -36,6 +36,12 @@
   --chart-ref-line-color: #9ca3af;
   --chart-ref-line-width: 2px;
   --chart-legend-inactive-opacity: 0.4;
+  --chart-sheet-bg: #ffffff;
+  --chart-sheet-border: rgba(17, 24, 39, 0.1);
+  --chart-sheet-shadow: 0 20px 45px rgba(15, 23, 42, 0.18);
+  --chart-sheet-backdrop: rgba(15, 23, 42, 0.32);
+  --chart-sheet-surface: rgba(243, 244, 246, 0.9);
+  --chart-sheet-accent: #111827;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -153,6 +159,237 @@
   background: transparent;
 }
 
+.myIO-fab {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 21;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--chart-sheet-accent);
+  background: var(--chart-sheet-bg);
+  box-shadow: var(--chart-sheet-shadow);
+  cursor: pointer;
+  transition: transform var(--chart-transition-speed) ease, box-shadow var(--chart-transition-speed) ease, opacity var(--chart-transition-speed) ease;
+}
+
+.myIO-fab:hover {
+  transform: translateY(-1px);
+}
+
+.myIO-fab:focus-visible {
+  outline: none;
+  box-shadow: var(--chart-sheet-shadow), var(--chart-focus-ring);
+}
+
+.myIO-fab svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  pointer-events: none;
+}
+
+.myIO-sheet-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  background: var(--chart-sheet-backdrop);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--chart-transition-speed) ease;
+}
+
+.myIO-sheet-backdrop--open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.myIO-panel {
+  position: absolute;
+  z-index: 21;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--chart-sheet-bg);
+  color: var(--chart-text-color);
+  box-shadow: var(--chart-sheet-shadow);
+  opacity: 0;
+  pointer-events: all;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  transition: transform var(--chart-transition-speed) ease, opacity var(--chart-transition-speed) ease;
+  will-change: transform, opacity;
+}
+
+.myIO-panel--bottom {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 60%;
+  padding: 8px 16px calc(16px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--chart-sheet-border);
+  border-radius: 16px 16px 0 0;
+  transform: translateY(100%);
+}
+
+.myIO-panel--side {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 260px;
+  max-width: 100%;
+  padding: 16px 14px;
+  border-left: 1px solid var(--chart-sheet-border);
+  border-radius: 16px 0 0 16px;
+  transform: translateX(100%);
+}
+
+.myIO-panel--open {
+  opacity: 1;
+}
+
+.myIO-panel--open.myIO-panel--bottom,
+.myIO-panel--open.myIO-panel--side {
+  transform: translate(0, 0);
+}
+
+.myIO-sheet-handle {
+  display: none;
+  align-self: center;
+  width: 42px;
+  height: 5px;
+  margin: 2px 0 4px;
+  border-radius: 999px;
+  background: var(--chart-sheet-surface);
+}
+
+.myIO-sheet-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.myIO-sheet-section-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--chart-text-color);
+}
+
+.myIO-sheet-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.myIO-sheet-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 36px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  transition: background-color var(--chart-transition-speed) ease, opacity var(--chart-transition-speed) ease;
+}
+
+.myIO-sheet-legend-item:hover {
+  background: var(--chart-button-hover-bg);
+}
+
+.myIO-sheet-legend-item:focus-visible {
+  outline: none;
+  box-shadow: var(--chart-focus-ring);
+}
+
+.myIO-sheet-legend-item[aria-checked="false"] {
+  opacity: var(--chart-legend-inactive-opacity);
+}
+
+.myIO-sheet-swatch {
+  flex: 0 0 auto;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.myIO-sheet-legend-label {
+  flex: 1 1 auto;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.myIO-sheet-legend-state {
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: var(--chart-text-color);
+  opacity: 0.8;
+}
+
+.myIO-sheet-gradient {
+  height: 16px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f1f5f9 0%, #94a3b8 50%, #0f172a 100%);
+}
+
+.myIO-sheet-gradient-ticks {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.myIO-sheet-gradient-ticks span {
+  font-size: 12px;
+  line-height: 1.2;
+  color: var(--chart-text-color);
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .myIO-sheet-handle {
+    display: block;
+  }
+}
+
+@media (min-width: 601px) {
+  .myIO-panel--side {
+    max-height: none;
+  }
+}
+
+.myIO-sheet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.myIO-sheet-actions .button {
+  width: auto;
+  min-width: 44px;
+  height: 36px;
+  gap: 6px;
+  padding: 0 12px;
+  background: var(--chart-sheet-surface);
+  color: var(--chart-sheet-accent);
+}
+
+.myIO-sheet-actions .button:hover {
+  background-color: rgba(15, 23, 42, 0.08);
+}
+
 .button {
   color: var(--chart-button-color);
   border-radius: var(--chart-radius-md);
@@ -225,5 +462,8 @@
 
 @media print {
   .buttonDiv { display: none !important; }
+  .myIO-fab,
+  .myIO-panel,
+  .myIO-sheet-backdrop { display: none !important; }
   .toolTip { display: none !important; }
 }

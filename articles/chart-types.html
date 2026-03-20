@@ -65,7 +65,7 @@
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<p>myIO supports 10 chart types via the <code>type</code> argument in
+<p>myIO supports 17 chart types via the <code>type</code> argument in
 <code><a href="../reference/addIoLayer.html">addIoLayer()</a></code>. This vignette shows an example of each.</p>
 <p>All examples use built-in R datasets so you can copy and run them
 directly.</p>
@@ -78,6 +78,10 @@ combine types within compatible groups (e.g. point + line + area), but
 standalone types like treemap or gauge cannot be mixed with other
 types.</p>
 <table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
 <thead><tr class="header">
 <th>Group</th>
 <th>Types</th>
@@ -86,34 +90,47 @@ types.</p>
 <tr class="odd">
 <td>Continuous axes</td>
 <td>
-<code>line</code>, <code>point</code>, <code>area</code>
+<code>line</code>, <code>point</code>, <code>area</code>,
+<code>candlestick</code>
 </td>
 </tr>
 <tr class="even">
 <td>Categorical axes</td>
 <td>
-<code>bar</code>, <code>groupedBar</code>
+<code>bar</code>, <code>groupedBar</code>, <code>waterfall</code>,
+<code>boxplot</code>, <code>violin</code>
 </td>
 </tr>
 <tr class="odd">
 <td>Binned axes</td>
-<td><code>histogram</code></td>
+<td>
+<code>histogram</code>, <code>ridgeline</code>
+</td>
 </tr>
 <tr class="even">
+<td>Matrix axes</td>
+<td><code>heatmap</code></td>
+</tr>
+<tr class="odd">
 <td>Standalone</td>
 <td>
 <code>hexbin</code>, <code>treemap</code>, <code>donut</code>,
-<code>gauge</code>
+<code>gauge</code>, <code>sankey</code>
 </td>
 </tr>
 </tbody>
 </table>
 <p>Continuous, categorical, and binned groups can be combined with each
-other. Standalone groups cannot be mixed.</p>
+other. Matrix and standalone groups cannot be mixed with other
+groups.</p>
+<hr>
 </div>
 <div class="section level2">
-<h2 id="line-chart">Line Chart<a class="anchor" aria-label="anchor" href="#line-chart"></a>
+<h2 id="basic-charts">Basic Charts<a class="anchor" aria-label="anchor" href="#basic-charts"></a>
 </h2>
+<div class="section level3">
+<h3 id="line-chart">Line Chart<a class="anchor" aria-label="anchor" href="#line-chart"></a>
+</h3>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
@@ -124,9 +141,9 @@ other. Standalone groups cannot be mixed.</p>
 <span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"Day"</span>, y_var <span class="op">=</span> <span class="st">"Temp"</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="point-scatter-chart">Point (Scatter) Chart<a class="anchor" aria-label="anchor" href="#point-scatter-chart"></a>
-</h2>
+<div class="section level3">
+<h3 id="point-scatter-chart">Point (Scatter) Chart<a class="anchor" aria-label="anchor" href="#point-scatter-chart"></a>
+</h3>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
@@ -137,9 +154,9 @@ other. Standalone groups cannot be mixed.</p>
 <span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"wt"</span>, y_var <span class="op">=</span> <span class="st">"mpg"</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="bar-chart">Bar Chart<a class="anchor" aria-label="anchor" href="#bar-chart"></a>
-</h2>
+<div class="section level3">
+<h3 id="bar-chart">Bar Chart<a class="anchor" aria-label="anchor" href="#bar-chart"></a>
+</h3>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
@@ -151,9 +168,9 @@ other. Standalone groups cannot be mixed.</p>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/defineCategoricalAxis.html">defineCategoricalAxis</a></span><span class="op">(</span>xAxis <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="area-chart">Area Chart<a class="anchor" aria-label="anchor" href="#area-chart"></a>
-</h2>
+<div class="section level3">
+<h3 id="area-chart">Area Chart<a class="anchor" aria-label="anchor" href="#area-chart"></a>
+</h3>
 <p>Area charts require <code>x_var</code>, <code>low_y</code>, and
 <code>high_y</code> in the mapping:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
@@ -170,9 +187,9 @@ other. Standalone groups cannot be mixed.</p>
 <span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"Day"</span>, low_y <span class="op">=</span> <span class="st">"TempLow"</span>, high_y <span class="op">=</span> <span class="st">"TempHigh"</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="grouped-bar-chart">Grouped Bar Chart<a class="anchor" aria-label="anchor" href="#grouped-bar-chart"></a>
-</h2>
+<div class="section level3">
+<h3 id="grouped-bar-chart">Grouped Bar Chart<a class="anchor" aria-label="anchor" href="#grouped-bar-chart"></a>
+</h3>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
@@ -184,9 +201,9 @@ other. Standalone groups cannot be mixed.</p>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/defineCategoricalAxis.html">defineCategoricalAxis</a></span><span class="op">(</span>xAxis <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="histogram">Histogram<a class="anchor" aria-label="anchor" href="#histogram"></a>
-</h2>
+<div class="section level3">
+<h3 id="histogram">Histogram<a class="anchor" aria-label="anchor" href="#histogram"></a>
+</h3>
 <p>Histograms use a <code>value</code> mapping instead of
 <code>x_var</code>/<code>y_var</code>:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
@@ -199,22 +216,22 @@ other. Standalone groups cannot be mixed.</p>
 <span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>value <span class="op">=</span> <span class="st">"mpg"</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="donut-chart">Donut Chart<a class="anchor" aria-label="anchor" href="#donut-chart"></a>
-</h2>
+<div class="section level3">
+<h3 id="donut-chart">Donut Chart<a class="anchor" aria-label="anchor" href="#donut-chart"></a>
+</h3>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
 <span>    type <span class="op">=</span> <span class="st">"donut"</span>,</span>
-<span>    color <span class="op">=</span> <span class="st">"steelblue"</span>,</span>
+<span>    color <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#E69F00"</span>, <span class="st">"#56B4E9"</span>, <span class="st">"#009E73"</span><span class="op">)</span>,</span>
 <span>    label <span class="op">=</span> <span class="st">"donut"</span>,</span>
-<span>    data <span class="op">=</span> <span class="va">mtcars</span>,</span>
+<span>    data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span><span class="va">mpg</span> <span class="op">~</span> <span class="va">cyl</span>, data <span class="op">=</span> <span class="va">mtcars</span>, FUN <span class="op">=</span> <span class="va">mean</span><span class="op">)</span>,</span>
 <span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"cyl"</span>, y_var <span class="op">=</span> <span class="st">"mpg"</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="gauge-chart">Gauge Chart<a class="anchor" aria-label="anchor" href="#gauge-chart"></a>
-</h2>
+<div class="section level3">
+<h3 id="gauge-chart">Gauge Chart<a class="anchor" aria-label="anchor" href="#gauge-chart"></a>
+</h3>
 <p>Gauges use a <code>value</code> mapping:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -226,9 +243,9 @@ other. Standalone groups cannot be mixed.</p>
 <span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>value <span class="op">=</span> <span class="st">"value"</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="hexbin-chart">Hexbin Chart<a class="anchor" aria-label="anchor" href="#hexbin-chart"></a>
-</h2>
+<div class="section level3">
+<h3 id="hexbin-chart">Hexbin Chart<a class="anchor" aria-label="anchor" href="#hexbin-chart"></a>
+</h3>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
@@ -239,9 +256,9 @@ other. Standalone groups cannot be mixed.</p>
 <span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"wt"</span>, y_var <span class="op">=</span> <span class="st">"mpg"</span>, radius <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="treemap">Treemap<a class="anchor" aria-label="anchor" href="#treemap"></a>
-</h2>
+<div class="section level3">
+<h3 id="treemap">Treemap<a class="anchor" aria-label="anchor" href="#treemap"></a>
+</h3>
 <p>Treemaps use a different mapping with <code>level_1</code> and
 <code>level_2</code> instead of <code>x_var</code> and
 <code>y_var</code>:</p>
@@ -253,13 +270,186 @@ other. Standalone groups cannot be mixed.</p>
 <span>    data <span class="op">=</span> <span class="va">mtcars</span>,</span>
 <span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>level_1 <span class="op">=</span> <span class="st">"vs"</span>, level_2 <span class="op">=</span> <span class="st">"cyl"</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
+<hr>
+</div>
+</div>
+<div class="section level2">
+<h2 id="phase-2-charts">Phase 2 Charts<a class="anchor" aria-label="anchor" href="#phase-2-charts"></a>
+</h2>
+<div class="section level3">
+<h3 id="heatmap">Heatmap<a class="anchor" aria-label="anchor" href="#heatmap"></a>
+</h3>
+<p>Heatmaps display a matrix of values with a continuous color scale.
+Both axes are categorical. Mapping requires <code>x_var</code>,
+<code>y_var</code>, and <code>value</code>:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span></span>
+<span>  quarter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Q1"</span>, <span class="st">"Q2"</span>, <span class="st">"Q3"</span>, <span class="st">"Q4"</span><span class="op">)</span>,</span>
+<span>  segment <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Low"</span>, <span class="st">"Mid"</span>, <span class="st">"High"</span><span class="op">)</span>,</span>
+<span>  stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">df</span><span class="op">$</span><span class="va">value</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">4</span>, <span class="fl">6</span>, <span class="fl">5</span>, <span class="fl">7</span>, <span class="fl">9</span>, <span class="fl">4</span>, <span class="fl">6</span>, <span class="fl">8</span>, <span class="fl">3</span>, <span class="fl">5</span>, <span class="fl">7</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
+<span>    type <span class="op">=</span> <span class="st">"heatmap"</span>,</span>
+<span>    color <span class="op">=</span> <span class="st">"#4E79A7"</span>,</span>
+<span>    label <span class="op">=</span> <span class="st">"Revenue"</span>,</span>
+<span>    data <span class="op">=</span> <span class="va">df</span>,</span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"quarter"</span>, y_var <span class="op">=</span> <span class="st">"segment"</span>, value <span class="op">=</span> <span class="st">"value"</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/defineCategoricalAxis.html">defineCategoricalAxis</a></span><span class="op">(</span>xAxis <span class="op">=</span> <span class="cn">TRUE</span>, yAxis <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/setAxisFormat.html">setAxisFormat</a></span><span class="op">(</span>xLabel <span class="op">=</span> <span class="st">"Quarter"</span>, yLabel <span class="op">=</span> <span class="st">"Segment"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="candlestick-ohlc">Candlestick (OHLC)<a class="anchor" aria-label="anchor" href="#candlestick-ohlc"></a>
+</h3>
+<p>Candlestick charts show open-high-low-close data. Green bars indicate
+close &gt;= open, red bars indicate close &lt; open. Mapping requires
+<code>x_var</code>, <code>open</code>, <code>high</code>,
+<code>low</code>, and <code>close</code>:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  day <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span>,</span>
+<span>  open  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">12</span>, <span class="fl">11</span>, <span class="fl">14</span>, <span class="fl">13</span>, <span class="fl">15</span>, <span class="fl">14</span>, <span class="fl">16</span>, <span class="fl">15</span>, <span class="fl">17</span><span class="op">)</span>,</span>
+<span>  high  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">14</span>, <span class="fl">15</span>, <span class="fl">14</span>, <span class="fl">17</span>, <span class="fl">16</span>, <span class="fl">18</span>, <span class="fl">17</span>, <span class="fl">19</span>, <span class="fl">18</span>, <span class="fl">20</span><span class="op">)</span>,</span>
+<span>  low   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">9</span>,  <span class="fl">11</span>, <span class="fl">10</span>, <span class="fl">13</span>, <span class="fl">12</span>, <span class="fl">14</span>, <span class="fl">13</span>, <span class="fl">15</span>, <span class="fl">14</span>, <span class="fl">16</span><span class="op">)</span>,</span>
+<span>  close <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">12</span>, <span class="fl">11</span>, <span class="fl">14</span>, <span class="fl">13</span>, <span class="fl">15</span>, <span class="fl">14</span>, <span class="fl">16</span>, <span class="fl">15</span>, <span class="fl">17</span>, <span class="fl">19</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
+<span>    type <span class="op">=</span> <span class="st">"candlestick"</span>,</span>
+<span>    label <span class="op">=</span> <span class="st">"Price"</span>,</span>
+<span>    data <span class="op">=</span> <span class="va">df</span>,</span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>      x_var <span class="op">=</span> <span class="st">"day"</span>, open <span class="op">=</span> <span class="st">"open"</span>,</span>
+<span>      high <span class="op">=</span> <span class="st">"high"</span>, low <span class="op">=</span> <span class="st">"low"</span>, close <span class="op">=</span> <span class="st">"close"</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/setAxisFormat.html">setAxisFormat</a></span><span class="op">(</span>xAxis <span class="op">=</span> <span class="st">".0f"</span>, yAxis <span class="op">=</span> <span class="st">"$,.0f"</span>,</span>
+<span>                xLabel <span class="op">=</span> <span class="st">"Day"</span>, yLabel <span class="op">=</span> <span class="st">"Price"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="waterfall">Waterfall<a class="anchor" aria-label="anchor" href="#waterfall"></a>
+</h3>
+<p>Waterfall charts show how an initial value is affected by sequential
+positive and negative changes. The <code>cumulative</code> transform is
+auto-applied. Mark summary rows with a <code>total</code> mapping:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  step  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Revenue"</span>, <span class="st">"COGS"</span>, <span class="st">"Gross Profit"</span>, <span class="st">"OpEx"</span>, <span class="st">"Net Income"</span><span class="op">)</span>,</span>
+<span>  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">500</span>, <span class="op">-</span><span class="fl">200</span>, <span class="cn">NA</span>, <span class="op">-</span><span class="fl">150</span>, <span class="cn">NA</span><span class="op">)</span>,</span>
+<span>  is_total <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">FALSE</span>, <span class="cn">FALSE</span>, <span class="cn">TRUE</span>, <span class="cn">FALSE</span>, <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
+<span>    type <span class="op">=</span> <span class="st">"waterfall"</span>,</span>
+<span>    label <span class="op">=</span> <span class="st">"P&amp;L"</span>,</span>
+<span>    data <span class="op">=</span> <span class="va">df</span>,</span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"step"</span>, y_var <span class="op">=</span> <span class="st">"value"</span>, total <span class="op">=</span> <span class="st">"is_total"</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/defineCategoricalAxis.html">defineCategoricalAxis</a></span><span class="op">(</span>xAxis <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/setAxisFormat.html">setAxisFormat</a></span><span class="op">(</span>yAxis <span class="op">=</span> <span class="st">"$,.0f"</span>, xLabel <span class="op">=</span> <span class="st">"Step"</span>, yLabel <span class="op">=</span> <span class="st">"Amount"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="sankey">Sankey<a class="anchor" aria-label="anchor" href="#sankey"></a>
+</h3>
+<p>Sankey diagrams show flows between nodes. Mapping requires
+<code>source</code>, <code>target</code>, and <code>value</code>. This
+is a standalone type and cannot be mixed with other charts:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  source <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Budget"</span>, <span class="st">"Budget"</span>, <span class="st">"Sales"</span>, <span class="st">"Sales"</span>, <span class="st">"Marketing"</span><span class="op">)</span>,</span>
+<span>  target <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Sales"</span>, <span class="st">"Marketing"</span>, <span class="st">"Revenue"</span>, <span class="st">"Leads"</span>, <span class="st">"Leads"</span><span class="op">)</span>,</span>
+<span>  value  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">40</span>, <span class="fl">20</span>, <span class="fl">30</span>, <span class="fl">10</span>, <span class="fl">15</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
+<span>    type <span class="op">=</span> <span class="st">"sankey"</span>,</span>
+<span>    color <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#4E79A7"</span>, <span class="st">"#F28E2B"</span>, <span class="st">"#E15759"</span>, <span class="st">"#76B7B2"</span>, <span class="st">"#59A14F"</span><span class="op">)</span>,</span>
+<span>    label <span class="op">=</span> <span class="st">"Flow"</span>,</span>
+<span>    data <span class="op">=</span> <span class="va">df</span>,</span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>source <span class="op">=</span> <span class="st">"source"</span>, target <span class="op">=</span> <span class="st">"target"</span>, value <span class="op">=</span> <span class="st">"value"</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="boxplot-composite">Boxplot (Composite)<a class="anchor" aria-label="anchor" href="#boxplot-composite"></a>
+</h3>
+<p>Boxplots are composite charts that automatically expand into area
+(IQR box), point (whiskers, median), and optional outlier layers.
+Mapping requires <code>x_var</code> (categorical) and <code>y_var</code>
+(numeric):</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
+<span>    type <span class="op">=</span> <span class="st">"boxplot"</span>,</span>
+<span>    color <span class="op">=</span> <span class="st">"#4E79A7"</span>,</span>
+<span>    label <span class="op">=</span> <span class="st">"Sepal Length"</span>,</span>
+<span>    data <span class="op">=</span> <span class="va">iris</span>,</span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"Species"</span>, y_var <span class="op">=</span> <span class="st">"Sepal.Length"</span><span class="op">)</span>,</span>
+<span>    options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>showOutliers <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/setAxisFormat.html">setAxisFormat</a></span><span class="op">(</span>xLabel <span class="op">=</span> <span class="st">"Species"</span>, yLabel <span class="op">=</span> <span class="st">"Sepal Length (cm)"</span><span class="op">)</span></span></code></pre></div>
+<p>Options: <code>showOutliers</code> (default TRUE),
+<code>whiskerType</code> (“tukey” or “minmax”).</p>
+</div>
+<div class="section level3">
+<h3 id="violin-composite">Violin (Composite)<a class="anchor" aria-label="anchor" href="#violin-composite"></a>
+</h3>
+<p>Violin plots show the distribution shape via a mirrored kernel
+density estimate. They expand into area (density), optional box (IQR),
+and optional median point layers:</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
+<span>    type <span class="op">=</span> <span class="st">"violin"</span>,</span>
+<span>    color <span class="op">=</span> <span class="st">"#59A14F"</span>,</span>
+<span>    label <span class="op">=</span> <span class="st">"Distribution"</span>,</span>
+<span>    data <span class="op">=</span> <span class="va">iris</span>,</span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"Species"</span>, y_var <span class="op">=</span> <span class="st">"Sepal.Length"</span><span class="op">)</span>,</span>
+<span>    options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>showBox <span class="op">=</span> <span class="cn">TRUE</span>, showMedian <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/setAxisFormat.html">setAxisFormat</a></span><span class="op">(</span>xLabel <span class="op">=</span> <span class="st">"Species"</span>, yLabel <span class="op">=</span> <span class="st">"Sepal Length (cm)"</span><span class="op">)</span></span></code></pre></div>
+<p>Options: <code>showBox</code> (TRUE), <code>showMedian</code> (TRUE),
+<code>showPoints</code> (FALSE), <code>bandwidth</code> (KDE bandwidth,
+default “nrd0”).</p>
+</div>
+<div class="section level3">
+<h3 id="ridgeline-composite">Ridgeline (Composite)<a class="anchor" aria-label="anchor" href="#ridgeline-composite"></a>
+</h3>
+<p>Ridgeline plots stack multiple density curves vertically for
+comparing distributions across groups. They expand into one area
+sub-layer per group value. Mapping requires <code>x_var</code> (numeric
+values), <code>y_var</code> (numeric), and <code>group</code>
+(categorical):</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="va">mtcars</span></span>
+<span><span class="va">df</span><span class="op">$</span><span class="va">cyl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">cyl</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
+<span>    type <span class="op">=</span> <span class="st">"ridgeline"</span>,</span>
+<span>    color <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#4E79A7"</span>, <span class="st">"#F28E2B"</span>, <span class="st">"#E15759"</span><span class="op">)</span>,</span>
+<span>    label <span class="op">=</span> <span class="st">"MPG by Cylinders"</span>,</span>
+<span>    data <span class="op">=</span> <span class="va">df</span>,</span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"hp"</span>, y_var <span class="op">=</span> <span class="st">"mpg"</span>, group <span class="op">=</span> <span class="st">"cyl"</span><span class="op">)</span>,</span>
+<span>    options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>overlap <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/setAxisFormat.html">setAxisFormat</a></span><span class="op">(</span>xLabel <span class="op">=</span> <span class="st">"Horsepower"</span>, yLabel <span class="op">=</span> <span class="st">"Density"</span><span class="op">)</span></span></code></pre></div>
+<p>Options: <code>overlap</code> (0-1, default 0.6),
+<code>bandwidth</code> (KDE bandwidth).</p>
+<hr>
+</div>
 </div>
 <div class="section level2">
 <h2 id="combining-chart-types">Combining Chart Types<a class="anchor" aria-label="anchor" href="#combining-chart-types"></a>
 </h2>
 <p>You can overlay compatible chart types on a single widget. Here we
 layer points, a connecting line, and a linear model trend line:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
 <span>    type <span class="op">=</span> <span class="st">"point"</span>,</span>
