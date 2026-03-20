@@ -1,4 +1,5 @@
 import { createBins, processScales } from "./scales.js";
+import { resolveScaleSemantics } from "./scale-semantics.js";
 import { getRendererForLayer } from "../registry.js";
 
 export function getPrimaryType(chart) {
@@ -51,6 +52,7 @@ export function applyDerivedScales(chart, renderState) {
   if (renderState.histogram) {
     createBins(chart, chart.derived.currentLayers);
   } else {
-    processScales(chart, chart.derived.currentLayers);
+    var semantics = resolveScaleSemantics(chart, chart.derived.currentLayers);
+    processScales(chart, chart.derived.currentLayers, semantics);
   }
 }

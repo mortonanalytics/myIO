@@ -3,6 +3,7 @@ import { isColorSchemeActive } from "../utils/responsive.js";
 export class DonutRenderer {
   static type = "donut";
   static traits = { hasAxes: false, referenceLines: false, legendType: "ordinal", binning: false, rolloverStyle: "none", scaleCapabilities: { invertX: false } };
+  static scaleHints = null;
   static dataContract = { x_var: { required: true }, y_var: { required: true, numeric: true } };
 
   render(chart, layer) {

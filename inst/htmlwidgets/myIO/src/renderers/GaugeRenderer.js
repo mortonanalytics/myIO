@@ -3,6 +3,7 @@ import { getChartHeight } from "../layout/scaffold.js";
 export class GaugeRenderer {
   static type = "gauge";
   static traits = { hasAxes: false, referenceLines: false, legendType: "none", binning: false, rolloverStyle: "none", scaleCapabilities: { invertX: false } };
+  static scaleHints = null;
   static dataContract = { value: { required: true, numeric: true } };
 
   render(chart, layer) {

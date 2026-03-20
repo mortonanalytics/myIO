@@ -3,6 +3,7 @@ import { resolveColor, tagName } from "../utils/responsive.js";
 export class HistogramRenderer {
   static type = "histogram";
   static traits = { hasAxes: true, referenceLines: false, legendType: "layer", binning: true, rolloverStyle: "element", scaleCapabilities: { invertX: false } };
+  static scaleHints = { xScaleType: "linear", yScaleType: "linear", yExtentFields: ["value"], domainMerge: "union" };
   static dataContract = { value: { required: true, numeric: true } };
 
   render(chart, layer) {

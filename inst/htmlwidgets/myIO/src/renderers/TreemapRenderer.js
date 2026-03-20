@@ -4,6 +4,7 @@ import { isColorSchemeActive, tagName } from "../utils/responsive.js";
 export class TreemapRenderer {
   static type = "treemap";
   static traits = { hasAxes: false, referenceLines: false, legendType: "ordinal", binning: false, rolloverStyle: "none", scaleCapabilities: { invertX: false } };
+  static scaleHints = null;
   static dataContract = { level_1: { required: true }, level_2: { required: true }, y_var: { required: false, numeric: true } };
 
   render(chart, layer) {

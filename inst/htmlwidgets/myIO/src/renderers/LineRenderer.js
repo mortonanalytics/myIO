@@ -3,6 +3,7 @@ import { pointRadius, resolveColor, strokeWidth, tagName } from "../utils/respon
 export class LineRenderer {
   static type = "line";
   static traits = { hasAxes: true, referenceLines: true, legendType: "layer", binning: false, rolloverStyle: "overlay", scaleCapabilities: { invertX: true } };
+  static scaleHints = { xScaleType: "linear", yScaleType: "linear", yExtentFields: ["y_var"], domainMerge: "union" };
   static dataContract = { x_var: { required: true, numeric: true, sorted: true }, y_var: { required: true, numeric: true } };
 
   render(chart, layer) {

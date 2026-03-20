@@ -4,6 +4,7 @@ import { resolveColor } from "../utils/responsive.js";
 export class GroupedBarRenderer {
   static type = "groupedBar";
   static traits = { hasAxes: true, referenceLines: true, legendType: "layer", binning: false, rolloverStyle: "element", scaleCapabilities: { invertX: false } };
+  static scaleHints = { xScaleType: "band", yScaleType: "linear", yExtentFields: ["y_var"], domainMerge: "union" };
   static dataContract = { x_var: { required: true }, y_var: { required: true, numeric: true }, group: { required: true } };
 
   render(chart, layer, layers) {
