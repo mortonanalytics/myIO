@@ -734,6 +734,244 @@
     image.src = imgsrc;
   }
 
+  // inst/htmlwidgets/myIO/src/layout/legend-data.js
+  function buildLegendData(chart, state) {
+    if (!chart || !chart.plotLayers || chart.plotLayers.length === 0) {
+      return null;
+    }
+    if (chart.options && chart.options.suppressLegend === true) {
+      return null;
+    }
+    var renderState = state || {};
+    if (renderState.continuousLegend) {
+      return buildContinuousLegendData(chart);
+    }
+    if (renderState.ordinalLegend) {
+      var ordinalLayer = (chart.currentLayers || chart.derived && chart.derived.currentLayers || chart.plotLayers)[0] || chart.plotLayers[0];
+      return buildOrdinalLegendData(chart, ordinalLayer);
+    }
+    return buildLayerLegendData(chart);
+  }
+  function buildOrdinalLegendData(chart, layer) {
+    if (!layer) {
+      return null;
+    }
+    if (!chart.runtime) {
+      chart.runtime = {};
+    }
+    if (!Array.isArray(chart.runtime._hiddenOrdinalSegments)) {
+      chart.runtime._hiddenOrdinalSegments = [];
+    }
+    var hidden = chart.runtime._hiddenOrdinalSegments;
+    var keys = [];
+    if (layer.type === "treemap" && layer.data && layer.data.children) {
+      keys = layer.data.children.map(function(d) {
+        return d.name;
+      });
+    } else if (layer.type === "donut" && Array.isArray(layer.data)) {
+      keys = layer.data.map(function(d) {
+        return d[layer.mapping.x_var];
+      });
+    }
+    return {
+      type: "ordinal",
+      items: keys.map(function(key) {
+        var swatchColor = "#6b7280";
+        if (typeof chart.colorDiscrete === "function") {
+          swatchColor = layer.type === "treemap" ? chart.colorDiscrete("treemap." + key) : chart.colorDiscrete(key);
+        }
+        if (!swatchColor) {
+          swatchColor = "#6b7280";
+        }
+        return {
+          key,
+          label: key,
+          color: swatchColor,
+          visible: hidden.indexOf(key) === -1,
+          kind: "segment"
+        };
+      })
+    };
+  }
+  function buildLayerLegendData(chart) {
+    var currentLayers = chart.currentLayers || chart.derived && chart.derived.currentLayers || [];
+    var visibleKeys = currentLayers.map(function(layer) {
+      return layer._composite || layer.label;
+    });
+    var hiddenKeys = Array.isArray(chart.runtime && chart.runtime._hiddenLayerKeys) ? chart.runtime._hiddenLayerKeys : [];
+    return {
+      type: "layer",
+      items: (chart.plotLayers || []).map(function(layer) {
+        var key = layer._composite || layer.label;
+        return {
+          key,
+          label: layer.label,
+          color: layer.color || "#6b7280",
+          visible: visibleKeys.indexOf(key) > -1 && hiddenKeys.indexOf(key) === -1,
+          kind: layer.type
+        };
+      })
+    };
+  }
+  function buildContinuousLegendData(chart) {
+    var scale = chart.colorContinuous || chart.derived && chart.derived.colorContinuous;
+    return {
+      type: "continuous",
+      items: [],
+      colorScale: scale || null,
+      domain: scale && typeof scale.domain === "function" ? scale.domain() : null
+    };
+  }
+
+  // inst/htmlwidgets/myIO/src/utils/export-legend.js
+  var LEGEND_PADDING = 16;
+  var SWATCH_SIZE = 12;
+  var SWATCH_GAP = 6;
+  var ITEM_GAP = 18;
+  var ROW_GAP = 6;
+  var FONT_SIZE = 12;
+  var GRADIENT_HEIGHT = 14;
+  var GRADIENT_WIDTH = 180;
+  function injectExportLegend(chart) {
+    var legendData = buildLegendData(chart, chart.runtime && chart.runtime._legendState);
+    if (!legendData || !legendData.type) {
+      return { extraHeight: 0, cleanup: function() {
+      } };
+    }
+    var visibleItems = legendData.items ? legendData.items.filter(function(d) {
+      return d.visible !== false;
+    }) : [];
+    if (legendData.type !== "continuous" && visibleItems.length === 0) {
+      return { extraHeight: 0, cleanup: function() {
+      } };
+    }
+    var svgNode = chart.svg.node();
+    var svgWidth = parseFloat(svgNode.getAttribute("width")) || chart.totalWidth || chart.width;
+    var origHeight = parseFloat(svgNode.getAttribute("height")) || chart.height;
+    var origViewBox = svgNode.getAttribute("viewBox");
+    var textColor = getTextColor(chart);
+    var g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    g.setAttribute("class", "myIO-export-legend");
+    var extraHeight;
+    if (legendData.type === "continuous") {
+      extraHeight = buildContinuousLegendSVG(g, legendData, svgWidth, textColor);
+    } else {
+      extraHeight = buildDiscreteLegendSVG(g, visibleItems, svgWidth, textColor);
+    }
+    g.setAttribute("transform", "translate(0," + origHeight + ")");
+    var newHeight = origHeight + extraHeight;
+    svgNode.appendChild(g);
+    svgNode.setAttribute("height", newHeight);
+    svgNode.setAttribute("viewBox", "0 0 " + svgWidth + " " + newHeight);
+    return {
+      extraHeight,
+      cleanup: function() {
+        svgNode.removeChild(g);
+        svgNode.setAttribute("height", origHeight);
+        svgNode.setAttribute("viewBox", origViewBox);
+      }
+    };
+  }
+  function buildDiscreteLegendSVG(g, items, svgWidth, textColor) {
+    var usableWidth = svgWidth - LEGEND_PADDING * 2;
+    var x = LEGEND_PADDING;
+    var y = LEGEND_PADDING;
+    var rowHeight = Math.max(SWATCH_SIZE, FONT_SIZE);
+    items.forEach(function(item) {
+      var labelWidth = estimateTextWidth(item.label, FONT_SIZE);
+      var itemWidth = SWATCH_SIZE + SWATCH_GAP + labelWidth;
+      if (x + itemWidth > LEGEND_PADDING + usableWidth && x > LEGEND_PADDING) {
+        x = LEGEND_PADDING;
+        y += rowHeight + ROW_GAP;
+      }
+      var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      rect.setAttribute("x", x);
+      rect.setAttribute("y", y);
+      rect.setAttribute("width", SWATCH_SIZE);
+      rect.setAttribute("height", SWATCH_SIZE);
+      rect.setAttribute("rx", 2);
+      rect.setAttribute("fill", item.color || "#6b7280");
+      g.appendChild(rect);
+      var text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("x", x + SWATCH_SIZE + SWATCH_GAP);
+      text.setAttribute("y", y + SWATCH_SIZE - 1);
+      text.setAttribute("font-family", "Roboto, Arial, sans-serif");
+      text.setAttribute("font-size", FONT_SIZE);
+      text.setAttribute("fill", textColor);
+      text.textContent = item.label;
+      g.appendChild(text);
+      x += itemWidth + ITEM_GAP;
+    });
+    return y + rowHeight + LEGEND_PADDING;
+  }
+  function buildContinuousLegendSVG(g, legendData, svgWidth, textColor) {
+    var scale = legendData.colorScale;
+    if (!scale) {
+      return 0;
+    }
+    var domain = legendData.domain || scale.domain();
+    var y = LEGEND_PADDING;
+    var gradientX = (svgWidth - GRADIENT_WIDTH) / 2;
+    var defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+    var linearGrad = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
+    var gradId = "export-legend-grad-" + Date.now();
+    linearGrad.setAttribute("id", gradId);
+    var steps = 8;
+    var min = domain[0];
+    var max = domain[domain.length - 1];
+    for (var i = 0; i < steps; i++) {
+      var t = steps === 1 ? 0 : i / (steps - 1);
+      var value = min + (max - min) * t;
+      var stop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+      stop.setAttribute("offset", Math.round(t * 100) + "%");
+      stop.setAttribute("stop-color", scale(value));
+      linearGrad.appendChild(stop);
+    }
+    defs.appendChild(linearGrad);
+    g.appendChild(defs);
+    var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    rect.setAttribute("x", gradientX);
+    rect.setAttribute("y", y);
+    rect.setAttribute("width", GRADIENT_WIDTH);
+    rect.setAttribute("height", GRADIENT_HEIGHT);
+    rect.setAttribute("rx", 3);
+    rect.setAttribute("fill", "url(#" + gradId + ")");
+    g.appendChild(rect);
+    var ticks = [];
+    if (typeof scale.ticks === "function") {
+      ticks = scale.ticks(5).map(String);
+    } else {
+      ticks = [String(min), String(max)];
+    }
+    var tickY = y + GRADIENT_HEIGHT + FONT_SIZE + 4;
+    ticks.forEach(function(tick, idx) {
+      var tickT = ticks.length === 1 ? 0.5 : idx / (ticks.length - 1);
+      var text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("x", gradientX + tickT * GRADIENT_WIDTH);
+      text.setAttribute("y", tickY);
+      text.setAttribute("text-anchor", "middle");
+      text.setAttribute("font-family", "Roboto, Arial, sans-serif");
+      text.setAttribute("font-size", FONT_SIZE);
+      text.setAttribute("fill", textColor);
+      text.textContent = tick;
+      g.appendChild(text);
+    });
+    return tickY + LEGEND_PADDING;
+  }
+  function estimateTextWidth(str, fontSize) {
+    return (str || "").length * fontSize * 0.6;
+  }
+  function getTextColor(chart) {
+    var el = chart.element || chart.svg && chart.svg.node && chart.svg.node().parentNode;
+    if (el && typeof getComputedStyle === "function") {
+      var val = getComputedStyle(el).getPropertyValue("--chart-text-color");
+      if (val && val.trim()) {
+        return val.trim();
+      }
+    }
+    return "#6b7280";
+  }
+
   // inst/htmlwidgets/myIO/src/utils/file-saver.js
   var saveAs = saveAs || (function(e) {
     "use strict";
@@ -835,8 +1073,11 @@
   };
   function handleAction(chart, layers, name) {
     if (name === "image") {
+      var legend = injectExportLegend(chart);
+      var exportHeight = chart.height + legend.extraHeight;
       var svgString = getSVGString(chart.svg.node());
-      svgString2Image(svgString, 2 * chart.width, 2 * chart.height, "png", function(dataBlob) {
+      legend.cleanup();
+      svgString2Image(svgString, 2 * chart.width, 2 * exportHeight, "png", function(dataBlob) {
         saveAs(dataBlob, chart.element.id + ".png");
       });
       return;
@@ -872,95 +1113,6 @@
   }
   function iconLayers() {
     return iconWrapper('<rect x="4" y="5" width="14" height="4" rx="1"></rect><rect x="6" y="10" width="14" height="4" rx="1"></rect><rect x="8" y="15" width="14" height="4" rx="1"></rect>');
-  }
-
-  // inst/htmlwidgets/myIO/src/layout/legend-data.js
-  function buildLegendData(chart, state) {
-    if (!chart || !chart.plotLayers || chart.plotLayers.length === 0) {
-      return null;
-    }
-    if (chart.options && chart.options.suppressLegend === true) {
-      return null;
-    }
-    var renderState = state || {};
-    if (renderState.continuousLegend) {
-      return buildContinuousLegendData(chart);
-    }
-    if (renderState.ordinalLegend) {
-      var ordinalLayer = (chart.currentLayers || chart.derived && chart.derived.currentLayers || chart.plotLayers)[0] || chart.plotLayers[0];
-      return buildOrdinalLegendData(chart, ordinalLayer);
-    }
-    return buildLayerLegendData(chart);
-  }
-  function buildOrdinalLegendData(chart, layer) {
-    if (!layer) {
-      return null;
-    }
-    if (!chart.runtime) {
-      chart.runtime = {};
-    }
-    if (!Array.isArray(chart.runtime._hiddenOrdinalSegments)) {
-      chart.runtime._hiddenOrdinalSegments = [];
-    }
-    var hidden = chart.runtime._hiddenOrdinalSegments;
-    var keys = [];
-    if (layer.type === "treemap" && layer.data && layer.data.children) {
-      keys = layer.data.children.map(function(d) {
-        return d.name;
-      });
-    } else if (layer.type === "donut" && Array.isArray(layer.data)) {
-      keys = layer.data.map(function(d) {
-        return d[layer.mapping.x_var];
-      });
-    }
-    return {
-      type: "ordinal",
-      items: keys.map(function(key) {
-        var swatchColor = "#6b7280";
-        if (typeof chart.colorDiscrete === "function") {
-          swatchColor = layer.type === "treemap" ? chart.colorDiscrete("treemap." + key) : chart.colorDiscrete(key);
-        }
-        if (!swatchColor) {
-          swatchColor = "#6b7280";
-        }
-        return {
-          key,
-          label: key,
-          color: swatchColor,
-          visible: hidden.indexOf(key) === -1,
-          kind: "segment"
-        };
-      })
-    };
-  }
-  function buildLayerLegendData(chart) {
-    var currentLayers = chart.currentLayers || chart.derived && chart.derived.currentLayers || [];
-    var visibleKeys = currentLayers.map(function(layer) {
-      return layer._composite || layer.label;
-    });
-    var hiddenKeys = Array.isArray(chart.runtime && chart.runtime._hiddenLayerKeys) ? chart.runtime._hiddenLayerKeys : [];
-    return {
-      type: "layer",
-      items: (chart.plotLayers || []).map(function(layer) {
-        var key = layer._composite || layer.label;
-        return {
-          key,
-          label: layer.label,
-          color: layer.color || "#6b7280",
-          visible: visibleKeys.indexOf(key) > -1 && hiddenKeys.indexOf(key) === -1,
-          kind: layer.type
-        };
-      })
-    };
-  }
-  function buildContinuousLegendData(chart) {
-    var scale = chart.colorContinuous || chart.derived && chart.derived.colorContinuous;
-    return {
-      type: "continuous",
-      items: [],
-      colorScale: scale || null,
-      domain: scale && typeof scale.domain === "function" ? scale.domain() : null
-    };
   }
 
   // inst/htmlwidgets/myIO/src/interactions/bottom-sheet.js
