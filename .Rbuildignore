@@ -13,3 +13,5 @@
 ^pkgdown$
 ^LICENSE\.md$
 ^cran-comments\.md$
+^\.claude$
+^\.do$
