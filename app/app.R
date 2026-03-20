@@ -147,20 +147,18 @@ ui <- navbarPage(
     )
   ),
 
-  # -- Phase 2 --
-  navbarMenu("Phase 2", icon = icon("star"),
-    tabPanel("Heatmap",
-      div(class = "chart-container", myIOOutput("heatmapPlot", height = "500px"))
-    ),
+  # -- Financial --
+  navbarMenu("Financial", icon = icon("chart-line"),
     tabPanel("Candlestick",
       div(class = "chart-container", myIOOutput("candlestickPlot", height = "500px"))
     ),
     tabPanel("Waterfall",
       div(class = "chart-container", myIOOutput("waterfallPlot", height = "500px"))
-    ),
-    tabPanel("Sankey",
-      div(class = "chart-container", myIOOutput("sankeyPlot", height = "500px"))
-    ),
+    )
+  ),
+
+  # -- Distribution --
+  navbarMenu("Distribution", icon = icon("chart-area"),
     tabPanel("Boxplot",
       div(class = "chart-container", myIOOutput("boxplotPlot", height = "500px"))
     ),
@@ -169,6 +167,16 @@ ui <- navbarPage(
     ),
     tabPanel("Ridgeline",
       div(class = "chart-container", myIOOutput("ridgelinePlot", height = "500px"))
+    )
+  ),
+
+  # -- Relational --
+  navbarMenu("Relational", icon = icon("diagram-project"),
+    tabPanel("Heatmap",
+      div(class = "chart-container", myIOOutput("heatmapPlot", height = "500px"))
+    ),
+    tabPanel("Sankey",
+      div(class = "chart-container", myIOOutput("sankeyPlot", height = "500px"))
     )
   ),
 
