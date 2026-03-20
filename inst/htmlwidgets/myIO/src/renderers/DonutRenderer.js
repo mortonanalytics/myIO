@@ -1,3 +1,4 @@
+import { syncOrdinalLegendData } from "../layout/legend.js";
 import { isColorSchemeActive } from "../utils/responsive.js";
 
 export class DonutRenderer {
@@ -114,7 +115,7 @@ export class DonutRenderer {
         };
       });
 
-    chart.updateOrdinalColorLegend(layer);
+    syncOrdinalLegendData(chart, layer);
   }
 
   remove(chart) {

@@ -1,3 +1,4 @@
+import { syncOrdinalLegendData } from "../layout/legend.js";
 import { getChartHeight } from "../layout/scaffold.js";
 import { isColorSchemeActive, tagName } from "../utils/responsive.js";
 
@@ -85,7 +86,7 @@ export class TreemapRenderer {
         return d.data[layer.mapping.level_1] + "  \n" + d.data[layer.mapping.level_2] + "  \n" + d.data[layer.mapping.x_var] + "  \n" + format(d.value);
       });
 
-    chart.updateOrdinalColorLegend(layer);
+    syncOrdinalLegendData(chart, layer);
   }
 
   remove(chart) {
