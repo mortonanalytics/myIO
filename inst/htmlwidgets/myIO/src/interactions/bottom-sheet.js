@@ -130,10 +130,12 @@ export function openPanel(chart) {
   return panel;
 }
 
-export function closePanel(chart) {
+export function closePanel(chart, opts) {
   if (!chart || !chart.dom) {
     return;
   }
+
+  var options = opts || {};
 
   if (!chart.runtime) {
     chart.runtime = {};
@@ -153,14 +155,15 @@ export function closePanel(chart) {
   }
 
   detachSheetKeydown(chart);
+  chart.runtime._sheetOpen = false;
+  syncFABState(chart);
 
   var finalize = function() {
     cleanupPanelNodes(chart);
-    chart.runtime._sheetOpen = false;
     chart.runtime._sheetCloseTimer = null;
     syncFABState(chart);
 
-    if (chart.dom.fab && typeof chart.dom.fab.node === "function" && chart.dom.fab.node()) {
+    if (options.returnFocus !== false && chart.dom.fab && typeof chart.dom.fab.node === "function" && chart.dom.fab.node()) {
       chart.dom.fab.node().focus();
     }
   };

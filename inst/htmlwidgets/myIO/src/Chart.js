@@ -1,5 +1,4 @@
 import { getRenderer, getRendererForLayer, listRenderers } from "./registry.js";
-import { addButtons as addInteractionButtons } from "./interactions/buttons.js";
 import { bindPointDrag } from "./interactions/drag.js";
 import { bindRollover } from "./interactions/rollover.js";
 import { deriveChartRender, applyDerivedScales } from "./derive/chart-render.js";
@@ -10,6 +9,7 @@ import { syncLegend, syncOrdinalLegendData } from "./layout/legend.js";
 import { syncReferenceLines } from "./layout/reference-lines.js";
 import { getChartHeight, initializeScaffold, updateScaffoldLayout } from "./layout/scaffold.js";
 import { hideChartTooltip, initializeTooltip, removeHoverOverlay } from "./tooltip.js";
+import { addFAB, closePanel, openPanel } from "./interactions/bottom-sheet.js";
 import { linearRegression } from "./utils/math.js";
 import { tagName } from "./utils/responsive.js";
 
@@ -216,7 +216,7 @@ export class myIOchart {
       if (!isCurrent()) {
         return;
       }
-      this.addButtons(this.derived.currentLayers);
+      addFAB(this);
       this.emit("afterScales", { state });
       syncAxes(this, state, options);
       this.routeLayers(this.derived.currentLayers);
@@ -235,7 +235,7 @@ export class myIOchart {
       this.dom.svg.selectAll(".myIO-empty-state").remove();
     }
     if (this.dom && this.dom.element) {
-      d3.select(this.dom.element).select(".buttonDiv").style("display", null);
+      d3.select(this.dom.element).select(".myIO-fab").style("display", null);
     }
   }
 
@@ -252,8 +252,11 @@ export class myIOchart {
     }
     removeHoverOverlay(this);
     hideChartTooltip(this);
+    if (this.runtime && this.runtime._sheetOpen) {
+      closePanel(this, { returnFocus: false });
+    }
     if (this.dom.element) {
-      d3.select(this.dom.element).select(".buttonDiv").style("display", "none");
+      d3.select(this.dom.element).select(".myIO-fab").style("display", "none");
     }
     if (this.dom.svg) {
       this.dom.svg.selectAll(".myIO-empty-state").remove();
@@ -265,8 +268,8 @@ export class myIOchart {
     }
   }
 
-  addButtons(layers) {
-    addInteractionButtons(this, layers);
+  addButtons() {
+    addFAB(this);
   }
 
   toggleVarY(newY) {
@@ -395,6 +398,10 @@ export class myIOchart {
   }
 
   resize(width, height) {
+    const wasSheetOpen = this.runtime && this.runtime._sheetOpen === true;
+    if (wasSheetOpen) {
+      closePanel(this, { returnFocus: false });
+    }
     this.runtime.totalWidth = Math.max(width, MIN_CHART_WIDTH);
     this.runtime.width = this.runtime.totalWidth;
     this.runtime.height = height;
@@ -404,6 +411,9 @@ export class myIOchart {
       updateScaffoldLayout(this);
       this.captureLegacyAliases();
       this.renderCurrentLayers();
+      if (wasSheetOpen && this.derived && this.derived.currentLayers && this.derived.currentLayers.length > 0) {
+        openPanel(this);
+      }
       this.emit("resize", { width: this.runtime.width, height: this.runtime.height });
     }, RESIZE_DEBOUNCE_MS);
   }
@@ -412,6 +422,10 @@ export class myIOchart {
     this.emit("destroy", {});
     clearTimeout(this.runtime && this.runtime.resizeTimer);
     clearTimeout(this.runtime && this.runtime.tooltipHideTimer);
+    if (this.runtime && this.runtime._sheetOpen) {
+      closePanel(this, { returnFocus: false });
+    }
+    clearTimeout(this.runtime && this.runtime._sheetCloseTimer);
     if (this.dom && this.dom.chartArea) {
       this.dom.chartArea.selectAll("*").interrupt();
     }
@@ -422,7 +436,7 @@ export class myIOchart {
       this.dom.tooltip.remove();
     }
     if (this.dom && this.dom.element) {
-      d3.select(this.dom.element).select(".buttonDiv").remove();
+      d3.select(this.dom.element).selectAll(".buttonDiv, .myIO-fab, .myIO-panel, .myIO-sheet-backdrop").remove();
     }
     removeHoverOverlay(this);
     this._listeners = {};
