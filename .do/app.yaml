@@ -1,0 +1,14 @@
+name: myio-demo
+region: nyc
+services:
+  - name: shiny-app
+    dockerfile_path: Dockerfile
+    github:
+      repo: mortonanalytics/myIO
+      branch: main
+      deploy_on_push: true
+    http_port: 3838
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    routes:
+      - path: /
