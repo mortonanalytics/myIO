@@ -89,4 +89,48 @@ describe("Chart", function() {
     expect(chart.config.layers[1].data[0].mpg).toBe(2);
     expect(chart.config.layers[1].data[1].mpg).toBe(4);
   });
+
+  test("renderEmptyState hides the FAB and clearEmptyState restores it", function() {
+    const chart = new myIOchart({
+      element: document.getElementById("chart"),
+      width: 640,
+      height: 400,
+      config: {
+        specVersion: 1,
+        layers: [
+          {
+            id: "layer_001",
+            type: "point",
+            label: "points",
+            data: [{ wt: 1, mpg: 2 }],
+            mapping: { x_var: "wt", y_var: "mpg" },
+            options: {},
+            transform: "identity",
+            transformMeta: {},
+            encoding: {},
+            sourceKey: "_source_key",
+            derivedFrom: null,
+            order: 1,
+            visibility: true,
+            color: "#E69F00"
+          }
+        ],
+        layout: { margin: { top: 30, bottom: 60, left: 50, right: 5 }, suppressLegend: false, suppressAxis: { xAxis: false, yAxis: false } },
+        scales: { xlim: { min: null, max: null }, ylim: { min: null, max: null }, categoricalScale: { xAxis: false, yAxis: false }, flipAxis: false, colorScheme: { colors: ["#E69F00"], domain: ["none"], enabled: false } },
+        axes: { xAxisFormat: "s", yAxisFormat: "s", xAxisLabel: null, yAxisLabel: null, toolTipFormat: "s" },
+        interactions: { dragPoints: false, toggleY: { variable: null, format: null }, toolTipOptions: { suppressY: false } },
+        theme: {},
+        transitions: { speed: 0 },
+        referenceLines: { x: null, y: null }
+      }
+    });
+
+    expect(chart.element.querySelector(".myIO-fab")).toBeTruthy();
+
+    chart.renderEmptyState();
+    expect(chart.element.querySelector(".myIO-fab").style.display).toBe("none");
+
+    chart.clearEmptyState();
+    expect(chart.element.querySelector(".myIO-fab").style.display).not.toBe("none");
+  });
 });

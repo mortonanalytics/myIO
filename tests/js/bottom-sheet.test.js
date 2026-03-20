@@ -158,4 +158,30 @@ describe("bottom sheet", function() {
     expect(chart.element.querySelector(".myIO-sheet-backdrop")).toBeFalsy();
     expect(chart.element.querySelector(".myIO-fab").getAttribute("aria-expanded")).toBe("false");
   });
+
+  test("closePanel allows the sheet to reopen immediately", async function() {
+    const chart = buildChart();
+    addFAB(chart);
+    openPanel(chart);
+    await flush();
+
+    closePanel(chart);
+    openPanel(chart);
+    await flush();
+
+    expect(chart.runtime._sheetOpen).toBe(true);
+    expect(chart.element.querySelector(".myIO-panel")).toBeTruthy();
+  });
+
+  test("suppressLegend charts still show actions in the panel", async function() {
+    const chart = buildChart();
+    chart.options.suppressLegend = true;
+    chart.options.toggleY = null;
+    addFAB(chart);
+    openPanel(chart);
+    await flush();
+
+    expect(chart.element.querySelector(".myIO-sheet-legend-section")).toBeFalsy();
+    expect(chart.element.querySelectorAll(".myIO-sheet-action")).toHaveLength(2);
+  });
 });
