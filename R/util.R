@@ -27,7 +27,7 @@ OKABE_ITO_PALETTE <- c(
 ALLOWED_TYPES <- c(
   "line", "point", "bar", "hexbin", "treemap", "gauge",
   "donut", "area", "groupedBar", "histogram", "heatmap",
-  "candlestick", "waterfall", "sankey", "boxplot"
+  "candlestick", "waterfall", "sankey", "boxplot", "violin"
 )
 
 COMPATIBILITY_GROUPS <- list(
@@ -42,6 +42,7 @@ COMPATIBILITY_GROUPS <- list(
   waterfall = "axes-categorical",
   sankey = "standalone-flow",
   boxplot = "axes-categorical",
+  violin = "axes-categorical",
   hexbin = "axes-hex",
   treemap = "standalone-treemap",
   donut = "standalone-donut",
@@ -72,6 +73,7 @@ VALID_COMBINATIONS <- list(
   waterfall = c("identity", "cumulative"),
   sankey = c("identity"),
   boxplot = c("identity"),
+  violin = c("identity"),
   hexbin = c("identity"),
   treemap = c("identity"),
   donut = c("identity"),
@@ -80,7 +82,8 @@ VALID_COMBINATIONS <- list(
 
 composite_registry <- function() {
   list(
-    boxplot = composite_boxplot
+    boxplot = composite_boxplot,
+    violin = composite_violin
   )
 }
 

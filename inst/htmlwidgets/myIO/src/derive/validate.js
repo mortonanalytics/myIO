@@ -7,6 +7,7 @@ const COMPAT_GROUP = {
   bar: "axes-categorical",
   groupedBar: "axes-categorical",
   boxplot: "axes-categorical",
+  violin: "axes-categorical",
   histogram: "axes-binned",
   heatmap: "axes-matrix",
   candlestick: "axes-continuous",

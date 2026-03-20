@@ -174,6 +174,7 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
     candlestick = c("x_var", "open", "high", "low", "close"),
     waterfall = c("x_var", "y_var"),
     sankey = c("source", "target", "value"),
+    violin = c("x_var", "y_var"),
     area = c("x_var", "low_y", "high_y"),
     hexbin = c("x_var", "y_var", "radius"),
     c("x_var", "y_var")
@@ -191,7 +192,7 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
   }
 
   numeric_fields <- intersect(c("y_var", "value", "low_y", "high_y", "open", "high", "low", "close"), names(mapping))
-  if (type %in% c("line", "point", "bar", "hexbin", "area", "groupedBar", "histogram", "gauge", "donut", "candlestick", "waterfall", "sankey")) {
+  if (type %in% c("line", "point", "bar", "hexbin", "area", "groupedBar", "histogram", "gauge", "donut", "candlestick", "waterfall", "sankey", "violin")) {
     for (nf in numeric_fields) {
       if (!is.numeric(data[[mapping[[nf]]]])) {
         stop("Mapped field '", mapping[[nf]], "' must be numeric for type '", type, "'.", call. = FALSE)

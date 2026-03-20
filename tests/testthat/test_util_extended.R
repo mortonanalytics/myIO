@@ -102,8 +102,12 @@ test_that("build_tree leaf nodes contain row data", {
 
 # --- composite_registry ---
 
-test_that("composite_registry returns a list", {
-  expect_true(is.list(myIO:::composite_registry()))
+test_that("composite_registry returns a named list", {
+  reg <- myIO:::composite_registry()
+  expect_true(is.list(reg))
+  for (nm in names(reg)) {
+    expect_true(is.function(reg[[nm]]), info = paste("Entry", nm, "is not a function"))
+  }
 })
 
 # --- transform_registry ---
