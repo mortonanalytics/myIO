@@ -329,11 +329,11 @@ server <- function(input, output) {
 
   output$candlestickPlot <- renderMyIO({
     df <- data.frame(
-      session = 1:5,
-      open = c(10, 12, 14, 13, 15),
-      high = c(15, 16, 18, 17, 19),
-      low = c(8, 11, 13, 12, 14),
-      close = c(13, 14, 17, 15, 18),
+      session = 1:10,
+      open  = c(44, 46, 43, 47, 45, 48, 46, 50, 48, 51),
+      high  = c(48, 49, 47, 50, 48, 51, 49, 53, 51, 54),
+      low   = c(42, 43, 41, 44, 43, 45, 44, 47, 46, 49),
+      close = c(46, 43, 46, 44, 48, 45, 49, 48, 51, 53),
       stringsAsFactors = FALSE
     )
     myIO() %>%
