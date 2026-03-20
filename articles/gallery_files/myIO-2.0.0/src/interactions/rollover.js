@@ -227,7 +227,7 @@ export function bindRollover(chart, layers) {
     lys.forEach(function(layer) {
       var values = layer.data;
       var xVar = layer.mapping.x_var;
-      var yVar = that.newY ? that.newY : layer.mapping.y_var;
+      var yVar = that.newY ? that.newY : (layer.mapping.y_var || layer.mapping.high_y);
       var layerIndex = values.map(function(value) { return value[xVar]; });
       var idx = bisect(layerIndex, xPos);
       var d0 = values[idx - 1];
@@ -243,6 +243,7 @@ export function bindRollover(chart, layers) {
         label: layer.label,
         xVar: xVar,
         yVar: yVar,
+        displayValue: v.density != null ? v.density : v[yVar],
         value: v
       });
     });
@@ -283,7 +284,7 @@ export function bindRollover(chart, layers) {
       pointer: getContainerPointer(event),
       title: { text: tipText[0].xVar + ": " + xFormat(xValue) },
       items: tipText.map(function(d) {
-        return { color: d.color, label: d.label, value: currentFormatY(d.value[d.yVar]) };
+        return { color: d.color, label: d.label, value: currentFormatY(d.displayValue) };
       })
     });
   }

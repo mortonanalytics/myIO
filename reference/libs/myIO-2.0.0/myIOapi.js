@@ -189,18 +189,30 @@
     static type = "area";
     static traits = { hasAxes: true, referenceLines: true, legendType: "layer", binning: false, rolloverStyle: "overlay", scaleCapabilities: { invertX: true } };
     static scaleHints = { xScaleType: "linear", yScaleType: "linear", yExtentFields: ["low_y", "high_y"], domainMerge: "union" };
-    static dataContract = { x_var: { required: true, numeric: true, sorted: true }, low_y: { required: true, numeric: true }, high_y: { required: true, numeric: true } };
+    static dataContract = { x_var: { required: true, numeric: true } };
     render(chart, layer) {
       var data = layer.data;
       var key = layer.label;
       var transitionSpeed = chart.options.transition.speed;
-      var valueArea = d3.area().curve(d3.curveMonotoneX).x(function(d) {
-        return chart.xScale(d[layer.mapping.x_var]);
-      }).y0(function(d) {
-        return chart.yScale(d[layer.mapping.low_y]);
-      }).y1(function(d) {
-        return chart.yScale(d[layer.mapping.high_y]);
-      });
+      var isVertical = layer.options && layer.options.orientation === "vertical";
+      var valueArea;
+      if (isVertical) {
+        valueArea = d3.area().curve(d3.curveMonotoneY).y(function(d) {
+          return chart.yScale(d[layer.mapping.y_var]);
+        }).x0(function(d) {
+          return chart.xScale(d[layer.mapping.low_x]);
+        }).x1(function(d) {
+          return chart.xScale(d[layer.mapping.high_x]);
+        });
+      } else {
+        valueArea = d3.area().curve(d3.curveMonotoneX).x(function(d) {
+          return chart.xScale(d[layer.mapping.x_var]);
+        }).y0(function(d) {
+          return chart.yScale(d[layer.mapping.low_y]);
+        }).y1(function(d) {
+          return chart.yScale(d[layer.mapping.high_y]);
+        });
+      }
       var linePath = chart.chart.selectAll("." + tagName("area", chart.element.id, key)).data([data]);
       linePath.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
       var newLinePath = linePath.enter().append("path").attr("clip-path", "url(#" + chart.element.id + "clip)").style("fill", function(d) {
@@ -209,7 +221,10 @@
       linePath.merge(newLinePath).attr("clip-path", "url(#" + chart.element.id + "clip)").transition().ease(d3.easeQuad).duration(transitionSpeed).attr("d", valueArea).style("opacity", 0.4);
     }
     formatTooltip(chart, d, layer) {
-      return { title: layer.mapping.x_var + ": " + d[layer.mapping.x_var], body: layer.label + ": " + d[layer.mapping.high_y], color: layer.color, label: layer.label, value: d[layer.mapping.high_y], raw: d };
+      var displayValue = d.density != null ? d.density : d[layer.mapping.high_y];
+      var titleField = layer.options && layer.options.orientation === "vertical" ? layer.mapping.y_var : layer.mapping.x_var;
+      var titleValue = d[titleField];
+      return { title: titleField + ": " + titleValue, body: layer.label + ": " + displayValue, color: layer.color, label: layer.label, value: displayValue, raw: d };
     }
     remove(chart, layer) {
       chart.dom.chartArea.selectAll("." + tagName("area", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
@@ -2548,7 +2563,7 @@
       lys.forEach(function(layer) {
         var values = layer.data;
         var xVar = layer.mapping.x_var;
-        var yVar = that.newY ? that.newY : layer.mapping.y_var;
+        var yVar = that.newY ? that.newY : layer.mapping.y_var || layer.mapping.high_y;
         var layerIndex = values.map(function(value) {
           return value[xVar];
         });
@@ -2564,6 +2579,7 @@
           label: layer.label,
           xVar,
           yVar,
+          displayValue: v.density != null ? v.density : v[yVar],
           value: v
         });
       });
@@ -2591,7 +2607,7 @@
         pointer: getContainerPointer(event),
         title: { text: tipText[0].xVar + ": " + xFormat(xValue) },
         items: tipText.map(function(d) {
-          return { color: d.color, label: d.label, value: currentFormatY(d.value[d.yVar]) };
+          return { color: d.color, label: d.label, value: currentFormatY(d.displayValue) };
         })
       });
     }
@@ -2700,14 +2716,22 @@
     var x_bands = [];
     var y_bands = [];
     var scaleSemantics = semantics || {};
+    var globalXExtentFields = scaleSemantics.xExtentFields || ["x_var"];
     var yExtentFields = scaleSemantics.yExtentFields || ["y_var"];
     lys.forEach(function(d) {
-      var x_var = d.mapping.x_var;
-      var x = d3.extent(d.data, function(e) {
-        return +e[x_var];
+      var layerXFields = d.scaleHints && Array.isArray(d.scaleHints.xExtentFields) ? d.scaleHints.xExtentFields : globalXExtentFields;
+      var xValues = [];
+      layerXFields.forEach(function(field) {
+        var dataField = d.mapping[field] || field;
+        var values = d.data.map(function(e) {
+          return +e[dataField];
+        });
+        xValues = xValues.concat(values);
       });
+      var xLayerExtent = d3.extent(xValues.length > 0 ? xValues : [0]);
+      var layerYFields = d.scaleHints && Array.isArray(d.scaleHints.yExtentFields) ? d.scaleHints.yExtentFields : yExtentFields;
       var yValues = [];
-      yExtentFields.forEach(function(field) {
+      layerYFields.forEach(function(field) {
         var dataField = d.mapping[field] || field;
         var values = d.data.map(function(e) {
           return +e[dataField];
@@ -2717,11 +2741,12 @@
       var yExtent2 = d3.extent(yValues.length > 0 ? yValues : [0], function(e) {
         return e;
       });
-      x_extents.push(x);
+      x_extents.push(xLayerExtent);
       y_extents.push([
         yExtent2[0],
         yExtent2[1]
       ]);
+      var x_var = d.mapping.x_var;
       x_bands.push(d.data.map(function(e) {
         return e[x_var];
       }));
@@ -2810,6 +2835,7 @@
   var DEFAULT_SCALE_HINTS = {
     xScaleType: "linear",
     yScaleType: "linear",
+    xExtentFields: ["x_var"],
     yExtentFields: ["y_var"],
     domainMerge: "union"
   };
@@ -2841,6 +2867,7 @@
     var flipAxis = !!(chart && chart.config && chart.config.scales && chart.config.scales.flipAxis);
     var xTypes = /* @__PURE__ */ new Set();
     var yTypes = /* @__PURE__ */ new Set();
+    var xExtentFields = /* @__PURE__ */ new Set();
     var yExtentFields = /* @__PURE__ */ new Set();
     var domainMerge = "union";
     (layers || []).forEach(function(layer) {
@@ -2851,6 +2878,10 @@
       var resolvedY = flipAxis ? xType : yType;
       xTypes.add(resolvedX);
       yTypes.add(resolvedY);
+      var xFields = hints && Array.isArray(hints.xExtentFields) ? hints.xExtentFields : DEFAULT_SCALE_HINTS.xExtentFields;
+      xFields.forEach(function(field) {
+        xExtentFields.add(field);
+      });
       var fields = hints && Array.isArray(hints.yExtentFields) ? hints.yExtentFields : DEFAULT_SCALE_HINTS.yExtentFields;
       fields.forEach(function(field) {
         yExtentFields.add(field);
@@ -2867,6 +2898,7 @@
     return {
       xScaleType: xTypes.size > 0 ? Array.from(xTypes)[0] : resolveFallbackScaleType(chart, "x"),
       yScaleType: yTypes.size > 0 ? Array.from(yTypes)[0] : resolveFallbackScaleType(chart, "y"),
+      xExtentFields: Array.from(xExtentFields).length > 0 ? Array.from(xExtentFields) : DEFAULT_SCALE_HINTS.xExtentFields,
       yExtentFields: Array.from(yExtentFields).length > 0 ? Array.from(yExtentFields) : DEFAULT_SCALE_HINTS.yExtentFields,
       domainMerge
     };

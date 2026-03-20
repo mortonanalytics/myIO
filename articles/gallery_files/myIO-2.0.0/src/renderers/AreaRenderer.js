@@ -4,24 +4,28 @@ export class AreaRenderer {
   static type = "area";
   static traits = { hasAxes: true, referenceLines: true, legendType: "layer", binning: false, rolloverStyle: "overlay", scaleCapabilities: { invertX: true } };
   static scaleHints = { xScaleType: "linear", yScaleType: "linear", yExtentFields: ["low_y", "high_y"], domainMerge: "union" };
-  static dataContract = { x_var: { required: true, numeric: true, sorted: true }, low_y: { required: true, numeric: true }, high_y: { required: true, numeric: true } };
+  static dataContract = { x_var: { required: true, numeric: true } };
 
   render(chart, layer) {
     var data = layer.data;
     var key = layer.label;
     var transitionSpeed = chart.options.transition.speed;
+    var isVertical = layer.options && layer.options.orientation === "vertical";
 
-    var valueArea = d3.area()
-      .curve(d3.curveMonotoneX)
-      .x(function(d) {
-        return chart.xScale(d[layer.mapping.x_var]);
-      })
-      .y0(function(d) {
-        return chart.yScale(d[layer.mapping.low_y]);
-      })
-      .y1(function(d) {
-        return chart.yScale(d[layer.mapping.high_y]);
-      });
+    var valueArea;
+    if (isVertical) {
+      valueArea = d3.area()
+        .curve(d3.curveMonotoneY)
+        .y(function(d) { return chart.yScale(d[layer.mapping.y_var]); })
+        .x0(function(d) { return chart.xScale(d[layer.mapping.low_x]); })
+        .x1(function(d) { return chart.xScale(d[layer.mapping.high_x]); });
+    } else {
+      valueArea = d3.area()
+        .curve(d3.curveMonotoneX)
+        .x(function(d) { return chart.xScale(d[layer.mapping.x_var]); })
+        .y0(function(d) { return chart.yScale(d[layer.mapping.low_y]); })
+        .y1(function(d) { return chart.yScale(d[layer.mapping.high_y]); });
+    }
 
     var linePath = chart.chart
       .selectAll("." + tagName("area", chart.element.id, key))
@@ -47,7 +51,10 @@ export class AreaRenderer {
   }
 
   formatTooltip(chart, d, layer) {
-    return { title: layer.mapping.x_var + ": " + d[layer.mapping.x_var], body: layer.label + ": " + d[layer.mapping.high_y], color: layer.color, label: layer.label, value: d[layer.mapping.high_y], raw: d };
+    var displayValue = d.density != null ? d.density : d[layer.mapping.high_y];
+    var titleField = layer.options && layer.options.orientation === "vertical" ? layer.mapping.y_var : layer.mapping.x_var;
+    var titleValue = d[titleField];
+    return { title: titleField + ": " + titleValue, body: layer.label + ": " + displayValue, color: layer.color, label: layer.label, value: displayValue, raw: d };
   }
 
   remove(chart, layer) {
