@@ -9,6 +9,7 @@ const COMPAT_GROUP = {
   histogram: "axes-binned",
   heatmap: "axes-matrix",
   candlestick: "axes-continuous",
+  waterfall: "axes-categorical",
   hexbin: "axes-hex",
   treemap: "standalone-treemap",
   donut: "standalone-donut",

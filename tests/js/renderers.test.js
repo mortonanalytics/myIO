@@ -45,7 +45,7 @@ describe("Renderer static properties", function() {
   });
 
   test("all 11 renderer types are registered", function() {
-    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge", "heatmap", "candlestick"];
+    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge", "heatmap", "candlestick", "waterfall"];
     types.forEach(function(type) {
       var renderer = getRenderer(type);
       expect(renderer).toBeDefined();
@@ -54,7 +54,7 @@ describe("Renderer static properties", function() {
   });
 
   test("each renderer has traits and dataContract", function() {
-    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge", "heatmap", "candlestick"];
+    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge", "heatmap", "candlestick", "waterfall"];
     types.forEach(function(type) {
       var renderer = getRenderer(type);
       expect(renderer.constructor.traits).toBeDefined();
@@ -70,7 +70,7 @@ describe("Renderer static properties", function() {
   });
 
   test("axes types have hasAxes=true", function() {
-    ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "heatmap", "candlestick"].forEach(function(type) {
+    ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "heatmap", "candlestick", "waterfall"].forEach(function(type) {
       expect(getRenderer(type).constructor.traits.hasAxes).toBe(true);
     });
   });
@@ -156,6 +156,17 @@ describe("Renderer formatTooltip methods", function() {
     expect(result.body).toContain("O: 10");
   });
 
+  test("WaterfallRenderer.formatTooltip returns delta and running total", function() {
+    var renderer = getRenderer("waterfall");
+    var chart = {};
+    var layer = { mapping: { x_var: "step", y_var: "delta" }, color: "blue", label: "flow" };
+    var d = { step: "A", delta: 10, _base_y: 0, _cumulative_y: 10, _is_total: false };
+    var result = renderer.formatTooltip(chart, d, layer);
+    expect(result.title).toBe("step: A");
+    expect(result.value).toBe(10);
+    expect(result.body).toContain("Delta: 10");
+  });
+
   test("HeatmapRenderer.render creates rect cells and a continuous color scale", function() {
     var renderer = getRenderer("heatmap");
     document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
@@ -212,6 +223,36 @@ describe("Renderer formatTooltip methods", function() {
     expect(document.querySelectorAll("g." + "tag-candlestick-chart-candles").length).toBe(2);
     expect(document.querySelectorAll("g." + "tag-candlestick-chart-candles line.wick").length).toBe(2);
     expect(document.querySelectorAll("g." + "tag-candlestick-chart-candles rect.body").length).toBe(2);
+  });
+
+  test("WaterfallRenderer.render creates bars and connector lines", function() {
+    var renderer = getRenderer("waterfall");
+    document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
+    var el = document.getElementById("chart");
+    var chart = {
+      element: el,
+      chart: d3.select(el).select(".myIO-chart-area"),
+      derived: {},
+      options: { transition: { speed: 0 } },
+      margin: { top: 30, bottom: 60, left: 50, right: 5 },
+      xScale: d3.scaleBand().domain(["Start", "Add", "Sub"]).range([0, 180]),
+      yScale: d3.scaleLinear().domain([0, 150]).range([120, 0])
+    };
+    var layer = {
+      label: "wf",
+      color: "blue",
+      mapping: { x_var: "step", y_var: "delta" },
+      data: [
+        { step: "Start", delta: 100, _base_y: 0, _cumulative_y: 100, _is_total: false },
+        { step: "Add", delta: 30, _base_y: 100, _cumulative_y: 130, _is_total: false },
+        { step: "Sub", delta: -20, _base_y: 130, _cumulative_y: 110, _is_total: false }
+      ]
+    };
+
+    renderer.render(chart, layer);
+
+    expect(document.querySelectorAll("rect." + "tag-waterfall-chart-wf").length).toBe(3);
+    expect(document.querySelectorAll("line." + "tag-waterfall-connector-chart-wf").length).toBe(2);
   });
 
   test("HistogramRenderer.formatTooltip shows bin range", function() {
