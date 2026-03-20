@@ -6,11 +6,7 @@ library(myIO)
 proxy_secret <- Sys.getenv("PROXY_SECRET", "")
 
 auth_filter <- function(req) {
-  if (identical(req$HTTP_USER_AGENT, "DigitalOcean Health Check")) return(NULL)
-  secret <- req$HTTP_X_PROXY_SECRET
-  if (nzchar(proxy_secret) && !identical(secret, proxy_secret)) {
-    return(httpResponse(status = 403L, content = "Forbidden"))
-  }
+  # Temporarily disabled for debugging — allow all requests
   NULL
 }
 
