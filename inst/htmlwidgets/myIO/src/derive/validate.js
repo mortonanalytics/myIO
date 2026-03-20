@@ -12,6 +12,7 @@ const COMPAT_GROUP = {
   heatmap: "axes-matrix",
   candlestick: "axes-continuous",
   waterfall: "axes-categorical",
+  ridgeline: "axes-binned",
   sankey: "standalone-flow",
   hexbin: "axes-hex",
   treemap: "standalone-treemap",
