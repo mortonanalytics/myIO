@@ -1782,7 +1782,21 @@
       var hasColorArray = Array.isArray(layer.color);
       var bars = chart.chart.selectAll("." + tagName("waterfall", chart.element.id, layer.label)).data(layer.data);
       bars.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
-      var newBars = bars.enter().append("rect").attr("class", tagName("waterfall", chart.element.id, layer.label)).attr("clip-path", "url(#" + chart.element.id + "clip)").style("opacity", 0);
+      var newBars = bars.enter().append("rect").attr("class", tagName("waterfall", chart.element.id, layer.label)).attr("clip-path", "url(#" + chart.element.id + "clip)").attr("x", function(d) {
+        return chart.xScale(d[xVar]);
+      }).attr("width", bandwidth).attr("y", function(d) {
+        return chart.yScale(Math.max(+d._base_y, +d._cumulative_y));
+      }).attr("height", function(d) {
+        return Math.abs(chart.yScale(+d._base_y) - chart.yScale(+d._cumulative_y));
+      }).attr("fill", function(d, i) {
+        if (hasColorArray) {
+          return layer.color[i % layer.color.length];
+        }
+        if (d._is_total) {
+          return "#888";
+        }
+        return +d._cumulative_y >= +d._base_y ? "#4CAF50" : "#F44336";
+      }).style("opacity", 0);
       bars.merge(newBars).transition().ease(d3.easeQuad).duration(transitionSpeed).style("opacity", 1).attr("x", function(d) {
         return chart.xScale(d[xVar]);
       }).attr("width", bandwidth).attr("y", function(d) {
@@ -1801,7 +1815,15 @@
       var connectors = layer.data.slice(0, Math.max(layer.data.length - 1, 0));
       var connectorLines = chart.chart.selectAll("." + tagName("waterfall-connector", chart.element.id, layer.label)).data(connectors);
       connectorLines.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
-      var newConnectors = connectorLines.enter().append("line").attr("class", tagName("waterfall-connector", chart.element.id, layer.label)).attr("clip-path", "url(#" + chart.element.id + "clip)").style("stroke", "#666").style("stroke-width", 1.5).style("opacity", 0);
+      var newConnectors = connectorLines.enter().append("line").attr("class", tagName("waterfall-connector", chart.element.id, layer.label)).attr("clip-path", "url(#" + chart.element.id + "clip)").style("stroke", "#666").style("stroke-width", 1.5).style("stroke-dasharray", "4 2").attr("x1", function(d, i) {
+        return chart.xScale(layer.data[i][xVar]) + bandwidth;
+      }).attr("x2", function(d, i) {
+        return chart.xScale(layer.data[i + 1][xVar]);
+      }).attr("y1", function(d) {
+        return chart.yScale(+d._cumulative_y);
+      }).attr("y2", function(d) {
+        return chart.yScale(+d._cumulative_y);
+      }).style("opacity", 0);
       connectorLines.merge(newConnectors).transition().ease(d3.easeQuad).duration(transitionSpeed).style("opacity", 1).attr("x1", function(d, i) {
         return chart.xScale(layer.data[i][xVar]) + bandwidth;
       }).attr("x2", function(d, i) {
@@ -1868,18 +1890,19 @@
       chart.colorDiscrete = chart.derived.colorDiscrete;
       var link = chart.chart.selectAll("." + tagName("sankey", chart.element.id, layer.label)).data(graph.links);
       link.exit().transition().duration(chart.options.transition.speed).style("opacity", 0).remove();
-      var newLink = link.enter().append("path").attr("class", tagName("sankey", chart.element.id, layer.label)).attr("fill", "none").attr("stroke", "#888").attr("stroke-opacity", 0.4).attr("clip-path", "url(#" + chart.element.id + "clip)");
-      link.merge(newLink).transition().ease(d3.easeQuad).duration(chart.options.transition.speed).attr("d", d3.sankeyLinkHorizontal()).attr("stroke-width", function(d) {
+      var newLink = link.enter().append("path").attr("class", tagName("sankey", chart.element.id, layer.label)).attr("fill", "none").attr("stroke-opacity", 0.4).attr("clip-path", "url(#" + chart.element.id + "clip)").attr("d", d3.sankeyLinkHorizontal()).attr("stroke-width", function(d) {
+        return Math.max(1, d.width);
+      }).attr("stroke", function(d) {
+        return chart.colorDiscrete(d.source.name);
+      }).style("opacity", 0);
+      link.merge(newLink).transition().ease(d3.easeQuad).duration(chart.options.transition.speed).style("opacity", 1).attr("d", d3.sankeyLinkHorizontal()).attr("stroke-width", function(d) {
         return Math.max(1, d.width);
       }).attr("stroke", function(d) {
         return chart.colorDiscrete(d.source.name);
       });
       var node = chart.chart.selectAll("." + tagName("sankey-node", chart.element.id, layer.label)).data(graph.nodes);
       node.exit().transition().duration(chart.options.transition.speed).style("opacity", 0).remove();
-      var newNode = node.enter().append("rect").attr("class", tagName("sankey-node", chart.element.id, layer.label)).attr("clip-path", "url(#" + chart.element.id + "clip)").attr("fill", function(d) {
-        return chart.colorDiscrete(d.name);
-      });
-      node.merge(newNode).transition().ease(d3.easeQuad).duration(chart.options.transition.speed).attr("x", function(d) {
+      var newNode = node.enter().append("rect").attr("class", tagName("sankey-node", chart.element.id, layer.label)).attr("clip-path", "url(#" + chart.element.id + "clip)").attr("x", function(d) {
         return d.x0;
       }).attr("y", function(d) {
         return d.y0;
@@ -1889,6 +1912,23 @@
         return Math.max(1, d.y1 - d.y0);
       }).attr("fill", function(d) {
         return chart.colorDiscrete(d.name);
+      }).style("opacity", 0);
+      node.merge(newNode).transition().ease(d3.easeQuad).duration(chart.options.transition.speed).style("opacity", 1).attr("x", function(d) {
+        return d.x0;
+      }).attr("y", function(d) {
+        return d.y0;
+      }).attr("width", function(d) {
+        return d.x1 - d.x0;
+      }).attr("height", function(d) {
+        return Math.max(1, d.y1 - d.y0);
+      }).attr("fill", function(d) {
+        return chart.colorDiscrete(d.name);
+      });
+      var labelClass = tagName("sankey-label", chart.element.id, layer.label);
+      chart.chart.selectAll("." + labelClass).remove();
+      graph.nodes.forEach(function(d) {
+        var isLeft = d.x0 < width / 2;
+        chart.chart.append("text").attr("class", labelClass).attr("x", isLeft ? d.x1 + 6 : d.x0 - 6).attr("y", (d.y0 + d.y1) / 2).attr("dy", "0.35em").attr("text-anchor", isLeft ? "start" : "end").style("font-size", "12px").style("fill", "var(--chart-text-color, #333)").text(d.name);
       });
     }
     formatTooltip(chart, d, layer) {
@@ -1914,6 +1954,7 @@
     remove(chart, layer) {
       chart.dom.chartArea.selectAll("." + tagName("sankey", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
       chart.dom.chartArea.selectAll("." + tagName("sankey-node", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
+      chart.dom.chartArea.selectAll("." + tagName("sankey-label", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
     }
   };
 

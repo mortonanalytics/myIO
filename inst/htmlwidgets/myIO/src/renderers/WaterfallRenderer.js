@@ -23,6 +23,23 @@ export class WaterfallRenderer {
       .append("rect")
       .attr("class", tagName("waterfall", chart.element.id, layer.label))
       .attr("clip-path", "url(#" + chart.element.id + "clip)")
+      .attr("x", function(d) { return chart.xScale(d[xVar]); })
+      .attr("width", bandwidth)
+      .attr("y", function(d) {
+        return chart.yScale(Math.max(+d._base_y, +d._cumulative_y));
+      })
+      .attr("height", function(d) {
+        return Math.abs(chart.yScale(+d._base_y) - chart.yScale(+d._cumulative_y));
+      })
+      .attr("fill", function(d, i) {
+        if (hasColorArray) {
+          return layer.color[i % layer.color.length];
+        }
+        if (d._is_total) {
+          return "#888";
+        }
+        return +d._cumulative_y >= +d._base_y ? "#4CAF50" : "#F44336";
+      })
       .style("opacity", 0);
 
     bars.merge(newBars)
@@ -61,6 +78,11 @@ export class WaterfallRenderer {
       .attr("clip-path", "url(#" + chart.element.id + "clip)")
       .style("stroke", "#666")
       .style("stroke-width", 1.5)
+      .style("stroke-dasharray", "4 2")
+      .attr("x1", function(d, i) { return chart.xScale(layer.data[i][xVar]) + bandwidth; })
+      .attr("x2", function(d, i) { return chart.xScale(layer.data[i + 1][xVar]); })
+      .attr("y1", function(d) { return chart.yScale(+d._cumulative_y); })
+      .attr("y2", function(d) { return chart.yScale(+d._cumulative_y); })
       .style("opacity", 0);
 
     connectorLines.merge(newConnectors)
