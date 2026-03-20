@@ -11,10 +11,9 @@ import { syncReferenceLines } from "./layout/reference-lines.js";
 import { getChartHeight, initializeScaffold, updateScaffoldLayout } from "./layout/scaffold.js";
 import { hideChartTooltip, initializeTooltip, removeHoverOverlay } from "./tooltip.js";
 import { linearRegression } from "./utils/math.js";
-import { isMobile, tagName } from "./utils/responsive.js";
+import { tagName } from "./utils/responsive.js";
 
 const MIN_CHART_WIDTH = 280;
-const PLOT_WIDTH_RATIO = 0.8;
 const RESIZE_DEBOUNCE_MS = 100;
 
 const EventEmitter = {
@@ -65,9 +64,7 @@ export class myIOchart {
     if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       this.config.transitions.speed = 0;
     }
-    this.runtime.width = !isMobile(this) && !this.config.layout.suppressLegend
-      ? this.runtime.totalWidth * PLOT_WIDTH_RATIO
-      : this.runtime.totalWidth;
+    this.runtime.width = this.runtime.totalWidth;
     this.syncLegacyAliases();
     this.draw();
   }
@@ -399,9 +396,7 @@ export class myIOchart {
 
   resize(width, height) {
     this.runtime.totalWidth = Math.max(width, MIN_CHART_WIDTH);
-    this.runtime.width = !isMobile(this) && !this.config.layout.suppressLegend
-      ? this.runtime.totalWidth * PLOT_WIDTH_RATIO
-      : this.runtime.totalWidth;
+    this.runtime.width = this.runtime.totalWidth;
     this.runtime.height = height;
     this.syncLegacyAliases();
     clearTimeout(this.runtime.resizeTimer);

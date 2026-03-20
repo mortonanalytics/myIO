@@ -5,6 +5,10 @@ export function syncLegend(chart, state) {
     return;
   }
 
+  if (!chart.legendArea) {
+    return;
+  }
+
   if (state.continuousLegend) {
     updateContinuousColorLegend(chart);
     return;
@@ -19,6 +23,10 @@ export function syncLegend(chart, state) {
 }
 
 export function updateLegend(chart) {
+  if (!chart.legendArea) {
+    return;
+  }
+
   var m = chart.margin;
   var activeLayers = chart.currentLayers || [];
   var legendLayers = [];
@@ -172,6 +180,10 @@ export function updateOrdinalColorLegend(chart, ly) {
     return;
   }
 
+  if (!chart.legendArea) {
+    return;
+  }
+
   var m = chart.margin;
 
   d3.select(chart.element).select(".legend-box").remove();
@@ -263,6 +275,10 @@ export function updateOrdinalColorLegend(chart, ly) {
 }
 
 export function updateContinuousColorLegend(chart) {
+  if (!chart.legendArea) {
+    return;
+  }
+
   var m = chart.margin;
 
   d3.select(chart.element).select(".legend-box").remove();

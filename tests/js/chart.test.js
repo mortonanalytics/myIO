@@ -31,6 +31,7 @@ describe("Chart", function() {
     });
 
     expect(chart.config.specVersion).toBe(1);
+    expect(chart.runtime.width).toBe(640);
   });
 
   test("updateRegression refreshes lm line layers from point data", function() {

@@ -23,12 +23,12 @@ describe("getChartHeight", function() {
     expect(getChartHeight(chart)).toBe(400);
   });
 
-  test("returns 80% height on mobile with legend", function() {
+  test("returns full height on mobile with legend", function() {
     var chart = {
       height: 400,
       options: { suppressLegend: false },
       runtime: { totalWidth: 400 }
     };
-    expect(getChartHeight(chart)).toBe(320);
+    expect(getChartHeight(chart)).toBe(400);
   });
 });
