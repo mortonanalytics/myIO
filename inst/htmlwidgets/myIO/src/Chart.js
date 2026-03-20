@@ -247,9 +247,6 @@ export class myIOchart {
       this.dom.plot.selectAll(".x-axis, .y-axis").interrupt().remove();
       this.dom.plot.selectAll(".ref-x-line, .ref-y-line").remove();
     }
-    if (this.dom.legendArea) {
-      this.dom.legendArea.selectAll("*").remove();
-    }
     removeHoverOverlay(this);
     hideChartTooltip(this);
     if (this.runtime && this.runtime._sheetOpen) {

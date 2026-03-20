@@ -2654,10 +2654,13 @@
     area: "axes-continuous",
     bar: "axes-categorical",
     groupedBar: "axes-categorical",
+    boxplot: "axes-categorical",
+    violin: "axes-categorical",
     histogram: "axes-binned",
     heatmap: "axes-matrix",
     candlestick: "axes-continuous",
     waterfall: "axes-categorical",
+    ridgeline: "axes-binned",
     sankey: "standalone-flow",
     hexbin: "axes-hex",
     treemap: "standalone-treemap",
@@ -3084,9 +3087,6 @@
       if (this.dom.plot) {
         this.dom.plot.selectAll(".x-axis, .y-axis").interrupt().remove();
         this.dom.plot.selectAll(".ref-x-line, .ref-y-line").remove();
-      }
-      if (this.dom.legendArea) {
-        this.dom.legendArea.selectAll("*").remove();
       }
       removeHoverOverlay(this);
       hideChartTooltip(this);
