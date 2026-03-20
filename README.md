@@ -7,7 +7,7 @@
 
 # myIO
 
-An R package for creating interactive `d3.js` visualizations using `htmlwidgets`. Supports 10 chart types including scatter plots, line charts, bar charts, treemaps, and more — all composable through a piped API.
+An R package for creating interactive `d3.js` visualizations using `htmlwidgets`. Supports 17 chart types including scatter plots, line charts, bar charts, treemaps, and more — all composable through a piped API.
 
 [Live Demo](https://mortonanalytics.github.io/myIO/)
 
@@ -53,6 +53,13 @@ myIO() |>
 | Grouped bar chart | `"groupedBar"` |
 | Area chart | `"area"` |
 | Histogram | `"histogram"` |
+| Heatmap | `"heatmap"` |
+| Candlestick | `"candlestick"` |
+| Waterfall | `"waterfall"` |
+| Sankey | `"sankey"` |
+| Boxplot | `"boxplot"` |
+| Violin | `"violin"` |
+| Ridgeline | `"ridgeline"` |
 | Donut chart | `"donut"` |
 | Gauge chart | `"gauge"` |
 | Hexbin plot | `"hexbin"` |

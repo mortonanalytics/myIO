@@ -43,9 +43,10 @@ ui <- navbarPage(
       fluidRow(
         column(4, div(class = "feature-card",
           icon("layer-group", style = "font-size: 2rem; color: #4A5ACB;"),
-          h4("10 Chart Types"),
+          h4("17 Chart Types"),
           p("Scatter, line, bar, grouped bar, area, histogram,
-             donut, gauge, treemap, and hexbin.")
+             donut, gauge, treemap, hexbin, heatmap, candlestick,
+             waterfall, sankey, boxplot, violin, and ridgeline.")
         )),
         column(4, div(class = "feature-card",
           icon("sliders", style = "font-size: 2rem; color: #4A5ACB;"),
@@ -143,6 +144,31 @@ ui <- navbarPage(
     ),
     tabPanel("Treemap",
       div(class = "chart-container", myIOOutput("treemapPlot", height = "550px"))
+    )
+  ),
+
+  # -- Phase 2 --
+  navbarMenu("Phase 2", icon = icon("star"),
+    tabPanel("Heatmap",
+      div(class = "chart-container", myIOOutput("heatmapPlot", height = "500px"))
+    ),
+    tabPanel("Candlestick",
+      div(class = "chart-container", myIOOutput("candlestickPlot", height = "500px"))
+    ),
+    tabPanel("Waterfall",
+      div(class = "chart-container", myIOOutput("waterfallPlot", height = "500px"))
+    ),
+    tabPanel("Sankey",
+      div(class = "chart-container", myIOOutput("sankeyPlot", height = "500px"))
+    ),
+    tabPanel("Boxplot",
+      div(class = "chart-container", myIOOutput("boxplotPlot", height = "500px"))
+    ),
+    tabPanel("Violin",
+      div(class = "chart-container", myIOOutput("violinPlot", height = "500px"))
+    ),
+    tabPanel("Ridgeline",
+      div(class = "chart-container", myIOOutput("ridgelinePlot", height = "500px"))
     )
   ),
 
@@ -277,6 +303,89 @@ server <- function(input, output) {
       addIoLayer(type = "treemap", color = c("#4E79A7", "#F28E2B", "#E15759"),
         label = "Org Chart",
         data = df, mapping = list(level_1 = "department", level_2 = "team", y_var = "headcount", x_var = "team"))
+  })
+
+  output$heatmapPlot <- renderMyIO({
+    df <- expand.grid(
+      x = c("Q1", "Q2", "Q3", "Q4"),
+      y = c("Low", "Mid", "High"),
+      stringsAsFactors = FALSE
+    )
+    df$value <- c(2, 4, 6, 5, 7, 9, 4, 6, 8, 3, 5, 7)
+    myIO() %>%
+      addIoLayer(type = "heatmap", color = "#4E79A7", label = "Heatmap",
+        data = df, mapping = list(x_var = "x", y_var = "y", value = "value")) %>%
+      defineCategoricalAxis(xAxis = TRUE, yAxis = TRUE) %>%
+      setAxisFormat(xLabel = "Quarter", yLabel = "Segment")
+  })
+
+  output$candlestickPlot <- renderMyIO({
+    df <- data.frame(
+      session = 1:5,
+      open = c(10, 12, 14, 13, 15),
+      high = c(15, 16, 18, 17, 19),
+      low = c(8, 11, 13, 12, 14),
+      close = c(13, 14, 17, 15, 18),
+      stringsAsFactors = FALSE
+    )
+    myIO() %>%
+      addIoLayer(type = "candlestick", color = "#59A14F", label = "Candles",
+        data = df, mapping = list(x_var = "session", open = "open", high = "high", low = "low", close = "close")) %>%
+      setAxisFormat(xAxis = ".0f", yAxis = "$,.0f", xLabel = "Session", yLabel = "Price")
+  })
+
+  output$waterfallPlot <- renderMyIO({
+    df <- data.frame(
+      step = c("Start", "Add Sales", "Discount", "Tax", "End"),
+      value = c(100, 35, -15, -10, NA),
+      total = c(FALSE, FALSE, FALSE, FALSE, TRUE),
+      stringsAsFactors = FALSE
+    )
+    myIO() %>%
+      addIoLayer(type = "waterfall", color = "#F28E2B", label = "Revenue Bridge",
+        data = df, mapping = list(x_var = "step", y_var = "value", total = "total")) %>%
+      defineCategoricalAxis(xAxis = TRUE) %>%
+      setAxisFormat(yAxis = "$,.0f", xLabel = "Step", yLabel = "Running Total")
+  })
+
+  output$sankeyPlot <- renderMyIO({
+    df <- data.frame(
+      source = c("Awareness", "Awareness", "Interest", "Interest", "Purchase"),
+      target = c("Interest", "Purchase", "Purchase", "Drop-off", "Repeat"),
+      value = c(12, 3, 7, 5, 2),
+      stringsAsFactors = FALSE
+    )
+    myIO() %>%
+      addIoLayer(type = "sankey", color = c("#4E79A7", "#F28E2B", "#E15759", "#76B7B2", "#59A14F"),
+        label = "Funnel",
+        data = df, mapping = list(source = "source", target = "target", value = "value"))
+  })
+
+  output$boxplotPlot <- renderMyIO({
+    myIO() %>%
+      addIoLayer(type = "boxplot", color = "#4E79A7", label = "Sepal Length",
+        data = iris, mapping = list(x_var = "Species", y_var = "Sepal.Length"),
+        options = list(showOutliers = FALSE)) %>%
+      setAxisFormat(xLabel = "Species", yLabel = "Sepal Length")
+  })
+
+  output$violinPlot <- renderMyIO({
+    myIO() %>%
+      addIoLayer(type = "violin", color = "#59A14F", label = "Violin",
+        data = iris, mapping = list(x_var = "Species", y_var = "Sepal.Length"),
+        options = list(showBox = TRUE, showMedian = TRUE, showPoints = FALSE)) %>%
+      setAxisFormat(xLabel = "Species", yLabel = "Sepal Length")
+  })
+
+  output$ridgelinePlot <- renderMyIO({
+    df <- datasets::mtcars
+    df$cyl <- as.character(df$cyl)
+    myIO() %>%
+      addIoLayer(type = "ridgeline", color = c("#4E79A7", "#F28E2B", "#E15759"),
+        label = "Ridgeline",
+        data = df, mapping = list(x_var = "hp", y_var = "mpg", group = "cyl"),
+        options = list(overlap = 0.5, bandwidth = "nrd0")) %>%
+      setAxisFormat(xLabel = "Horsepower", yLabel = "Density")
   })
 
   output$themePlot <- renderMyIO({
