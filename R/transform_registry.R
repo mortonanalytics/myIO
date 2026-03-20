@@ -6,7 +6,9 @@ transform_registry <- function() {
     identity = transform_identity,
     lm = transform_lm,
     cumulative = transform_cumulative,
-    quantiles = transform_quantiles
+    quantiles = transform_quantiles,
+    median = transform_median,
+    outliers = transform_outliers
   )
 }
 
