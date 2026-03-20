@@ -1,9 +1,10 @@
 import * as d3 from "d3";
+import * as d3Sankey from "d3-sankey";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { myIOchart } from "../../inst/htmlwidgets/myIO/src/Chart.js";
 import { registerBuiltInRenderers, getRenderer } from "../../inst/htmlwidgets/myIO/src/registry.js";
 
-globalThis.d3 = d3;
+globalThis.d3 = Object.assign({}, d3, d3Sankey);
 globalThis.HTMLWidgets = { shinyMode: false };
 
 function makeConfig(layers, overrides) {
@@ -45,7 +46,7 @@ describe("Renderer static properties", function() {
   });
 
   test("all 11 renderer types are registered", function() {
-    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge", "heatmap", "candlestick", "waterfall"];
+    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge", "heatmap", "candlestick", "waterfall", "sankey"];
     types.forEach(function(type) {
       var renderer = getRenderer(type);
       expect(renderer).toBeDefined();
@@ -54,7 +55,7 @@ describe("Renderer static properties", function() {
   });
 
   test("each renderer has traits and dataContract", function() {
-    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge", "heatmap", "candlestick", "waterfall"];
+    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge", "heatmap", "candlestick", "waterfall", "sankey"];
     types.forEach(function(type) {
       var renderer = getRenderer(type);
       expect(renderer.constructor.traits).toBeDefined();
@@ -167,6 +168,16 @@ describe("Renderer formatTooltip methods", function() {
     expect(result.body).toContain("Delta: 10");
   });
 
+  test("SankeyRenderer.formatTooltip returns node and link values", function() {
+    var renderer = getRenderer("sankey");
+    var chart = { colorDiscrete: function() { return "#abc"; } };
+    var layer = { mapping: { source: "source", target: "target", value: "value" }, color: "blue", label: "flow" };
+    var linkDatum = { source: { name: "A" }, target: { name: "B" }, value: 7 };
+    var nodeDatum = { name: "C", value: 3 };
+    expect(renderer.formatTooltip(chart, linkDatum, layer).title).toBe("A -> B");
+    expect(renderer.formatTooltip(chart, nodeDatum, layer).title).toBe("C");
+  });
+
   test("HeatmapRenderer.render creates rect cells and a continuous color scale", function() {
     var renderer = getRenderer("heatmap");
     document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
@@ -253,6 +264,36 @@ describe("Renderer formatTooltip methods", function() {
 
     expect(document.querySelectorAll("rect." + "tag-waterfall-chart-wf").length).toBe(3);
     expect(document.querySelectorAll("line." + "tag-waterfall-connector-chart-wf").length).toBe(2);
+  });
+
+  test("SankeyRenderer.render creates node and link elements", function() {
+    var renderer = getRenderer("sankey");
+    document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
+    var el = document.getElementById("chart");
+    var chart = {
+      element: el,
+      chart: d3.select(el).select(".myIO-chart-area"),
+      derived: {},
+      options: { transition: { speed: 0 } },
+      margin: { top: 30, bottom: 60, left: 50, right: 5 },
+      width: 400,
+      height: 300,
+      colorDiscrete: null
+    };
+    var layer = {
+      label: "flow",
+      color: ["#ff0000", "#00ff00", "#0000ff"],
+      mapping: { source: "source", target: "target", value: "value" },
+      data: [
+        { source: "A", target: "B", value: 2 },
+        { source: "B", target: "C", value: 3 }
+      ]
+    };
+
+    renderer.render(chart, layer);
+
+    expect(document.querySelectorAll("rect." + "tag-sankey-node-chart-flow").length).toBeGreaterThan(0);
+    expect(document.querySelectorAll("path." + "tag-sankey-chart-flow").length).toBeGreaterThan(0);
   });
 
   test("HistogramRenderer.formatTooltip shows bin range", function() {

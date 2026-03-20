@@ -27,7 +27,7 @@ OKABE_ITO_PALETTE <- c(
 ALLOWED_TYPES <- c(
   "line", "point", "bar", "hexbin", "treemap", "gauge",
   "donut", "area", "groupedBar", "histogram", "heatmap",
-  "candlestick", "waterfall"
+  "candlestick", "waterfall", "sankey"
 )
 
 COMPATIBILITY_GROUPS <- list(
@@ -40,6 +40,7 @@ COMPATIBILITY_GROUPS <- list(
   heatmap = "axes-matrix",
   candlestick = "axes-continuous",
   waterfall = "axes-categorical",
+  sankey = "standalone-flow",
   hexbin = "axes-hex",
   treemap = "standalone-treemap",
   donut = "standalone-donut",
@@ -52,6 +53,7 @@ GROUP_MATRIX <- list(
   "axes-binned" = c("axes-continuous", "axes-binned"),
   "axes-matrix" = c("axes-matrix"),
   "axes-hex" = c("axes-hex"),
+  "standalone-flow" = c("standalone-flow"),
   "standalone-treemap" = c("standalone-treemap"),
   "standalone-donut" = c("standalone-donut"),
   "standalone-gauge" = c("standalone-gauge")
@@ -67,6 +69,7 @@ VALID_COMBINATIONS <- list(
   heatmap = c("identity"),
   candlestick = c("identity"),
   waterfall = c("identity", "cumulative"),
+  sankey = c("identity"),
   hexbin = c("identity"),
   treemap = c("identity"),
   donut = c("identity"),

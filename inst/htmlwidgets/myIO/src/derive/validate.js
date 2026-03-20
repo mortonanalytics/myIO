@@ -10,6 +10,7 @@ const COMPAT_GROUP = {
   heatmap: "axes-matrix",
   candlestick: "axes-continuous",
   waterfall: "axes-categorical",
+  sankey: "standalone-flow",
   hexbin: "axes-hex",
   treemap: "standalone-treemap",
   donut: "standalone-donut",

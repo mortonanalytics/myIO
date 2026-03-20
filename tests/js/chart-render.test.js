@@ -24,6 +24,7 @@ describe("chart-render utility functions", function() {
     expect(isAxesChart("treemap")).toBe(false);
     expect(isAxesChart("gauge")).toBe(false);
     expect(isAxesChart("donut")).toBe(false);
+    expect(isAxesChart("sankey")).toBe(false);
   });
 
   test("isAxesChart returns true for axes types", function() {
@@ -51,6 +52,7 @@ describe("chart-render utility functions", function() {
   test("usesOrdinalLegend true for treemap and donut", function() {
     expect(usesOrdinalLegend("treemap")).toBe(true);
     expect(usesOrdinalLegend("donut")).toBe(true);
+    expect(usesOrdinalLegend("sankey")).toBe(true);
     expect(usesOrdinalLegend("bar")).toBe(false);
   });
 

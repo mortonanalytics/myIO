@@ -7,6 +7,10 @@ dependencies:
   version: 0.2
   src: htmlwidgets/lib
   script: ./d3-hexbin.js
+- name: d3-sankey
+  version: 0.12.3
+  src: htmlwidgets/lib
+  script: ./d3-sankey.min.js
 - name: myIO
   version: 2.0.0
   src: htmlwidgets/myIO

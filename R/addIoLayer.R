@@ -173,6 +173,7 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
     heatmap = c("x_var", "y_var", "value"),
     candlestick = c("x_var", "open", "high", "low", "close"),
     waterfall = c("x_var", "y_var"),
+    sankey = c("source", "target", "value"),
     area = c("x_var", "low_y", "high_y"),
     hexbin = c("x_var", "y_var", "radius"),
     c("x_var", "y_var")
@@ -182,7 +183,7 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
     stop("Missing required mapping: ", paste(missing_map, collapse = ", "), call. = FALSE)
   }
 
-  mapped_fields <- intersect(c("x_var", "y_var", "group", "level_1", "level_2", "value", "low_y", "high_y", "open", "high", "low", "close", "total"), names(mapping))
+  mapped_fields <- intersect(c("x_var", "y_var", "group", "level_1", "level_2", "value", "low_y", "high_y", "open", "high", "low", "close", "total", "source", "target"), names(mapping))
   for (field in mapped_fields) {
     if (!mapping[[field]] %in% colnames(data)) {
       stop("Mapping variable '", mapping[[field]], "' not found in data.", call. = FALSE)
@@ -190,7 +191,7 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
   }
 
   numeric_fields <- intersect(c("y_var", "value", "low_y", "high_y", "open", "high", "low", "close"), names(mapping))
-  if (type %in% c("line", "point", "bar", "hexbin", "area", "groupedBar", "histogram", "gauge", "donut", "candlestick", "waterfall")) {
+  if (type %in% c("line", "point", "bar", "hexbin", "area", "groupedBar", "histogram", "gauge", "donut", "candlestick", "waterfall", "sankey")) {
     for (nf in numeric_fields) {
       if (!is.numeric(data[[mapping[[nf]]]])) {
         stop("Mapped field '", mapping[[nf]], "' must be numeric for type '", type, "'.", call. = FALSE)
@@ -204,6 +205,10 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
 
   if (type == "waterfall" && !is.numeric(data[[mapping[["y_var"]]]])) {
     stop("Mapped field '", mapping[["y_var"]], "' must be numeric for type '", type, "'.", call. = FALSE)
+  }
+
+  if (type == "sankey" && !is.numeric(data[[mapping[["value"]]]])) {
+    stop("Mapped field '", mapping[["value"]], "' must be numeric for type '", type, "'.", call. = FALSE)
   }
 
   invisible(NULL)
