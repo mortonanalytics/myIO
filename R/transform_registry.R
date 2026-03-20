@@ -4,7 +4,9 @@
 transform_registry <- function() {
   list(
     identity = transform_identity,
-    lm = transform_lm
+    lm = transform_lm,
+    cumulative = transform_cumulative,
+    quantiles = transform_quantiles
   )
 }
 

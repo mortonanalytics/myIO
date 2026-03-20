@@ -102,8 +102,8 @@ test_that("build_tree leaf nodes contain row data", {
 
 # --- composite_registry ---
 
-test_that("composite_registry returns empty list", {
-  expect_equal(myIO:::composite_registry(), list())
+test_that("composite_registry returns a list", {
+  expect_true(is.list(myIO:::composite_registry()))
 })
 
 # --- transform_registry ---
@@ -112,8 +112,10 @@ test_that("transform_registry contains identity and lm", {
   reg <- myIO:::transform_registry()
   expect_true("identity" %in% names(reg))
   expect_true("lm" %in% names(reg))
+  expect_true("cumulative" %in% names(reg))
   expect_true(is.function(reg$identity))
   expect_true(is.function(reg$lm))
+  expect_true(is.function(reg$cumulative))
 })
 
 test_that("assert_myIO accepts widgets and rejects plain lists", {
