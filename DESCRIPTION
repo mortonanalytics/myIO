@@ -9,7 +9,9 @@ Maintainer: Ryan Morton <morton@myma.us>
 Description: Create interactive data visualizations powered by 'd3.js' directly
     from R. Provides a layered grammar for bindings composition, supporting
     bar charts, line charts, scatter plots, histograms, treemaps, gauges,
-    hexbin plots, and more. Includes transform-driven derived layers, tooltips,
+    hexbin plots, heatmaps, candlestick charts, waterfall charts, sankey
+    diagrams, boxplots, violin plots, and ridgeline plots. Includes
+    transform-driven derived layers, composite chart expansion, tooltips,
     responsive sizing, and 'Shiny' integration.
 License: MIT + file LICENSE
 URL: https://mortonanalytics.github.io/myIO/, https://github.com/mortonanalytics/myIO

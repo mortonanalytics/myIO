@@ -226,3 +226,155 @@ myIO() |>
     mapping = list(level_1 = "vs", level_2 = "cyl")
   )
 ```
+
+## Heatmap
+
+Visualize a matrix of values with continuous color:
+
+```{r heatmap, }
+df <- expand.grid(
+  quarter = c("Q1", "Q2", "Q3", "Q4"),
+  segment = c("Enterprise", "Mid-Market", "SMB"),
+  stringsAsFactors = FALSE
+)
+df$revenue <- c(120, 145, 160, 155, 80, 95, 110, 105, 40, 55, 65, 60)
+
+myIO() |>
+  addIoLayer(
+    type = "heatmap",
+    color = "#4E79A7",
+    label = "Revenue",
+    data = df,
+    mapping = list(x_var = "quarter", y_var = "segment", value = "revenue")
+  ) |>
+  defineCategoricalAxis(xAxis = TRUE, yAxis = TRUE) |>
+  setAxisFormat(xLabel = "Quarter", yLabel = "Segment")
+```
+
+## Candlestick Chart
+
+Show open-high-low-close financial data:
+
+```{r candlestick, }
+df <- data.frame(
+  day   = 1:8,
+  open  = c(44, 45, 43, 46, 45, 47, 46, 48),
+  high  = c(47, 48, 46, 49, 48, 50, 49, 52),
+  low   = c(43, 44, 42, 45, 44, 46, 45, 47),
+  close = c(45, 43, 46, 45, 47, 46, 48, 51)
+)
+
+myIO() |>
+  addIoLayer(
+    type = "candlestick",
+    label = "Stock",
+    data = df,
+    mapping = list(
+      x_var = "day", open = "open",
+      high = "high", low = "low", close = "close"
+    )
+  ) |>
+  setAxisFormat(xAxis = ".0f", yAxis = "$,.0f",
+                xLabel = "Trading Day", yLabel = "Price") |>
+  setMargin(top = 20, bottom = 70, left = 60, right = 10)
+```
+
+## Waterfall Chart
+
+Show how values accumulate through sequential steps:
+
+```{r waterfall, }
+df <- data.frame(
+  step     = c("Revenue", "COGS", "Gross Profit", "OpEx", "Tax", "Net Income"),
+  value    = c(500, -200, NA, -120, -30, NA),
+  is_total = c(FALSE, FALSE, TRUE, FALSE, FALSE, TRUE)
+)
+
+myIO() |>
+  addIoLayer(
+    type = "waterfall",
+    label = "P&L Bridge",
+    data = df,
+    mapping = list(x_var = "step", y_var = "value", total = "is_total")
+  ) |>
+  defineCategoricalAxis(xAxis = TRUE) |>
+  setAxisFormat(yAxis = "$,.0f", xLabel = "Step", yLabel = "Amount") |>
+  setMargin(top = 20, bottom = 70, left = 60, right = 10)
+```
+
+## Sankey Flow Diagram
+
+Visualize flows between nodes:
+
+```{r sankey, }
+df <- data.frame(
+  source = c("Organic", "Organic", "Paid", "Paid", "Referral"),
+  target = c("Landing", "Blog", "Landing", "Promo", "Landing"),
+  value  = c(300, 120, 200, 80, 150)
+)
+
+myIO() |>
+  addIoLayer(
+    type = "sankey",
+    color = c("#4E79A7", "#F28E2B", "#E15759", "#76B7B2", "#59A14F"),
+    label = "Traffic Flow",
+    data = df,
+    mapping = list(source = "source", target = "target", value = "value")
+  )
+```
+
+## Boxplot
+
+Compare distributions across groups:
+
+```{r boxplot, }
+myIO() |>
+  addIoLayer(
+    type = "boxplot",
+    color = "#4E79A7",
+    label = "Petal Width",
+    data = iris,
+    mapping = list(x_var = "Species", y_var = "Petal.Width")
+  ) |>
+  setAxisFormat(xLabel = "Species", yLabel = "Petal Width (cm)") |>
+  setMargin(top = 20, bottom = 70, left = 60, right = 10)
+```
+
+## Violin Plot
+
+Show distribution shape alongside summary statistics:
+
+```{r violin, }
+myIO() |>
+  addIoLayer(
+    type = "violin",
+    color = "#59A14F",
+    label = "Sepal Width",
+    data = iris,
+    mapping = list(x_var = "Species", y_var = "Sepal.Width"),
+    options = list(showBox = TRUE, showMedian = TRUE)
+  ) |>
+  setAxisFormat(xLabel = "Species", yLabel = "Sepal Width (cm)") |>
+  setMargin(top = 20, bottom = 70, left = 60, right = 10)
+```
+
+## Ridgeline Plot
+
+Compare distributions across groups with overlapping density curves:
+
+```{r ridgeline, }
+df <- mtcars
+df$cyl <- as.character(df$cyl)
+
+myIO() |>
+  addIoLayer(
+    type = "ridgeline",
+    color = c("#4E79A7", "#F28E2B", "#E15759"),
+    label = "MPG Distribution",
+    data = df,
+    mapping = list(x_var = "hp", y_var = "mpg", group = "cyl"),
+    options = list(overlap = 0.5)
+  ) |>
+  setAxisFormat(xLabel = "Horsepower", yLabel = "Density") |>
+  setMargin(top = 20, bottom = 70, left = 60, right = 10)
+```
