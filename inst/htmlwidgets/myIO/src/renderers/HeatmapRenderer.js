@@ -38,6 +38,11 @@ export class HeatmapRenderer {
       .append("rect")
       .attr("class", tagName("heatmap", chart.element.id, layer.label))
       .attr("clip-path", "url(#" + chart.element.id + "clip)")
+      .attr("x", function(d) { return chart.xScale(d[xVar]); })
+      .attr("y", function(d) { return chart.yScale(d[yVar]); })
+      .attr("width", cellWidth)
+      .attr("height", cellHeight)
+      .attr("fill", function(d) { return chart.colorContinuous(+d[valueVar]); })
       .style("opacity", 0);
 
     cells.merge(newCells)

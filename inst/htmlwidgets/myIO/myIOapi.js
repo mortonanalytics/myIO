@@ -1675,7 +1675,13 @@
       cells.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
       var cellWidth = chart.xScale.bandwidth ? chart.xScale.bandwidth() : 0;
       var cellHeight = chart.yScale.bandwidth ? chart.yScale.bandwidth() : 0;
-      var newCells = cells.enter().append("rect").attr("class", tagName("heatmap", chart.element.id, layer.label)).attr("clip-path", "url(#" + chart.element.id + "clip)").style("opacity", 0);
+      var newCells = cells.enter().append("rect").attr("class", tagName("heatmap", chart.element.id, layer.label)).attr("clip-path", "url(#" + chart.element.id + "clip)").attr("x", function(d) {
+        return chart.xScale(d[xVar]);
+      }).attr("y", function(d) {
+        return chart.yScale(d[yVar]);
+      }).attr("width", cellWidth).attr("height", cellHeight).attr("fill", function(d) {
+        return chart.colorContinuous(+d[valueVar]);
+      }).style("opacity", 0);
       cells.merge(newCells).transition().ease(d3.easeQuad).duration(transitionSpeed).attr("x", function(d) {
         return chart.xScale(d[xVar]);
       }).attr("y", function(d) {
