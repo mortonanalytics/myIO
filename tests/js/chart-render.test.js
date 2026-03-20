@@ -44,6 +44,7 @@ describe("chart-render utility functions", function() {
 
   test("usesContinuousLegend only true for hexbin", function() {
     expect(usesContinuousLegend("hexbin")).toBe(true);
+    expect(usesContinuousLegend("heatmap")).toBe(true);
     expect(usesContinuousLegend("line")).toBe(false);
   });
 

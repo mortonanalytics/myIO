@@ -26,7 +26,7 @@ OKABE_ITO_PALETTE <- c(
 
 ALLOWED_TYPES <- c(
   "line", "point", "bar", "hexbin", "treemap", "gauge",
-  "donut", "area", "groupedBar", "histogram"
+  "donut", "area", "groupedBar", "histogram", "heatmap"
 )
 
 COMPATIBILITY_GROUPS <- list(
@@ -36,6 +36,7 @@ COMPATIBILITY_GROUPS <- list(
   bar = "axes-categorical",
   groupedBar = "axes-categorical",
   histogram = "axes-binned",
+  heatmap = "axes-matrix",
   hexbin = "axes-hex",
   treemap = "standalone-treemap",
   donut = "standalone-donut",
@@ -46,6 +47,7 @@ GROUP_MATRIX <- list(
   "axes-continuous" = c("axes-continuous", "axes-categorical", "axes-binned"),
   "axes-categorical" = c("axes-continuous", "axes-categorical"),
   "axes-binned" = c("axes-continuous", "axes-binned"),
+  "axes-matrix" = c("axes-matrix"),
   "axes-hex" = c("axes-hex"),
   "standalone-treemap" = c("standalone-treemap"),
   "standalone-donut" = c("standalone-donut"),
@@ -59,6 +61,7 @@ VALID_COMBINATIONS <- list(
   bar = c("identity"),
   groupedBar = c("identity"),
   histogram = c("identity"),
+  heatmap = c("identity"),
   hexbin = c("identity"),
   treemap = c("identity"),
   donut = c("identity"),

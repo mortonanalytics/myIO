@@ -10,6 +10,7 @@ import { HexbinRenderer } from "./renderers/HexbinRenderer.js";
 import { TreemapRenderer } from "./renderers/TreemapRenderer.js";
 import { DonutRenderer } from "./renderers/DonutRenderer.js";
 import { GaugeRenderer } from "./renderers/GaugeRenderer.js";
+import { HeatmapRenderer } from "./renderers/HeatmapRenderer.js";
 
 export function registerRenderer(type, RendererClass) {
   if (rendererRegistry.has(type)) {
@@ -72,6 +73,9 @@ export function registerBuiltInRenderers() {
   }
   if (!rendererRegistry.has(GaugeRenderer.type)) {
     registerRenderer(GaugeRenderer.type, new GaugeRenderer());
+  }
+  if (!rendererRegistry.has(HeatmapRenderer.type)) {
+    registerRenderer(HeatmapRenderer.type, new HeatmapRenderer());
   }
 
   return rendererRegistry;

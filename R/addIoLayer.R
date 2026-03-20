@@ -166,6 +166,7 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
     treemap = c("level_1", "level_2"),
     gauge = c("value"),
     histogram = c("value"),
+    heatmap = c("x_var", "y_var", "value"),
     area = c("x_var", "low_y", "high_y"),
     hexbin = c("x_var", "y_var", "radius"),
     c("x_var", "y_var")
@@ -189,6 +190,10 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
         stop("Mapped field '", mapping[[nf]], "' must be numeric for type '", type, "'.", call. = FALSE)
       }
     }
+  }
+
+  if (type == "heatmap" && !is.numeric(data[[mapping[["value"]]]])) {
+    stop("Mapped field '", mapping[["value"]], "' must be numeric for type '", type, "'.", call. = FALSE)
   }
 
   invisible(NULL)

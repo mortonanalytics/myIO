@@ -44,8 +44,8 @@ describe("Renderer static properties", function() {
     registerBuiltInRenderers();
   });
 
-  test("all 10 renderer types are registered", function() {
-    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge"];
+  test("all 11 renderer types are registered", function() {
+    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge", "heatmap"];
     types.forEach(function(type) {
       var renderer = getRenderer(type);
       expect(renderer).toBeDefined();
@@ -54,7 +54,7 @@ describe("Renderer static properties", function() {
   });
 
   test("each renderer has traits and dataContract", function() {
-    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge"];
+    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge", "heatmap"];
     types.forEach(function(type) {
       var renderer = getRenderer(type);
       expect(renderer.constructor.traits).toBeDefined();
@@ -70,7 +70,7 @@ describe("Renderer static properties", function() {
   });
 
   test("axes types have hasAxes=true", function() {
-    ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin"].forEach(function(type) {
+    ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "heatmap"].forEach(function(type) {
       expect(getRenderer(type).constructor.traits.hasAxes).toBe(true);
     });
   });
@@ -132,6 +132,45 @@ describe("Renderer formatTooltip methods", function() {
     var result = renderer.formatTooltip(chart, d, layer);
     expect(result.value).toBe(50);
     expect(result.label).toBe("band");
+  });
+
+  test("HeatmapRenderer.formatTooltip returns value and coordinates", function() {
+    var renderer = getRenderer("heatmap");
+    var chart = { colorContinuous: function() { return "#abc"; } };
+    var layer = { mapping: { x_var: "x", y_var: "y", value: "v" }, color: "blue", label: "cells" };
+    var d = { x: "A", y: "B", v: 9 };
+    var result = renderer.formatTooltip(chart, d, layer);
+    expect(result.title).toContain("x: A");
+    expect(result.title).toContain("y: B");
+    expect(result.value).toBe(9);
+  });
+
+  test("HeatmapRenderer.render creates rect cells and a continuous color scale", function() {
+    var renderer = getRenderer("heatmap");
+    document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
+    var el = document.getElementById("chart");
+    var chart = {
+      element: el,
+      chart: d3.select(el).select(".myIO-chart-area"),
+      derived: {},
+      options: { transition: { speed: 0 } },
+      xScale: d3.scaleBand().domain(["A", "B"]).range([0, 100]),
+      yScale: d3.scaleBand().domain(["Low", "High"]).range([100, 0])
+    };
+    var layer = {
+      label: "cells",
+      color: "blue",
+      mapping: { x_var: "x", y_var: "y", value: "v" },
+      data: [
+        { x: "A", y: "Low", v: 1 },
+        { x: "B", y: "High", v: 4 }
+      ]
+    };
+
+    renderer.render(chart, layer);
+
+    expect(chart.derived.colorContinuous).toBeDefined();
+    expect(document.querySelectorAll("rect." + "tag-heatmap-chart-cells").length).toBe(2);
   });
 
   test("HistogramRenderer.formatTooltip shows bin range", function() {
@@ -255,6 +294,14 @@ describe("Renderer remove methods", function() {
     var dom = makeDom();
     var chart = { dom: dom };
     var layer = { label: "density" };
+    renderer.remove(chart, layer);
+  });
+
+  test("HeatmapRenderer.remove removes heatmap cells", function() {
+    var renderer = getRenderer("heatmap");
+    var dom = makeDom();
+    var chart = { dom: dom };
+    var layer = { label: "cells" };
     renderer.remove(chart, layer);
   });
 

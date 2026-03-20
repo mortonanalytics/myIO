@@ -15,7 +15,7 @@ export function usesHistogramBins(type) {
 }
 
 export function usesContinuousLegend(type) {
-  return type === "hexbin";
+  return type === "hexbin" || type === "heatmap";
 }
 
 export function usesOrdinalLegend(type) {
