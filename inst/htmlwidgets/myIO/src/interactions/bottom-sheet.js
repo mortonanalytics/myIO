@@ -1,14 +1,5 @@
-import { exportToCsv } from "../utils/export-csv.js";
-import { getSVGString, svgString2Image } from "../utils/export-svg.js";
-import { saveAs } from "../utils/file-saver.js";
+import { BUTTON_LABELS, handleAction, iconCamera, iconFileDown, iconLayers, iconPercent } from "./buttons.js";
 import { isMobile } from "../utils/responsive.js";
-
-const BUTTON_LABELS = {
-  image: "Export as PNG",
-  chart: "Download CSV data",
-  percent: "Toggle percent view",
-  group2stack: "Toggle grouped/stacked layout"
-};
 
 const PANEL_OPEN_CLASS = "myIO-panel--open";
 const BACKDROP_OPEN_CLASS = "myIO-sheet-backdrop--open";
@@ -376,37 +367,6 @@ function buildActionData(chart) {
   return data;
 }
 
-function handleAction(chart, layers, name) {
-  if (name === "image") {
-    var svgString = getSVGString(chart.svg.node());
-    svgString2Image(svgString, 2 * chart.width, 2 * chart.height, "png", function(dataBlob) {
-      saveAs(dataBlob, chart.element.id + ".png");
-    });
-    return;
-  }
-
-  if (name === "chart") {
-    var csvData = [];
-    (chart.plotLayers || []).forEach(function(layer) {
-      csvData.push(layer.data);
-    });
-    exportToCsv(chart.element.id + "_data.csv", [].concat.apply([], csvData));
-    return;
-  }
-
-  if (name === "percent") {
-    var nextToggle = chart.runtime.activeY === chart.options.toggleY[0]
-      ? [chart.plotLayers[0].mapping.y_var, chart.options.yAxisFormat]
-      : chart.options.toggleY;
-    chart.toggleVarY(nextToggle);
-    return;
-  }
-
-  if (name === "group2stack") {
-    chart.toggleGroupedLayout(layers);
-  }
-}
-
 function toggleLayerVisibility(chart, item) {
   if (!chart.runtime) {
     chart.runtime = {};
@@ -718,20 +678,4 @@ function iconMore() {
 
 function iconClose() {
   return iconWrapper('<path d="M6 6 18 18"></path><path d="M18 6 6 18"></path>');
-}
-
-function iconCamera() {
-  return iconWrapper('<path d="M4 7h3l2-2h6l2 2h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"></path><circle cx="12" cy="13" r="4"></circle>');
-}
-
-function iconFileDown() {
-  return iconWrapper('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M12 12v6"></path><path d="m9 15 3 3 3-3"></path>');
-}
-
-function iconPercent() {
-  return iconWrapper('<line x1="19" y1="5" x2="5" y2="19"></line><circle cx="7" cy="7" r="2"></circle><circle cx="17" cy="17" r="2"></circle>');
-}
-
-function iconLayers() {
-  return iconWrapper('<rect x="4" y="5" width="14" height="4" rx="1"></rect><rect x="6" y="10" width="14" height="4" rx="1"></rect><rect x="8" y="15" width="14" height="4" rx="1"></rect>');
 }
