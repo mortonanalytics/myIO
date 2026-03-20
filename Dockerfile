@@ -14,9 +14,9 @@ COPY app/ /srv/shiny-server/
 
 RUN rm -rf /srv/shiny-server/sample-apps /srv/shiny-server/index.html
 
-# Verify all packages load
-RUN R -e "library(shiny); library(bslib); library(dplyr); library(myIO); cat('All packages OK\n')"
+# Verify app parses without error
+RUN R -e "library(shiny); library(bslib); library(dplyr); library(myIO); parse('/srv/shiny-server/app.R'); cat('All OK\n')"
 
 EXPOSE 3838
 
-CMD ["/usr/bin/shiny-server"]
+CMD ["R", "-e", "shiny::runApp('/srv/shiny-server', host = '0.0.0.0', port = 3838)"]
