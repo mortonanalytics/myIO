@@ -49,7 +49,8 @@ export class LineRenderer {
       })
       .attr("d", valueLine);
 
-    if (layer.transform !== "lm") {
+    var fittingTransforms = ["lm", "loess", "polynomial", "smooth"];
+    if (fittingTransforms.indexOf(layer.transform) === -1) {
       this.renderPoints(chart, layer);
     }
   }

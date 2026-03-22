@@ -56,7 +56,17 @@ export function processScales(chart, lys, semantics) {
   var globalXExtentFields = scaleSemantics.xExtentFields || ["x_var"];
   var yExtentFields = scaleSemantics.yExtentFields || ["y_var"];
 
-  lys.forEach(function(d) {
+  // Filter out non-axes layers (e.g. text annotations) from scale computation
+  var scaleLayers = lys.filter(function(layer) {
+    var hints = layer.scaleHints;
+    if (hints && Array.isArray(hints.xExtentFields) && hints.xExtentFields.length === 0
+        && Array.isArray(hints.yExtentFields) && hints.yExtentFields.length === 0) {
+      return false;
+    }
+    return true;
+  });
+
+  scaleLayers.forEach(function(d) {
     var layerXFields = (d.scaleHints && Array.isArray(d.scaleHints.xExtentFields))
       ? d.scaleHints.xExtentFields
       : globalXExtentFields;
