@@ -19,7 +19,8 @@ const COMPAT_GROUP = {
   treemap: "standalone-treemap",
   donut: "standalone-donut",
   gauge: "standalone-gauge",
-  text: "axes-continuous"
+  text: "axes-continuous",
+  bracket: "axes-continuous"
 };
 
 const CROSS_GROUP_ALLOWED = new Set([

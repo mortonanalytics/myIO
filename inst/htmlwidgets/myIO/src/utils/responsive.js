@@ -17,7 +17,7 @@ export function strokeWidth(chart) {
 }
 
 export function tagName(type, elementId, label) {
-  return "tag-" + type + "-" + elementId + "-" + String(label).replace(/\s+/g, "");
+  return "tag-" + type + "-" + elementId + "-" + String(label).replace(/[^a-zA-Z0-9_-]/g, "");
 }
 
 export function isColorSchemeActive(chart) {

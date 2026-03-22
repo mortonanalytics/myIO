@@ -14,7 +14,7 @@
     return responsiveValue(chart, 3, 1);
   }
   function tagName(type, elementId, label) {
-    return "tag-" + type + "-" + elementId + "-" + String(label).replace(/\s+/g, "");
+    return "tag-" + type + "-" + elementId + "-" + String(label).replace(/[^a-zA-Z0-9_-]/g, "");
   }
   function isColorSchemeActive(chart) {
     return chart.config.scales.colorScheme.enabled === true;
@@ -2329,6 +2329,58 @@
     }
   };
 
+  // inst/htmlwidgets/myIO/src/renderers/BracketRenderer.js
+  var BracketRenderer = class {
+    static type = "bracket";
+    static traits = {
+      hasAxes: true,
+      referenceLines: false,
+      legendType: "none",
+      binning: false,
+      rolloverStyle: "none",
+      scaleCapabilities: { invertX: false }
+    };
+    static scaleHints = {
+      xScaleType: "linear",
+      yScaleType: "linear",
+      xExtentFields: [],
+      yExtentFields: ["y"],
+      domainMerge: "union"
+    };
+    static dataContract = {
+      x1: { required: true, numeric: true },
+      x2: { required: true, numeric: true },
+      y: { required: true, numeric: true }
+    };
+    render(chart, layer) {
+      var className = tagName("bracket", chart.element.id, layer.label);
+      var tickHeight = 6;
+      var labelOffset = 4;
+      var transitionSpeed = chart.options.transition.speed;
+      var color = layer.color || "var(--text-color, #333)";
+      chart.chart.selectAll("." + className).remove();
+      var g = chart.chart.append("g").attr("class", className).attr("clip-path", "url(#" + chart.element.id + "clip)");
+      layer.data.forEach(function(d) {
+        var sx1 = chart.xScale(+d.x1);
+        var sx2 = chart.xScale(+d.x2);
+        var sy = chart.yScale(+d.y);
+        var bracket = g.append("g").style("opacity", 0);
+        bracket.append("line").attr("x1", sx1).attr("y1", sy).attr("x2", sx2).attr("y2", sy).attr("stroke", color).attr("stroke-width", 1.5);
+        bracket.append("line").attr("x1", sx1).attr("y1", sy).attr("x2", sx1).attr("y2", sy + tickHeight).attr("stroke", color).attr("stroke-width", 1.5);
+        bracket.append("line").attr("x1", sx2).attr("y1", sy).attr("x2", sx2).attr("y2", sy + tickHeight).attr("stroke", color).attr("stroke-width", 1.5);
+        bracket.append("text").attr("x", (sx1 + sx2) / 2).attr("y", sy - labelOffset).attr("text-anchor", "middle").style("font-size", "11px").style("font-family", "var(--font-family, sans-serif)").style("fill", color).text(d.label);
+        bracket.transition().duration(transitionSpeed).style("opacity", 1);
+      });
+    }
+    formatTooltip() {
+      return null;
+    }
+    remove(chart, layer) {
+      var className = tagName("bracket", chart.element.id, layer.label);
+      chart.chart.selectAll("." + className).remove();
+    }
+  };
+
   // inst/htmlwidgets/myIO/src/registry.js
   var rendererRegistry = /* @__PURE__ */ new Map();
   function registerRenderer(type, RendererClass) {
@@ -2404,6 +2456,9 @@
     }
     if (!rendererRegistry.has(TextRenderer.type)) {
       registerRenderer(TextRenderer.type, new TextRenderer());
+    }
+    if (!rendererRegistry.has(BracketRenderer.type)) {
+      registerRenderer(BracketRenderer.type, new BracketRenderer());
     }
     return rendererRegistry;
   }
@@ -3116,7 +3171,8 @@
     treemap: "standalone-treemap",
     donut: "standalone-donut",
     gauge: "standalone-gauge",
-    text: "axes-continuous"
+    text: "axes-continuous",
+    bracket: "axes-continuous"
   };
   var CROSS_GROUP_ALLOWED = /* @__PURE__ */ new Set([
     "axes-continuous:axes-categorical",
