@@ -18,3 +18,4 @@ coverage/
 /.claude
 .mcp.json
 /.playwright-mcp
+/screenshots
