@@ -28,7 +28,8 @@ ALLOWED_TYPES <- c(
   "line", "point", "bar", "hexbin", "treemap", "gauge",
   "donut", "area", "groupedBar", "histogram", "heatmap",
   "candlestick", "waterfall", "sankey", "boxplot", "violin",
-  "ridgeline", "rangeBar", "text", "regression"
+  "ridgeline", "rangeBar", "text", "regression", "bracket",
+  "comparison"
 )
 
 COMPATIBILITY_GROUPS <- list(
@@ -51,7 +52,9 @@ COMPATIBILITY_GROUPS <- list(
   donut = "standalone-donut",
   gauge = "standalone-gauge",
   text = "axes-continuous",
-  regression = "axes-continuous"
+  regression = "axes-continuous",
+  bracket = "axes-continuous",
+  comparison = "axes-categorical"
 )
 
 GROUP_MATRIX <- list(
@@ -85,7 +88,8 @@ VALID_COMBINATIONS <- list(
   treemap = c("identity"),
   donut = c("identity"),
   gauge = c("identity"),
-  text = c("identity")
+  text = c("identity"),
+  bracket = c("identity", "pairwise_test")
 )
 
 composite_registry <- function() {
@@ -93,7 +97,8 @@ composite_registry <- function() {
     boxplot = composite_boxplot,
     violin = composite_violin,
     ridgeline = composite_ridgeline,
-    regression = composite_regression
+    regression = composite_regression,
+    comparison = composite_comparison
   )
 }
 

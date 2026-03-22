@@ -45,8 +45,8 @@ describe("Renderer static properties", function() {
     registerBuiltInRenderers();
   });
 
-  test("all 14 renderer types are registered", function() {
-    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge", "heatmap", "candlestick", "waterfall", "sankey"];
+  test("all 17 renderer types are registered", function() {
+    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge", "heatmap", "candlestick", "waterfall", "sankey", "rangeBar", "text", "bracket"];
     types.forEach(function(type) {
       var renderer = getRenderer(type);
       expect(renderer).toBeDefined();
@@ -55,7 +55,7 @@ describe("Renderer static properties", function() {
   });
 
   test("each renderer has traits and dataContract", function() {
-    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge", "heatmap", "candlestick", "waterfall", "sankey"];
+    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge", "heatmap", "candlestick", "waterfall", "sankey", "rangeBar", "text", "bracket"];
     types.forEach(function(type) {
       var renderer = getRenderer(type);
       expect(renderer.constructor.traits).toBeDefined();
@@ -71,7 +71,7 @@ describe("Renderer static properties", function() {
   });
 
   test("axes types have hasAxes=true", function() {
-    ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "heatmap", "candlestick", "waterfall"].forEach(function(type) {
+    ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "heatmap", "candlestick", "waterfall", "rangeBar", "bracket"].forEach(function(type) {
       expect(getRenderer(type).constructor.traits.hasAxes).toBe(true);
     });
   });

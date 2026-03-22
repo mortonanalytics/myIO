@@ -314,6 +314,13 @@ TRANSFORM_INPUT_CONTRACTS <- list(
     required_map = c("x_var", "y_var"),
     skip_column_check = c("low_y", "high_y"),
     auto_mapping = list(low_y = "low_y", high_y = "high_y")
+  ),
+  pairwise_test = list(
+    required_map = c("x_var", "y_var"),
+    skip_column_check = c("x1", "x2", "y", "group1", "group2",
+                           "p_value", "label", "method", "statistic"),
+    auto_mapping = list(x1 = "x1", x2 = "x2", y = "y",
+                         label = "label", p_value = "p_value")
   )
 )
 
