@@ -18,7 +18,8 @@ const COMPAT_GROUP = {
   hexbin: "axes-hex",
   treemap: "standalone-treemap",
   donut: "standalone-donut",
-  gauge: "standalone-gauge"
+  gauge: "standalone-gauge",
+  text: "axes-continuous"
 };
 
 const CROSS_GROUP_ALLOWED = new Set([

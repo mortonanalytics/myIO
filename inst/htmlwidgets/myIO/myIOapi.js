@@ -2231,7 +2231,7 @@
     static type = "rangeBar";
     static traits = { hasAxes: true, referenceLines: false, legendType: "layer", binning: false, rolloverStyle: "element", scaleCapabilities: { invertX: false } };
     static scaleHints = { xScaleType: "linear", yScaleType: "linear", yExtentFields: ["low_y", "high_y"], domainMerge: "union" };
-    static dataContract = { x_var: { required: true, numeric: true }, low_y: { required: true, numeric: true }, high_y: { required: true, numeric: true } };
+    static dataContract = { x_var: { required: true }, low_y: { required: true, numeric: true }, high_y: { required: true, numeric: true } };
     render(chart, layer) {
       var transitionSpeed = chart.options.transition.speed;
       var xVar = layer.mapping.x_var;
@@ -3115,7 +3115,8 @@
     hexbin: "axes-hex",
     treemap: "standalone-treemap",
     donut: "standalone-donut",
-    gauge: "standalone-gauge"
+    gauge: "standalone-gauge",
+    text: "axes-continuous"
   };
   var CROSS_GROUP_ALLOWED = /* @__PURE__ */ new Set([
     "axes-continuous:axes-categorical",
