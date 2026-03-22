@@ -43,11 +43,12 @@ ui <- navbarPage(
       fluidRow(
         column(4, div(class = "feature-card",
           icon("layer-group", style = "font-size: 2rem; color: #4A5ACB;"),
-          h4("18 Chart Types"),
+          h4("20 Chart Types"),
           p("Scatter, line, bar, grouped bar, area, histogram,
              donut, gauge, treemap, hexbin, heatmap, candlestick,
              waterfall, sankey, boxplot, violin, ridgeline,
-             and regression with CI bands.")
+             regression, Q-Q plots, and group comparisons
+             with significance brackets.")
         )),
         column(4, div(class = "feature-card",
           icon("sliders", style = "font-size: 2rem; color: #4A5ACB;"),
@@ -165,6 +166,19 @@ ui <- navbarPage(
     ),
     tabPanel("Hexbin Density",
       div(class = "chart-container", myIOOutput("hexbinPlot", height = "500px"))
+    ),
+    tabPanel("Q-Q Plot",
+      fluidRow(
+        column(3,
+          wellPanel(
+            selectInput("qq_var", "Variable",
+              choices = c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width")),
+            checkboxInput("qq_envelope", "Show CI Envelope", value = TRUE),
+            checkboxInput("qq_grouped", "Group by Species", value = FALSE)
+          )
+        ),
+        column(9, myIOOutput("qqPlot", height = "500px"))
+      )
     )
   ),
 
@@ -211,6 +225,19 @@ ui <- navbarPage(
     ),
     tabPanel("Ridgeline",
       div(class = "chart-container", myIOOutput("ridgelinePlot", height = "500px"))
+    ),
+    tabPanel("Comparison",
+      fluidRow(
+        column(3,
+          wellPanel(
+            selectInput("cmp_method", "Test Method",
+              choices = c("t-test" = "t.test", "Wilcoxon" = "wilcox.test")),
+            selectInput("cmp_adjust", "P-value Adjustment",
+              choices = c("None" = "none", "Bonferroni" = "bonferroni", "Holm" = "holm", "BH" = "BH"))
+          )
+        ),
+        column(9, myIOOutput("comparisonPlot", height = "500px"))
+      )
     )
   ),
 
@@ -454,6 +481,29 @@ server <- function(input, output) {
         data = df, mapping = list(x_var = "hp", y_var = "mpg", group = "cyl"),
         options = list(overlap = 0.5, bandwidth = "nrd0")) %>%
       setAxisFormat(xLabel = "Horsepower", yLabel = "Density")
+  })
+
+  output$qqPlot <- renderMyIO({
+    mapping <- list(y_var = input$qq_var)
+    if (input$qq_grouped) mapping$group <- "Species"
+    myIO(data = iris) %>%
+      addIoLayer(type = "qq", color = c("#4E79A7", "#F28E2B", "#E15759"),
+        label = "Q-Q",
+        mapping = mapping,
+        options = list(envelope = input$qq_envelope)) %>%
+      setAxisFormat(xLabel = "Theoretical Quantiles", yLabel = "Sample Quantiles")
+  })
+
+  output$comparisonPlot <- renderMyIO({
+    myIO(data = iris) %>%
+      addIoLayer(type = "comparison", color = "#4E79A7",
+        label = "Sepal Width",
+        mapping = list(x_var = "Species", y_var = "Sepal.Width"),
+        options = list(
+          method = input$cmp_method,
+          p_adjust = input$cmp_adjust,
+          showOutliers = TRUE)) %>%
+      setAxisFormat(xLabel = "Species", yLabel = "Sepal Width")
   })
 
   output$regressionPlot <- renderMyIO({
