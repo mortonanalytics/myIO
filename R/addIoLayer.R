@@ -50,6 +50,9 @@ addIoLayer <- function(myIO,
     transform <- "cumulative"
   }
 
+  # Auto-inject mapping for transforms that produce output columns (Decision #11)
+  mapping <- inject_transform_mapping(transform, mapping)
+
   layer_id <- next_layer_id(existing_layers)
 
   if (is_composite(type)) {
@@ -172,28 +175,38 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
     }
   }
 
-  required_map <- switch(type,
-    treemap = c("level_1", "level_2"),
-    gauge = c("value"),
-    histogram = c("value"),
-    heatmap = c("x_var", "y_var", "value"),
-    candlestick = c("x_var", "open", "high", "low", "close"),
-    waterfall = c("x_var", "y_var"),
-    sankey = c("source", "target", "value"),
-    boxplot = c("x_var", "y_var"),
-    violin = c("x_var", "y_var"),
-    ridgeline = c("x_var", "y_var", "group"),
-    rangeBar = c("x_var", "low_y", "high_y"),
-    area = c("x_var", "low_y", "high_y"),
-    hexbin = c("x_var", "y_var", "radius"),
-    c("x_var", "y_var")
-  )
+  # Override required mapping for transforms that produce output columns
+  transform_contract <- TRANSFORM_INPUT_CONTRACTS[[transform]]
+  if (!is.null(transform_contract)) {
+    required_map <- transform_contract$required_map
+  } else {
+    required_map <- switch(type,
+      treemap = c("level_1", "level_2"),
+      gauge = c("value"),
+      histogram = c("value"),
+      heatmap = c("x_var", "y_var", "value"),
+      candlestick = c("x_var", "open", "high", "low", "close"),
+      waterfall = c("x_var", "y_var"),
+      sankey = c("source", "target", "value"),
+      boxplot = c("x_var", "y_var"),
+      violin = c("x_var", "y_var"),
+      ridgeline = c("x_var", "y_var", "group"),
+      rangeBar = c("x_var", "low_y", "high_y"),
+      area = c("x_var", "low_y", "high_y"),
+      hexbin = c("x_var", "y_var", "radius"),
+      c("x_var", "y_var")
+    )
+  }
   missing_map <- setdiff(required_map, names(mapping))
   if (length(missing_map) > 0) {
     stop("Missing required mapping: ", paste(missing_map, collapse = ", "), call. = FALSE)
   }
 
+  # Fields produced by the transform should be skipped in column-existence checks
+  skip_fields <- if (!is.null(transform_contract)) transform_contract$skip_column_check else character(0)
+
   mapped_fields <- intersect(c("x_var", "y_var", "group", "level_1", "level_2", "value", "low_y", "high_y", "open", "high", "low", "close", "total", "source", "target"), names(mapping))
+  mapped_fields <- setdiff(mapped_fields, skip_fields)
   for (field in mapped_fields) {
     if (!mapping[[field]] %in% colnames(data)) {
       stop("Mapping variable '", mapping[[field]], "' not found in data.", call. = FALSE)
@@ -201,6 +214,7 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
   }
 
   numeric_fields <- intersect(c("y_var", "value", "low_y", "high_y", "open", "high", "low", "close"), names(mapping))
+  numeric_fields <- setdiff(numeric_fields, skip_fields)
   if (type %in% c("line", "point", "bar", "hexbin", "area", "groupedBar", "histogram", "gauge", "donut", "candlestick", "waterfall", "sankey", "violin")) {
     for (nf in numeric_fields) {
       if (!is.numeric(data[[mapping[[nf]]]])) {
@@ -287,4 +301,30 @@ build_grouped_layers <- function(data, mapping, type, label, color, transform_fn
   }
 
   layers
+}
+
+# Transform input contracts: override validation for transforms that produce output columns
+TRANSFORM_INPUT_CONTRACTS <- list(
+  ci = list(
+    required_map = c("x_var", "y_var"),
+    skip_column_check = c("low_y", "high_y"),
+    auto_mapping = list(low_y = "low_y", high_y = "high_y")
+  ),
+  mean_ci = list(
+    required_map = c("x_var", "y_var"),
+    skip_column_check = c("low_y", "high_y"),
+    auto_mapping = list(low_y = "low_y", high_y = "high_y")
+  )
+)
+
+inject_transform_mapping <- function(transform, mapping) {
+  contract <- TRANSFORM_INPUT_CONTRACTS[[transform]]
+  if (!is.null(contract) && !is.null(contract$auto_mapping)) {
+    for (field in names(contract$auto_mapping)) {
+      if (is.null(mapping[[field]])) {
+        mapping[[field]] <- contract$auto_mapping[[field]]
+      }
+    }
+  }
+  mapping
 }

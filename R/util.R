@@ -28,7 +28,7 @@ ALLOWED_TYPES <- c(
   "line", "point", "bar", "hexbin", "treemap", "gauge",
   "donut", "area", "groupedBar", "histogram", "heatmap",
   "candlestick", "waterfall", "sankey", "boxplot", "violin",
-  "ridgeline", "rangeBar"
+  "ridgeline", "rangeBar", "text", "regression"
 )
 
 COMPATIBILITY_GROUPS <- list(
@@ -49,7 +49,9 @@ COMPATIBILITY_GROUPS <- list(
   hexbin = "axes-hex",
   treemap = "standalone-treemap",
   donut = "standalone-donut",
-  gauge = "standalone-gauge"
+  gauge = "standalone-gauge",
+  text = "axes-continuous",
+  regression = "axes-continuous"
 )
 
 GROUP_MATRIX <- list(
@@ -65,10 +67,10 @@ GROUP_MATRIX <- list(
 )
 
 VALID_COMBINATIONS <- list(
-  line = c("identity", "lm"),
-  point = c("identity"),
-  area = c("identity"),
-  bar = c("identity"),
+  line = c("identity", "lm", "loess", "polynomial", "smooth"),
+  point = c("identity", "mean", "summary", "residuals"),
+  area = c("identity", "ci"),
+  bar = c("identity", "mean", "summary"),
   groupedBar = c("identity"),
   histogram = c("identity"),
   heatmap = c("identity"),
@@ -78,18 +80,20 @@ VALID_COMBINATIONS <- list(
   boxplot = c("identity"),
   violin = c("identity"),
   ridgeline = c("identity"),
-  rangeBar = c("identity"),
+  rangeBar = c("identity", "mean_ci"),
   hexbin = c("identity"),
   treemap = c("identity"),
   donut = c("identity"),
-  gauge = c("identity")
+  gauge = c("identity"),
+  text = c("identity")
 )
 
 composite_registry <- function() {
   list(
     boxplot = composite_boxplot,
     violin = composite_violin,
-    ridgeline = composite_ridgeline
+    ridgeline = composite_ridgeline,
+    regression = composite_regression
   )
 }
 
