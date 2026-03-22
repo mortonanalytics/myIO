@@ -19,3 +19,7 @@ coverage/
 .mcp.json
 /.playwright-mcp
 /screenshots
+/screenshots-review
+review-home.png
+/scripts
+/md
