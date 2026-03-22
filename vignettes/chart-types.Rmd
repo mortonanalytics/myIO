@@ -17,7 +17,7 @@ library(myIO)
 
 ## Overview
 
-myIO supports 17 chart types via the `type` argument in `addIoLayer()`.
+myIO supports 20 chart types via the `type` argument in `addIoLayer()`.
 This vignette shows an example of each.
 
 All examples use built-in R datasets so you can copy and run them directly.
@@ -30,8 +30,8 @@ types like treemap or gauge cannot be mixed with other types.
 
 | Group | Types |
 |-------|-------|
-| Continuous axes | `line`, `point`, `area`, `candlestick` |
-| Categorical axes | `bar`, `groupedBar`, `waterfall`, `boxplot`, `violin` |
+| Continuous axes | `line`, `point`, `area`, `candlestick`, `bracket`, `qq` |
+| Categorical axes | `bar`, `groupedBar`, `waterfall`, `boxplot`, `violin`, `comparison` |
 | Binned axes | `histogram`, `ridgeline` |
 | Matrix axes | `heatmap` |
 | Standalone | `hexbin`, `treemap`, `donut`, `gauge`, `sankey` |
@@ -358,6 +358,70 @@ myIO() |>
 ```
 
 Options: `overlap` (0-1, default 0.6), `bandwidth` (KDE bandwidth).
+
+### Q-Q Plot (Composite)
+
+Q-Q (quantile-quantile) plots compare sample quantiles against a theoretical
+distribution to assess normality. The composite expands into a point layer
+(Q-Q scatter), a reference line (through Q1/Q3), and an optional confidence
+envelope. Only `y_var` is required in the mapping:
+
+```{r qq, eval = FALSE}
+myIO() |>
+  addIoLayer(
+    type = "qq",
+    color = "#4E79A7",
+    label = "MPG Normality",
+    data = mtcars,
+    mapping = list(y_var = "mpg")
+  ) |>
+  setAxisFormat(xLabel = "Theoretical Quantiles", yLabel = "Sample Quantiles")
+```
+
+Options: `envelope` (TRUE), `conf_level` (0.95), `distribution` ("norm"),
+`qfunc` (custom quantile function). Supports grouped Q-Q via `group` mapping.
+
+### Comparison (Composite)
+
+Comparison plots combine boxplots with pairwise significance brackets showing
+p-values from hypothesis tests. The composite expands into boxplot sub-layers
+plus a bracket layer with test results:
+
+```{r comparison, eval = FALSE}
+myIO() |>
+  addIoLayer(
+    type = "comparison",
+    color = "#4E79A7",
+    label = "Species Comparison",
+    data = iris,
+    mapping = list(x_var = "Species", y_var = "Sepal.Width"),
+    options = list(method = "t.test", p_adjust = "bonferroni")
+  ) |>
+  setAxisFormat(xLabel = "Species", yLabel = "Sepal Width (cm)")
+```
+
+Options: `method` ("t.test" or "wilcox.test"), `p_adjust` ("none", "bonferroni",
+"holm", "BH"), `comparisons` (list of specific pairs), `showOutliers` (TRUE).
+
+### Bracket (Standalone Layer)
+
+Brackets can also be added as a standalone layer on top of any grouped chart.
+Use `transform = "pairwise_test"` to compute significance tests:
+
+```{r bracket, eval = FALSE}
+myIO() |>
+  addIoLayer(
+    type = "boxplot", color = "#4E79A7",
+    label = "Sepal Width", data = iris,
+    mapping = list(x_var = "Species", y_var = "Sepal.Width")
+  ) |>
+  addIoLayer(
+    type = "bracket", label = "Tests",
+    transform = "pairwise_test", data = iris,
+    mapping = list(x_var = "Species", y_var = "Sepal.Width"),
+    options = list(method = "wilcox.test", p_adjust = "holm")
+  )
+```
 
 ---
 
