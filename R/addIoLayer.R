@@ -190,6 +190,7 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
       sankey = c("source", "target", "value"),
       boxplot = c("x_var", "y_var"),
       violin = c("x_var", "y_var"),
+      qq = c("y_var"),
       ridgeline = c("x_var", "y_var", "group"),
       rangeBar = c("x_var", "low_y", "high_y"),
       area = c("x_var", "low_y", "high_y"),

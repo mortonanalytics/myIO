@@ -29,7 +29,7 @@ ALLOWED_TYPES <- c(
   "donut", "area", "groupedBar", "histogram", "heatmap",
   "candlestick", "waterfall", "sankey", "boxplot", "violin",
   "ridgeline", "rangeBar", "text", "regression", "bracket",
-  "comparison"
+  "comparison", "qq"
 )
 
 COMPATIBILITY_GROUPS <- list(
@@ -54,7 +54,8 @@ COMPATIBILITY_GROUPS <- list(
   text = "axes-continuous",
   regression = "axes-continuous",
   bracket = "axes-continuous",
-  comparison = "axes-categorical"
+  comparison = "axes-categorical",
+  qq = "axes-continuous"
 )
 
 GROUP_MATRIX <- list(
@@ -98,7 +99,8 @@ composite_registry <- function() {
     violin = composite_violin,
     ridgeline = composite_ridgeline,
     regression = composite_regression,
-    comparison = composite_comparison
+    comparison = composite_comparison,
+    qq = composite_qq
   )
 }
 
