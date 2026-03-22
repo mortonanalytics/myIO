@@ -43,16 +43,18 @@ ui <- navbarPage(
       fluidRow(
         column(4, div(class = "feature-card",
           icon("layer-group", style = "font-size: 2rem; color: #4A5ACB;"),
-          h4("17 Chart Types"),
+          h4("18 Chart Types"),
           p("Scatter, line, bar, grouped bar, area, histogram,
              donut, gauge, treemap, hexbin, heatmap, candlestick,
-             waterfall, sankey, boxplot, violin, and ridgeline.")
+             waterfall, sankey, boxplot, violin, ridgeline,
+             and regression with CI bands.")
         )),
         column(4, div(class = "feature-card",
           icon("sliders", style = "font-size: 2rem; color: #4A5ACB;"),
-          h4("Reactive & Composable"),
-          p("Every chart is a Shiny-ready htmlwidget with
-             chainable functions like setTheme() and flipAxis().")
+          h4("Statistical Transforms"),
+          p("Built-in CI bands, LOESS smoothing, moving averages,
+             mean \u00B1 CI error bars, and regression diagnostics.
+             Composable and chainable.")
         )),
         column(4, div(class = "feature-card",
           icon("code", style = "font-size: 2rem; color: #4A5ACB;"),
@@ -110,6 +112,48 @@ ui <- navbarPage(
   navbarMenu("Statistical", icon = icon("chart-line"),
     tabPanel("Scatter + Trend",
       div(class = "chart-container", myIOOutput("pointPlot", height = "500px"))
+    ),
+    tabPanel("Regression + CI",
+      fluidRow(
+        column(3,
+          wellPanel(
+            selectInput("reg_method", "Method",
+              choices = c("Linear" = "lm", "LOESS" = "loess", "Polynomial" = "polynomial")),
+            sliderInput("reg_level", "Confidence Level", min = 0.80, max = 0.99, value = 0.95, step = 0.01),
+            selectInput("reg_interval", "Interval Type",
+              choices = c("Confidence" = "confidence", "Prediction" = "prediction"))
+          )
+        ),
+        column(9, myIOOutput("regressionPlot", height = "500px"))
+      )
+    ),
+    tabPanel("LOESS Smoothing",
+      fluidRow(
+        column(3,
+          wellPanel(sliderInput("loess_span", "Span", min = 0.1, max = 1.0, value = 0.5, step = 0.05))
+        ),
+        column(9, myIOOutput("loessPlot", height = "500px"))
+      )
+    ),
+    tabPanel("Mean \u00B1 CI",
+      div(class = "chart-container", myIOOutput("meanCIPlot", height = "500px"))
+    ),
+    tabPanel("Moving Average",
+      fluidRow(
+        column(3,
+          wellPanel(
+            selectInput("ma_method", "Method", choices = c("Simple MA" = "sma", "Exponential MA" = "ema")),
+            conditionalPanel("input.ma_method == 'sma'",
+              sliderInput("ma_window", "Window", min = 3, max = 30, value = 10, step = 1)),
+            conditionalPanel("input.ma_method == 'ema'",
+              sliderInput("ma_alpha", "Alpha", min = 0.05, max = 0.5, value = 0.2, step = 0.05))
+          )
+        ),
+        column(9, myIOOutput("movingAvgPlot", height = "500px"))
+      )
+    ),
+    tabPanel("Residuals",
+      div(class = "chart-container", myIOOutput("residualPlot", height = "500px"))
     ),
     tabPanel("Histogram",
       fluidRow(
@@ -394,6 +438,86 @@ server <- function(input, output) {
         data = df, mapping = list(x_var = "hp", y_var = "mpg", group = "cyl"),
         options = list(overlap = 0.5, bandwidth = "nrd0")) %>%
       setAxisFormat(xLabel = "Horsepower", yLabel = "Density")
+  })
+
+  output$regressionPlot <- renderMyIO({
+    set.seed(42)
+    df <- data.frame(x = 1:40, y = 0.8 * (1:40) + sin(1:40) * 5 + rnorm(40, sd = 3))
+    myIO(data = df) %>%
+      addIoLayer(type = "regression", label = "Regression",
+        mapping = list(x_var = "x", y_var = "y"),
+        options = list(
+          method = input$reg_method,
+          showCI = TRUE,
+          level = input$reg_level,
+          interval = input$reg_interval,
+          showStats = (input$reg_method %in% c("lm", "polynomial")),
+          degree = 3,
+          span = 0.5
+        )) %>%
+      setAxisFormat(xLabel = "X", yLabel = "Y")
+  })
+
+  output$loessPlot <- renderMyIO({
+    set.seed(42)
+    df <- data.frame(
+      x = 1:60,
+      y = sin(seq(0, 4 * pi, length.out = 60)) * 10 + rnorm(60, sd = 2))
+    myIO(data = df) %>%
+      addIoLayer(type = "point", color = "#4E79A7", label = "Data",
+        mapping = list(x_var = "x", y_var = "y")) %>%
+      addIoLayer(type = "line", color = "#E15759", label = "LOESS Trend",
+        transform = "loess",
+        mapping = list(x_var = "x", y_var = "y"),
+        options = list(span = input$loess_span)) %>%
+      addIoLayer(type = "area", color = "#E15759", label = "95% CI",
+        transform = "ci",
+        mapping = list(x_var = "x", y_var = "y"),
+        options = list(method = "loess", span = input$loess_span, level = 0.95)) %>%
+      setAxisFormat(xLabel = "X", yLabel = "Y")
+  })
+
+  output$meanCIPlot <- renderMyIO({
+    myIO(data = iris) %>%
+      addIoLayer(type = "rangeBar", color = "#4E79A7", label = "Mean \u00B1 95% CI",
+        transform = "mean_ci",
+        mapping = list(x_var = "Species", y_var = "Sepal.Length"),
+        options = list(level = 0.95)) %>%
+      defineCategoricalAxis(xAxis = TRUE) %>%
+      setAxisFormat(xLabel = "Species", yLabel = "Sepal Length")
+  })
+
+  output$movingAvgPlot <- renderMyIO({
+    set.seed(42)
+    df <- data.frame(x = 1:100, y = cumsum(rnorm(100, mean = 0.2, sd = 1)))
+    w <- myIO(data = df) %>%
+      addIoLayer(type = "line", color = "#CCCCCC", label = "Raw",
+        mapping = list(x_var = "x", y_var = "y"))
+    if (input$ma_method == "sma") {
+      w <- w %>%
+        addIoLayer(type = "line", color = "#E15759", label = "Smoothed",
+          transform = "smooth",
+          mapping = list(x_var = "x", y_var = "y"),
+          options = list(method = "sma", window = input$ma_window))
+    } else {
+      w <- w %>%
+        addIoLayer(type = "line", color = "#E15759", label = "Smoothed",
+          transform = "smooth",
+          mapping = list(x_var = "x", y_var = "y"),
+          options = list(method = "ema", alpha = input$ma_alpha))
+    }
+    w %>% setAxisFormat(xLabel = "Time", yLabel = "Value")
+  })
+
+  output$residualPlot <- renderMyIO({
+    set.seed(42)
+    df <- data.frame(x = 1:40, y = 2.5 * (1:40) + rnorm(40, sd = 5))
+    myIO(data = df) %>%
+      addIoLayer(type = "point", color = "#4E79A7", label = "Residuals",
+        transform = "residuals",
+        mapping = list(x_var = "x", y_var = "y")) %>%
+      setReferenceLines(yRef = 0) %>%
+      setAxisFormat(xLabel = "Fitted Values", yLabel = "Residuals")
   })
 
   output$themePlot <- renderMyIO({
