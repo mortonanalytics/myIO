@@ -236,13 +236,13 @@ server <- function(input, output) {
 
   output$barPlot <- renderMyIO({
     df <- data.frame(
-      category = c("Alpha", "Beta", "Gamma", "Delta", "Epsilon"),
-      value = c(42, 87, 63, 29, 55), stringsAsFactors = FALSE)
+      language = c("Python", "JavaScript", "Java", "R", "Go"),
+      postings = c(87, 63, 55, 42, 29), stringsAsFactors = FALSE)
     myIO() %>%
-      addIoLayer(type = "bar", color = "#59A14F", label = "Values",
-        data = df, mapping = list(x_var = "category", y_var = "value")) %>%
+      addIoLayer(type = "bar", color = "#59A14F", label = "Job Postings",
+        data = df, mapping = list(x_var = "language", y_var = "postings")) %>%
       defineCategoricalAxis(xAxis = TRUE) %>%
-      setAxisFormat(yAxis = ".0f", xLabel = "Category", yLabel = "Value")
+      setAxisFormat(yAxis = ".0f", xLabel = "Language", yLabel = "Job Postings (K)")
   })
 
   output$groupedBar <- renderMyIO({
@@ -279,8 +279,7 @@ server <- function(input, output) {
         color = c("#4E79A7", "#F28E2B", "#E15759", "#76B7B2", "#59A14F"),
         label = "Temp",
         data = df, mapping = list(x_var = "Day", y_var = "Temp", group = "Month")) %>%
-      setAxisLimits(ylim = list(min = 0)) %>%
-      setAxisFormat(xAxis = ".0f", yAxis = ".0f", xLabel = "Day", yLabel = "Temperature")
+      setAxisFormat(xAxis = ".0f", yAxis = ".0f", xLabel = "Day", yLabel = "Temperature (F)")
   })
 
   output$areaPlot <- renderMyIO({
@@ -308,11 +307,14 @@ server <- function(input, output) {
   })
 
   output$histPlot <- renderMyIO({
-    df <- data.frame(value = rnorm(input$hist_n, mean = 50, sd = 15))
+    set.seed(42)
+    n <- input$hist_n
+    df <- data.frame(value = c(rnorm(n %/% 2, mean = 35, sd = 8),
+                                rnorm(n - n %/% 2, mean = 65, sd = 10)))
     myIO() %>%
       addIoLayer(type = "histogram", color = "#76B7B2", label = "Distribution",
         data = df, mapping = list(value = "value")) %>%
-      setAxisFormat(xAxis = ".0f", yAxis = ".0f", xLabel = "Value", yLabel = "Count")
+      setAxisFormat(xAxis = ".0f", yAxis = ".0f", xLabel = "Response Time (ms)", yLabel = "Frequency")
   })
 
   output$hexbinPlot <- renderMyIO({
@@ -323,7 +325,7 @@ server <- function(input, output) {
     myIO() %>%
       addIoLayer(type = "hexbin", color = "#4E79A7", label = "Density",
         data = df, mapping = list(x_var = "x", y_var = "y", radius = 20)) %>%
-      setAxisFormat(xLabel = "X", yLabel = "Y")
+      setAxisFormat(xLabel = "Height (in)", yLabel = "Weight (lbs)")
   })
 
   output$donutPlot <- renderMyIO({
@@ -348,42 +350,47 @@ server <- function(input, output) {
 
   output$treemapPlot <- renderMyIO({
     df <- data.frame(
-      department = c("Eng", "Eng", "Eng", "Sales", "Sales", "Marketing", "Marketing", "Marketing"),
+      department = c("Engineering", "Engineering", "Engineering", "Sales", "Sales", "Marketing", "Marketing", "Marketing"),
       team = c("Frontend", "Backend", "Infra", "Enterprise", "SMB", "Content", "Paid", "Brand"),
       headcount = c(25, 30, 15, 20, 18, 12, 10, 8), stringsAsFactors = FALSE)
     myIO() %>%
       addIoLayer(type = "treemap", color = c("#4E79A7", "#F28E2B", "#E15759"),
-        label = "Org Chart",
+        label = "Headcount by Department",
         data = df, mapping = list(level_1 = "department", level_2 = "team", y_var = "headcount", x_var = "team"))
   })
 
   output$heatmapPlot <- renderMyIO({
     df <- expand.grid(
       x = c("Q1", "Q2", "Q3", "Q4"),
-      y = c("Low", "Mid", "High"),
+      y = c("Basic", "Pro", "Enterprise"),
       stringsAsFactors = FALSE
     )
-    df$value <- c(2, 4, 6, 5, 7, 9, 4, 6, 8, 3, 5, 7)
+    df$value <- c(12, 15, 22, 30, 5, 8, 14, 25, 2, 3, 6, 18)
     myIO() %>%
-      addIoLayer(type = "heatmap", color = "#4E79A7", label = "Heatmap",
+      addIoLayer(type = "heatmap", color = "#4E79A7", label = "Signups",
         data = df, mapping = list(x_var = "x", y_var = "y", value = "value")) %>%
       defineCategoricalAxis(xAxis = TRUE, yAxis = TRUE) %>%
-      setAxisFormat(xLabel = "Quarter", yLabel = "Segment")
+      setAxisFormat(xLabel = "Quarter", yLabel = "Tier")
   })
 
   output$candlestickPlot <- renderMyIO({
+    set.seed(42)
+    n <- 30
+    prices <- numeric(n)
+    prices[1] <- 100
+    for (i in 2:n) prices[i] <- prices[i - 1] + rnorm(1, mean = 0.3, sd = 2)
     df <- data.frame(
-      session = 1:10,
-      open  = c(44, 46, 43, 47, 45, 48, 46, 50, 48, 51),
-      high  = c(48, 49, 47, 50, 48, 51, 49, 53, 51, 54),
-      low   = c(42, 43, 41, 44, 43, 45, 44, 47, 46, 49),
-      close = c(46, 43, 46, 44, 48, 45, 49, 48, 51, 53),
+      day = 1:n,
+      open = prices + runif(n, -1, 1),
+      close = prices + runif(n, -1, 1),
       stringsAsFactors = FALSE
     )
+    df$high <- pmax(df$open, df$close) + abs(rnorm(n, 0, 1.5))
+    df$low <- pmin(df$open, df$close) - abs(rnorm(n, 0, 1.5))
     myIO() %>%
-      addIoLayer(type = "candlestick", color = "#59A14F", label = "Candles",
-        data = df, mapping = list(x_var = "session", open = "open", high = "high", low = "low", close = "close")) %>%
-      setAxisFormat(xAxis = ".0f", yAxis = "$,.0f", xLabel = "Session", yLabel = "Price")
+      addIoLayer(type = "candlestick", color = "#59A14F", label = "ACME Corp",
+        data = df, mapping = list(x_var = "day", open = "open", high = "high", low = "low", close = "close")) %>%
+      setAxisFormat(xAxis = ".0f", yAxis = "$,.0f", xLabel = "Trading Day", yLabel = "Price")
   })
 
   output$waterfallPlot <- renderMyIO({
@@ -402,14 +409,23 @@ server <- function(input, output) {
 
   output$sankeyPlot <- renderMyIO({
     df <- data.frame(
-      source = c("Awareness", "Awareness", "Interest", "Interest", "Purchase"),
-      target = c("Interest", "Purchase", "Purchase", "Drop-off", "Repeat"),
-      value = c(12, 3, 7, 5, 2),
+      source = c("Organic", "Organic", "Paid", "Paid", "Referral",
+                  "Trial", "Trial", "Trial", "Demo", "Demo",
+                  "Converted", "Converted"),
+      target = c("Trial", "Bounce", "Trial", "Demo", "Trial",
+                  "Converted", "Churned", "Demo", "Converted", "Lost",
+                  "Annual", "Monthly"),
+      value = c(40, 15, 25, 10, 20,
+                30, 25, 30, 25, 15,
+                35, 20),
       stringsAsFactors = FALSE
     )
     myIO() %>%
-      addIoLayer(type = "sankey", color = c("#4E79A7", "#F28E2B", "#E15759", "#76B7B2", "#59A14F"),
-        label = "Funnel",
+      addIoLayer(type = "sankey",
+        color = c("#4E79A7", "#F28E2B", "#E15759", "#76B7B2", "#59A14F",
+                  "#EDC948", "#B07AA1", "#FF9DA7", "#9C755F", "#BAB0AC",
+                  "#4E79A7", "#F28E2B"),
+        label = "Acquisition Funnel",
         data = df, mapping = list(source = "source", target = "target", value = "value"))
   })
 
@@ -442,10 +458,11 @@ server <- function(input, output) {
 
   output$regressionPlot <- renderMyIO({
     set.seed(42)
-    df <- data.frame(x = 1:40, y = 0.8 * (1:40) + sin(1:40) * 5 + rnorm(40, sd = 3))
+    day <- 1:40
+    df <- data.frame(day = day, yield = 0.8 * day + sin(day) * 5 + rnorm(40, sd = 3))
     myIO(data = df) %>%
-      addIoLayer(type = "regression", label = "Regression",
-        mapping = list(x_var = "x", y_var = "y"),
+      addIoLayer(type = "regression", label = "Yield Model",
+        mapping = list(x_var = "day", y_var = "yield"),
         options = list(
           method = input$reg_method,
           showCI = TRUE,
@@ -455,26 +472,27 @@ server <- function(input, output) {
           degree = 3,
           span = 0.5
         )) %>%
-      setAxisFormat(xLabel = "X", yLabel = "Y")
+      setAxisFormat(xLabel = "Day of Experiment", yLabel = "Yield (mg)")
   })
 
   output$loessPlot <- renderMyIO({
     set.seed(42)
+    week <- 1:60
     df <- data.frame(
-      x = 1:60,
-      y = sin(seq(0, 4 * pi, length.out = 60)) * 10 + rnorm(60, sd = 2))
+      week = week,
+      reading = sin(seq(0, 4 * pi, length.out = 60)) * 10 + rnorm(60, sd = 2))
     myIO(data = df) %>%
-      addIoLayer(type = "point", color = "#4E79A7", label = "Data",
-        mapping = list(x_var = "x", y_var = "y")) %>%
+      addIoLayer(type = "point", color = "#4E79A7", label = "Readings",
+        mapping = list(x_var = "week", y_var = "reading")) %>%
       addIoLayer(type = "line", color = "#E15759", label = "LOESS Trend",
         transform = "loess",
-        mapping = list(x_var = "x", y_var = "y"),
+        mapping = list(x_var = "week", y_var = "reading"),
         options = list(span = input$loess_span)) %>%
       addIoLayer(type = "area", color = "#E15759", label = "95% CI",
         transform = "ci",
-        mapping = list(x_var = "x", y_var = "y"),
+        mapping = list(x_var = "week", y_var = "reading"),
         options = list(method = "loess", span = input$loess_span, level = 0.95)) %>%
-      setAxisFormat(xLabel = "X", yLabel = "Y")
+      setAxisFormat(xLabel = "Week", yLabel = "Sensor Reading")
   })
 
   output$meanCIPlot <- renderMyIO({
@@ -489,31 +507,32 @@ server <- function(input, output) {
 
   output$movingAvgPlot <- renderMyIO({
     set.seed(42)
-    df <- data.frame(x = 1:100, y = cumsum(rnorm(100, mean = 0.2, sd = 1)))
+    df <- data.frame(day = 1:100, price = cumsum(rnorm(100, mean = 0.2, sd = 1)) + 50)
     w <- myIO(data = df) %>%
-      addIoLayer(type = "line", color = "#CCCCCC", label = "Raw",
-        mapping = list(x_var = "x", y_var = "y"))
+      addIoLayer(type = "line", color = "#CCCCCC", label = "Daily Close",
+        mapping = list(x_var = "day", y_var = "price"))
     if (input$ma_method == "sma") {
       w <- w %>%
         addIoLayer(type = "line", color = "#E15759", label = "Smoothed",
           transform = "smooth",
-          mapping = list(x_var = "x", y_var = "y"),
+          mapping = list(x_var = "day", y_var = "price"),
           options = list(method = "sma", window = input$ma_window))
     } else {
       w <- w %>%
         addIoLayer(type = "line", color = "#E15759", label = "Smoothed",
           transform = "smooth",
-          mapping = list(x_var = "x", y_var = "y"),
+          mapping = list(x_var = "day", y_var = "price"),
           options = list(method = "ema", alpha = input$ma_alpha))
     }
-    w %>% setAxisFormat(xLabel = "Time", yLabel = "Value")
+    w %>% setAxisFormat(xLabel = "Trading Day", yLabel = "Price ($)")
   })
 
   output$residualPlot <- renderMyIO({
     set.seed(42)
-    df <- data.frame(x = 1:40, y = 2.5 * (1:40) + rnorm(40, sd = 5))
+    x <- 1:40
+    df <- data.frame(x = x, y = 0.05 * x^2 + rnorm(40, sd = 3))
     myIO(data = df) %>%
-      addIoLayer(type = "point", color = "#4E79A7", label = "Residuals",
+      addIoLayer(type = "point", color = "#4E79A7", label = "Residuals (lm on quadratic data)",
         transform = "residuals",
         mapping = list(x_var = "x", y_var = "y")) %>%
       setReferenceLines(yRef = 0) %>%
