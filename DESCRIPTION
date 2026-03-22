@@ -3,16 +3,14 @@ Type: Package
 Title: Interactive Data Visualizations Using 'd3.js'
 Version: 1.0.0
 Authors@R: person("Ryan", "Morton", email = "morton@myma.us",
-    role = c("aut", "cre"))
-Author: Ryan Morton [aut, cre]
-Maintainer: Ryan Morton <morton@myma.us>
-Description: Create interactive data visualizations powered by 'd3.js' directly
-    from R. Provides a layered grammar for bindings composition, supporting
-    bar charts, line charts, scatter plots, histograms, treemaps, gauges,
-    hexbin plots, heatmaps, candlestick charts, waterfall charts, sankey
-    diagrams, boxplots, violin plots, and ridgeline plots. Includes
-    transform-driven derived layers, composite chart expansion, tooltips,
-    responsive sizing, and 'Shiny' integration.
+    role = c("aut", "cre", "cph"))
+Description: Create interactive 'd3.js' visualizations from R with built-in
+    statistical transforms. Computes confidence intervals, regression fits,
+    LOESS smoothing, moving averages, and error bars in R and renders them as
+    composable chart layers via 'htmlwidgets'. Supports 20 chart types
+    including boxplots, violin plots, Q-Q diagnostic plots, and group
+    comparisons with pairwise significance testing. Works in 'RStudio',
+    'Shiny', and 'R Markdown'.
 License: MIT + file LICENSE
 URL: https://mortonanalytics.github.io/myIO/, https://github.com/mortonanalytics/myIO
 BugReports: https://github.com/mortonanalytics/myIO/issues
@@ -23,7 +21,8 @@ Suggests:
   testthat (>= 3.0.0),
   knitr,
   rmarkdown,
-  pkgdown
+  pkgdown,
+  shiny
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 Imports:

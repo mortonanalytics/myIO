@@ -2,7 +2,7 @@
 % Please edit documentation in R/suppressAxis.R
 \name{suppressAxis}
 \alias{suppressAxis}
-\title{suppressAxis()}
+\title{Suppress Axis Display}
 \usage{
 suppressAxis(myIO, xAxis = NULL, yAxis = NULL)
 }
@@ -14,7 +14,8 @@ suppressAxis(myIO, xAxis = NULL, yAxis = NULL)
 \item{yAxis}{a logical operator defining whether the y axis should be printed or not}
 }
 \value{
-the same myIO object
+A modified \code{myIO} htmlwidget object with axis display
+  suppressed.
 }
 \description{
 Suppresses axes from printing

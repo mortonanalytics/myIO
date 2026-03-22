@@ -2,7 +2,7 @@
 % Please edit documentation in R/setMargin.R
 \name{setMargin}
 \alias{setMargin}
-\title{setMargin()}
+\title{Set Chart Margins}
 \usage{
 setMargin(myIO, top = 20, bottom = 40, left = 50, right = 50)
 }
@@ -18,7 +18,8 @@ setMargin(myIO, top = 20, bottom = 40, left = 50, right = 50)
 \item{right}{a numeric value representing in pixels the right margin}
 }
 \value{
-the same myIO object
+A modified \code{myIO} htmlwidget object with updated margin
+  configuration.
 }
 \description{
 Sets margins for the top, bottom, left, and right sides of the chart

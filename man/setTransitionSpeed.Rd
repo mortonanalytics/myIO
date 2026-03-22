@@ -2,7 +2,7 @@
 % Please edit documentation in R/setTransitionSpeed.R
 \name{setTransitionSpeed}
 \alias{setTransitionSpeed}
-\title{setTransitionSpeed()}
+\title{Set Transition Speed}
 \usage{
 setTransitionSpeed(myIO, speed)
 }
@@ -12,7 +12,8 @@ setTransitionSpeed(myIO, speed)
 \item{speed}{a number indicating the speed of transition in milliseconds}
 }
 \value{
-the same myIO object
+A modified \code{myIO} htmlwidget object with updated transition
+  speed.
 }
 \description{
 Sets transition speeds across the chart (set to 0 to suppress)

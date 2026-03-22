@@ -2,7 +2,7 @@
 % Please edit documentation in R/dragPoints.R
 \name{dragPoints}
 \alias{dragPoints}
-\title{dragPoints()}
+\title{Enable Draggable Points}
 \usage{
 dragPoints(myIO, dragPoints = TRUE)
 }
@@ -12,7 +12,8 @@ dragPoints(myIO, dragPoints = TRUE)
 \item{dragPoints}{a logical argument (TRUE) for creating draggable points}
 }
 \value{
-the same myIO object
+A modified \code{myIO} htmlwidget object with drag interaction
+  enabled.
 }
 \description{
 Function to make points draggable

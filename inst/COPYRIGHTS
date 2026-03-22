@@ -1,0 +1,26 @@
+This package bundles the following third-party JavaScript and CSS libraries:
+
+Name:      D3.js
+Version:   7.9.0
+License:   ISC
+Copyright: 2010-2023 Mike Bostock
+URL:       https://d3js.org
+Source:    https://github.com/d3/d3
+
+Name:      d3-hexbin
+Version:   0.2.2
+License:   BSD-3-Clause
+Copyright: 2017 Mike Bostock
+URL:       https://github.com/d3/d3-hexbin
+
+Name:      d3-sankey
+Version:   0.12.3
+License:   BSD-3-Clause
+Copyright: 2019 Mike Bostock
+URL:       https://github.com/d3/d3-sankey
+
+Name:      W3.CSS
+Version:   4.13
+License:   MIT
+Copyright: Jan Egil and Borge Refsnes
+URL:       https://www.w3schools.com/w3css/

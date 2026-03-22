@@ -2,7 +2,7 @@
 % Please edit documentation in R/addIoLayer.R
 \name{addIoLayer}
 \alias{addIoLayer}
-\title{addLayer()}
+\title{Add a Layer to a myIO Chart}
 \usage{
 addIoLayer(
   myIO,
@@ -16,7 +16,7 @@ addIoLayer(
 )
 }
 \arguments{
-\item{myIO}{an htmlwidget object created by the `myIO()` function}
+\item{myIO}{an htmlwidget object created by the \code{myIO()} function}
 
 \item{type}{chart type}
 
@@ -32,6 +32,10 @@ addIoLayer(
 
 \item{options}{layer options passed through to the widget config}
 }
+\value{
+A modified \code{myIO} htmlwidget object with the new layer appended
+  to the configuration.
+}
 \description{
 Adds individual layer to a myIO widget
 }
@@ -41,4 +45,5 @@ myIO(data = mtcars) |>
     type = "point", label = "points",
     mapping = list(x_var = "wt", y_var = "mpg")
   )
+
 }

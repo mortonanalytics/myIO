@@ -1,4 +1,4 @@
-#' setColorScheme()
+#' Set Color Scheme
 #'
 #' Sets color scheme for a chart and the category names (optional)
 #'
@@ -6,7 +6,7 @@
 #' @param colorScheme a vector of colors in the order you want them used
 #' @param setCategories an optional vector of names that will be mapped to the corresponding color in the colorScheme
 #'
-#' @return the same myIO object
+#' @return A modified \code{myIO} htmlwidget object with updated color scheme.
 #'
 #' @examples
 #' # Set a custom color scheme

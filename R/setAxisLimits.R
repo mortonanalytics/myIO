@@ -1,12 +1,12 @@
-#' setAxisLimits()
+#' Set Axis Limits
 #'
-#' Sets margins for the top, bottom, left, and right sides of the chart
+#' Sets the minimum and maximum values for chart axes
 #'
 #' @param myIO an htmlwidget object created by the myIO() function
 #' @param xlim a list of min and max values
 #' @param ylim a list of min and max values
 #'
-#' @return the same myIO object
+#' @return A modified \code{myIO} htmlwidget object with updated axis limits.
 #'
 #' @examples
 #' # Set x axis limits

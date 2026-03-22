@@ -2,7 +2,7 @@
 % Please edit documentation in R/myIO.R
 \name{myIO}
 \alias{myIO}
-\title{myIO}
+\title{Create a myIO Chart Widget}
 \usage{
 myIO(data = NULL, width = "100\%", height = "400px", elementId = NULL)
 }
@@ -16,12 +16,13 @@ myIO(data = NULL, width = "100\%", height = "400px", elementId = NULL)
 \item{elementId}{a unique id for the htmlwidget object}
 }
 \value{
-the same myIO object
+An htmlwidget object of class \code{myIO}.
 }
 \description{
-myIO R + d3.js project
+Create an interactive D3.js chart widget
 }
 \examples{
 myIO(data = mtcars) |>
   setMargin(top = 40, bottom = 80, left = 60, right = 10)
+
 }

@@ -1,11 +1,12 @@
-#' dragPoints()
+#' Enable Draggable Points
 #'
 #' Function to make points draggable
 #'
 #' @param myIO an htmlwidget object created by the myIO() function
 #' @param dragPoints a logical argument (TRUE) for creating draggable points
 #'
-#' @return the same myIO object
+#' @return A modified \code{myIO} htmlwidget object with drag interaction
+#'   enabled.
 #'
 #' @examples
 #' # Enable draggable points

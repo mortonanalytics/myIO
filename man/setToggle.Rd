@@ -2,7 +2,7 @@
 % Please edit documentation in R/setToggle.R
 \name{setToggle}
 \alias{setToggle}
-\title{setToggle()}
+\title{Set Toggle Interaction}
 \usage{
 setToggle(myIO, variable, format = NULL)
 }
@@ -14,7 +14,8 @@ setToggle(myIO, variable, format = NULL)
 \item{format}{a string indicating the format for the toggled variable}
 }
 \value{
-the same myIO object
+A modified \code{myIO} htmlwidget object with toggle interaction
+  configured.
 }
 \description{
 Sets toggle options for y_var and adds a toggle button for chart

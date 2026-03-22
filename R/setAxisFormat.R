@@ -1,4 +1,4 @@
-#' setAxisFormat()
+#' Set Axis Format
 #'
 #' Sets axis for x axis, y axis, and/or tool tip
 #'
@@ -9,7 +9,8 @@
 #' @param xLabel a string label for axis
 #' @param yLabel a string label for axis
 #'
-#' @return the same myIO object with options set for the tooltip formats
+#' @return A modified \code{myIO} htmlwidget object with updated axis format
+#'   configuration. with options set for the tooltip formats
 #'
 #' @examples
 #' # Set axis formats using d3.js format strings

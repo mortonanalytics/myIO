@@ -2,7 +2,7 @@
 % Please edit documentation in R/setTheme.R
 \name{setTheme}
 \alias{setTheme}
-\title{setTheme()}
+\title{Set Chart Theme}
 \usage{
 setTheme(
   myIO,
@@ -27,7 +27,8 @@ setTheme(
 \item{...}{additional CSS custom property overrides without the `chart-` prefix}
 }
 \value{
-the same myIO object
+A modified \code{myIO} htmlwidget object with updated theme
+  configuration.
 }
 \description{
 Sets chart theme tokens using CSS custom properties
@@ -35,4 +36,5 @@ Sets chart theme tokens using CSS custom properties
 \examples{
 myIO() |>
   setTheme(text_color = "#222222", grid_color = "#d9d9d9")
+
 }

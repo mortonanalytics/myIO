@@ -2,7 +2,7 @@
 % Please edit documentation in R/flipAxis.R
 \name{flipAxis}
 \alias{flipAxis}
-\title{flipAxis()}
+\title{Flip Chart Axes}
 \usage{
 flipAxis(myIO, flipAxis = TRUE)
 }
@@ -12,7 +12,7 @@ flipAxis(myIO, flipAxis = TRUE)
 \item{flipAxis}{a logical argument (TRUE) for flipping the x and y axes}
 }
 \value{
-the same myIO object
+A modified \code{myIO} htmlwidget object with axes flipped.
 }
 \description{
 Function to flip the x and y axes

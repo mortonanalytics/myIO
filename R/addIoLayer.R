@@ -1,8 +1,8 @@
-#' addLayer()
+#' Add a Layer to a myIO Chart
 #'
 #' Adds individual layer to a myIO widget
 #'
-#' @param myIO an htmlwidget object created by the `myIO()` function
+#' @param myIO an htmlwidget object created by the \code{myIO()} function
 #' @param type chart type
 #' @param color optional CSS color string or vector for grouped layers
 #' @param label unique layer label
@@ -11,6 +11,8 @@
 #' @param transform transform name applied before serialization
 #' @param options layer options passed through to the widget config
 #'
+#' @return A modified \code{myIO} htmlwidget object with the new layer appended
+#'   to the configuration.
 #' @examples
 #' myIO(data = mtcars) |>
 #'   addIoLayer(

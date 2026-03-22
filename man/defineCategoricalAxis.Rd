@@ -2,19 +2,20 @@
 % Please edit documentation in R/defineCategoricalAxis.R
 \name{defineCategoricalAxis}
 \alias{defineCategoricalAxis}
-\title{defineCategoricalAxis()}
+\title{Define Categorical Axis}
 \usage{
 defineCategoricalAxis(myIO, xAxis = TRUE, yAxis = FALSE)
 }
 \arguments{
 \item{myIO}{an htmlwidget object created by the myIO() function}
 
-\item{xAxis}{a logical argument (TRUE) for defining the x axis as categrocial}
+\item{xAxis}{a logical argument (TRUE) for defining the x axis as categorical}
 
-\item{yAxis}{a logical argument (TRUE) for defining the y axis as categrocial}
+\item{yAxis}{a logical argument (TRUE) for defining the y axis as categorical}
 }
 \value{
-the same myIO object
+A modified \code{myIO} htmlwidget object with categorical axis
+  configured.
 }
 \description{
 Function to define the x variable as categorical

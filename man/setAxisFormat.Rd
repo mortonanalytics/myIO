@@ -2,7 +2,7 @@
 % Please edit documentation in R/setAxisFormat.R
 \name{setAxisFormat}
 \alias{setAxisFormat}
-\title{setAxisFormat()}
+\title{Set Axis Format}
 \usage{
 setAxisFormat(
   myIO,
@@ -27,7 +27,8 @@ setAxisFormat(
 \item{yLabel}{a string label for axis}
 }
 \value{
-the same myIO object with options set for the tooltip formats
+A modified \code{myIO} htmlwidget object with updated axis format
+  configuration. with options set for the tooltip formats
 }
 \description{
 Sets axis for x axis, y axis, and/or tool tip

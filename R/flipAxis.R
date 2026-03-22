@@ -1,11 +1,11 @@
-#' flipAxis()
+#' Flip Chart Axes
 #'
 #' Function to flip the x and y axes
 #'
 #' @param myIO an htmlwidget object created by the myIO() function
 #' @param flipAxis a logical argument (TRUE) for flipping the x and y axes
 #'
-#' @return the same myIO object
+#' @return A modified \code{myIO} htmlwidget object with axes flipped.
 #'
 #' @examples
 #' # Flip the axes for a horizontal bar chart

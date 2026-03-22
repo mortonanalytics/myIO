@@ -2,7 +2,7 @@
 % Please edit documentation in R/setColorScheme.R
 \name{setColorScheme}
 \alias{setColorScheme}
-\title{setColorScheme()}
+\title{Set Color Scheme}
 \usage{
 setColorScheme(myIO, colorScheme = NULL, setCategories = NULL)
 }
@@ -14,7 +14,7 @@ setColorScheme(myIO, colorScheme = NULL, setCategories = NULL)
 \item{setCategories}{an optional vector of names that will be mapped to the corresponding color in the colorScheme}
 }
 \value{
-the same myIO object
+A modified \code{myIO} htmlwidget object with updated color scheme.
 }
 \description{
 Sets color scheme for a chart and the category names (optional)

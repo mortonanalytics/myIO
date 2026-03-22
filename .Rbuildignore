@@ -18,3 +18,13 @@
 ^app$
 ^coverage$
 ^Dockerfile$
+^\.mcp\.json$
+^\.playwright-mcp$
+^CLAUDE\.md$
+^design$
+^md$
+^review-home\.png$
+^screenshots-review$
+^scripts$
+^inst/test_rmarkdown
+^inst/appTester$

@@ -2,7 +2,7 @@
 % Please edit documentation in R/setAxisLimits.R
 \name{setAxisLimits}
 \alias{setAxisLimits}
-\title{setAxisLimits()}
+\title{Set Axis Limits}
 \usage{
 setAxisLimits(
   myIO,
@@ -18,10 +18,10 @@ setAxisLimits(
 \item{ylim}{a list of min and max values}
 }
 \value{
-the same myIO object
+A modified \code{myIO} htmlwidget object with updated axis limits.
 }
 \description{
-Sets margins for the top, bottom, left, and right sides of the chart
+Sets the minimum and maximum values for chart axes
 }
 \examples{
 # Set x axis limits

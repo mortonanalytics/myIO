@@ -4,7 +4,7 @@
 \alias{myIO-shiny}
 \alias{myIOOutput}
 \alias{renderMyIO}
-\title{Shiny bindings for myIO}
+\title{Shiny Bindings for myIO}
 \usage{
 myIOOutput(outputId, width = "100\%", height = "400px")
 
@@ -21,6 +21,26 @@ renderMyIO(expr, env = parent.frame(), quoted = FALSE)
 
 \item{quoted}{Is \code{expr} a quoted expression?}
 }
+\value{
+\code{myIOOutput} returns a Shiny UI element for placement in a UI
+  definition. \code{renderMyIO} returns a Shiny render function for use in a
+  server definition.
+}
 \description{
-Shiny bindings for myIO
+Shiny Bindings for myIO
+}
+\examples{
+if (interactive()) {
+  library(shiny)
+  ui <- fluidPage(myIOOutput("chart"))
+  server <- function(input, output) {
+    output$chart <- renderMyIO({
+      myIO(data = mtcars) |>
+        addIoLayer(type = "point", label = "scatter",
+          mapping = list(x_var = "wt", y_var = "mpg"))
+    })
+  }
+  shinyApp(ui, server)
+}
+
 }

@@ -1,4 +1,4 @@
-#' setTheme()
+#' Set Chart Theme
 #'
 #' Sets chart theme tokens using CSS custom properties
 #'
@@ -9,7 +9,8 @@
 #' @param font font family
 #' @param ... additional CSS custom property overrides without the `chart-` prefix
 #'
-#' @return the same myIO object
+#' @return A modified \code{myIO} htmlwidget object with updated theme
+#'   configuration.
 #' @examples
 #' myIO() |>
 #'   setTheme(text_color = "#222222", grid_color = "#d9d9d9")

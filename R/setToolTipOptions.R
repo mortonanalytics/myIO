@@ -1,11 +1,12 @@
-#' setToolTipOptions()
+#' Set Tooltip Options
 #'
 #' Generic function for setting tool tip options for a chart
 #'
 #' @param myIO an htmlwidget object created by the myIO() function
 #' @param suppressY a boolean
 #'
-#' @return the same myIO object with options set for the tooltip formats
+#' @return A modified \code{myIO} htmlwidget object with updated tooltip
+#'   options.
 #'
 #' @examples
 #' # Suppress the y value in tooltips

@@ -1,15 +1,16 @@
-#' myIO
+#' Create a myIO Chart Widget
 #'
-#' myIO R + d3.js project
+#' Create an interactive D3.js chart widget
 #'
 #' @importFrom htmlwidgets createWidget shinyWidgetOutput shinyRenderWidget
+#' @importFrom utils modifyList
 #'
 #' @param data an optional point of entry for the data frame or vector
 #' @param width a string of either pixel width or a percentage width
 #' @param height a string of pixel height
 #' @param elementId a unique id for the htmlwidget object
 #'
-#' @return the same myIO object
+#' @return An htmlwidget object of class \code{myIO}.
 #' @examples
 #' myIO(data = mtcars) |>
 #'   setMargin(top = 40, bottom = 80, left = 60, right = 10)
@@ -72,13 +73,30 @@ myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL
   )
 }
 
-#' Shiny bindings for myIO
+#' Shiny Bindings for myIO
 #'
 #' @param outputId output variable to read from
 #' @param width,height Must be a valid CSS unit or a number.
 #' @param expr An expression that generates a myIO
 #' @param env The environment in which to evaluate \code{expr}.
 #' @param quoted Is \code{expr} a quoted expression?
+#'
+#' @return \code{myIOOutput} returns a Shiny UI element for placement in a UI
+#'   definition. \code{renderMyIO} returns a Shiny render function for use in a
+#'   server definition.
+#' @examples
+#' if (interactive()) {
+#'   library(shiny)
+#'   ui <- fluidPage(myIOOutput("chart"))
+#'   server <- function(input, output) {
+#'     output$chart <- renderMyIO({
+#'       myIO(data = mtcars) |>
+#'         addIoLayer(type = "point", label = "scatter",
+#'           mapping = list(x_var = "wt", y_var = "mpg"))
+#'     })
+#'   }
+#'   shinyApp(ui, server)
+#' }
 #'
 #' @name myIO-shiny
 #' @export

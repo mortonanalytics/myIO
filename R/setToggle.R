@@ -1,4 +1,4 @@
-#' setToggle()
+#' Set Toggle Interaction
 #'
 #' Sets toggle options for y_var and adds a toggle button for chart
 #'
@@ -6,7 +6,8 @@
 #' @param variable a string indicating the variable name in data for toggle
 #' @param format a string indicating the format for the toggled variable
 #'
-#' @return the same myIO object
+#' @return A modified \code{myIO} htmlwidget object with toggle interaction
+#'   configured.
 #'
 #' @examples
 #' # Add a toggle button to switch y variable

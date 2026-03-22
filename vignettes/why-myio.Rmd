@@ -19,26 +19,34 @@ library(myIO)
 
 R has excellent interactive visualization packages. So why build another one?
 
-Three things changed:
+myIO addresses a specific gap in the ecosystem:
 
-1. **Plotly is deprioritizing R.** In late 2025, Plotly retired its R documentation and Dash docs for all non-Python languages. The plotly.R package has 750+ open issues, and core features like confidence interval rendering have been broken since 2019 with no maintainer response.
+1. **Translation layers lose statistical annotations.** Converting
+   `ggplot2` objects to interactive formats can drop confidence interval
+   ribbons, regression equations, and label geoms. This is an inherent
+   limitation of translating between grammars.
 
-2. **The ggplotly() translation layer is fundamentally limited.** Converting ggplot2 objects to plotly.js traces requires assumptions that break real-world statistical visualizations — CI ribbons render incorrectly, regression equations disappear, and label geoms are silently dropped.
+2. **Statistical overlays require manual assembly.** With most interactive
+   packages, users must pre-compute confidence intervals, regression
+   diagnostics, and error bars in R, then manually layer them onto charts.
+   This is tedious and error-prone.
 
-3. **No existing package computes and renders statistical overlays natively.** Users must pre-compute confidence intervals, regression diagnostics, and error bars in R, then manually layer them onto interactive charts. This is tedious and error-prone.
+3. **Native R-side computation enables composability.** By computing
+   transforms in R and rendering in D3.js, myIO avoids translation
+   artifacts entirely. The statistical layer and the rendering layer
+   connect through a clean data contract.
 
-myIO solves this with a **composable transform pipeline**: statistical computation happens in R (where it belongs), rendering happens in D3.js (where it's beautiful), and the two connect through a clean data contract.
+myIO solves this with a **composable transform pipeline**: statistical
+computation happens in R (where it belongs), rendering happens in D3.js
+(where it's beautiful), and the two connect through a clean data contract.
 
 ## What myIO does differently
 
-### 1. Confidence intervals that actually work
+### 1. Confidence intervals as first-class layers
 
-In plotly.R, `geom_smooth(se = TRUE)` converted through `ggplotly()` produces
-visual artifacts — nonsensical extra ribbons, broken NA handling, and misaligned
-bands. These bugs have been open for 7+ years ([#1472](https://github.com/plotly/plotly.R/issues/1472),
-[#1060](https://github.com/plotly/plotly.R/issues/1060)).
-
-myIO computes CI bands natively in R and renders them as a first-class area layer:
+Confidence interval bands are notoriously difficult to render correctly in
+interactive charts built through translation layers. myIO computes CI bands
+natively in R and renders them as a first-class area layer:
 
 ```{r ci-example, eval = FALSE}
 myIO(data = mtcars) |>
@@ -60,11 +68,9 @@ as a smooth band. Prediction intervals work the same way with
 
 ### 2. One-line regression with R² annotation
 
-In plotly.R, displaying a regression equation requires the `ggpmisc` package's
-`stat_poly_eq` — which silently disappears when converted through `ggplotly()`
-([#1687](https://github.com/plotly/plotly.R/issues/1687)).
-
-myIO's `regression` composite handles the entire workflow in one call:
+Displaying a regression equation alongside an interactive chart typically
+requires multiple packages and manual assembly. myIO's `regression` composite
+handles the entire workflow in one call:
 
 ```{r regression-example, eval = FALSE}
 myIO(data = mtcars) |>

@@ -2,7 +2,7 @@
 % Please edit documentation in R/setToolTipOptions.R
 \name{setToolTipOptions}
 \alias{setToolTipOptions}
-\title{setToolTipOptions()}
+\title{Set Tooltip Options}
 \usage{
 setToolTipOptions(myIO, suppressY = NULL)
 }
@@ -12,7 +12,8 @@ setToolTipOptions(myIO, suppressY = NULL)
 \item{suppressY}{a boolean}
 }
 \value{
-the same myIO object with options set for the tooltip formats
+A modified \code{myIO} htmlwidget object with updated tooltip
+  options.
 }
 \description{
 Generic function for setting tool tip options for a chart

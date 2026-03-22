@@ -2,7 +2,7 @@
 % Please edit documentation in R/suppressLegend.R
 \name{suppressLegend}
 \alias{suppressLegend}
-\title{suppressLegend()}
+\title{Suppress Legend Display}
 \usage{
 suppressLegend(myIO, suppressLegend = TRUE)
 }
@@ -12,7 +12,8 @@ suppressLegend(myIO, suppressLegend = TRUE)
 \item{suppressLegend}{a logical operator defining whether the legend should be printed or not}
 }
 \value{
-the same myIO object
+A modified \code{myIO} htmlwidget object with legend display
+  suppressed.
 }
 \description{
 Suppresses legend from printing

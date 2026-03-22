@@ -2,7 +2,7 @@
 % Please edit documentation in R/setReferenceLines.R
 \name{setReferenceLines}
 \alias{setReferenceLines}
-\title{setReferenceLines()}
+\title{Set Reference Lines}
 \usage{
 setReferenceLines(myIO, xRef = 0, yRef = 0)
 }
@@ -14,7 +14,7 @@ setReferenceLines(myIO, xRef = 0, yRef = 0)
 \item{yRef}{a list of the reference line value of y}
 }
 \value{
-the same myIO object
+A modified \code{myIO} htmlwidget object with reference lines added.
 }
 \description{
 Sets x and y reference lines

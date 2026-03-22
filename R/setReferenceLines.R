@@ -1,4 +1,4 @@
-#' setReferenceLines()
+#' Set Reference Lines
 #'
 #' Sets x and y reference lines
 #'
@@ -6,7 +6,7 @@
 #' @param xRef a list of the reference line value of x
 #' @param yRef a list of the reference line value of y
 #'
-#' @return the same myIO object
+#' @return A modified \code{myIO} htmlwidget object with reference lines added.
 #'
 #' @examples
 #' # Add reference lines at x=5 and y=20

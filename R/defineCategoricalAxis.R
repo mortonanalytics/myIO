@@ -1,12 +1,13 @@
-#' defineCategoricalAxis()
+#' Define Categorical Axis
 #'
 #' Function to define the x variable as categorical
 #'
 #' @param myIO an htmlwidget object created by the myIO() function
-#' @param xAxis a logical argument (TRUE) for defining the x axis as categrocial
-#' @param yAxis a logical argument (TRUE) for defining the y axis as categrocial
+#' @param xAxis a logical argument (TRUE) for defining the x axis as categorical
+#' @param yAxis a logical argument (TRUE) for defining the y axis as categorical
 #'
-#' @return the same myIO object
+#' @return A modified \code{myIO} htmlwidget object with categorical axis
+#'   configured.
 #'
 #' @examples
 #' # Define x axis as categorical

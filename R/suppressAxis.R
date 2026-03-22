@@ -1,4 +1,4 @@
-#' suppressAxis()
+#' Suppress Axis Display
 #'
 #' Suppresses axes from printing
 #'
@@ -6,7 +6,8 @@
 #' @param xAxis a logical operator defining whether the x axis should be printed or not
 #' @param yAxis a logical operator defining whether the y axis should be printed or not
 #'
-#' @return the same myIO object
+#' @return A modified \code{myIO} htmlwidget object with axis display
+#'   suppressed.
 #'
 #' @examples
 #' # Suppress both axes
