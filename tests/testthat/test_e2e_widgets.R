@@ -464,6 +464,95 @@ test_that("Theme demo renders with custom theme and reference line", {
   save_widget(w, "12_theme_demo")
 })
 
+# ---- Statistical augmentation E2E tests ----
+
+test_that("Regression composite renders with scatter + trend + CI + R²", {
+  set.seed(42)
+  df <- data.frame(x = 1:30, y = 2 * (1:30) + rnorm(30, sd = 3))
+  w <- myIO(data = df) |>
+    addIoLayer(type = "regression", label = "regression demo",
+      mapping = list(x_var = "x", y_var = "y"),
+      options = list(method = "lm", showCI = TRUE, showStats = TRUE))
+  layers <- w$x$config$layers
+  types <- sapply(layers, function(l) l$type)
+  expect_true("point" %in% types)
+  expect_true("line" %in% types)
+  expect_true("area" %in% types)
+  expect_true("text" %in% types)
+  save_widget(w, "13_regression_composite")
+})
+
+test_that("Scatter + lm line + CI band renders via manual composition", {
+  df <- data.frame(x = 1:25, y = 3 * (1:25) + rnorm(25, sd = 2))
+  w <- myIO(data = df) |>
+    addIoLayer(type = "point", label = "scatter",
+      mapping = list(x_var = "x", y_var = "y")) |>
+    addIoLayer(type = "line", label = "trend", transform = "lm",
+      mapping = list(x_var = "x", y_var = "y")) |>
+    addIoLayer(type = "area", label = "95% CI", transform = "ci",
+      mapping = list(x_var = "x", y_var = "y"))
+  expect_equal(length(w$x$config$layers), 3)
+  ci_layer <- w$x$config$layers[[3]]
+  expect_equal(ci_layer$transform, "ci")
+  expect_equal(ci_layer$mapping$low_y, "low_y")
+  save_widget(w, "14_scatter_lm_ci")
+})
+
+test_that("LOESS smoothing renders", {
+  set.seed(42)
+  df <- data.frame(x = 1:50, y = sin(seq(0, 4*pi, length.out = 50)) + rnorm(50, sd = 0.3))
+  w <- myIO(data = df) |>
+    addIoLayer(type = "point", label = "data",
+      mapping = list(x_var = "x", y_var = "y")) |>
+    addIoLayer(type = "line", label = "loess", transform = "loess",
+      mapping = list(x_var = "x", y_var = "y"),
+      options = list(span = 0.3))
+  expect_equal(length(w$x$config$layers), 2)
+  loess_layer <- w$x$config$layers[[2]]
+  expect_equal(length(loess_layer$data), 100)
+  save_widget(w, "15_loess_smoothing")
+})
+
+test_that("Mean ± CI error bars render", {
+  df <- data.frame(
+    species = rep(c("setosa", "versicolor", "virginica"), each = 20),
+    value = c(rnorm(20, 5, 0.5), rnorm(20, 6, 0.6), rnorm(20, 7, 0.7))
+  )
+  w <- myIO(data = df) |>
+    addIoLayer(type = "rangeBar", label = "mean CI", transform = "mean_ci",
+      mapping = list(x_var = "species", y_var = "value"),
+      options = list(level = 0.95))
+  layer <- w$x$config$layers[[1]]
+  expect_equal(layer$transform, "mean_ci")
+  expect_equal(length(layer$data), 3)
+  save_widget(w, "16_mean_ci_errorbars")
+})
+
+test_that("Moving average overlay renders", {
+  df <- data.frame(x = 1:100, y = cumsum(rnorm(100)))
+  w <- myIO(data = df) |>
+    addIoLayer(type = "line", label = "raw",
+      mapping = list(x_var = "x", y_var = "y")) |>
+    addIoLayer(type = "line", label = "SMA-10", transform = "smooth",
+      mapping = list(x_var = "x", y_var = "y"),
+      options = list(method = "sma", window = 10))
+  expect_equal(length(w$x$config$layers), 2)
+  save_widget(w, "17_moving_average")
+})
+
+test_that("Residual plot renders", {
+  set.seed(42)
+  df <- data.frame(x = 1:30, y = 2 * (1:30) + rnorm(30, sd = 3))
+  w <- myIO(data = df) |>
+    addIoLayer(type = "point", label = "residuals", transform = "residuals",
+      mapping = list(x_var = "x", y_var = "y")) |>
+    setReferenceLines(list(list(axis = "y", value = 0, label = "zero")))
+  layer <- w$x$config$layers[[1]]
+  expect_equal(layer$transform, "residuals")
+  expect_equal(length(layer$data), 30)
+  save_widget(w, "18_residual_plot")
+})
+
 # Print output directory for visual review
 cat("\n\n=== E2E HTML files saved to:", output_dir, "===\n")
 cat("Open these in a browser to visually verify each chart type.\n\n")

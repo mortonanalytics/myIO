@@ -47,7 +47,8 @@
       linePath.merge(newLinePath).transition().ease(d3.easeQuad).duration(transitionSpeed).style("opacity", 1).style("stroke-width", strokeWidth(chart)).style("stroke", function(d) {
         return resolveColor(chart, d[0][layer.mapping.group], layer.color);
       }).attr("d", valueLine);
-      if (layer.transform !== "lm") {
+      var fittingTransforms = ["lm", "loess", "polynomial", "smooth"];
+      if (fittingTransforms.indexOf(layer.transform) === -1) {
         this.renderPoints(chart, layer);
       }
     }
@@ -2282,6 +2283,52 @@
     }
   };
 
+  // inst/htmlwidgets/myIO/src/renderers/TextRenderer.js
+  var TextRenderer = class {
+    static type = "text";
+    static traits = {
+      hasAxes: false,
+      referenceLines: false,
+      legendType: "none",
+      binning: false,
+      rolloverStyle: "none",
+      scaleCapabilities: { invertX: false }
+    };
+    static scaleHints = {
+      xScaleType: "linear",
+      yScaleType: "linear",
+      xExtentFields: [],
+      yExtentFields: [],
+      domainMerge: "union"
+    };
+    static dataContract = {};
+    render(chart, layer) {
+      var position = layer.options && layer.options.position || "top-right";
+      var key = layer.label;
+      var className = tagName("text-annotation", chart.element.id, key);
+      chart.chart.selectAll("." + className).remove();
+      var lines = layer.data.map(function(d) {
+        return d.text;
+      });
+      var isTop = position.indexOf("top") !== -1;
+      var isRight = position.indexOf("right") !== -1;
+      var x = isRight ? chart.width - 10 : 10;
+      var y = isTop ? 20 : chart.height - 10;
+      var anchor = isRight ? "end" : "start";
+      var g = chart.chart.append("g").attr("class", className).attr("transform", "translate(" + x + "," + y + ")");
+      lines.forEach(function(line, i) {
+        g.append("text").attr("y", (isTop ? 1 : -1) * i * 16).attr("text-anchor", anchor).style("font-size", "12px").style("font-family", "var(--font-family, sans-serif)").style("fill", "var(--text-color, #333)").style("opacity", 0.8).text(line);
+      });
+    }
+    formatTooltip() {
+      return null;
+    }
+    remove(chart, layer) {
+      var className = tagName("text-annotation", chart.dom.element.id, layer.label);
+      chart.dom.chartArea.selectAll("." + className).remove();
+    }
+  };
+
   // inst/htmlwidgets/myIO/src/registry.js
   var rendererRegistry = /* @__PURE__ */ new Map();
   function registerRenderer(type, RendererClass) {
@@ -2354,6 +2401,9 @@
     }
     if (!rendererRegistry.has(RangeBarRenderer.type)) {
       registerRenderer(RangeBarRenderer.type, new RangeBarRenderer());
+    }
+    if (!rendererRegistry.has(TextRenderer.type)) {
+      registerRenderer(TextRenderer.type, new TextRenderer());
     }
     return rendererRegistry;
   }
@@ -2816,7 +2866,14 @@
     var scaleSemantics = semantics || {};
     var globalXExtentFields = scaleSemantics.xExtentFields || ["x_var"];
     var yExtentFields = scaleSemantics.yExtentFields || ["y_var"];
-    lys.forEach(function(d) {
+    var scaleLayers = lys.filter(function(layer) {
+      var hints = layer.scaleHints;
+      if (hints && Array.isArray(hints.xExtentFields) && hints.xExtentFields.length === 0 && Array.isArray(hints.yExtentFields) && hints.yExtentFields.length === 0) {
+        return false;
+      }
+      return true;
+    });
+    scaleLayers.forEach(function(d) {
       var layerXFields = d.scaleHints && Array.isArray(d.scaleHints.xExtentFields) ? d.scaleHints.xExtentFields : globalXExtentFields;
       var xValues = [];
       layerXFields.forEach(function(field) {

@@ -9,7 +9,15 @@ transform_registry <- function() {
     quantiles = transform_quantiles,
     median = transform_median,
     outliers = transform_outliers,
-    density = transform_density
+    density = transform_density,
+    mean = transform_mean,
+    summary = transform_summary,
+    loess = transform_loess,
+    polynomial = transform_polynomial,
+    smooth = transform_smooth,
+    residuals = transform_residuals,
+    ci = transform_ci,
+    mean_ci = transform_mean_ci
   )
 }
 
