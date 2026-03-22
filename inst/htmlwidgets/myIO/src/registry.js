@@ -16,6 +16,7 @@ import { WaterfallRenderer } from "./renderers/WaterfallRenderer.js";
 import { SankeyRenderer } from "./renderers/SankeyRenderer.js";
 import { RangeBarRenderer } from "./renderers/RangeBarRenderer.js";
 import { TextRenderer } from "./renderers/TextRenderer.js";
+import { BracketRenderer } from "./renderers/BracketRenderer.js";
 
 export function registerRenderer(type, RendererClass) {
   if (rendererRegistry.has(type)) {
@@ -97,6 +98,10 @@ export function registerBuiltInRenderers() {
 
   if (!rendererRegistry.has(TextRenderer.type)) {
     registerRenderer(TextRenderer.type, new TextRenderer());
+  }
+
+  if (!rendererRegistry.has(BracketRenderer.type)) {
+    registerRenderer(BracketRenderer.type, new BracketRenderer());
   }
 
   return rendererRegistry;

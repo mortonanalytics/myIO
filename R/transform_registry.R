@@ -17,7 +17,8 @@ transform_registry <- function() {
     smooth = transform_smooth,
     residuals = transform_residuals,
     ci = transform_ci,
-    mean_ci = transform_mean_ci
+    mean_ci = transform_mean_ci,
+    pairwise_test = transform_pairwise_test
   )
 }
 
