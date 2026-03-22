@@ -36,7 +36,7 @@ export function deriveChartRender(chart) {
 
   return {
     type: primaryType,
-    axesChart: traits.every(function(trait) { return trait.hasAxes; }),
+    axesChart: traits.some(function(trait) { return trait.hasAxes; }),
     histogram: traits.length > 0 && traits.every(function(trait) { return trait.binning; }),
     continuousLegend: legendTypes.length === 1 && legendTypes[0] === "continuous",
     ordinalLegend: legendTypes.length === 1 && legendTypes[0] === "ordinal",

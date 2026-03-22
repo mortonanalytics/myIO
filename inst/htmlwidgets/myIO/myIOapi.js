@@ -2241,7 +2241,7 @@
       var bars = chart.chart.selectAll("." + tagName("rangeBar", chart.element.id, layer.label)).data(layer.data);
       bars.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
       var newBars = bars.enter().append("rect").attr("class", tagName("rangeBar", chart.element.id, layer.label)).attr("clip-path", "url(#" + chart.element.id + "clip)").attr("x", function(d) {
-        return chart.xScale(+d[xVar]) - barWidth / 2;
+        return chart.xScale(d[xVar]) - barWidth / 2;
       }).attr("y", function(d) {
         return chart.yScale(Math.max(+d[lowVar], +d[highVar]));
       }).attr("width", barWidth).attr("height", function(d) {
@@ -2253,7 +2253,7 @@
         return layer.color || "#6b7280";
       }).style("opacity", 0);
       bars.merge(newBars).transition().ease(d3.easeQuad).duration(transitionSpeed).attr("x", function(d) {
-        return chart.xScale(+d[xVar]) - barWidth / 2;
+        return chart.xScale(d[xVar]) - barWidth / 2;
       }).attr("y", function(d) {
         return chart.yScale(Math.max(+d[lowVar], +d[highVar]));
       }).attr("width", barWidth).attr("height", function(d) {
@@ -3082,8 +3082,10 @@
     var domainMerge = "union";
     (layers || []).forEach(function(layer) {
       var hints = getScaleHintsForLayer(layer);
-      var xType = hints ? hints.xScaleType : resolveFallbackScaleType(chart, "x");
-      var yType = hints ? hints.yScaleType : resolveFallbackScaleType(chart, "y");
+      var fallbackX = resolveFallbackScaleType(chart, "x");
+      var fallbackY = resolveFallbackScaleType(chart, "y");
+      var xType = fallbackX === "band" ? "band" : hints ? hints.xScaleType : fallbackX;
+      var yType = fallbackY === "band" ? "band" : hints ? hints.yScaleType : fallbackY;
       var resolvedX = flipAxis ? yType : xType;
       var resolvedY = flipAxis ? xType : yType;
       xTypes.add(resolvedX);
@@ -3126,7 +3128,7 @@
     })));
     return {
       type: primaryType,
-      axesChart: traits.every(function(trait) {
+      axesChart: traits.some(function(trait) {
         return trait.hasAxes;
       }),
       histogram: traits.length > 0 && traits.every(function(trait) {
