@@ -1,0 +1,170 @@
+---
+title: "Troubleshooting"
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Common Errors and Fixes
+
+### Layer type errors
+
+**Error:** `addIoLayer(): Unknown layer type 'scatter'. Did you mean 'point'?`
+
+You used a type name that doesn't exist. myIO suggests the closest match.
+Use one of the 20 supported types listed in `?addIoLayer`.
+
+```{r fix-type, eval = FALSE}
+# Wrong
+addIoLayer(type = "scatter", ...)
+
+# Right
+addIoLayer(type = "point", ...)
+```
+
+### Column not found
+
+**Error:** `addIoLayer(): Column 'weight' not found in data. Available columns: mpg, cyl, disp, hp, ...`
+
+The column name in your `mapping` doesn't match any column in `data`.
+Check spelling and case — R column names are case-sensitive.
+
+```{r fix-column, eval = FALSE}
+# Wrong — 'weight' doesn't exist in mtcars
+addIoLayer(mapping = list(x_var = "weight", y_var = "mpg"), ...)
+
+# Right — the column is 'wt'
+addIoLayer(mapping = list(x_var = "wt", y_var = "mpg"), ...)
+
+# Check your column names first
+names(mtcars)
+```
+
+### Invalid transform for type
+
+**Error:** `addIoLayer(): Transform 'lm' is not valid for layer type 'bar'.`
+
+Not all transforms work with all chart types. For example, `lm` only
+works with `line` (it produces fitted values for a trend line).
+
+```{r fix-transform, eval = FALSE}
+# Wrong — can't apply regression to a bar chart
+addIoLayer(type = "bar", transform = "lm", ...)
+
+# Right — use 'line' for trend lines
+addIoLayer(type = "line", transform = "lm", ...)
+```
+
+### Duplicate layer label
+
+**Error:** `addIoLayer(): Layer label 'data' already exists. Each layer must have a unique label.`
+
+Every layer needs a unique `label`. If you're adding multiple layers,
+give each one a distinct name.
+
+```{r fix-label, eval = FALSE}
+# Wrong — same label used twice
+myIO() |>
+  addIoLayer(type = "point", label = "data", ...) |>
+  addIoLayer(type = "line", label = "data", ...)
+
+# Right — unique labels
+myIO() |>
+  addIoLayer(type = "point", label = "scatter", ...) |>
+  addIoLayer(type = "line", label = "trend", ...)
+```
+
+### Argument type errors
+
+**Error:** `setSlider(): \`param\` must be a single character string, not numeric (123).`
+
+The function tells you exactly what it expected and what you gave it.
+Check the argument types in `?setSlider`.
+
+```{r fix-arg, eval = FALSE}
+# Wrong — param should be a string, not a number
+setSlider(123, "label", 0, 1, 0.5)
+
+# Right
+setSlider("ci_level", "Confidence Level", 0.80, 0.99, 0.95)
+```
+
+### Missing SharedData
+
+**Error:** `setLinked(): \`shared_data\` must be a SharedData object, not data.frame.`
+
+`setLinked()` requires a `crosstalk::SharedData` object, not a raw
+data frame. Wrap your data first.
+
+```{r fix-shared, eval = FALSE}
+library(crosstalk)
+
+# Wrong — passing raw data.frame
+myIO() |> setLinked(mtcars)
+
+# Right — wrap in SharedData
+shared <- SharedData$new(mtcars, key = ~rownames(mtcars))
+myIO() |>
+  addIoLayer(type = "point", label = "pts",
+    data = shared$data(), mapping = list(x_var = "wt", y_var = "mpg")) |>
+  setLinked(shared)
+```
+
+### Widget type errors
+
+**Error:** `Expected a myIO widget, got 'list'.`
+
+You passed something other than a `myIO()` widget to a setter function.
+Make sure the first argument in your pipe is `myIO()`.
+
+```{r fix-widget, eval = FALSE}
+# Wrong — list is not a myIO widget
+setBrush(list())
+
+# Right — start with myIO()
+myIO() |>
+  addIoLayer(type = "point", label = "pts",
+    data = mtcars, mapping = list(x_var = "wt", y_var = "mpg")) |>
+  setBrush()
+```
+
+## Chart Renders with Missing Layers
+
+If your chart appears but is missing layers you expected, a JavaScript
+validation may have removed them. These errors are not visible in R
+by default.
+
+### How to diagnose
+
+1. **Run `myIO_last_error()`** for guidance on where to find the error
+2. **Open the browser's developer console** (F12 in most browsers)
+3. Look for warnings prefixed with `[myIO]`:
+   - `[myIO] Layer 'trend' removed: field 'y_var' must be numeric.`
+   - `[myIO] Composition error: Cannot mix standalone chart types with other layers.`
+
+### In Shiny
+
+Read the error reactive input:
+
+```{r shiny-error, eval = FALSE}
+observeEvent(input$`myIO-chart-error`, {
+  showNotification(input$`myIO-chart-error`, type = "error")
+})
+```
+
+## Shiny Input Reference
+
+All myIO Shiny inputs follow `myIO-{outputId}-{event}`:
+
+| Input key | When it fires |
+|-----------|---------------|
+| `myIO-{id}-error` | JS validation or render error |
+| `myIO-{id}-rollover` | Hover on data element |
+| `myIO-{id}-dragEnd` | Point drag completed |
+| `myIO-{id}-brushed` | Brush selection end/clear |
+| `myIO-{id}-annotated` | Annotation add/remove/clear |
+| `myIO-{id}-slider-{param}` | Slider value change |

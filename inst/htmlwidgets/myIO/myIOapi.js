@@ -3770,6 +3770,7 @@
     const composition = validateComposition(layers);
     if (!composition.valid) {
       composition.errors.forEach(function(message) {
+        console.warn("[myIO] Composition error:", message);
         chart.emit("error", { message });
       });
       return [];
@@ -3779,10 +3780,11 @@
       const contract = renderer.constructor.dataContract;
       const result = validateAgainstContract(layer, contract);
       result.warnings.forEach(function(message) {
-        console.warn(message);
+        console.warn("[myIO]", message);
       });
       if (result.errors.length > 0) {
         result.errors.forEach(function(message) {
+          console.warn("[myIO] Layer '" + layer.label + "' removed:", message);
           chart.emit("error", { message, layer });
         });
         return false;
@@ -4088,6 +4090,7 @@
         }
         this.emit("afterRender", { state });
       } catch (error) {
+        console.warn("[myIO] Render error:", error.message);
         this.emit("error", { message: error.message, error });
         throw error;
       }

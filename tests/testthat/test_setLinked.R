@@ -25,12 +25,13 @@ test_that("setLinked validates mode", {
   skip_if_not_installed("crosstalk")
   shared <- crosstalk::SharedData$new(mtcars, key = ~rownames(mtcars))
   expect_error(myIO() |> setLinked(shared, mode = "invalid"),
-               "'arg' should be one of")
+               'setLinked\\(\\): `mode`')
 })
 
 test_that("setLinked rejects non-SharedData", {
   skip_if_not_installed("crosstalk")
-  expect_error(myIO() |> setLinked(mtcars), "inherits")
+  expect_error(myIO() |> setLinked(mtcars),
+               'setLinked\\(\\): `shared_data` must be a SharedData object')
 })
 
 test_that("setLinked rejects non-myIO input", {

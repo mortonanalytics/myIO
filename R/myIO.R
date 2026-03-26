@@ -112,3 +112,37 @@ renderMyIO <- function(expr, env = parent.frame(), quoted = FALSE) {
   }
   htmlwidgets::shinyRenderWidget(expr, myIOOutput, env, quoted = TRUE)
 }
+
+#' Diagnose myIO Rendering Errors
+#'
+#' Prints guidance on how to find the most recent JavaScript error from a
+#' myIO widget. In Shiny, errors are available as reactive inputs. Outside
+#' Shiny, errors appear in the browser's developer console.
+#'
+#' @param outputId optional Shiny output ID (character string). If provided,
+#'   prints the exact Shiny input key to read.
+#'
+#' @return Invisibly returns \code{NULL}. Called for its side effect
+#'   (printing diagnostic guidance).
+#'
+#' @examples
+#' myIO_last_error()
+#' myIO_last_error("chart1")
+#'
+#' @export
+myIO_last_error <- function(outputId = NULL) {
+  if (is.null(outputId)) {
+    message("myIO: To debug rendering issues:\n",
+            "  1. Open your browser's developer console (F12)\n",
+            "  2. Look for warnings prefixed with [myIO]\n",
+            "  3. In Shiny, read: input$`myIO-{outputId}-error`")
+  } else {
+    check_string(outputId, "outputId", "myIO_last_error")
+    message("myIO: Read the last error for '", outputId, "' with:\n",
+            "  input$`myIO-", outputId, "-error`\n\n",
+            "Outside Shiny, open the browser console (F12) and look for:\n",
+            "  [myIO] Layer '...' removed: ...\n",
+            "  [myIO] Render error: ...")
+  }
+  invisible(NULL)
+}
