@@ -6,7 +6,7 @@ The only NOTE is "New submission".
 
 ## Test environments
 
-* local macOS (aarch64-apple-darwin), R 4.5.0
+* local macOS (aarch64-apple-darwin20), R 4.5.0
 * GitHub Actions: macOS-latest (release), windows-latest (release),
   ubuntu-latest (devel, release, oldrel-1)
 
@@ -23,4 +23,6 @@ The only NOTE is "New submission".
 * myIO differs from existing interactive visualization packages (plotly,
   echarts4r, highcharter) by computing statistical transforms (confidence
   intervals, regression fits, pairwise significance tests) in R and rendering
-  them as composable D3.js layers. See `vignette("why-myio")` for details.
+  them as composable D3.js layers, with bidirectional I/O (brush selection,
+  click-to-annotate, Crosstalk linked brushing, parameter sliders).
+  See `vignette("why-myio")` for details.
