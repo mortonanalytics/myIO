@@ -6,7 +6,8 @@ test_that("setBrush sets config correctly", {
 })
 
 test_that("setBrush validates direction", {
-  expect_error(myIO() |> setBrush(direction = "z"), "'arg' should be one of")
+  expect_error(myIO() |> setBrush(direction = "z"),
+               'setBrush\\(\\): `direction` must be "xy", "x", "y", not "z"')
 })
 
 test_that("setBrush rejects non-myIO input", {

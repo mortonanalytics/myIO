@@ -83,7 +83,7 @@ addIoLayer <- function(myIO,
 
   transform_fn <- get_transform(transform)
   if (!(transform %in% VALID_COMBINATIONS[[type]])) {
-    stop("Transform '", transform, "' is not valid for layer type '", type, "'.", call. = FALSE)
+    stop("addIoLayer(): Transform '", transform, "' is not valid for layer type '", type, "'.", call. = FALSE)
   }
 
   if (length(grep("group", names(mapping))) == 0) {
@@ -154,26 +154,33 @@ build_layer <- function(layer_type, layer_label, layer_data, layer_mapping, laye
 
 validate_layer_inputs <- function(type, transform, mapping, label, data, existing_layers) {
   if (!is.character(type) || length(type) != 1 || is.na(type) || !(type %in% ALLOWED_TYPES)) {
-    stop("Unknown layer type '", paste(type, collapse = ", "), "'. Must be one of: ",
-         paste(ALLOWED_TYPES, collapse = ", "), ".", call. = FALSE)
+    msg <- paste0("addIoLayer(): Unknown layer type '", paste(type, collapse = ", "), "'. Must be one of: ",
+                  paste(ALLOWED_TYPES, collapse = ", "), ".")
+    if (is.character(type) && length(type) == 1 && !is.na(type) && nchar(type) > 0) {
+      matches <- agrep(type, ALLOWED_TYPES, value = TRUE, max.distance = 0.2)
+      if (length(matches) > 0) {
+        msg <- paste0(msg, " Did you mean '", matches[1], "'?")
+      }
+    }
+    stop(msg, call. = FALSE)
   }
   if (!is.character(transform) || length(transform) != 1 || is.na(transform)) {
-    stop("'transform' must be a single character string.", call. = FALSE)
+    stop("addIoLayer(): `transform` must be a single character string.", call. = FALSE)
   }
   if (!is.list(mapping)) {
-    stop("'mapping' must be a list, e.g. list(x_var = 'col1', y_var = 'col2').", call. = FALSE)
+    stop("addIoLayer(): `mapping` must be a list, e.g. list(x_var = 'col1', y_var = 'col2').", call. = FALSE)
   }
   if (!is.character(label) || length(label) != 1 || is.na(label)) {
-    stop("'label' must be a single character string.", call. = FALSE)
+    stop("addIoLayer(): `label` must be a single character string.", call. = FALSE)
   }
   if (is.null(data)) {
-    stop("'data' must be provided either in addIoLayer() or myIO().", call. = FALSE)
+    stop("addIoLayer(): `data` must be provided either in addIoLayer() or myIO().", call. = FALSE)
   }
 
   if (!("group" %in% names(mapping))) {
     existing_labels <- vapply(existing_layers, function(layer) layer$label, character(1))
     if (label %in% existing_labels) {
-      stop("Layer label '", label, "' already exists.", call. = FALSE)
+      stop("addIoLayer(): Layer label '", label, "' already exists. Each layer must have a unique label.", call. = FALSE)
     }
   }
 
@@ -202,7 +209,8 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
   }
   missing_map <- setdiff(required_map, names(mapping))
   if (length(missing_map) > 0) {
-    stop("Missing required mapping: ", paste(missing_map, collapse = ", "), call. = FALSE)
+    stop("addIoLayer(): Missing required mapping for type '", type, "': ",
+         paste(missing_map, collapse = ", "), ".", call. = FALSE)
   }
 
   # Fields produced by the transform should be skipped in column-existence checks
@@ -212,7 +220,9 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
   mapped_fields <- setdiff(mapped_fields, skip_fields)
   for (field in mapped_fields) {
     if (!mapping[[field]] %in% colnames(data)) {
-      stop("Mapping variable '", mapping[[field]], "' not found in data.", call. = FALSE)
+      stop("addIoLayer(): Column '", mapping[[field]], "' not found in data. ",
+           "Available columns: ", paste(colnames(data), collapse = ", "), ".",
+           call. = FALSE)
     }
   }
 
@@ -221,25 +231,25 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
   if (type %in% c("line", "point", "bar", "hexbin", "area", "groupedBar", "histogram", "gauge", "donut", "candlestick", "waterfall", "sankey", "violin")) {
     for (nf in numeric_fields) {
       if (!is.numeric(data[[mapping[[nf]]]])) {
-        stop("Mapped field '", mapping[[nf]], "' must be numeric for type '", type, "'.", call. = FALSE)
+        stop("addIoLayer(): Mapped field '", mapping[[nf]], "' must be numeric for type '", type, "'.", call. = FALSE)
       }
     }
   }
 
   if (type == "heatmap" && !is.numeric(data[[mapping[["value"]]]])) {
-    stop("Mapped field '", mapping[["value"]], "' must be numeric for type '", type, "'.", call. = FALSE)
+    stop("addIoLayer(): Mapped field '", mapping[["value"]], "' must be numeric for type '", type, "'.", call. = FALSE)
   }
 
   if (type == "waterfall" && !is.numeric(data[[mapping[["y_var"]]]])) {
-    stop("Mapped field '", mapping[["y_var"]], "' must be numeric for type '", type, "'.", call. = FALSE)
+    stop("addIoLayer(): Mapped field '", mapping[["y_var"]], "' must be numeric for type '", type, "'.", call. = FALSE)
   }
 
   if (type == "sankey" && !is.numeric(data[[mapping[["value"]]]])) {
-    stop("Mapped field '", mapping[["value"]], "' must be numeric for type '", type, "'.", call. = FALSE)
+    stop("addIoLayer(): Mapped field '", mapping[["value"]], "' must be numeric for type '", type, "'.", call. = FALSE)
   }
 
   if (type == "ridgeline" && !is.numeric(data[[mapping[["x_var"]]]])) {
-    stop("Mapped field '", mapping[["x_var"]], "' must be numeric for type '", type, "'.", call. = FALSE)
+    stop("addIoLayer(): Mapped field '", mapping[["x_var"]], "' must be numeric for type '", type, "'.", call. = FALSE)
   }
 
   invisible(NULL)
@@ -260,7 +270,7 @@ check_layer_compatibility <- function(type, existing_layers) {
   conflict_group <- current_groups[[which(incompatible)[1]]]
   allowed_types <- names(Filter(function(group) group %in% GROUP_MATRIX[[conflict_group]], COMPATIBILITY_GROUPS))
   stop(
-    "Cannot add layer type '", type, "' because it is incompatible with existing group '", conflict_group,
+    "addIoLayer(): Cannot add layer type '", type, "' because it is incompatible with existing group '", conflict_group,
     "'. Compatible layer types here are: ", paste(sort(unique(allowed_types)), collapse = ", "), ".",
     call. = FALSE
   )
@@ -283,7 +293,7 @@ build_grouped_layers <- function(data, mapping, type, label, color, transform_fn
     layer_label <- paste0(label, " \u2014 ", as.character(group_value))
     all_labels <- c(existing_labels, vapply(layers, function(layer) layer$label, character(1)))
     if (layer_label %in% all_labels) {
-      stop("Layer label '", layer_label, "' already exists.", call. = FALSE)
+      stop("addIoLayer(): Layer label '", layer_label, "' already exists.", call. = FALSE)
     }
 
     temp_df <- data[data[[mapping$group]] == group_value, , drop = FALSE]

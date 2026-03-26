@@ -193,5 +193,5 @@ test_that("get_transform returns correct function", {
 })
 
 test_that("get_transform errors on unknown name", {
-  expect_error(myIO:::get_transform("banana"), "Unknown transform")
+  expect_error(myIO:::get_transform("banana"), "Unknown transform 'banana'")
 })

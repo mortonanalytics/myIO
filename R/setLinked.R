@@ -29,8 +29,8 @@ setLinked <- function(myIO, shared_data, mode = "both", filter = FALSE) {
          "Install it with: install.packages('crosstalk')", call. = FALSE)
   }
 
-  stopifnot(inherits(shared_data, "SharedData"))
-  mode <- match.arg(mode, c("source", "target", "both"))
+  check_class(shared_data, "SharedData", "shared_data", "setLinked")
+  check_choice(mode, c("source", "target", "both"), "mode", "setLinked")
 
   key <- shared_data$key()
   group <- shared_data$groupName()

@@ -18,8 +18,8 @@ test_that("setAnnotation with presets and colors", {
 })
 
 test_that("setAnnotation validates mode", {
-  expect_error(myIO() |> setAnnotation(mode = "hover"))
-  expect_error(myIO() |> setAnnotation(mode = "brush"))
+  expect_error(myIO() |> setAnnotation(mode = "hover"), 'setAnnotation\\(\\): `mode`')
+  expect_error(myIO() |> setAnnotation(mode = "brush"), 'setAnnotation\\(\\): `mode`')
 })
 
 test_that("setAnnotation rejects non-myIO input", {
@@ -27,9 +27,11 @@ test_that("setAnnotation rejects non-myIO input", {
 })
 
 test_that("setAnnotation rejects non-character labels", {
-  expect_error(myIO() |> setAnnotation(labels = 123))
+  expect_error(myIO() |> setAnnotation(labels = 123),
+               "setAnnotation\\(\\): `labels` must be a non-empty character vector")
 })
 
 test_that("setAnnotation rejects unnamed colors", {
-  expect_error(myIO() |> setAnnotation(colors = c("#E63946", "#2A9D8F")))
+  expect_error(myIO() |> setAnnotation(colors = c("#E63946", "#2A9D8F")),
+               "setAnnotation\\(\\): `colors`.*names are missing")
 })

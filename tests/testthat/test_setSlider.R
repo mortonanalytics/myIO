@@ -31,11 +31,13 @@ test_that("setSlider rejects non-myIO input", {
 })
 
 test_that("setSlider rejects non-numeric values", {
-  expect_error(myIO() |> setSlider("p", "l", "a", 1, 0.5))
+  expect_error(myIO() |> setSlider("p", "l", "a", 1, 0.5),
+               'setSlider\\(\\): `min` must be a single number')
 })
 
 test_that("setSlider rejects non-character param", {
-  expect_error(myIO() |> setSlider(123, "l", 0, 1, 0.5))
+  expect_error(myIO() |> setSlider(123, "l", 0, 1, 0.5),
+               'setSlider\\(\\): `param` must be a single character')
 })
 
 test_that("setSlider null step is allowed", {
@@ -44,11 +46,15 @@ test_that("setSlider null step is allowed", {
 })
 
 test_that("setSlider rejects min >= max", {
-  expect_error(myIO() |> setSlider("p", "l", 5, 1, 3), "min.*less than.*max")
-  expect_error(myIO() |> setSlider("p", "l", 1, 1, 1), "min.*less than.*max")
+  expect_error(myIO() |> setSlider("p", "l", 5, 1, 3),
+               "setSlider\\(\\): `min` must be less than `max`")
+  expect_error(myIO() |> setSlider("p", "l", 1, 1, 1),
+               "setSlider\\(\\): `min` must be less than `max`")
 })
 
 test_that("setSlider rejects value out of range", {
-  expect_error(myIO() |> setSlider("p", "l", 0, 1, 2), "value.*between")
-  expect_error(myIO() |> setSlider("p", "l", 0, 1, -1), "value.*between")
+  expect_error(myIO() |> setSlider("p", "l", 0, 1, 2),
+               "setSlider\\(\\): `value` must be between")
+  expect_error(myIO() |> setSlider("p", "l", 0, 1, -1),
+               "setSlider\\(\\): `value` must be between")
 })

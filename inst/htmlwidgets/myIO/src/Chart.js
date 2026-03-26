@@ -242,6 +242,7 @@ export class myIOchart {
       }
       this.emit("afterRender", { state });
     } catch (error) {
+      console.warn("[myIO] Render error:", error.message);
       this.emit("error", { message: error.message, error });
       throw error;
     }

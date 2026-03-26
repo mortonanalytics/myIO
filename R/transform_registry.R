@@ -28,7 +28,8 @@ get_transform <- function(name) {
   registry <- transform_registry()
   transform <- registry[[name]]
   if (is.null(transform)) {
-    stop("Unknown transform '", name, "'.", call. = FALSE)
+    stop("addIoLayer(): Unknown transform '", name, "'. Available transforms: ",
+         paste(names(transform_registry()), collapse = ", "), ".", call. = FALSE)
   }
   transform
 }

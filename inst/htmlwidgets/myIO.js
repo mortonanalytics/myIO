@@ -14,16 +14,23 @@ HTMLWidgets.widget({
               width: width,
               height: height
             });
+            var id = el.id;
+            this.myIOchart.on("error", function(e) {
+              el._myIO_lastError = {
+                message: e.message,
+                layer: e.layer ? e.layer.label : null,
+                timestamp: new Date().toISOString()
+              };
+              if (HTMLWidgets.shinyMode) {
+                Shiny.onInputChange("myIO-" + id + "-error", e.message);
+              }
+            });
             if (HTMLWidgets.shinyMode) {
-              var id = el.id;
               this.myIOchart.on("rollover", function(e) {
                 Shiny.onInputChange("myIO-" + id + "-rollover", JSON.stringify(e.data));
               });
               this.myIOchart.on("dragEnd", function(e) {
                 Shiny.onInputChange("myIO-" + id + "-dragEnd", JSON.stringify(e.point));
-              });
-              this.myIOchart.on("error", function(e) {
-                Shiny.onInputChange("myIO-" + id + "-error", e.message);
               });
               this.myIOchart.on("brushed", function(e) {
                 Shiny.onInputChange("myIO-" + id + "-brushed", JSON.stringify(e));

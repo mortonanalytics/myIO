@@ -23,12 +23,23 @@
 #' @export
 setAnnotation <- function(myIO, labels = NULL, colors = NULL, mode = "click") {
   assert_myIO(myIO)
-  mode <- match.arg(mode, c("click"))
+  check_choice(mode, c("click"), "mode", "setAnnotation")
   if (!is.null(labels)) {
-    stopifnot(is.character(labels), length(labels) > 0)
+    if (!is.character(labels) || length(labels) == 0) {
+      stop("setAnnotation(): `labels` must be a non-empty character vector, not ",
+           if (length(labels) == 0) "empty vector"
+           else paste0(class(labels)[1], " of length ", length(labels)),
+           ".", call. = FALSE)
+    }
   }
   if (!is.null(colors)) {
-    stopifnot(is.character(colors), !is.null(names(colors)))
+    if (!is.character(colors) || is.null(names(colors))) {
+      stop("setAnnotation(): `colors` must be a named character vector ",
+           "(e.g., c(outlier = \"#E63946\", normal = \"#2A9D8F\")), ",
+           if (is.null(names(colors))) "but names are missing."
+           else paste0("not ", class(colors)[1], "."),
+           call. = FALSE)
+    }
   }
   myIO$x$config$interactions$annotation <- list(
     enabled = TRUE,

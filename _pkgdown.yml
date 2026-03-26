@@ -55,6 +55,9 @@ articles:
   - title: Gallery
     contents:
       - gallery
+  - title: Help
+    contents:
+      - troubleshooting
 
 reference:
   - title: Core

@@ -23,8 +23,8 @@
 #' @export
 setBrush <- function(myIO, direction = "xy", on_select = "highlight") {
   assert_myIO(myIO)
-  direction <- match.arg(direction, c("xy", "x", "y"))
-  on_select <- match.arg(on_select, c("highlight", "export"))
+  check_choice(direction, c("xy", "x", "y"), "direction", "setBrush")
+  check_choice(on_select, c("highlight", "export"), "on_select", "setBrush")
   myIO$x$config$interactions$brush <- list(
     enabled = TRUE,
     direction = direction,
