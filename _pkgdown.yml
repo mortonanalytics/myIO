@@ -96,3 +96,7 @@ reference:
     desc: Use myIO widgets in Shiny applications
     contents:
       - starts_with("myIO-shiny")
+  - title: Diagnostics
+    desc: Debugging and error reporting
+    contents:
+      - myIO_last_error
