@@ -76,6 +76,15 @@ myIO() |>
 | `mapping` | List mapping variables, e.g. `list(x_var = "wt", y_var = "mpg")` |
 | `transform` | Optional derived-data transform, e.g. `"identity"` or `"lm"` |
 
+## Interactions
+
+myIO charts are bidirectional — user actions flow back as structured data:
+
+- `setBrush()` — Rectangle select returns selected rows as data
+- `setAnnotation()` — Click to label data points; export annotations as CSV
+- `setLinked()` — Crosstalk linked brushing across multiple charts
+- `setSlider()` — Parameter sliders that trigger Shiny recomputation
+
 ## Customization
 
 Customize plots by chaining additional functions:
@@ -95,4 +104,4 @@ Customize plots by chaining additional functions:
 - `dragPoints()` — Enable draggable points
 - `setReferenceLines()` — Add reference lines
 
-See the [Getting Started](https://mortonanalytics.github.io/myIO/articles/getting-started.html), [Chart Types](https://mortonanalytics.github.io/myIO/articles/chart-types.html), and [Transforms & Theming](https://mortonanalytics.github.io/myIO/articles/transforms-and-theming.html) vignettes for full examples.
+See the [Getting Started](https://mortonanalytics.github.io/myIO/articles/getting-started.html), [Chart Types](https://mortonanalytics.github.io/myIO/articles/chart-types.html), [Shiny Integration](https://mortonanalytics.github.io/myIO/articles/shiny-integration.html), and [Transforms & Theming](https://mortonanalytics.github.io/myIO/articles/transforms-and-theming.html) vignettes for full examples.

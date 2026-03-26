@@ -1,3 +1,30 @@
+# myIO 1.1.0
+
+## I/O interaction system
+
+myIO now supports bidirectional data flow — user interactions return
+structured data, not just visual feedback.
+
+* `setBrush()`: rectangle brush selection on point, bar, histogram, hexbin,
+  and grouped bar charts. Selected points available as Shiny reactive input
+  or scoped CSV export in static HTML.
+* `setAnnotation()`: click any data point to attach a label. Annotations
+  stored as structured data (source key, coordinates, label, category color,
+  timestamp) and exportable as CSV. Supports preset label dropdowns and
+  color category pickers.
+* `setLinked()`: Crosstalk `SharedData` integration for cross-widget linked
+  brushing. Selection dims non-matching points; optional filter mode hides
+  them. Supports source, target, or bidirectional modes.
+* `setSlider()`: parameter sliders below the chart that trigger Shiny
+  re-rendering with configurable debounce. Renders disabled with tooltip
+  in static HTML.
+
+## Bug fixes
+
+* `dragPoints()` now correctly emits the `dragEnd` event to Shiny
+  (`input$myIO-{id}-dragEnd`), which was previously registered but never
+  fired.
+
 # myIO 1.0.0
 
 ## Statistical transforms

@@ -1,0 +1,350 @@
+---
+title: "Interactive I/O in Shiny"
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(myIO)
+
+embed_app <- function(height = "600px") {
+  url <- "https://www.morton-analytics.com/myio/"
+  htmltools::tags$iframe(
+    src = url,
+    width = "100%",
+    height = height,
+    style = "border: 1px solid #dee2e6; border-radius: 8px;",
+    allow = "fullscreen",
+    loading = "lazy"
+  )
+}
+```
+
+myIO is not just a charting library — it is a bidirectional data interface.
+User interactions (brush, click, annotate, slider) flow back to R as
+structured data. This article walks through each pattern with a live demo
+and the code behind it.
+
+**Try each interaction in the live app below**, then read the code that
+powers it.
+
+## Live Demo App
+
+The full gallery app runs all 20 chart types plus the four I/O interaction
+demos. Navigate to **Interactions** in the top menu to try each one.
+
+```{r live-app, echo = FALSE}
+embed_app("700px")
+```
+
+---
+
+## Brush Selection
+
+Drag a rectangle on the chart to select data points. The selected rows
+are returned as a Shiny reactive input — no JavaScript required.
+
+### Try it
+
+Open **Interactions > Brush Selection** in the app above. Drag on the
+scatter plot, then watch the sidebar update with the selected count and
+data range. Use the direction dropdown to switch between 2D, X-only, and
+Y-only brushing.
+
+### Code
+
+```{r brush-code, eval = FALSE}
+# UI
+fluidRow(
+  column(8, myIOOutput("brushPlot", height = "450px")),
+  column(4,
+    h4("Selected Points"),
+    verbatimTextOutput("brushInfo"),
+    selectInput("brush_dir", "Brush Direction",
+      choices = c("Both axes" = "xy", "X only" = "x", "Y only" = "y"))
+  )
+)
+
+# Server
+output$brushPlot <- renderMyIO({
+  myIO() |>
+    addIoLayer(type = "point", color = "#4E79A7", label = "Cars",
+      data = mtcars, mapping = list(x_var = "wt", y_var = "mpg")) |>
+    setBrush(direction = input$brush_dir) |>
+    setAxisFormat(xLabel = "Weight (1000 lbs)", yLabel = "Miles per Gallon")
+})
+
+output$brushInfo <- renderPrint({
+  brushed <- input$`myIO-brushPlot-brushed`
+  if (is.null(brushed)) return("Drag on the chart to select points.")
+  sel <- jsonlite::fromJSON(brushed)
+  if (length(sel$keys) == 0) return("No points selected.")
+  cat(length(sel$keys), "of", nrow(mtcars), "points selected\n")
+  if (!is.null(sel$extent$x)) {
+    cat("X range:", round(sel$extent$x[1], 2), "-", round(sel$extent$x[2], 2), "\n")
+  }
+  if (!is.null(sel$extent$y)) {
+    cat("Y range:", round(sel$extent$y[1], 2), "-", round(sel$extent$y[2], 2), "\n")
+  }
+})
+```
+
+### How it works
+
+1. `setBrush()` adds a D3 brush overlay to the chart
+2. On brush end, the selected data points are emitted as a `"brushed"` event
+3. In Shiny, the event arrives as `input$myIO-{id}-brushed` — a JSON payload with:
+   - `data` — the selected row objects
+   - `keys` — `_source_key` values for linking
+   - `extent` — brush bounds in data coordinates
+4. In static HTML (no Shiny), a status bar shows the selection count and a
+   [Clear] button. The CSV export scopes to selected points when
+   `on_select = "export"`.
+
+### Supported chart types
+
+Brush works on element-based types: `point`, `bar`, `histogram`, `hexbin`,
+`groupedBar`. Line and area charts are excluded — they don't have discrete
+selectable elements.
+
+---
+
+## Click-to-Annotate
+
+Click any data point to attach a label. Annotations are stored as
+structured data — not cosmetic SVG — and can be exported as a CSV or
+read as a Shiny reactive.
+
+### Try it
+
+Open **Interactions > Click-to-Annotate** in the app above. Click any
+point in the iris scatter plot. Choose a label from the dropdown and
+optionally pick a category color. The annotation appears as a ring +
+label on the chart, and the table in the sidebar updates.
+
+### Code
+
+```{r annotate-code, eval = FALSE}
+# UI
+fluidRow(
+  column(8, myIOOutput("annotatePlot", height = "450px")),
+  column(4,
+    h4("Annotations"),
+    tableOutput("annotationTable")
+  )
+)
+
+# Server
+output$annotatePlot <- renderMyIO({
+  myIO() |>
+    addIoLayer(type = "point", color = "#4E79A7", label = "Iris",
+      data = iris, mapping = list(x_var = "Sepal.Length", y_var = "Petal.Length")) |>
+    setAnnotation(
+      labels = c("outlier", "cluster edge", "typical"),
+      colors = c(outlier = "#E63946", `cluster edge` = "#F4A261", typical = "#2A9D8F")
+    ) |>
+    setAxisFormat(xLabel = "Sepal Length", yLabel = "Petal Length")
+})
+
+output$annotationTable <- renderTable({
+  ann <- input$`myIO-annotatePlot-annotated`
+  if (is.null(ann)) return(data.frame())
+  parsed <- jsonlite::fromJSON(ann)
+  if (length(parsed$annotations) == 0) return(data.frame())
+  df <- parsed$annotations
+  data.frame(Label = df$label, X = round(as.numeric(df$x), 2), Y = round(as.numeric(df$y), 2))
+})
+```
+
+### Annotation data structure
+
+Each annotation is a structured object with these fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `_source_key` | string | Links back to the original data row |
+| `x`, `y` | number | Data coordinates (not pixels) |
+| `x_var`, `y_var` | string | Column names for context |
+| `label` | string | User-provided label (max 30 chars) |
+| `category` | string | CSS color from category picker (or null) |
+| `layerLabel` | string | Which chart layer the point belongs to |
+| `timestamp` | string | ISO 8601 when the annotation was created |
+
+In static HTML, annotations are exportable via the bottom-sheet CSV button
+or the status bar [Export] button.
+
+---
+
+## Linked Brushing
+
+Connect two or more myIO charts via Crosstalk. Brush points in one chart
+and watch them highlight in the other — with shared `_source_key` values
+linking the rows across views.
+
+### Try it
+
+Open **Interactions > Linked Brushing** in the app above. The left chart
+shows `wt vs mpg`, the right shows `hp vs mpg`. Drag a brush on the left
+chart — the same cars light up on the right.
+
+### Code
+
+```{r linked-code, eval = FALSE}
+library(crosstalk)
+
+# Server
+shared <- SharedData$new(mtcars, key = ~rownames(mtcars))
+
+output$linkedA <- renderMyIO({
+  myIO() |>
+    addIoLayer(type = "point", color = "#4E79A7", label = "wt vs mpg",
+      data = shared$data(), mapping = list(x_var = "wt", y_var = "mpg")) |>
+    setBrush() |>
+    setLinked(shared, mode = "source") |>
+    setAxisFormat(xLabel = "Weight", yLabel = "MPG")
+})
+
+output$linkedB <- renderMyIO({
+  myIO() |>
+    addIoLayer(type = "point", color = "#E15759", label = "hp vs mpg",
+      data = shared$data(), mapping = list(x_var = "hp", y_var = "mpg")) |>
+    setLinked(shared, mode = "target") |>
+    setAxisFormat(xLabel = "Horsepower", yLabel = "MPG")
+})
+```
+
+### How linking works
+
+1. Both charts share the same `crosstalk::SharedData` object
+2. The source chart calls `setBrush()` + `setLinked(shared, mode = "source")`
+3. The target chart calls `setLinked(shared, mode = "target")`
+4. When the source brushes, it sends selected `_source_key` values via
+   Crosstalk's `SelectionHandle`
+5. The target receives the keys and dims non-matching elements
+
+Use `mode = "both"` for bidirectional linking. Set `filter = TRUE` to
+hide non-matching points instead of dimming them.
+
+Crosstalk is a Suggests dependency — it's only loaded when `setLinked()`
+is called. Your core myIO code stays dependency-free.
+
+### Linked brushing + recomputation
+
+For deeper analysis, combine Crosstalk (instant visual feedback) with
+Shiny reactivity (recomputed statistics):
+
+```{r linked-recompute, eval = FALSE}
+# When chart A brushes, also trigger an R recomputation in chart B
+observeEvent(input$`myIO-chartA-brushed`, {
+  sel <- jsonlite::fromJSON(input$`myIO-chartA-brushed`)
+  subset <- mtcars[rownames(mtcars) %in% sel$keys, ]
+  output$chartB <- renderMyIO({
+    myIO(data = subset) |>
+      addIoLayer(type = "regression", label = "refitted",
+        mapping = list(x_var = "wt", y_var = "mpg"))
+  })
+})
+```
+
+This gives two-speed feedback: instant highlight via Crosstalk, then a
+smooth transition to a refitted model via Shiny.
+
+---
+
+## Parameter Sliders
+
+Add sliders below the chart that control transform parameters. Moving a
+slider triggers Shiny re-rendering — the chart recomputes and animates
+to the new state.
+
+### Try it
+
+Open **Interactions > Parameter Slider** in the app above. Drag the
+confidence level slider and watch the CI band narrow or widen in
+real-time as the regression recomputes.
+
+### Code
+
+```{r slider-code, eval = FALSE}
+output$sliderPlot <- renderMyIO({
+  ci <- input$`myIO-sliderPlot-slider-ci_level`
+  if (is.null(ci)) ci <- 0.95
+
+  myIO(data = df) |>
+    addIoLayer(type = "regression", label = "Yield Model",
+      mapping = list(x_var = "day", y_var = "yield"),
+      options = list(method = "lm", showCI = TRUE, level = ci, showStats = TRUE)) |>
+    setSlider("ci_level", "Confidence Level", 0.80, 0.99, ci, 0.01) |>
+    setAxisFormat(xLabel = "Day of Experiment", yLabel = "Yield (mg)")
+})
+```
+
+### How it works
+
+1. `setSlider()` renders an HTML range input below the chart
+2. On drag, the slider sends its value to `input$myIO-{id}-slider-{param}`
+3. This invalidates the `renderMyIO` reactive, which recomputes the chart
+   with the new parameter value
+4. D3 transitions animate the change smoothly
+
+The slider is **Shiny-only**. In static HTML it renders disabled with a
+tooltip explaining the limitation.
+
+### Multiple sliders
+
+`setSlider()` is additive — call it multiple times:
+
+```{r multi-slider, eval = FALSE}
+myIO(data = df) |>
+  addIoLayer(type = "regression", label = "fit",
+    mapping = list(x_var = "x", y_var = "y"),
+    options = list(method = "polynomial", degree = deg, level = ci)) |>
+  setSlider("ci_level", "Confidence Level", 0.80, 0.99, 0.95, 0.01) |>
+  setSlider("degree", "Polynomial Degree", 1, 5, 2, 1)
+```
+
+### Debounce
+
+For heavy transforms, increase the debounce to avoid excessive
+re-renders:
+
+```{r debounce, eval = FALSE}
+setSlider("span", "LOESS Span", 0.1, 1.0, 0.5, 0.05, debounce = 500)
+```
+
+---
+
+## Shiny Input Reference
+
+All myIO Shiny inputs follow the pattern `myIO-{outputId}-{event}`:
+
+| Input key | Trigger | Payload |
+|-----------|---------|---------|
+| `myIO-{id}-brushed` | Brush end or clear | `{ data, extent, keys, layerLabel }` |
+| `myIO-{id}-annotated` | Annotation add/remove/clear | `{ annotations, action, latest }` |
+| `myIO-{id}-slider-{param}` | Slider drag (debounced) | Numeric value |
+| `myIO-{id}-rollover` | Hover on element | JSON data point |
+| `myIO-{id}-dragEnd` | Point drag completed | `{ point, layerLabel }` |
+| `myIO-{id}-error` | Render error | Error message string |
+
+---
+
+## Static HTML vs Shiny
+
+Not every feature requires a running Shiny server:
+
+| Feature | Static HTML | Shiny |
+|---------|-------------|-------|
+| Brush selection | Visual highlight + scoped CSV export | + reactive `input$brushed` |
+| Annotations | Click to label + CSV export | + reactive `input$annotated` |
+| Linked brushing | Crosstalk client-side linking | + server-side recomputation |
+| Parameter sliders | Disabled (renders with default) | Full reactive recomputation |
+| Drag points | Live regression refit | + reactive `input$dragEnd` |
+| Tooltips | Always work | + reactive `input$rollover` |
+| CSV/PNG export | Always work | Always work |
+
+The I/O system is designed so that static HTML gets the best experience
+possible — brushing and annotation work without Shiny. The Shiny layer
+adds reactive data flow on top.

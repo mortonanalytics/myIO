@@ -1,7 +1,7 @@
 Package: myIO
 Type: Package
 Title: Interactive Data Visualizations Using 'd3.js'
-Version: 1.0.0
+Version: 1.1.0
 Authors@R: person("Ryan", "Morton", email = "morton@myma.us",
     role = c("aut", "cre", "cph"))
 Description: Create interactive 'd3.js' visualizations from R with built-in

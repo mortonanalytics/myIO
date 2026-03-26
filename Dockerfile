@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
   && rm -rf /var/lib/apt/lists/*
 
-RUN R -e "install.packages(c('dplyr', 'bslib', 'fontawesome', 'remotes'), repos = 'https://cloud.r-project.org')"
+RUN R -e "install.packages(c('dplyr', 'bslib', 'fontawesome', 'crosstalk', 'remotes'), repos = 'https://cloud.r-project.org')"
 
 # Install myIO from local source (not GitHub) so Docker always uses the current commit
 COPY . /tmp/myIO
@@ -18,7 +18,7 @@ COPY app/ /srv/shiny-server/
 RUN rm -rf /srv/shiny-server/sample-apps /srv/shiny-server/index.html
 
 # Verify app parses without error
-RUN R -e "library(shiny); library(bslib); library(dplyr); library(myIO); parse('/srv/shiny-server/app.R'); cat('All OK\n')"
+RUN R -e "library(shiny); library(bslib); library(dplyr); library(crosstalk); library(myIO); parse('/srv/shiny-server/app.R'); cat('All OK\n')"
 
 EXPOSE 3838
 
