@@ -1,5 +1,6 @@
 library(shiny)
 library(dplyr)
+library(crosstalk)
 library(myIO)
 
 # -- Proxy auth filter ----------------------------------------------------
@@ -58,10 +59,11 @@ ui <- navbarPage(
              Composable and chainable.")
         )),
         column(4, div(class = "feature-card",
-          icon("code", style = "font-size: 2rem; color: #4A5ACB;"),
-          h4("Minimal Code"),
-          p("A publication-quality chart in 5-6 lines of R.
-             No JavaScript required.")
+          icon("hand-pointer", style = "font-size: 2rem; color: #4A5ACB;"),
+          h4("Bidirectional I/O"),
+          p("Brush to select, click to annotate, link charts
+             with Crosstalk, and add parameter sliders.
+             User actions flow back as structured data.")
         ))
       ),
       div(
@@ -248,6 +250,47 @@ ui <- navbarPage(
     ),
     tabPanel("Sankey",
       div(class = "chart-container", myIOOutput("sankeyPlot", height = "500px"))
+    )
+  ),
+
+  # -- Interactions --
+  navbarMenu("Interactions", icon = icon("hand-pointer"),
+    tabPanel("Brush Selection",
+      fluidRow(
+        column(8, myIOOutput("brushPlot", height = "450px")),
+        column(4,
+          wellPanel(
+            h4("Selected Points"),
+            verbatimTextOutput("brushInfo"),
+            selectInput("brush_dir", "Brush Direction",
+              choices = c("Both axes" = "xy", "X only" = "x", "Y only" = "y"))
+          )
+        )
+      )
+    ),
+    tabPanel("Click-to-Annotate",
+      fluidRow(
+        column(8, myIOOutput("annotatePlot", height = "450px")),
+        column(4,
+          wellPanel(
+            h4("Annotations"),
+            tableOutput("annotationTable"),
+            p(class = "text-muted", style = "font-size: 12px;",
+              "Click any point to add a label. Click an annotated point to edit or remove.")
+          )
+        )
+      )
+    ),
+    tabPanel("Linked Brushing",
+      p(class = "text-muted", style = "padding: 0 1rem;",
+        "Brush points in the left chart to highlight them in the right chart."),
+      fluidRow(
+        column(6, myIOOutput("linkedA", height = "400px")),
+        column(6, myIOOutput("linkedB", height = "400px"))
+      )
+    ),
+    tabPanel("Parameter Slider",
+      div(class = "chart-container", myIOOutput("sliderPlot", height = "500px"))
     )
   ),
 
@@ -587,6 +630,92 @@ server <- function(input, output) {
         mapping = list(x_var = "x", y_var = "y")) %>%
       setReferenceLines(yRef = 0) %>%
       setAxisFormat(xLabel = "Fitted Values", yLabel = "Residuals")
+  })
+
+  # -- Interactions: Brush Selection --
+  output$brushPlot <- renderMyIO({
+    myIO() %>%
+      addIoLayer(type = "point", color = "#4E79A7", label = "Cars",
+        data = mtcars, mapping = list(x_var = "wt", y_var = "mpg")) %>%
+      setBrush(direction = input$brush_dir) %>%
+      setAxisFormat(xLabel = "Weight (1000 lbs)", yLabel = "Miles per Gallon") %>%
+      setMargin(top = 20, bottom = 70, left = 60, right = 10)
+  })
+
+  output$brushInfo <- renderPrint({
+    brushed <- input$`myIO-brushPlot-brushed`
+    if (is.null(brushed)) return("Drag on the chart to select points.")
+    sel <- jsonlite::fromJSON(brushed)
+    if (length(sel$keys) == 0) return("No points selected.")
+    cat(length(sel$keys), "of", nrow(mtcars), "points selected\n\n")
+    if (!is.null(sel$extent$x)) {
+      cat("X range:", round(sel$extent$x[1], 2), "-", round(sel$extent$x[2], 2), "\n")
+    }
+    if (!is.null(sel$extent$y)) {
+      cat("Y range:", round(sel$extent$y[1], 2), "-", round(sel$extent$y[2], 2), "\n")
+    }
+  })
+
+  # -- Interactions: Annotation --
+  output$annotatePlot <- renderMyIO({
+    myIO() %>%
+      addIoLayer(type = "point", color = "#4E79A7", label = "Iris",
+        data = iris, mapping = list(x_var = "Sepal.Length", y_var = "Petal.Length")) %>%
+      setAnnotation(
+        labels = c("outlier", "cluster edge", "typical"),
+        colors = c(outlier = "#E63946", `cluster edge` = "#F4A261", typical = "#2A9D8F")
+      ) %>%
+      setAxisFormat(xLabel = "Sepal Length", yLabel = "Petal Length")
+  })
+
+  output$annotationTable <- renderTable({
+    ann <- input$`myIO-annotatePlot-annotated`
+    if (is.null(ann)) return(data.frame(Label = character(), X = numeric(), Y = numeric()))
+    parsed <- jsonlite::fromJSON(ann)
+    if (length(parsed$annotations) == 0) {
+      return(data.frame(Label = character(), X = numeric(), Y = numeric()))
+    }
+    df <- parsed$annotations
+    data.frame(
+      Label = df$label,
+      X = round(as.numeric(df$x), 2),
+      Y = round(as.numeric(df$y), 2)
+    )
+  }, striped = TRUE, spacing = "s", width = "100%")
+
+  # -- Interactions: Linked Brushing --
+  shared_mtcars <- crosstalk::SharedData$new(mtcars, key = ~rownames(mtcars))
+
+  output$linkedA <- renderMyIO({
+    myIO() %>%
+      addIoLayer(type = "point", color = "#4E79A7", label = "wt vs mpg",
+        data = shared_mtcars$data(), mapping = list(x_var = "wt", y_var = "mpg")) %>%
+      setBrush() %>%
+      setLinked(shared_mtcars, mode = "source") %>%
+      setAxisFormat(xLabel = "Weight", yLabel = "MPG")
+  })
+
+  output$linkedB <- renderMyIO({
+    myIO() %>%
+      addIoLayer(type = "point", color = "#E15759", label = "hp vs mpg",
+        data = shared_mtcars$data(), mapping = list(x_var = "hp", y_var = "mpg")) %>%
+      setLinked(shared_mtcars, mode = "target") %>%
+      setAxisFormat(xLabel = "Horsepower", yLabel = "MPG")
+  })
+
+  # -- Interactions: Slider --
+  output$sliderPlot <- renderMyIO({
+    ci <- input$`myIO-sliderPlot-slider-ci_level`
+    if (is.null(ci)) ci <- 0.95
+    set.seed(42)
+    day <- 1:40
+    df <- data.frame(day = day, yield = 0.8 * day + sin(day) * 5 + rnorm(40, sd = 3))
+    myIO(data = df) %>%
+      addIoLayer(type = "regression", label = "Yield Model",
+        mapping = list(x_var = "day", y_var = "yield"),
+        options = list(method = "lm", showCI = TRUE, level = ci, showStats = TRUE)) %>%
+      setSlider("ci_level", "Confidence Level", 0.80, 0.99, ci, 0.01) %>%
+      setAxisFormat(xLabel = "Day of Experiment", yLabel = "Yield (mg)")
   })
 
   output$themePlot <- renderMyIO({

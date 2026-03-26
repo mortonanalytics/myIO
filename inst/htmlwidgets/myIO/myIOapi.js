@@ -1198,9 +1198,14 @@
     }
     if (name === "chart") {
       var csvData = [];
-      chart.plotLayers.forEach(function(layer) {
-        csvData.push(layer.data);
-      });
+      var brushed = chart.runtime._brushed;
+      if (brushed && brushed.data.length > 0 && chart.config.interactions.brush && chart.config.interactions.brush.onSelect === "export") {
+        csvData.push(brushed.data);
+      } else {
+        chart.plotLayers.forEach(function(layer) {
+          csvData.push(layer.data);
+        });
+      }
       exportToCsv(chart.element.id + "_data.csv", [].concat.apply([], csvData));
       return;
     }
@@ -2475,11 +2480,504 @@
       d[layer.mapping.x_var] = chart.xScale.invert(event.x);
       d[layer.mapping.y_var] = chart.yScale.invert(event.y);
       d3.select(this).attr("cx", chart.xScale(d[layer.mapping.x_var])).attr("cy", chart.yScale(d[layer.mapping.y_var]));
-    }).on("end", function() {
+    }).on("end", function(event, d) {
       d3.select(this).classed("active", false).style("cursor", "grab");
       chart.updateRegression(color, layer.label);
+      chart.emit("dragEnd", { point: d, layerLabel: layer.label });
     });
     chart.chart.selectAll("." + tagName("point", chart.element.id, layer.label)).style("cursor", "grab").call(drag);
+  }
+
+  // inst/htmlwidgets/myIO/src/interactions/status-bar.js
+  function showStatusBar(chart, message, actions) {
+    removeStatusBar(chart);
+    var container = d3.select(chart.dom.element);
+    var bar = container.append("div").attr("class", "myIO-status-bar").attr("role", "status").attr("aria-live", "polite");
+    bar.append("span").attr("class", "myIO-status-bar-text").text(message);
+    var btnGroup = bar.append("span").attr("class", "myIO-status-bar-actions");
+    (actions || []).forEach(function(action) {
+      btnGroup.append("button").attr("class", "myIO-status-bar-btn").attr("type", "button").text(action.label).on("click", action.handler);
+    });
+  }
+  function removeStatusBar(chart) {
+    d3.select(chart.dom.element).selectAll(".myIO-status-bar").remove();
+  }
+
+  // inst/htmlwidgets/myIO/src/interactions/brush.js
+  var BRUSHABLE_TYPES = ["point", "bar", "histogram", "hexbin", "groupedBar"];
+  function bindBrush(chart) {
+    var cfg = chart.config.interactions.brush;
+    if (!cfg || !cfg.enabled) return;
+    var brushableLayers = (chart.derived.currentLayers || []).filter(function(l) {
+      return BRUSHABLE_TYPES.indexOf(l.type) > -1;
+    });
+    if (brushableLayers.length === 0) return;
+    removeBrush(chart);
+    var brushFn = cfg.direction === "x" ? d3.brushX() : cfg.direction === "y" ? d3.brushY() : d3.brush();
+    var margin = chart.config.layout.margin;
+    var chartWidth = chart.runtime.width - (margin.left + margin.right);
+    var chartHeight = chart.runtime.height - (margin.top + margin.bottom);
+    brushFn.extent([[0, 0], [chartWidth, chartHeight]]);
+    brushFn.on("brush", function(event) {
+      onBrush(chart, event, brushableLayers, cfg);
+    }).on("end", function(event) {
+      onBrushEnd(chart, event, brushableLayers, cfg);
+    });
+    chart.dom.chartArea.insert("g", ":first-child").attr("class", "myIO-brush").call(brushFn);
+    chart.dom.chartArea.select(".myIO-brush .overlay").style("cursor", "crosshair");
+    chart.runtime._brushFn = brushFn;
+    d3.select(chart.dom.element).on("keydown.brush", function(event) {
+      if (event.key === "Escape" && chart.runtime._brushed) {
+        clearBrush(chart);
+      }
+    });
+  }
+  function onBrush(chart, event, layers, cfg) {
+    if (!event.selection) return;
+    var sel = event.selection;
+    var dir = cfg.direction;
+    layers.forEach(function(layer) {
+      var selector = getLayerSelector(chart, layer);
+      chart.dom.chartArea.selectAll(selector).each(function(d) {
+        var inside = isInsideBrush(chart, d, layer, sel, dir);
+        d3.select(this).style("opacity", inside ? 1 : "var(--chart-brush-dim-opacity)");
+      });
+    });
+  }
+  function onBrushEnd(chart, event, layers, cfg) {
+    if (!event.selection) {
+      clearBrush(chart);
+      return;
+    }
+    var sel = event.selection;
+    var dir = cfg.direction;
+    var extent = invertExtent(chart, sel, dir);
+    var selected = [];
+    var keys = [];
+    layers.forEach(function(layer) {
+      layer.data.forEach(function(d) {
+        if (isInsideBrush(chart, d, layer, sel, dir)) {
+          selected.push(d);
+          if (d._source_key) keys.push(d._source_key);
+        }
+      });
+    });
+    chart.runtime._brushed = { data: selected, extent, keys };
+    var totalPoints = layers.reduce(function(sum, l) {
+      return sum + l.data.length;
+    }, 0);
+    showStatusBar(
+      chart,
+      selected.length + " of " + totalPoints + " points selected",
+      [{ label: "Clear", handler: function() {
+        clearBrush(chart);
+      } }]
+    );
+    chart.emit("brushed", {
+      data: selected,
+      extent,
+      keys,
+      layerLabel: layers.length === 1 ? layers[0].label : null
+    });
+  }
+  function clearBrush(chart) {
+    (chart.derived.currentLayers || []).forEach(function(layer) {
+      if (BRUSHABLE_TYPES.indexOf(layer.type) > -1) {
+        var selector = getLayerSelector(chart, layer);
+        chart.dom.chartArea.selectAll(selector).style("opacity", 1);
+      }
+    });
+    if (chart.runtime._brushFn) {
+      chart.dom.chartArea.select(".myIO-brush").call(chart.runtime._brushFn.move, null);
+    }
+    chart.runtime._brushed = null;
+    removeStatusBar(chart);
+    chart.emit("brushed", { data: [], extent: null, keys: [], layerLabel: null });
+  }
+  function isInsideBrush(chart, d, layer, sel, dir) {
+    var xVar = layer.mapping.x_var;
+    var yVar = layer.mapping.y_var;
+    var px = chart.xScale(d[xVar]);
+    var py = chart.yScale(d[yVar]);
+    if (isNaN(px) || isNaN(py)) return false;
+    if (dir === "x") return px >= sel[0] && px <= sel[1];
+    if (dir === "y") return py >= sel[0] && py <= sel[1];
+    return px >= sel[0][0] && px <= sel[1][0] && py >= sel[0][1] && py <= sel[1][1];
+  }
+  function safeInvert(scale, v0, v1) {
+    if (typeof scale.invert === "function") {
+      return [scale.invert(v0), scale.invert(v1)];
+    }
+    return null;
+  }
+  function invertExtent(chart, sel, dir) {
+    if (dir === "x") {
+      return {
+        x: safeInvert(chart.xScale, sel[0], sel[1]),
+        y: null
+      };
+    }
+    if (dir === "y") {
+      return {
+        x: null,
+        y: safeInvert(chart.yScale, sel[1], sel[0])
+      };
+    }
+    return {
+      x: safeInvert(chart.xScale, sel[0][0], sel[1][0]),
+      y: safeInvert(chart.yScale, sel[1][1], sel[0][1])
+    };
+  }
+  function getLayerSelector(chart, layer) {
+    if (layer.type === "groupedBar") return ".tag-grouped-bar-g rect";
+    return "." + tagName(layer.type, chart.dom.element.id, layer.label);
+  }
+  function removeBrush(chart) {
+    if (chart.dom && chart.dom.chartArea) {
+      chart.dom.chartArea.selectAll(".myIO-brush").remove();
+    }
+    if (chart.dom && chart.dom.element) {
+      d3.select(chart.dom.element).on("keydown.brush", null);
+    }
+    chart.runtime._brushed = null;
+  }
+
+  // inst/htmlwidgets/myIO/src/interactions/popover.js
+  var MAX_LABEL_LENGTH = 30;
+  function showPopover(chart, anchorPoint, options) {
+    removePopover(chart);
+    var container = d3.select(chart.dom.element);
+    var popover = container.append("div").attr("class", "myIO-popover").attr("role", "dialog").attr("aria-label", "Annotate data point");
+    var labelSection = popover.append("div").attr("class", "myIO-popover-field");
+    labelSection.append("label").text("Label:");
+    var inputEl;
+    if (options.presetLabels && options.presetLabels.length > 0) {
+      inputEl = labelSection.append("select").attr("class", "myIO-popover-input");
+      options.presetLabels.forEach(function(label) {
+        inputEl.append("option").attr("value", label).text(label);
+      });
+      if (options.existingLabel) inputEl.property("value", options.existingLabel);
+    } else {
+      inputEl = labelSection.append("input").attr("class", "myIO-popover-input").attr("type", "text").attr("maxlength", MAX_LABEL_LENGTH).attr("placeholder", "Enter label...");
+      if (options.existingLabel) inputEl.property("value", options.existingLabel);
+    }
+    var selectedColor = null;
+    if (options.categoryColors) {
+      var colorSection = popover.append("div").attr("class", "myIO-popover-field");
+      colorSection.append("label").text("Category:");
+      var colorPicker = colorSection.append("div").attr("class", "myIO-popover-colors");
+      Object.keys(options.categoryColors).forEach(function(name) {
+        var color = options.categoryColors[name];
+        colorPicker.append("button").attr("class", "myIO-popover-color-btn").attr("type", "button").attr("title", name).attr("aria-label", name).style("background-color", color).on("click", function() {
+          colorPicker.selectAll(".myIO-popover-color-btn").classed("selected", false);
+          d3.select(this).classed("selected", true);
+          selectedColor = color;
+        });
+      });
+    }
+    var btnRow = popover.append("div").attr("class", "myIO-popover-buttons");
+    if (options.existingLabel && options.onRemove) {
+      btnRow.append("button").attr("class", "myIO-popover-btn myIO-popover-btn--danger").attr("type", "button").text("Remove").on("click", function() {
+        removePopover(chart);
+        options.onRemove();
+      });
+    }
+    btnRow.append("button").attr("class", "myIO-popover-btn").attr("type", "button").text("Cancel").on("click", function() {
+      removePopover(chart);
+      if (options.onCancel) options.onCancel();
+    });
+    btnRow.append("button").attr("class", "myIO-popover-btn myIO-popover-btn--primary").attr("type", "button").text("Apply").on("click", function() {
+      var val = inputEl.property("value").trim().substring(0, MAX_LABEL_LENGTH);
+      if (val) {
+        removePopover(chart);
+        options.onApply(val, selectedColor);
+      }
+    });
+    positionPopover(chart, popover, anchorPoint);
+    inputEl.node().focus();
+    popover.on("keydown", function(event) {
+      if (event.key === "Enter") {
+        var val = inputEl.property("value").trim().substring(0, MAX_LABEL_LENGTH);
+        if (val) {
+          removePopover(chart);
+          options.onApply(val, selectedColor);
+        }
+      }
+      if (event.key === "Escape") {
+        removePopover(chart);
+        if (options.onCancel) options.onCancel();
+      }
+    });
+  }
+  function positionPopover(chart, popover, point) {
+    var margin = chart.config.layout.margin;
+    var x = point.px + margin.left;
+    var y = point.py + margin.top - 10;
+    popover.style("left", Math.max(4, Math.min(x - 80, chart.runtime.totalWidth - 180)) + "px").style("bottom", chart.runtime.height - y + 8 + "px");
+  }
+  function removePopover(chart) {
+    d3.select(chart.dom.element).selectAll(".myIO-popover").remove();
+  }
+
+  // inst/htmlwidgets/myIO/src/interactions/annotate.js
+  var ANNOTATABLE_TYPES = ["point", "bar", "histogram", "hexbin", "groupedBar"];
+  function bindAnnotation(chart) {
+    var cfg = chart.config.interactions.annotation;
+    if (!cfg || !cfg.enabled) return;
+    if (!chart.runtime._annotations) chart.runtime._annotations = [];
+    var layers = (chart.derived.currentLayers || []).filter(function(l) {
+      return ANNOTATABLE_TYPES.indexOf(l.type) > -1;
+    });
+    layers.forEach(function(layer) {
+      var selector = "." + tagName(layer.type, chart.dom.element.id, layer.label);
+      chart.dom.chartArea.selectAll(selector).on("click.annotate", function(event, d) {
+        event.stopPropagation();
+        var existing = findAnnotation(chart, d._source_key);
+        showPopover(chart, {
+          px: chart.xScale(d[layer.mapping.x_var]),
+          py: chart.yScale(d[layer.mapping.y_var])
+        }, {
+          presetLabels: cfg.presetLabels,
+          categoryColors: cfg.categoryColors,
+          existingLabel: existing ? existing.label : null,
+          onApply: function(label, color) {
+            addAnnotation(chart, d, layer, label, color);
+          },
+          onRemove: function() {
+            removeAnnotation(chart, d._source_key);
+          },
+          onCancel: function() {
+          }
+        });
+      });
+    });
+    renderAnnotationMarks(chart);
+    updateAnnotationStatus(chart);
+  }
+  function addAnnotation(chart, datum, layer, label, color) {
+    chart.runtime._annotations = chart.runtime._annotations.filter(function(a) {
+      return a._source_key !== datum._source_key;
+    });
+    var annotation = {
+      _source_key: datum._source_key,
+      x: datum[layer.mapping.x_var],
+      y: datum[layer.mapping.y_var],
+      x_var: layer.mapping.x_var,
+      y_var: layer.mapping.y_var,
+      label,
+      category: color || null,
+      layerLabel: layer.label,
+      timestamp: (/* @__PURE__ */ new Date()).toISOString()
+    };
+    chart.runtime._annotations.push(annotation);
+    renderAnnotationMarks(chart);
+    updateAnnotationStatus(chart);
+    chart.emit("annotated", {
+      annotations: chart.runtime._annotations,
+      action: "add",
+      latest: annotation
+    });
+  }
+  function removeAnnotation(chart, sourceKey) {
+    var removed = chart.runtime._annotations.find(function(a) {
+      return a._source_key === sourceKey;
+    });
+    chart.runtime._annotations = chart.runtime._annotations.filter(function(a) {
+      return a._source_key !== sourceKey;
+    });
+    renderAnnotationMarks(chart);
+    updateAnnotationStatus(chart);
+    chart.emit("annotated", {
+      annotations: chart.runtime._annotations,
+      action: "remove",
+      latest: removed || null
+    });
+  }
+  function clearAnnotations(chart) {
+    chart.runtime._annotations = [];
+    renderAnnotationMarks(chart);
+    removeStatusBar(chart);
+    chart.emit("annotated", { annotations: [], action: "clear", latest: null });
+  }
+  function renderAnnotationMarks(chart) {
+    var group = chart.dom.chartArea.selectAll(".myIO-annotations").data([0]);
+    group = group.enter().append("g").attr("class", "myIO-annotations").merge(group);
+    var marks = group.selectAll(".myIO-annotation-mark").data(chart.runtime._annotations || [], function(d) {
+      return d._source_key;
+    });
+    marks.exit().remove();
+    var enter = marks.enter().append("g").attr("class", "myIO-annotation-mark");
+    enter.append("circle").attr("r", 8).attr("fill", "none").attr("stroke-width", 2);
+    enter.append("text").attr("dy", -12).attr("text-anchor", "middle").attr("class", "myIO-annotation-label");
+    var merged = enter.merge(marks);
+    merged.attr("transform", function(d) {
+      return "translate(" + chart.xScale(d.x) + "," + chart.yScale(d.y) + ")";
+    });
+    merged.select("circle").style("stroke", function(d) {
+      return d.category || "var(--chart-annotation-ring)";
+    });
+    merged.select("text").text(function(d) {
+      return d.label.length > 30 ? d.label.substring(0, 27) + "\u2026" : d.label;
+    }).style("font-size", "var(--chart-annotation-font-size)").style("fill", "var(--chart-text-color)");
+  }
+  function updateAnnotationStatus(chart) {
+    var count = (chart.runtime._annotations || []).length;
+    if (count === 0) {
+      removeStatusBar(chart);
+      return;
+    }
+    showStatusBar(chart, count + " annotation" + (count === 1 ? "" : "s"), [
+      {
+        label: "Export",
+        handler: function() {
+          var data = chart.runtime._annotations || [];
+          if (data.length > 0) {
+            exportToCsv(chart.dom.element.id + "_annotations.csv", data);
+          }
+        }
+      },
+      { label: "Clear", handler: function() {
+        clearAnnotations(chart);
+      } }
+    ]);
+  }
+  function findAnnotation(chart, sourceKey) {
+    return (chart.runtime._annotations || []).find(function(a) {
+      return a._source_key === sourceKey;
+    });
+  }
+  function removeAnnotationBindings(chart) {
+    removePopover(chart);
+  }
+
+  // inst/htmlwidgets/myIO/src/interactions/linked.js
+  var LINKABLE_TYPES = ["point", "bar", "histogram", "hexbin", "groupedBar"];
+  function bindLinked(chart) {
+    var cfg = chart.config.interactions.linked;
+    if (!cfg || !cfg.enabled) return;
+    if (typeof crosstalk === "undefined") return;
+    cleanupLinked(chart);
+    var sel = new crosstalk.SelectionHandle(cfg.group);
+    var fil = cfg.filter ? new crosstalk.FilterHandle(cfg.group) : null;
+    chart.runtime._crosstalkSel = sel;
+    chart.runtime._crosstalkFil = fil;
+    if (cfg.mode === "source" || cfg.mode === "both") {
+      chart.runtime._linkedBrushHandler = function(e) {
+        if (e.keys && e.keys.length > 0) {
+          sel.set(e.keys);
+        } else {
+          sel.clear();
+        }
+      };
+      chart.on("brushed", chart.runtime._linkedBrushHandler);
+    }
+    if (cfg.mode === "target" || cfg.mode === "both") {
+      sel.on("change.myIO", function(e) {
+        applySelection(chart, e.value);
+      });
+      if (fil) {
+        fil.on("change.myIO", function(e) {
+          applyFilter(chart, e.value);
+        });
+      }
+    }
+  }
+  function applySelection(chart, selectedKeys) {
+    var layers = (chart.derived.currentLayers || []).filter(function(l) {
+      return LINKABLE_TYPES.indexOf(l.type) > -1;
+    });
+    layers.forEach(function(layer) {
+      var selector = "." + tagName(layer.type, chart.dom.element.id, layer.label);
+      chart.dom.chartArea.selectAll(selector).each(function(d) {
+        if (!selectedKeys) {
+          d3.select(this).style("opacity", 1);
+        } else {
+          var inside = selectedKeys.indexOf(d._source_key) > -1;
+          d3.select(this).style("opacity", inside ? 1 : "var(--chart-brush-dim-opacity)");
+        }
+      });
+    });
+  }
+  function applyFilter(chart, filteredKeys) {
+    var layers = (chart.derived.currentLayers || []).filter(function(l) {
+      return LINKABLE_TYPES.indexOf(l.type) > -1;
+    });
+    layers.forEach(function(layer) {
+      var selector = "." + tagName(layer.type, chart.dom.element.id, layer.label);
+      chart.dom.chartArea.selectAll(selector).each(function(d) {
+        if (!filteredKeys) {
+          d3.select(this).style("display", null);
+        } else {
+          var visible = filteredKeys.indexOf(d._source_key) > -1;
+          d3.select(this).style("display", visible ? null : "none");
+        }
+      });
+    });
+  }
+  function cleanupLinked(chart) {
+    if (chart.runtime._linkedBrushHandler) {
+      chart.off("brushed", chart.runtime._linkedBrushHandler);
+      chart.runtime._linkedBrushHandler = null;
+    }
+    if (chart.runtime._crosstalkSel) {
+      chart.runtime._crosstalkSel.close();
+      chart.runtime._crosstalkSel = null;
+    }
+    if (chart.runtime._crosstalkFil) {
+      chart.runtime._crosstalkFil.close();
+      chart.runtime._crosstalkFil = null;
+    }
+  }
+
+  // inst/htmlwidgets/myIO/src/interactions/slider.js
+  function bindSliders(chart) {
+    var sliders = chart.config.interactions.sliders;
+    if (!sliders || sliders.length === 0) return;
+    removeSliders(chart);
+    chart.runtime._sliderTimers = [];
+    var container = d3.select(chart.dom.element);
+    var wrapper = container.append("div").attr("class", "myIO-slider-wrapper");
+    sliders.forEach(function(cfg) {
+      var row = wrapper.append("div").attr("class", "myIO-slider-row");
+      row.append("label").attr("class", "myIO-slider-label").attr("for", chart.dom.element.id + "-slider-" + cfg.param).text(cfg.label);
+      var input = row.append("input").attr("type", "range").attr("class", "myIO-slider-input").attr("id", chart.dom.element.id + "-slider-" + cfg.param).attr("min", cfg.min).attr("max", cfg.max).attr("step", cfg.step || "any").attr("aria-label", cfg.label).attr("aria-valuemin", cfg.min).attr("aria-valuemax", cfg.max).attr("aria-valuenow", cfg.value).property("value", cfg.value);
+      var valueSpan = row.append("span").attr("class", "myIO-slider-value").text(formatSliderValue(cfg.value, cfg.step));
+      if (!HTMLWidgets.shinyMode) {
+        input.attr("disabled", true).attr("title", "Parameter sliders require Shiny");
+        row.style("opacity", "0.5");
+        return;
+      }
+      var timerIdx = chart.runtime._sliderTimers.length;
+      chart.runtime._sliderTimers.push(null);
+      var debounceMs = cfg.debounce || 200;
+      input.on("input", function() {
+        var val = +this.value;
+        valueSpan.text(formatSliderValue(val, cfg.step));
+        d3.select(this).attr("aria-valuenow", val);
+        clearTimeout(chart.runtime._sliderTimers[timerIdx]);
+        chart.runtime._sliderTimers[timerIdx] = setTimeout(function() {
+          Shiny.onInputChange(
+            "myIO-" + chart.dom.element.id + "-slider-" + cfg.param,
+            val
+          );
+          chart.emit("sliderChanged", { param: cfg.param, value: val });
+        }, debounceMs);
+      });
+    });
+  }
+  function formatSliderValue(value, step) {
+    if (step && step < 1) {
+      var decimals = String(step).split(".")[1];
+      return value.toFixed(decimals ? decimals.length : 2);
+    }
+    return String(value);
+  }
+  function removeSliders(chart) {
+    if (chart.runtime._sliderTimers) {
+      chart.runtime._sliderTimers.forEach(clearTimeout);
+      chart.runtime._sliderTimers = null;
+    }
+    d3.select(chart.dom.element).selectAll(".myIO-slider-wrapper").remove();
   }
 
   // inst/htmlwidgets/myIO/src/tooltip.js
@@ -3575,6 +4073,19 @@
         syncReferenceLines(this, state, options);
         syncLegend(this, state);
         bindRollover(this);
+        removeBrush(this);
+        if (this.config.interactions.brush && this.config.interactions.brush.enabled) {
+          bindBrush(this);
+        }
+        if (this.config.interactions.annotation && this.config.interactions.annotation.enabled) {
+          bindAnnotation(this);
+        }
+        if (this.config.interactions.linked && this.config.interactions.linked.enabled) {
+          bindLinked(this);
+        }
+        if (this.config.interactions.sliders && this.config.interactions.sliders.length > 0) {
+          bindSliders(this);
+        }
         this.emit("afterRender", { state });
       } catch (error) {
         this.emit("error", { message: error.message, error });
@@ -3751,6 +4262,13 @@
         closePanel(this, { returnFocus: false });
       }
       clearTimeout(this.runtime && this.runtime._sheetCloseTimer);
+      removeBrush(this);
+      removeAnnotationBindings(this);
+      cleanupLinked(this);
+      removeSliders(this);
+      if (this.dom && this.dom.element) {
+        d3.select(this.dom.element).on("keydown.brush", null);
+      }
       if (this.dom && this.dom.chartArea) {
         this.dom.chartArea.selectAll("*").interrupt();
       }

@@ -43,12 +43,17 @@ navbar:
       href: https://github.com/mortonanalytics/myIO
 
 articles:
-  - title: Articles
+  - title: Getting Started
     contents:
       - getting-started
       - chart-types
       - transforms-and-theming
+  - title: Shiny & Interactions
+    contents:
       - shiny-integration
+      - shiny-interactions
+  - title: Gallery
+    contents:
       - gallery
 
 reference:
@@ -74,8 +79,12 @@ reference:
       - setTransitionSpeed
       - suppressLegend
   - title: Interactions
-    desc: Add interactive behaviors like tooltips, drag, and toggles
+    desc: Add interactive behaviors like brushing, annotation, and linked views
     contents:
+      - setBrush
+      - setAnnotation
+      - setLinked
+      - setSlider
       - dragPoints
       - setReferenceLines
       - setToggle

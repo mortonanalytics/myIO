@@ -187,6 +187,18 @@ appropriate transforms (density, quantiles, etc.).
 
 ## Available Option Functions
 
+### Interactions
+
+| Function | Purpose |
+|----------|---------|
+| `setBrush()` | Rectangle selection; returns selected rows as data |
+| `setAnnotation()` | Click-to-label data points; export annotations as CSV |
+| `setLinked()` | Crosstalk linked brushing across charts |
+| `setSlider()` | Parameter sliders that trigger Shiny recomputation |
+| `dragPoints()` | Make points draggable (with live regression refit) |
+
+### Layout & Appearance
+
 | Function | Purpose |
 |----------|---------|
 | `setAxisFormat()` | Set d3.js axis and tooltip formats, axis labels |
@@ -200,6 +212,5 @@ appropriate transforms (density, quantiles, etc.).
 | `setToolTipOptions()` | Configure tooltip behavior |
 | `defineCategoricalAxis()` | Treat axes as categorical |
 | `flipAxis()` | Swap x and y axes |
-| `dragPoints()` | Make points draggable |
 | `suppressAxis()` | Hide x and/or y axes |
 | `suppressLegend()` | Hide the legend |

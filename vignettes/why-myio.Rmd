@@ -176,6 +176,19 @@ myIO follows three principles:
    simpler ones. This means new statistical overlays don't require new
    renderers — they reuse existing ones.
 
+### 6. Bidirectional I/O
+
+Most charting libraries are output-only: data goes in, a picture comes out.
+myIO is an **information system** — user interactions flow back as structured
+data:
+
+- `setBrush()`: rectangle select returns selected rows
+- `setAnnotation()`: click to label points; export annotations as a data frame
+- `setLinked()`: Crosstalk cross-widget brushing
+- `setSlider()`: parameter sliders that trigger R recomputation
+
+This means the visualization is not just a display — it is an input device.
+
 ## When to use myIO
 
 myIO is a good fit when you need:
@@ -183,6 +196,9 @@ myIO is a good fit when you need:
 - Interactive statistical charts in Shiny apps or R Markdown
 - Confidence intervals, regression lines, or error bars that render correctly
 - Composable overlays (scatter + trend + CI band + annotation)
+- Brush selection that returns data, not just visual feedback
+- Click-to-annotate for flagging outliers, events, or regions of interest
+- Linked views across multiple charts via Crosstalk
 - Moving average or smoothing overlays on time-series data
 - Regression diagnostics (residual plots)
 - Publication-quality D3.js rendering with minimal code

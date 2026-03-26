@@ -42,6 +42,18 @@
   --chart-sheet-backdrop: rgba(15, 23, 42, 0.32);
   --chart-sheet-surface: rgba(243, 244, 246, 0.9);
   --chart-sheet-accent: #111827;
+  --chart-brush-fill: rgba(0, 0, 0, 0.08);
+  --chart-brush-stroke: #6b7280;
+  --chart-brush-dim-opacity: 0.25;
+  --chart-annotation-ring: #E63946;
+  --chart-annotation-font-size: 11px;
+  --chart-status-bar-bg: #f9fafb;
+  --chart-status-bar-color: #6b7280;
+  --chart-popover-bg: #ffffff;
+  --chart-popover-border: #e5e7eb;
+  --chart-popover-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  --chart-slider-track: #e5e7eb;
+  --chart-slider-thumb: #E69F00;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -460,10 +472,223 @@
   border: 0;
 }
 
+/* Brush selection */
+.myIO-brush .overlay {
+  cursor: crosshair;
+}
+
+.myIO-brush .selection {
+  fill: var(--chart-brush-fill);
+  stroke: var(--chart-brush-stroke);
+  stroke-dasharray: 4, 4;
+}
+
+/* Status bar */
+.myIO-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--chart-spacing-md);
+  padding: var(--chart-spacing-sm) var(--chart-spacing-md);
+  background: var(--chart-status-bar-bg);
+  color: var(--chart-status-bar-color);
+  font-family: var(--chart-font);
+  font-size: 12px;
+  border-top: 1px solid var(--chart-sheet-border);
+}
+
+.myIO-status-bar-actions {
+  display: flex;
+  gap: var(--chart-spacing-sm);
+}
+
+.myIO-status-bar-btn {
+  padding: 2px 8px;
+  border: 1px solid var(--chart-sheet-border);
+  border-radius: var(--chart-radius-sm);
+  background: var(--chart-sheet-bg);
+  color: var(--chart-status-bar-color);
+  font-family: var(--chart-font);
+  font-size: 11px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.myIO-status-bar-btn:hover {
+  background: var(--chart-button-hover-bg);
+}
+
+.myIO-status-bar-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--chart-focus-ring);
+}
+
+/* Annotation marks */
+.myIO-annotation-label {
+  font-family: var(--chart-font);
+  font-size: var(--chart-annotation-font-size);
+  fill: var(--chart-text-color);
+  pointer-events: none;
+}
+
+/* Popover */
+.myIO-popover {
+  position: absolute;
+  z-index: 9999;
+  min-width: 170px;
+  max-width: 220px;
+  padding: var(--chart-spacing-md);
+  background: var(--chart-popover-bg);
+  border: 1px solid var(--chart-popover-border);
+  border-radius: var(--chart-radius-md);
+  box-shadow: var(--chart-popover-shadow);
+  font-family: var(--chart-font);
+  font-size: 13px;
+  color: var(--chart-text-color);
+}
+
+.myIO-popover-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: var(--chart-spacing-md);
+}
+
+.myIO-popover-field label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.myIO-popover-input {
+  width: 100%;
+  padding: 4px 8px;
+  border: 1px solid var(--chart-popover-border);
+  border-radius: var(--chart-radius-sm);
+  font-family: var(--chart-font);
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.myIO-popover-input:focus {
+  outline: none;
+  box-shadow: var(--chart-focus-ring);
+}
+
+.myIO-popover-colors {
+  display: flex;
+  gap: 4px;
+}
+
+.myIO-popover-color-btn {
+  width: 24px;
+  height: 24px;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+}
+
+.myIO-popover-color-btn.selected {
+  border-color: var(--chart-sheet-accent);
+}
+
+.myIO-popover-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.myIO-popover-btn {
+  padding: 4px 10px;
+  border: 1px solid var(--chart-popover-border);
+  border-radius: var(--chart-radius-sm);
+  background: var(--chart-sheet-bg);
+  color: var(--chart-text-color);
+  font-family: var(--chart-font);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.myIO-popover-btn--primary {
+  background: var(--chart-primary-color);
+  color: #fff;
+  border-color: var(--chart-primary-color);
+}
+
+.myIO-popover-btn--danger {
+  color: #E63946;
+  border-color: #E63946;
+}
+
+/* Sliders */
+.myIO-slider-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chart-spacing-sm);
+  padding: var(--chart-spacing-sm) var(--chart-spacing-md);
+  font-family: var(--chart-font);
+}
+
+.myIO-slider-row {
+  display: flex;
+  align-items: center;
+  gap: var(--chart-spacing-md);
+}
+
+.myIO-slider-label {
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: var(--chart-text-color);
+  min-width: 100px;
+}
+
+.myIO-slider-input {
+  flex: 1 1 auto;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--chart-slider-track);
+  border-radius: 2px;
+  outline: none;
+}
+
+.myIO-slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--chart-slider-thumb);
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.myIO-slider-input:focus-visible {
+  box-shadow: var(--chart-focus-ring);
+}
+
+.myIO-slider-input:disabled {
+  cursor: not-allowed;
+}
+
+.myIO-slider-value {
+  flex: 0 0 auto;
+  min-width: 40px;
+  text-align: right;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--chart-text-color);
+}
+
 @media print {
   .buttonDiv { display: none !important; }
   .myIO-fab,
   .myIO-panel,
   .myIO-sheet-backdrop { display: none !important; }
   .toolTip { display: none !important; }
+  .myIO-status-bar { display: none !important; }
+  .myIO-popover { display: none !important; }
+  .myIO-slider-wrapper { display: none !important; }
 }

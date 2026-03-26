@@ -67,9 +67,16 @@ export function handleAction(chart, layers, name) {
 
   if (name === "chart") {
     var csvData = [];
-    chart.plotLayers.forEach(function(layer) {
-      csvData.push(layer.data);
-    });
+    var brushed = chart.runtime._brushed;
+    if (brushed && brushed.data.length > 0 &&
+        chart.config.interactions.brush &&
+        chart.config.interactions.brush.onSelect === "export") {
+      csvData.push(brushed.data);
+    } else {
+      chart.plotLayers.forEach(function(layer) {
+        csvData.push(layer.data);
+      });
+    }
     exportToCsv(chart.element.id + "_data.csv", [].concat.apply([], csvData));
     return;
   }

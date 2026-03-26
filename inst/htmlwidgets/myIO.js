@@ -25,6 +25,12 @@ HTMLWidgets.widget({
               this.myIOchart.on("error", function(e) {
                 Shiny.onInputChange("myIO-" + id + "-error", e.message);
               });
+              this.myIOchart.on("brushed", function(e) {
+                Shiny.onInputChange("myIO-" + id + "-brushed", JSON.stringify(e));
+              });
+              this.myIOchart.on("annotated", function(e) {
+                Shiny.onInputChange("myIO-" + id + "-annotated", JSON.stringify(e));
+              });
             }
           }
         }
