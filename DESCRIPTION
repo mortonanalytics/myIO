@@ -22,7 +22,8 @@ Suggests:
   knitr,
   rmarkdown,
   pkgdown,
-  shiny
+  shiny,
+  crosstalk (>= 1.2.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 Imports:

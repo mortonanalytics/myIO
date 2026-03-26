@@ -1,5 +1,9 @@
 import { getRenderer, getRendererForLayer, listRenderers } from "./registry.js";
 import { bindPointDrag } from "./interactions/drag.js";
+import { bindBrush, removeBrush } from "./interactions/brush.js";
+import { bindAnnotation, removeAnnotationBindings } from "./interactions/annotate.js";
+import { bindLinked, cleanupLinked } from "./interactions/linked.js";
+import { bindSliders, removeSliders } from "./interactions/slider.js";
 import { bindRollover } from "./interactions/rollover.js";
 import { deriveChartRender, applyDerivedScales } from "./derive/chart-render.js";
 import { validateLayers } from "./derive/validate.js";
@@ -223,6 +227,19 @@ export class myIOchart {
       syncReferenceLines(this, state, options);
       syncLegend(this, state);
       bindRollover(this);
+      removeBrush(this);
+      if (this.config.interactions.brush && this.config.interactions.brush.enabled) {
+        bindBrush(this);
+      }
+      if (this.config.interactions.annotation && this.config.interactions.annotation.enabled) {
+        bindAnnotation(this);
+      }
+      if (this.config.interactions.linked && this.config.interactions.linked.enabled) {
+        bindLinked(this);
+      }
+      if (this.config.interactions.sliders && this.config.interactions.sliders.length > 0) {
+        bindSliders(this);
+      }
       this.emit("afterRender", { state });
     } catch (error) {
       this.emit("error", { message: error.message, error });
@@ -423,6 +440,13 @@ export class myIOchart {
       closePanel(this, { returnFocus: false });
     }
     clearTimeout(this.runtime && this.runtime._sheetCloseTimer);
+    removeBrush(this);
+    removeAnnotationBindings(this);
+    cleanupLinked(this);
+    removeSliders(this);
+    if (this.dom && this.dom.element) {
+      d3.select(this.dom.element).on("keydown.brush", null);
+    }
     if (this.dom && this.dom.chartArea) {
       this.dom.chartArea.selectAll("*").interrupt();
     }
