@@ -1,3 +1,10 @@
+## Resubmission
+
+This is a resubmission. In the previous submission, Uwe Ligges noted an
+invalid file URI in the shiny-integration vignette (`shiny-interactions.html`
+referenced a non-existent article). This has been fixed by removing the
+dangling cross-reference.
+
 ## R CMD check results
 
 0 errors | 0 warnings | 1 note

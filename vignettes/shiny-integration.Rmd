@@ -430,4 +430,4 @@ All myIO Shiny inputs follow the naming pattern `myIO-{outputId}-{event}`:
 ## Deep Dive
 
 For a comprehensive walkthrough with the live demo app embedded, see the
-[Interactive I/O in Shiny](shiny-interactions.html) article.
+package documentation at `vignette("shiny-integration", package = "myIO")`.
