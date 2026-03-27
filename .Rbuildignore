@@ -28,3 +28,4 @@
 ^scripts$
 ^inst/test_rmarkdown
 ^inst/appTester$
+^CRAN-SUBMISSION$
