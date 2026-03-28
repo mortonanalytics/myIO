@@ -523,6 +523,21 @@
   box-shadow: var(--chart-focus-ring);
 }
 
+/* Sparkline mode */
+.myIO-container[data-sparkline="true"] .buttonDiv,
+.myIO-container[data-sparkline="true"] .myIO-fab,
+.myIO-container[data-sparkline="true"] .myIO-panel {
+  display: none !important;
+}
+
+.myIO-container[data-sparkline="true"] .tag-line path {
+  stroke-width: 1.5;
+}
+
+.myIO-container[data-sparkline="true"] .tag-bar rect {
+  shape-rendering: crispEdges;
+}
+
 /* Annotation marks */
 .myIO-annotation-label {
   font-family: var(--chart-font);

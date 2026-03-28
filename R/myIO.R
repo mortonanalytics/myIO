@@ -9,6 +9,9 @@
 #' @param width a string of either pixel width or a percentage width
 #' @param height a string of pixel height
 #' @param elementId a unique id for the htmlwidget object
+#' @param sparkline Logical. If TRUE, renders a compact sparkline suitable for
+#'   embedding in table cells. Strips axes, legend, and interactions.
+#'   Only "line", "bar", and "area" layer types are supported. Default FALSE.
 #'
 #' @return An htmlwidget object of class \code{myIO}.
 #' @examples
@@ -16,7 +19,7 @@
 #'   setMargin(top = 40, bottom = 80, left = 60, right = 10)
 #'
 #' @export
-myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL) {
+myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL, sparkline = FALSE) {
   validateCssDimension <- function(value, arg) {
     if (is.null(value) || (is.numeric(value) && length(value) == 1 && !is.na(value)) ||
         (is.character(value) && length(value) == 1 && !is.na(value))) {
@@ -32,6 +35,7 @@ myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL
     data = data,
     config = list(
       specVersion = 1L,
+      sparkline = if (isTRUE(sparkline)) TRUE else NULL,
       layers = list(),
       layout = list(
         margin = list(top = 30, bottom = 60, left = 50, right = 5),
@@ -62,6 +66,11 @@ myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL
       referenceLines = list(x = NULL, y = NULL)
     )
   )
+
+  if (isTRUE(sparkline)) {
+    if (identical(height, "400px")) height <- 20
+    if (identical(width, "100%")) width <- "100%"  # keep default
+  }
 
   htmlwidgets::createWidget(
     name = "myIO",

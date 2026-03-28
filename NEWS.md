@@ -1,3 +1,12 @@
+# myIO 1.2.0 (development)
+
+## Sparkline mode
+
+* `myIO(sparkline = TRUE)` renders a compact, axes-free chart suitable for
+  embedding in table cells (reactable, DT, gt). Strips legend, axes, reference
+  lines, and all interactions. Default height 20px. Supports line, bar, and
+  area layer types.
+
 # myIO 1.1.0
 
 ## I/O interaction system
