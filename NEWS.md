@@ -1,5 +1,14 @@
 # myIO 1.2.0 (development)
 
+## Dark mode / theme system
+
+* `setTheme(mode = "dark")` applies a WCAG AA-verified dark palette across all
+  chart elements. Also supports `"light"` and `"auto"` (detects OS preference
+  and Quarto/Bootstrap `data-bs-theme`).
+* Backward compatible: existing `setTheme(bg = "#fff")` calls still work.
+* New `overrides` parameter for fine-grained CSS custom property control.
+* High-contrast and reduced-motion CSS media query support.
+
 ## Sparkline mode
 
 * `myIO(sparkline = TRUE)` renders a compact, axes-free chart suitable for

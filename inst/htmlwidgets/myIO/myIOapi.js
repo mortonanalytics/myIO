@@ -3873,6 +3873,180 @@
     return lr;
   }
 
+  // inst/htmlwidgets/myIO/src/theme/palettes.js
+  var LIGHT = {
+    "--chart-text-color": "#6b7280",
+    "--chart-grid-color": "#9ca3af",
+    "--chart-grid-opacity": "0.4",
+    "--chart-bg": "#ffffff",
+    "--chart-tooltip-bg": "#ffffff",
+    "--chart-tooltip-border": "#e5e7eb",
+    "--chart-tooltip-shadow": "0 4px 12px rgba(0, 0, 0, 0.12)",
+    "--chart-button-color": "#6b7280",
+    "--chart-button-hover-bg": "rgba(107, 114, 128, 0.1)",
+    "--chart-sheet-bg": "#ffffff",
+    "--chart-sheet-border": "rgba(17, 24, 39, 0.1)",
+    "--chart-sheet-shadow": "0 20px 45px rgba(15, 23, 42, 0.18)",
+    "--chart-sheet-backdrop": "rgba(15, 23, 42, 0.32)",
+    "--chart-sheet-surface": "rgba(243, 244, 246, 0.9)",
+    "--chart-sheet-accent": "#111827",
+    "--chart-brush-fill": "rgba(0, 0, 0, 0.08)",
+    "--chart-brush-stroke": "#6b7280",
+    "--chart-status-bar-bg": "#f9fafb",
+    "--chart-slider-track": "#e5e7eb",
+    "--chart-ref-line-color": "#9ca3af",
+    "--chart-annotation-ring": "#E63946"
+  };
+  var DARK = {
+    "--chart-text-color": "#d1d5db",
+    "--chart-grid-color": "#4b5563",
+    "--chart-grid-opacity": "0.5",
+    "--chart-bg": "#1e1e2e",
+    "--chart-tooltip-bg": "#2d2d44",
+    "--chart-tooltip-border": "#3f3f5c",
+    "--chart-tooltip-shadow": "0 4px 12px rgba(0, 0, 0, 0.4)",
+    "--chart-button-color": "#9ca3af",
+    "--chart-button-hover-bg": "rgba(156, 163, 175, 0.15)",
+    "--chart-sheet-bg": "#2d2d44",
+    "--chart-sheet-border": "rgba(255, 255, 255, 0.1)",
+    "--chart-sheet-shadow": "0 20px 45px rgba(0, 0, 0, 0.5)",
+    "--chart-sheet-backdrop": "rgba(0, 0, 0, 0.6)",
+    "--chart-sheet-surface": "rgba(45, 45, 68, 0.95)",
+    "--chart-sheet-accent": "#f3f4f6",
+    "--chart-brush-fill": "rgba(255, 255, 255, 0.08)",
+    "--chart-brush-stroke": "#9ca3af",
+    "--chart-status-bar-bg": "#252540",
+    "--chart-slider-track": "#3f3f5c",
+    "--chart-ref-line-color": "#4b5563",
+    "--chart-annotation-ring": "#ff6b6b"
+  };
+
+  // inst/htmlwidgets/myIO/src/theme/theme-manager.js
+  function normalizeThemeValues(values) {
+    if (!values || typeof values !== "object") {
+      return {};
+    }
+    var normalized = {};
+    for (var key of Object.keys(values)) {
+      var cssKey = key.startsWith("--") ? key : "--" + key;
+      normalized[cssKey] = values[key];
+    }
+    return normalized;
+  }
+  function normalizeThemeConfig(raw) {
+    if (!raw || typeof raw !== "object") {
+      return { mode: null, preset: null, values: {} };
+    }
+    if (!("mode" in raw) && !("preset" in raw) && !("values" in raw)) {
+      return { mode: null, preset: null, values: normalizeThemeValues(raw) };
+    }
+    return {
+      mode: raw.mode || null,
+      preset: raw.preset || null,
+      values: normalizeThemeValues(raw.values || {})
+    };
+  }
+  var ThemeManager = class {
+    constructor(element, config) {
+      this.element = element;
+      this.config = normalizeThemeConfig(config ? config.theme : null);
+      this.currentMode = null;
+      this.mutationObserver = null;
+      this.mediaQuery = null;
+      this._mediaHandler = null;
+      this.listeners = [];
+    }
+    initialize() {
+      var resolved = this.resolveMode();
+      this.apply(resolved);
+      if (this.config.mode === "auto") {
+        this.startListening();
+      }
+    }
+    resolveMode() {
+      var mode = this.config.mode;
+      if (mode === "light" || mode === "dark") {
+        return mode;
+      }
+      if (mode === "auto") {
+        return this.detectEnvironment();
+      }
+      return "light";
+    }
+    detectEnvironment() {
+      var bsTheme = this.element.closest && this.element.closest("[data-bs-theme]");
+      if (bsTheme) {
+        return bsTheme.getAttribute("data-bs-theme") === "dark" ? "dark" : "light";
+      }
+      if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        return "dark";
+      }
+      return "light";
+    }
+    apply(mode) {
+      this.currentMode = mode;
+      var palette = mode === "dark" ? DARK : LIGHT;
+      for (var prop of Object.keys(palette)) {
+        this.element.style.setProperty(prop, palette[prop]);
+      }
+      if (this.config.values) {
+        for (var key of Object.keys(this.config.values)) {
+          this.element.style.setProperty(key, this.config.values[key]);
+        }
+      }
+      this.element.dataset.theme = mode;
+      for (var fn of this.listeners) {
+        fn(mode);
+      }
+    }
+    startListening() {
+      var self2 = this;
+      this.mutationObserver = new MutationObserver(function() {
+        var newMode = self2.detectEnvironment();
+        if (newMode !== self2.currentMode) {
+          self2.apply(newMode);
+        }
+      });
+      var body = document.body;
+      if (body) {
+        this.mutationObserver.observe(body, {
+          attributes: true,
+          attributeFilter: ["data-bs-theme"]
+        });
+      }
+      if (window.matchMedia) {
+        this.mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+        this._mediaHandler = function() {
+          var newMode = self2.detectEnvironment();
+          if (newMode !== self2.currentMode) {
+            self2.apply(newMode);
+          }
+        };
+        if (typeof this.mediaQuery.addEventListener === "function") {
+          this.mediaQuery.addEventListener("change", this._mediaHandler);
+        } else if (typeof this.mediaQuery.addListener === "function") {
+          this.mediaQuery.addListener(this._mediaHandler);
+        }
+      }
+    }
+    onChange(fn) {
+      this.listeners.push(fn);
+    }
+    destroy() {
+      if (this.mutationObserver) {
+        this.mutationObserver.disconnect();
+      }
+      if (this.mediaQuery && this._mediaHandler) {
+        if (typeof this.mediaQuery.removeEventListener === "function") {
+          this.mediaQuery.removeEventListener("change", this._mediaHandler);
+        } else if (typeof this.mediaQuery.removeListener === "function") {
+          this.mediaQuery.removeListener(this._mediaHandler);
+        }
+      }
+      this.listeners = [];
+    }
+  };
+
   // inst/htmlwidgets/myIO/src/Chart.js
   var MIN_CHART_WIDTH = 280;
   var RESIZE_DEBOUNCE_MS = 100;
@@ -4018,14 +4192,8 @@
     initialize() {
       this.derived.currentLayers = this.config.layers;
       this.syncLegacyAliases();
-      if (this.config.theme) {
-        var el = this.dom.element;
-        Object.keys(this.config.theme).forEach(function(key) {
-          if (this.config.theme[key] != null) {
-            el.style.setProperty("--" + key, this.config.theme[key]);
-          }
-        }, this);
-      }
+      this.themeManager = new ThemeManager(this.dom.element, this.config);
+      this.themeManager.initialize();
       initializeTooltip(this);
       this.captureLegacyAliases();
       if (this.derived.currentLayers.length > 0) {
@@ -4276,6 +4444,9 @@
       this.emit("destroy", {});
       clearTimeout(this.runtime && this.runtime.resizeTimer);
       clearTimeout(this.runtime && this.runtime.tooltipHideTimer);
+      if (this.themeManager) {
+        this.themeManager.destroy();
+      }
       if (this.runtime && this.runtime._sheetOpen) {
         closePanel(this, { returnFocus: false });
       }
