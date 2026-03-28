@@ -1,10 +1,11 @@
 import { exportToCsv } from "../utils/export-csv.js";
-import { getSVGString, svgString2Image } from "../utils/export-svg.js";
+import { downloadSVG, getSVGString, svgString2Image } from "../utils/export-svg.js";
 import { injectExportLegend } from "../utils/export-legend.js";
 import { saveAs } from "../utils/file-saver.js";
 
 export const BUTTON_LABELS = {
   image: "Export as PNG",
+  svg: "Download as SVG",
   chart: "Download CSV data",
   percent: "Toggle percent view",
   group2stack: "Toggle grouped/stacked layout"
@@ -15,12 +16,27 @@ export function addButtons(chart, layers) {
 
   var buttonData = [
     { name: "image", html: iconCamera() },
+    { name: "svg", html: iconSVG() },
     { name: "chart", html: iconFileDown() },
     { name: "percent", html: iconPercent() },
     { name: "group2stack", html: iconLayers() }
   ];
 
-  var data2Use = chart.options.toggleY ? (chart.plotLayers[0].type === "groupedBar" ? buttonData : buttonData.slice(0, 3)) : buttonData.slice(0, 2);
+  var data2Use = chart.options.toggleY ? (chart.plotLayers[0].type === "groupedBar" ? buttonData : buttonData.slice(0, 4)) : buttonData.slice(0, 3);
+  var exportConfig = chart.config && chart.config.export;
+  if (exportConfig) {
+    data2Use = data2Use.filter(function(d) {
+      if (d.name === "image") return exportConfig.png !== false;
+      if (d.name === "svg") return exportConfig.svg === true;
+      if (d.name === "chart") return exportConfig.csv !== false;
+      return true;
+    });
+  } else {
+    data2Use = data2Use.filter(function(d) {
+      return d.name !== "svg";
+    });
+  }
+
   var buttonDiv = d3.select(chart.element).append("div")
     .attr("class", "buttonDiv")
     .style("display", chart.runtime.totalWidth < 400 ? "none" : "inline-flex")
@@ -54,6 +70,20 @@ export function addButtons(chart, layers) {
 }
 
 export function handleAction(chart, layers, name) {
+  if (name === "svg") {
+    var svgLegend = injectExportLegend(chart);
+    if (typeof saveAs === "function") {
+      var svgString = getSVGString(chart.svg.node());
+      svgLegend.cleanup();
+      var blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+      saveAs(blob, chart.element.id + ".svg");
+    } else {
+      downloadSVG(chart.svg.node(), chart.element.id + ".svg");
+      svgLegend.cleanup();
+    }
+    return;
+  }
+
   if (name === "image") {
     var legend = injectExportLegend(chart);
     var exportHeight = chart.height + legend.extraHeight;
@@ -100,6 +130,10 @@ export function iconWrapper(paths) {
 
 export function iconCamera() {
   return iconWrapper('<path d="M4 7h3l2-2h6l2 2h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"></path><circle cx="12" cy="13" r="4"></circle>');
+}
+
+export function iconSVG() {
+  return iconWrapper('<rect x="3" y="3" width="18" height="18" rx="2"></rect><text x="12" y="15" text-anchor="middle" font-size="8" fill="currentColor" stroke="none" font-weight="bold">SVG</text>');
 }
 
 export function iconFileDown() {
