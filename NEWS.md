@@ -1,5 +1,12 @@
 # myIO 1.2.0 (development)
 
+## Export enhancements
+
+* `setExportOptions()` controls which export buttons appear in the toolbar
+  (PNG, SVG, clipboard, CSV). New SVG download button and clipboard copy
+  (SVG + PNG) via the Clipboard API.
+* CSS custom properties resolved in exported SVGs for correct dark-mode colors.
+
 ## Dark mode / theme system
 
 * `setTheme(mode = "dark")` applies a WCAG AA-verified dark palette across all
