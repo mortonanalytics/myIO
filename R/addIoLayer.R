@@ -32,6 +32,16 @@ addIoLayer <- function(myIO,
                                       toolTipOptions = list(suppressY = FALSE))) {
   assert_myIO(myIO)
 
+  if (isTRUE(myIO$x$config$sparkline)) {
+    sparkline_types <- c("line", "bar", "area")
+    if (!type %in% sparkline_types) {
+      stop(sprintf(
+        "Sparkline mode only supports types: %s. Got: '%s'",
+        paste(sparkline_types, collapse = ", "), type
+      ), call. = FALSE)
+    }
+  }
+
   existing_layers <- myIO$x$config$layers
 
   if (is.null(data)) {

@@ -3920,6 +3920,9 @@
         activeYFormat: null,
         tooltipHideTimer: null
       };
+      if (this.config.sparkline) {
+        this.applySparklineOverrides();
+      }
       if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
         this.config.transitions.speed = 0;
       }
@@ -4029,6 +4032,18 @@
         this.setClipPath(this.derived.currentLayers[0].type);
       }
       this.renderCurrentLayers({ isInitialRender: true });
+    }
+    applySparklineOverrides() {
+      this.config.layout.margin = { top: 1, right: 1, bottom: 1, left: 1 };
+      this.config.layout.suppressLegend = true;
+      this.config.layout.suppressAxis = { xAxis: true, yAxis: true };
+      if (this.config.interactions.brush) this.config.interactions.brush.enabled = false;
+      if (this.config.interactions.annotation) this.config.interactions.annotation.enabled = false;
+      if (this.config.interactions.linked) this.config.interactions.linked.enabled = false;
+      this.config.interactions.sliders = [];
+      this.config.interactions.dragPoints = false;
+      this.config.referenceLines = { x: null, y: null };
+      this.dom.element.dataset.sparkline = "true";
     }
     renderCurrentLayers(opts) {
       const options = opts || {};
