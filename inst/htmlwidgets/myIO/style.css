@@ -707,3 +707,26 @@
   .myIO-popover { display: none !important; }
   .myIO-slider-wrapper { display: none !important; }
 }
+
+/* High contrast */
+@media (prefers-contrast: more) {
+  .myIO-container {
+    --chart-grid-opacity: 1;
+  }
+  .myIO-container:not([data-theme="dark"]) {
+    --chart-text-color: #000000;
+    --chart-grid-color: #333333;
+  }
+  .myIO-container[data-theme="dark"] {
+    --chart-text-color: #ffffff;
+    --chart-grid-color: #cccccc;
+  }
+}
+
+/* Reduced motion — ALL transitions */
+@media (prefers-reduced-motion: reduce) {
+  .myIO-container * {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
+}

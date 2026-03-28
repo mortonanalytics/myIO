@@ -10,6 +10,9 @@ setTheme(
   grid_color = NULL,
   bg = NULL,
   font = NULL,
+  mode = NULL,
+  preset = NULL,
+  overrides = list(),
   ...
 )
 }
@@ -24,7 +27,16 @@ setTheme(
 
 \item{font}{font family}
 
-\item{...}{additional CSS custom property overrides without the `chart-` prefix}
+\item{mode}{Character or NULL. Theme mode: "light", "dark", or "auto".
+Default NULL (no mode, manual CSS vars only).}
+
+\item{preset}{Character or NULL. Named preset (reserved for future use).
+Default NULL.}
+
+\item{overrides}{Named list of CSS custom property overrides
+(e.g., \code{list("--chart-tooltip-bg" = "#222")}).}
+
+\item{...}{additional CSS custom property overrides with `--` prefix}
 }
 \value{
 A modified \code{myIO} htmlwidget object with updated theme
@@ -36,5 +48,8 @@ Sets chart theme tokens using CSS custom properties
 \examples{
 myIO() |>
   setTheme(text_color = "#222222", grid_color = "#d9d9d9")
+
+myIO() |>
+  setTheme(mode = "dark", bg = "#1a1a2e")
 
 }

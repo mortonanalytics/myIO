@@ -458,8 +458,8 @@ test_that("Theme demo renders with custom theme and reference line", {
     setAxisFormat(xLabel = "Horsepower", yLabel = "MPG") |>
     setReferenceLines(yRef = mean(df$mpg))
 
-  expect_equal(w$x$config$theme[["chart-text-color"]], "#e0e0e0")
-  expect_equal(w$x$config$theme[["chart-bg"]], "#1a1a2e")
+  expect_equal(w$x$config$theme$values[["--chart-text-color"]], "#e0e0e0")
+  expect_equal(w$x$config$theme$values[["--chart-bg"]], "#1a1a2e")
   expect_equal(w$x$config$referenceLines$y, mean(df$mpg))
   save_widget(w, "12_theme_demo")
 })

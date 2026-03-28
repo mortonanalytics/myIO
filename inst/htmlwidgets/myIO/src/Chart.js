@@ -16,6 +16,7 @@ import { hideChartTooltip, initializeTooltip, removeHoverOverlay } from "./toolt
 import { addFAB, closePanel, openPanel } from "./interactions/bottom-sheet.js";
 import { linearRegression } from "./utils/math.js";
 import { tagName } from "./utils/responsive.js";
+import { ThemeManager } from "./theme/theme-manager.js";
 
 const MIN_CHART_WIDTH = 280;
 const RESIZE_DEBOUNCE_MS = 100;
@@ -173,14 +174,8 @@ export class myIOchart {
   initialize() {
     this.derived.currentLayers = this.config.layers;
     this.syncLegacyAliases();
-    if (this.config.theme) {
-      var el = this.dom.element;
-      Object.keys(this.config.theme).forEach(function(key) {
-        if (this.config.theme[key] != null) {
-          el.style.setProperty("--" + key, this.config.theme[key]);
-        }
-      }, this);
-    }
+    this.themeManager = new ThemeManager(this.dom.element, this.config);
+    this.themeManager.initialize();
     initializeTooltip(this);
     this.captureLegacyAliases();
     if (this.derived.currentLayers.length > 0) {
@@ -456,6 +451,9 @@ export class myIOchart {
     this.emit("destroy", {});
     clearTimeout(this.runtime && this.runtime.resizeTimer);
     clearTimeout(this.runtime && this.runtime.tooltipHideTimer);
+    if (this.themeManager) {
+      this.themeManager.destroy();
+    }
     if (this.runtime && this.runtime._sheetOpen) {
       closePanel(this, { returnFocus: false });
     }
