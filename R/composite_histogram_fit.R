@@ -38,7 +38,7 @@ composite_histogram_fit <- function(data, mapping, label, color, options) {
       role = "histogram",
       scaleHints = list(
         xScaleType = "linear", yScaleType = "linear",
-        xExtentFields = list(), yExtentFields = list("y_var"),
+        xExtentFields = list("x_var"), yExtentFields = list("y_var"),
         domainMerge = "union"
       )
     ),
@@ -52,7 +52,7 @@ composite_histogram_fit <- function(data, mapping, label, color, options) {
       role = "density_line",
       scaleHints = list(
         xScaleType = "linear", yScaleType = "linear",
-        xExtentFields = list(), yExtentFields = list("y_var"),
+        xExtentFields = list("x_var"), yExtentFields = list("y_var"),
         domainMerge = "union"
       )
     )
