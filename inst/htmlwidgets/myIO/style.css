@@ -64,6 +64,15 @@
   background: var(--chart-bg);
 }
 
+.myIO-container .tick text {
+  fill: var(--chart-text-color);
+}
+
+.myIO-container .tick line,
+.myIO-container .domain {
+  stroke: var(--chart-grid-color);
+}
+
 .inner-text,
 .legendElement,
 .x-label,

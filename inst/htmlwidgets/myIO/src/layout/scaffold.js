@@ -18,6 +18,13 @@ export function initializeScaffold(chart) {
     .attr("role", "img")
     .attr("aria-label", buildAriaLabel(chart));
 
+  // Background rect that respects theme CSS variable
+  chart.svg.append("rect")
+    .attr("class", "myIO-bg")
+    .attr("width", chart.totalWidth)
+    .attr("height", chart.height)
+    .attr("fill", "var(--chart-bg, #ffffff)");
+
   applyPlotTransform(chart);
 
   chart.chart = chart.plot
