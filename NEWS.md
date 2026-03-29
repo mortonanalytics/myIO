@@ -1,5 +1,12 @@
 # myIO 1.2.0 (development)
 
+## New chart types
+
+* `lollipop` — vertical stem with circle head, supports `mean` and `summary`
+  transforms. Compatible with categorical x-axis charts.
+* `dumbbell` — connected dots showing a range between `low_y` and `high_y`.
+  Both types support `flipAxis` and themed colors.
+
 ## Small multiples / faceting
 
 * `setFacet(var, ncol, scales)` splits charts into a CSS grid of panels, one per

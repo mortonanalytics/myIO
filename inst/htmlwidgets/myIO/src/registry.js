@@ -17,6 +17,8 @@ import { SankeyRenderer } from "./renderers/SankeyRenderer.js";
 import { RangeBarRenderer } from "./renderers/RangeBarRenderer.js";
 import { TextRenderer } from "./renderers/TextRenderer.js";
 import { BracketRenderer } from "./renderers/BracketRenderer.js";
+import { LollipopRenderer } from "./renderers/LollipopRenderer.js";
+import { DumbbellRenderer } from "./renderers/DumbbellRenderer.js";
 
 export function registerRenderer(type, RendererClass) {
   if (rendererRegistry.has(type)) {
@@ -94,6 +96,12 @@ export function registerBuiltInRenderers() {
   }
   if (!rendererRegistry.has(RangeBarRenderer.type)) {
     registerRenderer(RangeBarRenderer.type, new RangeBarRenderer());
+  }
+  if (!rendererRegistry.has(LollipopRenderer.type)) {
+    registerRenderer(LollipopRenderer.type, new LollipopRenderer());
+  }
+  if (!rendererRegistry.has(DumbbellRenderer.type)) {
+    registerRenderer(DumbbellRenderer.type, new DumbbellRenderer());
   }
 
   if (!rendererRegistry.has(TextRenderer.type)) {
