@@ -834,3 +834,19 @@
   font-weight: 600;
   color: var(--chart-text-color);
 }
+
+/* Radar */
+.radar-polygon { transition: opacity 0.15s ease; }
+.radar-polygon:hover { opacity: 0.9; }
+.radar-axis-line { stroke: var(--chart-grid-color); stroke-opacity: 0.3; }
+.radar-axis-label { font-size: 11px; fill: var(--chart-text-color); }
+
+/* Funnel */
+.funnel-stage { cursor: pointer; transition: opacity 0.15s ease; }
+.funnel-stage:hover { opacity: 0.85; }
+.funnel-label { font-size: 12px; fill: var(--chart-text-color); font-weight: 600; }
+
+/* Parallel coordinates */
+.parallel-line { fill: none; stroke-opacity: 0.4; transition: stroke-opacity 0.15s ease; }
+.parallel-line:hover { stroke-opacity: 1; stroke-width: 2; }
+.parallel-axis-label { font-size: 11px; fill: var(--chart-text-color); }

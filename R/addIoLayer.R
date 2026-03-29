@@ -223,6 +223,9 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
       dumbbell = c("x_var", "low_y", "high_y"),
       waffle = c("category", "value"),
       bump = c("x_var", "y_var", "group"),
+      radar = c("axis", "value"),
+      funnel = c("stage", "value"),
+      parallel = c("dimensions"),
       c("x_var", "y_var")
     )
   }

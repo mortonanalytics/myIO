@@ -22,6 +22,9 @@ import { DumbbellRenderer } from "./renderers/DumbbellRenderer.js";
 import { WaffleRenderer } from "./renderers/WaffleRenderer.js";
 import { BeeswarmRenderer } from "./renderers/BeeswarmRenderer.js";
 import { BumpRenderer } from "./renderers/BumpRenderer.js";
+import { RadarRenderer } from "./renderers/RadarRenderer.js";
+import { FunnelRenderer } from "./renderers/FunnelRenderer.js";
+import { ParallelRenderer } from "./renderers/ParallelRenderer.js";
 
 export function registerRenderer(type, RendererClass) {
   if (rendererRegistry.has(type)) {
@@ -114,6 +117,15 @@ export function registerBuiltInRenderers() {
   }
   if (!rendererRegistry.has(BumpRenderer.type)) {
     registerRenderer(BumpRenderer.type, new BumpRenderer());
+  }
+  if (!rendererRegistry.has(RadarRenderer.type)) {
+    registerRenderer(RadarRenderer.type, new RadarRenderer());
+  }
+  if (!rendererRegistry.has(FunnelRenderer.type)) {
+    registerRenderer(FunnelRenderer.type, new FunnelRenderer());
+  }
+  if (!rendererRegistry.has(ParallelRenderer.type)) {
+    registerRenderer(ParallelRenderer.type, new ParallelRenderer());
   }
 
   if (!rendererRegistry.has(TextRenderer.type)) {

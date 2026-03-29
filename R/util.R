@@ -32,6 +32,7 @@ ALLOWED_TYPES <- c(
   "comparison", "qq",
   "lollipop", "dumbbell",
   "waffle", "beeswarm", "bump",
+  "radar", "funnel", "parallel",
   "survfit", "histogram_fit"
 )
 
@@ -64,6 +65,9 @@ COMPATIBILITY_GROUPS <- list(
   waffle = "standalone-waffle",
   beeswarm = "axes-continuous",
   bump = "axes-continuous",
+  radar = "standalone-radar",
+  funnel = "standalone-funnel",
+  parallel = "standalone-parallel",
   survfit = "axes-continuous",
   histogram_fit = "axes-binned"
 )
@@ -78,7 +82,10 @@ GROUP_MATRIX <- list(
   "standalone-treemap" = c("standalone-treemap"),
   "standalone-donut" = c("standalone-donut"),
   "standalone-gauge" = c("standalone-gauge"),
-  "standalone-waffle" = c("standalone-waffle")
+  "standalone-waffle" = c("standalone-waffle"),
+  "standalone-radar" = c("standalone-radar"),
+  "standalone-funnel" = c("standalone-funnel"),
+  "standalone-parallel" = c("standalone-parallel")
 )
 
 VALID_COMBINATIONS <- list(
@@ -107,6 +114,9 @@ VALID_COMBINATIONS <- list(
   waffle = c("identity"),
   beeswarm = c("identity"),
   bump = c("identity"),
+  radar = c("identity"),
+  funnel = c("identity"),
+  parallel = c("identity"),
   survfit = c("identity"),
   histogram_fit = c("identity")
 )
