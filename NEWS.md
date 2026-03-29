@@ -1,5 +1,16 @@
 # myIO 1.2.0 (development)
 
+## Linked brushing
+
+* `linkCharts(chart1, chart2, on = "column")` enables cross-chart selection.
+  Brush in one chart highlights matching rows in linked charts. Works in Shiny
+  and static HTML. Aggregation-to-source-row key resolution for summary views.
+
+## Group-by auto-series
+
+* Pass a `dplyr::group_by()` tibble to `addIoLayer()` and it auto-creates one
+  layer per group with colors from the Okabe-Ito palette. Soft dplyr dependency.
+
 ## Survival curves (Kaplan-Meier)
 
 * `addIoLayer(type = "survfit", mapping = list(time = "time", status = "status"))`

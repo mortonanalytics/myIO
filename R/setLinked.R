@@ -8,6 +8,12 @@
 #' @param mode \code{"source"}, \code{"target"}, or \code{"both"} (default)
 #' @param filter if \code{TRUE}, Crosstalk filter operations hide
 #'   non-matching points. Default \code{FALSE} (dim only).
+#' @param key Optional character vector of row keys. When supplied, overrides
+#'   the keys extracted from \code{shared_data}. Useful when the SharedData
+#'   keys do not match the column used for cross-chart matching.
+#' @param group Optional character string. When supplied, overrides the
+#'   Crosstalk group name from \code{shared_data}, allowing manual control
+#'   over which widgets share selections.
 #'
 #' @return A modified \code{myIO} htmlwidget with Crosstalk linking.
 #' @examples
@@ -22,7 +28,8 @@
 #' }
 #'
 #' @export
-setLinked <- function(myIO, shared_data, mode = "both", filter = FALSE) {
+setLinked <- function(myIO, shared_data, mode = "both", filter = FALSE,
+                      key = NULL, group = NULL) {
   assert_myIO(myIO)
   if (!requireNamespace("crosstalk", quietly = TRUE)) {
     stop("Package 'crosstalk' is required for linked brushing. ",
@@ -32,13 +39,16 @@ setLinked <- function(myIO, shared_data, mode = "both", filter = FALSE) {
   check_class(shared_data, "SharedData", "shared_data", "setLinked")
   check_choice(mode, c("source", "target", "both"), "mode", "setLinked")
 
-  key <- shared_data$key()
-  group <- shared_data$groupName()
+  resolved_key <- if (!is.null(key)) key else shared_data$key()
+  resolved_group <- if (!is.null(group)) group else shared_data$groupName()
+
+  if (!is.null(key)) check_class(key, "character", "key", "setLinked")
+  if (!is.null(group)) check_string(group, "group", "setLinked")
 
   myIO$x$config$interactions$linked <- list(
     enabled = TRUE,
-    group = group,
-    key = as.list(key),
+    group = resolved_group,
+    key = as.list(resolved_key),
     mode = mode,
     filter = filter
   )
