@@ -49,6 +49,10 @@ addIoLayer <- function(myIO,
   }
   data <- ensure_source_key(data)
 
+  if (inherits(data, "grouped_df")) {
+    return(expand_grouped_df(myIO, type, color, label, data, mapping, transform, options))
+  }
+
   validate_layer_inputs(type, transform, mapping, label, data, existing_layers)
 
   presets <- list(barSize = "large", toolTipOptions = list(suppressY = FALSE))
@@ -210,15 +214,15 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
       boxplot = c("x_var", "y_var"),
       violin = c("x_var", "y_var"),
       qq = c("y_var"),
+      ridgeline = c("x_var", "y_var", "group"),
+      rangeBar = c("x_var", "low_y", "high_y"),
+      area = c("x_var", "low_y", "high_y"),
+      hexbin = c("x_var", "y_var", "radius"),
       survfit = c("time", "status"),
       histogram_fit = c("value"),
       dumbbell = c("x_var", "low_y", "high_y"),
       waffle = c("category", "value"),
       bump = c("x_var", "y_var", "group"),
-      ridgeline = c("x_var", "y_var", "group"),
-      rangeBar = c("x_var", "low_y", "high_y"),
-      area = c("x_var", "low_y", "high_y"),
-      hexbin = c("x_var", "y_var", "radius"),
       c("x_var", "y_var")
     )
   }
