@@ -772,3 +772,13 @@
     grid-template-columns: repeat(2, 1fr) !important;
   }
 }
+
+/* Lollipop */
+.lollipop-stem { shape-rendering: crispEdges; }
+.lollipop-head { cursor: pointer; transition: r 0.15s ease; }
+.lollipop-head:hover { r: 7; }
+
+/* Dumbbell */
+.dumbbell-line { shape-rendering: crispEdges; }
+.dumbbell-low, .dumbbell-high { cursor: pointer; transition: r 0.15s ease; }
+.dumbbell-low:hover, .dumbbell-high:hover { r: 7; }

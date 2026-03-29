@@ -214,6 +214,7 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
       rangeBar = c("x_var", "low_y", "high_y"),
       area = c("x_var", "low_y", "high_y"),
       hexbin = c("x_var", "y_var", "radius"),
+      dumbbell = c("x_var", "low_y", "high_y"),
       c("x_var", "y_var")
     )
   }
