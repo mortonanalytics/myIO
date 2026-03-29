@@ -13,16 +13,34 @@ composite_histogram_fit <- function(data, mapping, label, color, options) {
 
   fit_result <- transform_fit_distribution(data, mapping, options)
 
+  # Pre-bin the histogram in R so JS doesn't need to re-bin
+  val_col <- mapping$value
+  vals <- data[[val_col]]
+  vals <- vals[!is.na(vals)]
+  h <- graphics::hist(vals, breaks = bins, plot = FALSE)
+  hist_data <- data.frame(
+    x_var = h$mids,
+    y_var = h$counts,
+    x0 = h$breaks[-length(h$breaks)],
+    x1 = h$breaks[-1],
+    stringsAsFactors = FALSE
+  )
+  hist_data[["_source_key"]] <- sprintf("bin_%d", seq_len(nrow(hist_data)))
+
   layers <- list(
     list(
-      type = "histogram",
-      data = data,
-      mapping = list(value = mapping$value),
+      type = "bar",
+      data = hist_data,
+      mapping = list(x_var = "x_var", y_var = "y_var"),
       transform = "identity",
       label = paste0(label, " - histogram"),
       color = base_color,
       role = "histogram",
-      options = list(bins = bins)
+      scaleHints = list(
+        xScaleType = "linear", yScaleType = "linear",
+        xExtentFields = list(), yExtentFields = list("y_var"),
+        domainMerge = "union"
+      )
     ),
     list(
       type = "line",
@@ -32,7 +50,11 @@ composite_histogram_fit <- function(data, mapping, label, color, options) {
       label = paste0(label, " - fit"),
       color = line_color,
       role = "density_line",
-      scaleHints = list(suppressY = TRUE)
+      scaleHints = list(
+        xScaleType = "linear", yScaleType = "linear",
+        xExtentFields = list(), yExtentFields = list("y_var"),
+        domainMerge = "union"
+      )
     )
   )
 

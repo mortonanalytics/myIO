@@ -49,7 +49,7 @@ composite_survfit <- function(data, mapping, label, color, options) {
       options = list(curveType = "stepAfter"),
       scaleHints = list(
         xScaleType = "linear", yScaleType = "linear",
-        xExtentFields = list(), yExtentFields = list("surv"),
+        xExtentFields = list("x_var"), yExtentFields = list("y_var"),
         domainMerge = "union"
       )
     )
@@ -65,7 +65,7 @@ composite_survfit <- function(data, mapping, label, color, options) {
         options = list(curveType = "stepAfter"),
         scaleHints = list(
           xScaleType = "linear", yScaleType = "linear",
-          xExtentFields = list(), yExtentFields = list("ci_lower", "ci_upper"),
+          xExtentFields = list("x_var"), yExtentFields = list("low_y", "high_y"),
           domainMerge = "union"
         )
       )
@@ -82,7 +82,7 @@ composite_survfit <- function(data, mapping, label, color, options) {
         options = list(shape = "tickUp", radius = 4),
         scaleHints = list(
           xScaleType = "linear", yScaleType = "linear",
-          xExtentFields = list(), yExtentFields = list("surv"),
+          xExtentFields = list("x_var"), yExtentFields = list("y_var"),
           domainMerge = "union"
         )
       )
