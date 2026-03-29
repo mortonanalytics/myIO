@@ -420,6 +420,7 @@
     d3.select(chart.element).selectAll(".myIO-svg, .buttonDiv, .toolTip, .myIO-fab, .myIO-panel, .myIO-sheet-backdrop").remove();
     d3.select(chart.element).classed("myIO-container", true).style("position", "relative");
     chart.svg = d3.select(chart.element).append("svg").attr("class", "myIO-svg").attr("id", "myIO-svg" + chart.element.id).attr("width", chart.totalWidth).attr("height", chart.height).attr("viewBox", "0 0 " + chart.totalWidth + " " + chart.height).attr("role", "img").attr("aria-label", buildAriaLabel(chart));
+    chart.svg.append("rect").attr("class", "myIO-bg").attr("width", chart.totalWidth).attr("height", chart.height).attr("fill", "var(--chart-bg, #ffffff)");
     applyPlotTransform(chart);
     chart.chart = chart.plot.append("g").attr("class", "myIO-chart-area");
   }
