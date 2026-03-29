@@ -18,6 +18,9 @@ import { linearRegression } from "./utils/math.js";
 import { tagName } from "./utils/responsive.js";
 import { ThemeManager } from "./theme/theme-manager.js";
 import { FacetController } from "./layout/facet-controller.js";
+import { applyARIA } from "./a11y/aria.js";
+import { KeyboardNavigator } from "./a11y/keyboard-nav.js";
+import { DataTableFallback } from "./a11y/data-table.js";
 
 const MIN_CHART_WIDTH = 280;
 const RESIZE_DEBOUNCE_MS = 100;
@@ -178,6 +181,13 @@ export class myIOchart {
     this.themeManager = new ThemeManager(this.dom.element, this.config);
     this.themeManager.initialize();
     initializeTooltip(this);
+    if (!this.config.sparkline) {
+      this.keyboardNav = new KeyboardNavigator(this);
+      this.keyboardNav.initialize();
+      this.dataTable = new DataTableFallback(this);
+      this.dataTable.initialize();
+      applyARIA(this);
+    }
     this.captureLegacyAliases();
     if (this.derived.currentLayers.length > 0) {
       this.setClipPath(this.derived.currentLayers[0].type);
@@ -240,6 +250,9 @@ export class myIOchart {
       }
       if (this.derived.currentLayers.length === 0) {
         this.renderEmptyState();
+        if (!this.config.sparkline) {
+          applyARIA(this);
+        }
         return;
       }
       const state = deriveChartRender(this);
@@ -269,6 +282,9 @@ export class myIOchart {
         bindSliders(this);
       }
       this.emit("afterRender", { state });
+      if (!this.config.sparkline) {
+        applyARIA(this);
+      }
     } catch (error) {
       console.warn("[myIO] Render error:", error.message);
       this.emit("error", { message: error.message, error });
@@ -469,6 +485,8 @@ export class myIOchart {
       this.facetController.destroy();
       this.facetController = null;
     }
+    if (this.keyboardNav) this.keyboardNav.destroy();
+    if (this.dataTable) this.dataTable.destroy();
     if (this.themeManager) {
       this.themeManager.destroy();
     }

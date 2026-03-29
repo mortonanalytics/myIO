@@ -4963,6 +4963,332 @@
     }
   };
 
+  // inst/htmlwidgets/myIO/src/a11y/descriptions.js
+  function generateChartLabel(config) {
+    var types = [];
+    var layers = config && config.layers || [];
+    for (var i = 0; i < layers.length; i++) {
+      var type = layers[i].type;
+      if (type && types.indexOf(type) === -1) {
+        types.push(type);
+      }
+    }
+    var xLabel = config && config.axes && config.axes.xAxisLabel || "x";
+    var yLabel = config && config.axes && config.axes.yAxisLabel || "y";
+    var prefix = types.length ? types.join(" and ") + " chart" : "chart";
+    return prefix + ": " + xLabel + " vs " + yLabel;
+  }
+  function generateLayerLabel(layer) {
+    var label = layer && (layer.label || layer.type) || "series";
+    var dataLength = layer && Array.isArray(layer.data) ? layer.data.length : 0;
+    return label + ": " + dataLength + " data points";
+  }
+  function generatePointLabel(d, layer) {
+    var mapping = layer && layer.mapping || {};
+    if (mapping.x_var && mapping.y_var && d) {
+      return String(d[mapping.x_var] != null ? d[mapping.x_var] : "") + ": " + String(d[mapping.y_var] != null ? d[mapping.y_var] : "");
+    }
+    if (mapping.category && mapping.value && d) {
+      return String(d[mapping.category] || "") + ": " + String(d[mapping.value] || "");
+    }
+    return "Data point";
+  }
+
+  // inst/htmlwidgets/myIO/src/a11y/aria.js
+  function sanitizeLabel(label) {
+    return String(label).replace(/[^a-zA-Z0-9_-]/g, "");
+  }
+  function getLayerGroup(chart, layer) {
+    if (!chart.dom || !chart.dom.chartArea || !layer) {
+      return null;
+    }
+    var chartArea = chart.dom.chartArea;
+    var selectors = [
+      ".tag-" + layer.type + "-" + layer.id,
+      ".tag-" + layer.type + "-" + chart.dom.element.id + "-" + sanitizeLabel(layer.label)
+    ];
+    for (var i = 0; i < selectors.length; i++) {
+      var selection = chartArea.select(selectors[i]);
+      if (!selection.empty()) {
+        return selection;
+      }
+    }
+    return null;
+  }
+  function getLayerElements(chart, layer) {
+    if (!chart.dom || !chart.dom.chartArea || !layer) {
+      return null;
+    }
+    var chartArea = chart.dom.chartArea;
+    var label = sanitizeLabel(layer.label);
+    var elementId = chart.dom.element.id;
+    var selectors = [];
+    if (layer.type === "line") {
+      selectors.push(".tag-point-" + elementId + "-" + label);
+    }
+    if (layer.type === "groupedBar") {
+      selectors.push(".tag-grouped-bar-g rect");
+    }
+    selectors.push(".tag-" + layer.type + "-" + elementId + "-" + label);
+    selectors.push(".tag-" + layer.type + "-" + layer.id + " circle");
+    selectors.push(".tag-" + layer.type + "-" + layer.id + " rect");
+    selectors.push(".tag-" + layer.type + "-" + layer.id + " path");
+    selectors.push(".tag-" + layer.type + "-" + layer.id + " line");
+    for (var i = 0; i < selectors.length; i++) {
+      var selection = chartArea.selectAll(selectors[i]);
+      if (!selection.empty()) {
+        return selection;
+      }
+    }
+    return null;
+  }
+  function applyARIA(chart) {
+    if (!chart || !chart.dom || !chart.dom.svg) {
+      return;
+    }
+    var svg = chart.dom.svg;
+    var layers = chart.config && chart.config.layers ? chart.config.layers : [];
+    svg.attr("role", "graphics-document").attr("aria-roledescription", "chart").attr("aria-label", generateChartLabel(chart.config)).attr("tabindex", "0");
+    if (chart.dom.chartArea) {
+      chart.dom.chartArea.attr("role", "graphics-object").attr("aria-roledescription", "plot area").attr("aria-label", "Plot area with " + layers.length + " data series");
+    }
+    for (var i = 0; i < layers.length; i++) {
+      var layer = layers[i];
+      var layerGroup = getLayerGroup(chart, layer);
+      var layerElements = getLayerElements(chart, layer);
+      if (layerGroup && !layerGroup.empty()) {
+        layerGroup.attr("role", "graphics-object").attr("aria-roledescription", layer.type + " series").attr("aria-label", generateLayerLabel(layer));
+      }
+      if (layerElements && !layerElements.empty()) {
+        layerElements.each(function(d) {
+          d3.select(this).attr("role", "graphics-symbol").attr("aria-roledescription", "data point").attr("aria-label", generatePointLabel(d, layer));
+        });
+      }
+    }
+  }
+
+  // inst/htmlwidgets/myIO/src/a11y/keyboard-nav.js
+  function sanitizeLabel2(label) {
+    return String(label).replace(/[^a-zA-Z0-9_-]/g, "");
+  }
+  function getLayerSymbols(chart, layer) {
+    if (!chart || !chart.dom || !chart.dom.chartArea || !layer) {
+      return d3.select(null);
+    }
+    var chartArea = chart.dom.chartArea;
+    var label = sanitizeLabel2(layer.label);
+    var elementId = chart.dom.element.id;
+    var selectors = [
+      ".tag-" + layer.type + "-" + layer.id + ' [role="graphics-symbol"]'
+    ];
+    if (layer.type === "line") {
+      selectors.push(".tag-point-" + elementId + "-" + label + '[role="graphics-symbol"]');
+    }
+    if (layer.type === "groupedBar") {
+      selectors.push('.tag-grouped-bar-g rect[role="graphics-symbol"]');
+    }
+    selectors.push(".tag-" + layer.type + "-" + elementId + "-" + label + '[role="graphics-symbol"]');
+    selectors.push(".tag-" + layer.type + "-" + layer.id + ' circle[role="graphics-symbol"]');
+    selectors.push(".tag-" + layer.type + "-" + layer.id + ' rect[role="graphics-symbol"]');
+    selectors.push(".tag-" + layer.type + "-" + layer.id + ' path[role="graphics-symbol"]');
+    selectors.push(".tag-" + layer.type + "-" + layer.id + ' line[role="graphics-symbol"]');
+    for (var i = 0; i < selectors.length; i++) {
+      var selection = chartArea.selectAll(selectors[i]);
+      if (!selection.empty()) {
+        return selection;
+      }
+    }
+    return d3.select(null);
+  }
+  var KeyboardNavigator = class {
+    constructor(chart) {
+      this.chart = chart;
+      this.state = "IDLE";
+      this.layerIndex = 0;
+      this.pointIndex = 0;
+      this.debounceTimer = null;
+      this.liveRegion = null;
+      this._keyHandler = null;
+    }
+    initialize() {
+      var self2 = this;
+      this.liveRegion = d3.select(this.chart.dom.element).append("div").attr("role", "status").attr("aria-live", "polite").attr("aria-atomic", "true").attr("class", "myIO-sr-only");
+      this._keyHandler = function(event) {
+        self2.handleKey(event);
+      };
+      this.chart.dom.svg.on("keydown.a11y", this._keyHandler);
+    }
+    handleKey(event) {
+      var key = event.key;
+      switch (key) {
+        case "ArrowRight":
+          event.preventDefault();
+          this.movePoint(1);
+          break;
+        case "ArrowLeft":
+          event.preventDefault();
+          this.movePoint(-1);
+          break;
+        case "ArrowDown":
+          event.preventDefault();
+          this.moveLayer(1);
+          break;
+        case "ArrowUp":
+          event.preventDefault();
+          this.moveLayer(-1);
+          break;
+        case "Escape":
+          event.preventDefault();
+          this.reset();
+          break;
+      }
+    }
+    movePoint(delta) {
+      var layers = this.getNavigableLayers();
+      if (!layers.length) {
+        return;
+      }
+      if (this.state === "IDLE") {
+        this.state = "POINT";
+        this.layerIndex = 0;
+        this.pointIndex = 0;
+      } else {
+        var maxIndex = layers[this.layerIndex].data.length - 1;
+        this.pointIndex = Math.max(0, Math.min(maxIndex, this.pointIndex + delta));
+      }
+      this.focusCurrent();
+    }
+    moveLayer(delta) {
+      var layers = this.getNavigableLayers();
+      if (!layers.length) {
+        return;
+      }
+      var maxIndex = layers.length - 1;
+      this.layerIndex = Math.max(0, Math.min(maxIndex, this.layerIndex + delta));
+      this.pointIndex = 0;
+      this.state = "POINT";
+      this.focusCurrent();
+    }
+    focusCurrent() {
+      var layers = this.getNavigableLayers();
+      var layer = layers[this.layerIndex];
+      if (!layer || !layer.data || !layer.data.length) {
+        return;
+      }
+      var d = layer.data[this.pointIndex];
+      if (!d) {
+        return;
+      }
+      this.chart.dom.chartArea.selectAll(".myIO-kb-focus").classed("myIO-kb-focus", false);
+      var elements = getLayerSymbols(this.chart, layer);
+      var pointIndex = this.pointIndex;
+      var target = elements.filter(function(dd, i) {
+        if (dd && d && dd._source_key != null && d._source_key != null) {
+          return dd._source_key === d._source_key;
+        }
+        return dd === d || i === pointIndex;
+      });
+      if (!target.empty()) {
+        target.classed("myIO-kb-focus", true);
+      }
+      var mapping = layer.mapping || {};
+      var text = "";
+      if (mapping.x_var && mapping.y_var && d) {
+        text = String(d[mapping.x_var]) + ": " + String(d[mapping.y_var]);
+      } else {
+        text = "Point " + (this.pointIndex + 1) + " of " + layer.data.length;
+      }
+      this.announce(text);
+    }
+    announce(text) {
+      var self2 = this;
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = setTimeout(function() {
+        if (self2.liveRegion) {
+          self2.liveRegion.text(text);
+        }
+      }, 150);
+    }
+    reset() {
+      this.state = "IDLE";
+      this.chart.dom.chartArea.selectAll(".myIO-kb-focus").classed("myIO-kb-focus", false);
+      if (this.liveRegion) {
+        this.liveRegion.text("");
+      }
+    }
+    getNavigableLayers() {
+      return this.chart.config.layers.filter(function(layer) {
+        return layer.data && layer.data.length > 0 && layer.visibility !== false;
+      });
+    }
+    destroy() {
+      this.chart.dom.svg.on("keydown.a11y", null);
+      if (this.liveRegion) {
+        this.liveRegion.remove();
+      }
+      clearTimeout(this.debounceTimer);
+    }
+  };
+
+  // inst/htmlwidgets/myIO/src/a11y/data-table.js
+  var DataTableFallback = class {
+    constructor(chart) {
+      this.chart = chart;
+      this.tableContainer = null;
+      this.visible = false;
+    }
+    initialize() {
+      this.tableContainer = d3.select(this.chart.dom.element).append("div").attr("class", "myIO-data-table myIO-sr-only").attr("role", "region").attr("aria-label", "Chart data table");
+    }
+    generate() {
+      if (!this.tableContainer) {
+        return;
+      }
+      this.tableContainer.selectAll("*").remove();
+      var layers = this.chart.config.layers;
+      var maxRows = 500;
+      for (var i = 0; i < layers.length; i++) {
+        var layer = layers[i];
+        var data = Array.isArray(layer.data) ? layer.data : [];
+        var display = data.slice(0, maxRows);
+        var columns = Object.values(layer.mapping || {}).filter(Boolean);
+        var table = this.tableContainer.append("table").attr("aria-label", "Data for " + (layer.label || layer.type));
+        var thead = table.append("thead");
+        var headerRow = thead.append("tr");
+        for (var c = 0; c < columns.length; c++) {
+          headerRow.append("th").attr("scope", "col").text(columns[c]);
+        }
+        var tbody = table.append("tbody");
+        for (var r = 0; r < display.length; r++) {
+          var row = tbody.append("tr");
+          for (var c2 = 0; c2 < columns.length; c2++) {
+            var value = display[r][columns[c2]];
+            row.append("td").text(value != null ? String(value) : "");
+          }
+        }
+        if (data.length > maxRows) {
+          this.tableContainer.append("p").text("Showing first " + maxRows + " of " + data.length + " rows");
+        }
+      }
+    }
+    toggle() {
+      this.visible = !this.visible;
+      if (this.visible) {
+        this.generate();
+        this.tableContainer.classed("myIO-sr-only", false);
+        this.chart.dom.svg.attr("aria-hidden", "true");
+      } else {
+        this.tableContainer.classed("myIO-sr-only", true);
+        this.chart.dom.svg.attr("aria-hidden", null);
+      }
+    }
+    destroy() {
+      if (this.tableContainer) {
+        this.tableContainer.remove();
+      }
+    }
+  };
+
   // inst/htmlwidgets/myIO/src/Chart.js
   var MIN_CHART_WIDTH = 280;
   var RESIZE_DEBOUNCE_MS = 100;
@@ -5111,6 +5437,13 @@
       this.themeManager = new ThemeManager(this.dom.element, this.config);
       this.themeManager.initialize();
       initializeTooltip(this);
+      if (!this.config.sparkline) {
+        this.keyboardNav = new KeyboardNavigator(this);
+        this.keyboardNav.initialize();
+        this.dataTable = new DataTableFallback(this);
+        this.dataTable.initialize();
+        applyARIA(this);
+      }
       this.captureLegacyAliases();
       if (this.derived.currentLayers.length > 0) {
         this.setClipPath(this.derived.currentLayers[0].type);
@@ -5169,6 +5502,9 @@
         }
         if (this.derived.currentLayers.length === 0) {
           this.renderEmptyState();
+          if (!this.config.sparkline) {
+            applyARIA(this);
+          }
           return;
         }
         const state = deriveChartRender(this);
@@ -5198,6 +5534,9 @@
           bindSliders(this);
         }
         this.emit("afterRender", { state });
+        if (!this.config.sparkline) {
+          applyARIA(this);
+        }
       } catch (error) {
         console.warn("[myIO] Render error:", error.message);
         this.emit("error", { message: error.message, error });
@@ -5374,6 +5713,8 @@
         this.facetController.destroy();
         this.facetController = null;
       }
+      if (this.keyboardNav) this.keyboardNav.destroy();
+      if (this.dataTable) this.dataTable.destroy();
       if (this.themeManager) {
         this.themeManager.destroy();
       }

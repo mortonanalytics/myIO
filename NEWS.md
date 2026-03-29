@@ -1,5 +1,15 @@
 # myIO 1.2.0 (development)
 
+## SVG accessibility
+
+* ARIA roles (`graphics-document`, `graphics-object`, `graphics-symbol`) applied
+  to SVG chart structure for screen reader navigation.
+* Keyboard navigation: arrow keys traverse layers and data points, with live
+  region announcements (150ms debounce).
+* Hidden data table fallback for screen reader access to raw data (capped at
+  500 rows).
+* Focus ring styling and screen-reader-only utility class.
+
 ## New chart types
 
 * `lollipop` — vertical stem with circle head, supports `mean` and `summary`
