@@ -2665,6 +2665,238 @@
     }
   };
 
+  // inst/htmlwidgets/myIO/src/renderers/WaffleRenderer.js
+  var WaffleRenderer = class {
+    static type = "waffle";
+    static traits = {
+      hasAxes: false,
+      referenceLines: false,
+      legendType: "ordinal",
+      binning: false,
+      rolloverStyle: "element",
+      scaleCapabilities: {}
+    };
+    static scaleHints = null;
+    static dataContract = {
+      category: { required: true },
+      value: { required: true, numeric: true }
+    };
+    render(chart, layer) {
+      var rows = layer.options && layer.options.rows || 10;
+      var cols = layer.options && layer.options.cols || 10;
+      var totalCells = rows * cols;
+      var cellGap = layer.options && layer.options.cellGap || 2;
+      var cellRadius = layer.options && layer.options.cellRadius || 2;
+      var m = chart.config.layout.margin;
+      var chartWidth = chart.runtime.width - m.left - m.right;
+      var chartHeight = chart.runtime.height - m.top - m.bottom;
+      var cellSize = Math.min(
+        (chartWidth - (cols - 1) * cellGap) / cols,
+        (chartHeight - (rows - 1) * cellGap) / rows
+      );
+      var total = 0;
+      for (var i = 0; i < layer.data.length; i++) {
+        total += layer.data[i][layer.mapping.value];
+      }
+      var cells = [];
+      var cellIndex = 0;
+      var colorScale = chart.derived.colorDiscrete || d3.scaleOrdinal(d3.schemeCategory10);
+      for (var i = 0; i < layer.data.length; i++) {
+        var d = layer.data[i];
+        var count = Math.round(d[layer.mapping.value] / total * totalCells);
+        for (var j = 0; j < count && cellIndex < totalCells; j++) {
+          cells.push({
+            category: d[layer.mapping.category],
+            row: Math.floor(cellIndex / cols),
+            col: cellIndex % cols,
+            color: colorScale(d[layer.mapping.category]),
+            datum: d,
+            _source_key: d._source_key
+          });
+          cellIndex++;
+        }
+      }
+      var gridWidth = cols * cellSize + (cols - 1) * cellGap;
+      var gridHeight = rows * cellSize + (rows - 1) * cellGap;
+      var offsetX = (chartWidth - gridWidth) / 2;
+      var offsetY = (chartHeight - gridHeight) / 2;
+      var group = chart.dom.chartArea.selectAll(".tag-waffle-" + layer.id).data([null]).join("g").attr("class", "tag-waffle-" + layer.id).attr("transform", "translate(" + offsetX + "," + offsetY + ")");
+      group.selectAll(".waffle-cell").data(cells).join("rect").attr("class", "waffle-cell").attr("x", function(d2) {
+        return d2.col * (cellSize + cellGap);
+      }).attr("y", function(d2) {
+        return d2.row * (cellSize + cellGap);
+      }).attr("width", cellSize).attr("height", cellSize).attr("rx", cellRadius).attr("fill", function(d2) {
+        return d2.color;
+      });
+    }
+    getHoverSelector(chart, layer) {
+      return ".tag-waffle-" + layer.id + " .waffle-cell";
+    }
+    formatTooltip(chart, d, layer) {
+      return {
+        title: { text: d.category },
+        items: [{ color: d.color, label: d.category, value: String(d.datum[layer.mapping.value]) }]
+      };
+    }
+    remove(chart, layer) {
+      chart.dom.chartArea.selectAll(".tag-waffle-" + layer.id).remove();
+    }
+  };
+
+  // inst/htmlwidgets/myIO/src/renderers/BeeswarmRenderer.js
+  var BeeswarmRenderer = class {
+    static type = "beeswarm";
+    static traits = {
+      hasAxes: true,
+      referenceLines: true,
+      legendType: "layer",
+      binning: false,
+      rolloverStyle: "element",
+      scaleCapabilities: { invertX: false }
+    };
+    static scaleHints = {
+      xScaleType: "linear",
+      yScaleType: "linear",
+      xExtentFields: ["x_var"],
+      yExtentFields: ["y_var"],
+      domainMerge: "union"
+    };
+    static dataContract = {
+      x_var: { required: true, numeric: true },
+      y_var: { required: true }
+    };
+    render(chart, layer) {
+      var xScale = chart.derived.xScale;
+      var yScale = chart.derived.yScale;
+      var radius = layer.options && layer.options.radius || 3;
+      var padding = layer.options && layer.options.padding || 1;
+      var xVar = layer.mapping.x_var;
+      var yVar = layer.mapping.y_var;
+      var data = layer.data.slice().sort(function(a, b) {
+        return xScale(a[xVar]) - xScale(b[xVar]);
+      });
+      var placed = [];
+      var diameter = 2 * radius + padding;
+      for (var i = 0; i < data.length; i++) {
+        var cx = xScale(data[i][xVar]);
+        var baseY = yScale(data[i][yVar]);
+        var dy = 0;
+        var found = false;
+        for (var attempt = 0; attempt < 500 && !found; attempt++) {
+          var candidateY = attempt === 0 ? baseY : attempt % 2 === 1 ? baseY + Math.ceil(attempt / 2) * diameter : baseY - Math.ceil(attempt / 2) * diameter;
+          var collision = false;
+          for (var j = 0; j < placed.length; j++) {
+            var dx2 = cx - placed[j].cx;
+            var dy2 = candidateY - placed[j].cy;
+            if (dx2 * dx2 + dy2 * dy2 < diameter * diameter) {
+              collision = true;
+              break;
+            }
+          }
+          if (!collision) {
+            dy = candidateY;
+            found = true;
+          }
+        }
+        data[i]._beeswarm_cx = cx;
+        data[i]._beeswarm_cy = dy;
+        placed.push({ cx, cy: dy });
+      }
+      var group = chart.dom.chartArea.selectAll(".tag-beeswarm-" + layer.id).data([null]).join("g").attr("class", "tag-beeswarm-" + layer.id);
+      group.selectAll(".beeswarm-point").data(data, function(d) {
+        return d._source_key;
+      }).join("circle").attr("class", "beeswarm-point").attr("cx", function(d) {
+        return d._beeswarm_cx;
+      }).attr("cy", function(d) {
+        return d._beeswarm_cy;
+      }).attr("r", radius).attr("fill", layer.color).attr("fill-opacity", 0.7);
+    }
+    getHoverSelector(chart, layer) {
+      return ".tag-beeswarm-" + layer.id + " .beeswarm-point";
+    }
+    formatTooltip(chart, d, layer) {
+      var yFormat = chart.runtime.activeYFormat || d3.format("s");
+      return {
+        title: { text: String(d[layer.mapping.x_var]) },
+        items: [{ color: layer.color, label: layer.label, value: yFormat(d[layer.mapping.y_var]) }]
+      };
+    }
+    remove(chart, layer) {
+      chart.dom.chartArea.selectAll(".tag-beeswarm-" + layer.id).remove();
+    }
+  };
+
+  // inst/htmlwidgets/myIO/src/renderers/BumpRenderer.js
+  var BumpRenderer = class {
+    static type = "bump";
+    static traits = {
+      hasAxes: true,
+      referenceLines: false,
+      legendType: "layer",
+      binning: false,
+      rolloverStyle: "element",
+      scaleCapabilities: {}
+    };
+    static scaleHints = {
+      xScaleType: "point",
+      yScaleType: "linear",
+      xExtentFields: [],
+      yExtentFields: ["y_var"],
+      domainMerge: "union"
+    };
+    static dataContract = {
+      x_var: { required: true },
+      y_var: { required: true, numeric: true },
+      group: { required: true }
+    };
+    render(chart, layer) {
+      var xScale = chart.derived.xScale;
+      var yScale = chart.derived.yScale;
+      var xVar = layer.mapping.x_var;
+      var yVar = layer.mapping.y_var;
+      var groupVar = layer.mapping.group;
+      var dotRadius = layer.options && layer.options.dotRadius || 5;
+      var colorScale = chart.derived.colorDiscrete || d3.scaleOrdinal(d3.schemeCategory10);
+      var groups = d3.group(layer.data, function(d) {
+        return d[groupVar];
+      });
+      var group = chart.dom.chartArea.selectAll(".tag-bump-" + layer.id).data([null]).join("g").attr("class", "tag-bump-" + layer.id);
+      var line = d3.line().x(function(d) {
+        return xScale(d[xVar]);
+      }).y(function(d) {
+        return yScale(d[yVar]);
+      }).curve(d3.curveBumpX);
+      var groupIndex = 0;
+      groups.forEach(function(data, name) {
+        var color = colorScale(name);
+        var sorted = data.slice().sort(function(a, b) {
+          return String(a[xVar]).localeCompare(String(b[xVar]));
+        });
+        group.selectAll(".bump-line-" + groupIndex).data([sorted]).join("path").attr("class", "bump-line bump-line-" + groupIndex).attr("d", line).attr("fill", "none").attr("stroke", color).attr("stroke-width", 2.5).attr("stroke-opacity", 0.8);
+        group.selectAll(".bump-dot-" + groupIndex).data(sorted).join("circle").attr("class", "bump-dot bump-dot-" + groupIndex).attr("cx", function(d) {
+          return xScale(d[xVar]);
+        }).attr("cy", function(d) {
+          return yScale(d[yVar]);
+        }).attr("r", dotRadius).attr("fill", color).attr("stroke", "#fff").attr("stroke-width", 1.5);
+        groupIndex++;
+      });
+    }
+    getHoverSelector(chart, layer) {
+      return ".tag-bump-" + layer.id + " .bump-dot";
+    }
+    formatTooltip(chart, d, layer) {
+      return {
+        title: { text: String(d[layer.mapping.group]) },
+        items: [
+          { color: layer.color, label: String(d[layer.mapping.x_var]), value: String(d[layer.mapping.y_var]) }
+        ]
+      };
+    }
+    remove(chart, layer) {
+      chart.dom.chartArea.selectAll(".tag-bump-" + layer.id).remove();
+    }
+  };
+
   // inst/htmlwidgets/myIO/src/registry.js
   var rendererRegistry = /* @__PURE__ */ new Map();
   function registerRenderer(type, RendererClass) {
@@ -2743,6 +2975,15 @@
     }
     if (!rendererRegistry.has(DumbbellRenderer.type)) {
       registerRenderer(DumbbellRenderer.type, new DumbbellRenderer());
+    }
+    if (!rendererRegistry.has(WaffleRenderer.type)) {
+      registerRenderer(WaffleRenderer.type, new WaffleRenderer());
+    }
+    if (!rendererRegistry.has(BeeswarmRenderer.type)) {
+      registerRenderer(BeeswarmRenderer.type, new BeeswarmRenderer());
+    }
+    if (!rendererRegistry.has(BumpRenderer.type)) {
+      registerRenderer(BumpRenderer.type, new BumpRenderer());
     }
     if (!rendererRegistry.has(TextRenderer.type)) {
       registerRenderer(TextRenderer.type, new TextRenderer());

@@ -5,7 +5,10 @@
 * `lollipop` — vertical stem with circle head, supports `mean` and `summary`
   transforms. Compatible with categorical x-axis charts.
 * `dumbbell` — connected dots showing a range between `low_y` and `high_y`.
-  Both types support `flipAxis` and themed colors.
+* `waffle` — 10x10 grid of colored squares representing proportions. Standalone.
+* `beeswarm` — dodge-positioned points to avoid overlap. Inline dodge algorithm.
+* `bump` — smooth S-curves showing rank/value changes over time with grouped lines.
+  All new types support themed colors and standard tooltip formatting.
 
 ## Small multiples / faceting
 

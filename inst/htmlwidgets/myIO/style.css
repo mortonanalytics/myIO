@@ -782,3 +782,16 @@
 .dumbbell-line { shape-rendering: crispEdges; }
 .dumbbell-low, .dumbbell-high { cursor: pointer; transition: r 0.15s ease; }
 .dumbbell-low:hover, .dumbbell-high:hover { r: 7; }
+
+/* Waffle */
+.waffle-cell { cursor: pointer; transition: opacity 0.15s ease; }
+.waffle-cell:hover { opacity: 0.8; }
+
+/* Beeswarm */
+.beeswarm-point { cursor: pointer; transition: r 0.15s ease, fill-opacity 0.15s ease; }
+.beeswarm-point:hover { fill-opacity: 1; r: 5; }
+
+/* Bump */
+.bump-line { pointer-events: none; }
+.bump-dot { cursor: pointer; transition: r 0.15s ease; }
+.bump-dot:hover { r: 7; }
