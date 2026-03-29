@@ -53,6 +53,9 @@
 * `waffle` — 10x10 grid of colored squares representing proportions. Standalone.
 * `beeswarm` — dodge-positioned points to avoid overlap. Inline dodge algorithm.
 * `bump` — smooth S-curves showing rank/value changes over time with grouped lines.
+* `radar` — spider/radar chart with radial axes and polygon data fill.
+* `funnel` — narrowing horizontal bars for conversion pipeline data.
+* `parallel` — parallel coordinates for multivariate exploration.
   All new types support themed colors and standard tooltip formatting.
 
 ## Small multiples / faceting

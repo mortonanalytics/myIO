@@ -20,7 +20,10 @@ const COMPAT_GROUP = {
   donut: "standalone-donut",
   gauge: "standalone-gauge",
   text: "axes-continuous",
-  bracket: "axes-continuous"
+  bracket: "axes-continuous",
+  radar: "standalone-radar",
+  funnel: "standalone-funnel",
+  parallel: "standalone-parallel"
 };
 
 const CROSS_GROUP_ALLOWED = new Set([

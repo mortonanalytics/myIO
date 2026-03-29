@@ -946,6 +946,18 @@
       keys = layer.data.map(function(d) {
         return d[layer.mapping.x_var];
       });
+    } else if (layer.type === "funnel" && Array.isArray(layer.data)) {
+      keys = layer.data.map(function(d) {
+        return d[layer.mapping.stage];
+      });
+    } else if (layer.type === "radar" && Array.isArray(layer.data)) {
+      keys = layer.mapping.group ? Array.from(new Set(layer.data.map(function(d) {
+        return d[layer.mapping.group];
+      }))) : [layer.label];
+    } else if (layer.type === "parallel" && Array.isArray(layer.data)) {
+      keys = layer.mapping.group ? Array.from(new Set(layer.data.map(function(d) {
+        return d[layer.mapping.group];
+      }))) : [layer.label];
     }
     return {
       type: "ordinal",
@@ -2897,6 +2909,344 @@
     }
   };
 
+  // inst/htmlwidgets/myIO/src/renderers/RadarRenderer.js
+  var RadarRenderer = class {
+    static type = "radar";
+    static traits = {
+      hasAxes: false,
+      referenceLines: false,
+      legendType: "ordinal",
+      binning: false,
+      rolloverStyle: "element",
+      scaleCapabilities: {}
+    };
+    static scaleHints = null;
+    static dataContract = {
+      axis: { required: true },
+      value: { required: true, numeric: true }
+    };
+    render(chart, layer) {
+      var margin = chart.margin || (chart.config && chart.config.layout ? chart.config.layout.margin : { top: 0, right: 0, bottom: 0, left: 0 });
+      var width = (chart.width || chart.runtime && chart.runtime.width || 0) - margin.left - margin.right;
+      var height = (chart.height || chart.runtime && chart.runtime.height || 0) - margin.top - margin.bottom;
+      var axisVar = layer.mapping.axis;
+      var valueVar = layer.mapping.value;
+      var groupVar = layer.mapping.group;
+      var labelOffset = layer.options && layer.options.labelOffset || 16;
+      var centerX = width / 2;
+      var centerY = height / 2;
+      var maxRadius = Math.max(0, Math.min(width, height) / 2 - labelOffset - 8);
+      var axisOrder = [];
+      var axisSeen = /* @__PURE__ */ new Set();
+      var maxValue = d3.max(layer.data, function(d) {
+        return +d[valueVar];
+      }) || 0;
+      var radiusScale = d3.scaleLinear().domain([0, maxValue > 0 ? maxValue : 1]).range([0, maxRadius]);
+      var groups = [];
+      var groupMap = groupVar ? d3.group(layer.data, function(d) {
+        return d[groupVar];
+      }) : /* @__PURE__ */ new Map([[layer.label || "Series", layer.data]]);
+      var colorScale = chart.derived.colorDiscrete || d3.scaleOrdinal(d3.schemeCategory10);
+      var axisCount;
+      var root;
+      var axisLayer;
+      var polygonLayer;
+      var lineGenerator;
+      layer.data.forEach(function(d) {
+        var axisName = d[axisVar];
+        if (!axisSeen.has(axisName)) {
+          axisSeen.add(axisName);
+          axisOrder.push(axisName);
+        }
+      });
+      axisCount = axisOrder.length;
+      if (axisCount === 0) {
+        return;
+      }
+      root = chart.dom.chartArea.selectAll(".tag-radar-" + layer.id).data([null]).join("g").attr("class", "tag-radar-" + layer.id);
+      axisLayer = root.selectAll(".radar-axis-layer").data([null]).join("g").attr("class", "radar-axis-layer");
+      polygonLayer = root.selectAll(".radar-polygon-layer").data([null]).join("g").attr("class", "radar-polygon-layer");
+      axisLayer.selectAll(".radar-axis").data(axisOrder).join(function(enter) {
+        var group = enter.append("g").attr("class", "radar-axis");
+        group.append("line").attr("class", "radar-axis-line");
+        group.append("text").attr("class", "radar-axis-label");
+        return group;
+      }).each(function(axisName, index) {
+        var angle = 2 * Math.PI * index / axisCount;
+        var lineX = centerX + maxRadius * Math.sin(angle);
+        var lineY = centerY - maxRadius * Math.cos(angle);
+        var labelX = centerX + (maxRadius + labelOffset) * Math.sin(angle);
+        var labelY = centerY - (maxRadius + labelOffset) * Math.cos(angle);
+        var textAnchor = "middle";
+        if (Math.sin(angle) > 0.25) {
+          textAnchor = "start";
+        } else if (Math.sin(angle) < -0.25) {
+          textAnchor = "end";
+        }
+        d3.select(this).select(".radar-axis-line").attr("x1", centerX).attr("y1", centerY).attr("x2", lineX).attr("y2", lineY);
+        d3.select(this).select(".radar-axis-label").attr("x", labelX).attr("y", labelY).attr("dy", "0.35em").attr("text-anchor", textAnchor).text(axisName);
+      });
+      groupMap.forEach(function(rows, key) {
+        var rowByAxis = /* @__PURE__ */ new Map();
+        var polygonPoints = [];
+        rows.forEach(function(d) {
+          rowByAxis.set(d[axisVar], d);
+        });
+        axisOrder.forEach(function(axisName, index) {
+          var angle = 2 * Math.PI * index / axisCount;
+          var datum = rowByAxis.get(axisName);
+          var rawValue = datum ? +datum[valueVar] : 0;
+          var scaledRadius = radiusScale(Number.isFinite(rawValue) ? rawValue : 0);
+          polygonPoints.push({
+            axis: axisName,
+            angle,
+            value: Number.isFinite(rawValue) ? rawValue : 0,
+            x: centerX + scaledRadius * Math.sin(angle),
+            y: centerY - scaledRadius * Math.cos(angle),
+            datum: datum || null
+          });
+        });
+        groups.push({
+          key,
+          color: colorScale(key),
+          points: polygonPoints,
+          rows
+        });
+      });
+      chart.derived.colorDiscrete = colorScale.domain(groups.map(function(group) {
+        return group.key;
+      }));
+      chart.colorDiscrete = chart.derived.colorDiscrete;
+      lineGenerator = d3.line().x(function(d) {
+        return d.x;
+      }).y(function(d) {
+        return d.y;
+      }).curve(d3.curveLinearClosed);
+      polygonLayer.selectAll(".radar-polygon").data(groups).join("path").attr("class", "radar-polygon").attr("d", function(d) {
+        return lineGenerator(d.points);
+      }).attr("fill", function(d) {
+        return d.color;
+      }).attr("fill-opacity", 0.2).attr("stroke", function(d) {
+        return d.color;
+      }).attr("stroke-width", 2);
+    }
+    getHoverSelector(chart, layer) {
+      return ".tag-radar-" + layer.id + " .radar-polygon";
+    }
+    formatTooltip(chart, d) {
+      return {
+        title: { text: String(d.key) },
+        items: d.points.map(function(point) {
+          return {
+            color: d.color,
+            label: point.axis,
+            value: String(point.value)
+          };
+        })
+      };
+    }
+    remove(chart, layer) {
+      chart.dom.chartArea.selectAll(".tag-radar-" + layer.id).remove();
+    }
+  };
+
+  // inst/htmlwidgets/myIO/src/renderers/FunnelRenderer.js
+  var FunnelRenderer = class {
+    static type = "funnel";
+    static traits = {
+      hasAxes: false,
+      referenceLines: false,
+      legendType: "ordinal",
+      binning: false,
+      rolloverStyle: "element",
+      scaleCapabilities: {}
+    };
+    static scaleHints = null;
+    static dataContract = {
+      stage: { required: true },
+      value: { required: true, numeric: true }
+    };
+    render(chart, layer) {
+      var margin = chart.margin || (chart.config && chart.config.layout ? chart.config.layout.margin : { top: 0, right: 0, bottom: 0, left: 0 });
+      var width = (chart.width || chart.runtime && chart.runtime.width || 0) - margin.left - margin.right;
+      var height = (chart.height || chart.runtime && chart.runtime.height || 0) - margin.top - margin.bottom;
+      var stageVar = layer.mapping.stage;
+      var valueVar = layer.mapping.value;
+      var stageGap = layer.options && layer.options.stageGap || 6;
+      var maxValue = d3.max(layer.data, function(d) {
+        return +d[valueVar];
+      }) || 0;
+      var widthScale = d3.scaleLinear().domain([0, maxValue > 0 ? maxValue : 1]).range([0, width * 0.95]);
+      var colorScale = chart.derived.colorDiscrete || d3.scaleOrdinal(d3.schemeTableau10);
+      var stageHeight = layer.data.length > 0 ? height / layer.data.length : 0;
+      var stages;
+      var root;
+      var stageGroups;
+      stages = layer.data.map(function(d, index) {
+        var nextDatum = layer.data[index + 1] || null;
+        var topWidth = widthScale(+d[valueVar] || 0);
+        var bottomWidth = nextDatum ? widthScale(+nextDatum[valueVar] || 0) : topWidth * 0.55;
+        var y0 = index * stageHeight;
+        var y1 = Math.max(y0, y0 + stageHeight - stageGap);
+        var centerX = width / 2;
+        var topLeft = centerX - topWidth / 2;
+        var topRight = centerX + topWidth / 2;
+        var bottomLeft = centerX - bottomWidth / 2;
+        var bottomRight = centerX + bottomWidth / 2;
+        return {
+          stage: d[stageVar],
+          value: +d[valueVar],
+          color: colorScale(d[stageVar]),
+          datum: d,
+          points: [
+            [topLeft, y0],
+            [topRight, y0],
+            [bottomRight, y1],
+            [bottomLeft, y1]
+          ],
+          labelX: centerX,
+          labelY: (y0 + y1) / 2
+        };
+      });
+      chart.derived.colorDiscrete = colorScale.domain(stages.map(function(stage) {
+        return stage.stage;
+      }));
+      chart.colorDiscrete = chart.derived.colorDiscrete;
+      root = chart.dom.chartArea.selectAll(".tag-funnel-" + layer.id).data([null]).join("g").attr("class", "tag-funnel-" + layer.id);
+      stageGroups = root.selectAll(".funnel-stage-group").data(stages).join(function(enter) {
+        var group = enter.append("g").attr("class", "funnel-stage-group");
+        group.append("path").attr("class", "funnel-stage");
+        group.append("text").attr("class", "funnel-label");
+        return group;
+      });
+      stageGroups.select(".funnel-stage").attr("d", function(d) {
+        return "M" + d.points[0][0] + "," + d.points[0][1] + "L" + d.points[1][0] + "," + d.points[1][1] + "L" + d.points[2][0] + "," + d.points[2][1] + "L" + d.points[3][0] + "," + d.points[3][1] + "Z";
+      }).attr("fill", function(d) {
+        return d.color;
+      });
+      stageGroups.select(".funnel-label").attr("x", function(d) {
+        return d.labelX;
+      }).attr("y", function(d) {
+        return d.labelY;
+      }).attr("dy", "0.35em").attr("text-anchor", "middle").text(function(d) {
+        return d.stage;
+      });
+    }
+    getHoverSelector(chart, layer) {
+      return ".tag-funnel-" + layer.id + " .funnel-stage";
+    }
+    formatTooltip(chart, d) {
+      return {
+        title: { text: String(d.stage) },
+        items: [{ color: d.color, label: String(d.stage), value: String(d.value) }]
+      };
+    }
+    remove(chart, layer) {
+      chart.dom.chartArea.selectAll(".tag-funnel-" + layer.id).remove();
+    }
+  };
+
+  // inst/htmlwidgets/myIO/src/renderers/ParallelRenderer.js
+  var ParallelRenderer = class {
+    static type = "parallel";
+    static traits = {
+      hasAxes: false,
+      referenceLines: false,
+      legendType: "ordinal",
+      binning: false,
+      rolloverStyle: "element",
+      scaleCapabilities: {}
+    };
+    static scaleHints = null;
+    static dataContract = {
+      dimensions: { required: true }
+    };
+    render(chart, layer) {
+      var margin = chart.margin || (chart.config && chart.config.layout ? chart.config.layout.margin : { top: 0, right: 0, bottom: 0, left: 0 });
+      var width = (chart.width || chart.runtime && chart.runtime.width || 0) - margin.left - margin.right;
+      var height = (chart.height || chart.runtime && chart.runtime.height || 0) - margin.top - margin.bottom;
+      var rawDimensions = layer.mapping.dimensions;
+      var dimensions = Array.isArray(rawDimensions) ? rawDimensions.slice() : [rawDimensions];
+      var groupVar = layer.mapping.group;
+      var xScale = d3.scalePoint().domain(dimensions).range([0, width]).padding(0.5);
+      var yScales = {};
+      var colorScale = chart.derived.colorDiscrete || d3.scaleOrdinal(d3.schemeCategory10);
+      var root;
+      var axisGroups;
+      var lineGenerator;
+      dimensions.forEach(function(dimension) {
+        var extent = d3.extent(layer.data, function(row) {
+          var value = +row[dimension];
+          return Number.isFinite(value) ? value : null;
+        });
+        if (!extent || extent[0] === void 0 || extent[1] === void 0) {
+          extent = [0, 1];
+        }
+        if (extent[0] === extent[1]) {
+          extent = [extent[0] - 1, extent[1] + 1];
+        }
+        yScales[dimension] = d3.scaleLinear().domain(extent).range([height, 0]);
+      });
+      chart.derived.colorDiscrete = colorScale.domain(Array.from(new Set(layer.data.map(function(row) {
+        return groupVar ? row[groupVar] : layer.label;
+      }))));
+      chart.colorDiscrete = chart.derived.colorDiscrete;
+      root = chart.dom.chartArea.selectAll(".tag-parallel-" + layer.id).data([null]).join("g").attr("class", "tag-parallel-" + layer.id);
+      axisGroups = root.selectAll(".parallel-axis").data(dimensions).join(function(enter) {
+        var group = enter.append("g").attr("class", "parallel-axis");
+        group.append("text").attr("class", "parallel-axis-label");
+        return group;
+      }).attr("transform", function(dimension) {
+        return "translate(" + xScale(dimension) + ",0)";
+      }).each(function(dimension) {
+        d3.select(this).call(d3.axisLeft(yScales[dimension]).ticks(5));
+      });
+      axisGroups.select(".parallel-axis-label").attr("x", 0).attr("y", -10).attr("text-anchor", "middle").text(function(dimension) {
+        return dimension;
+      });
+      lineGenerator = d3.line().defined(function(point) {
+        return point && point[1] !== null;
+      }).x(function(point) {
+        return point[0];
+      }).y(function(point) {
+        return point[1];
+      });
+      root.selectAll(".parallel-line").data(layer.data).join("path").attr("class", "parallel-line").attr("d", function(row) {
+        var points = dimensions.map(function(dimension) {
+          var value = +row[dimension];
+          if (!Number.isFinite(value)) {
+            return [xScale(dimension), null];
+          }
+          return [xScale(dimension), yScales[dimension](value)];
+        });
+        return lineGenerator(points);
+      }).attr("stroke", function(row) {
+        var colorKey = groupVar ? row[groupVar] : layer.label;
+        return colorScale(colorKey);
+      });
+    }
+    getHoverSelector(chart, layer) {
+      return ".tag-parallel-" + layer.id + " .parallel-line";
+    }
+    formatTooltip(chart, d, layer) {
+      var dimensions = Array.isArray(layer.mapping.dimensions) ? layer.mapping.dimensions : [layer.mapping.dimensions];
+      var title = layer.mapping.group ? String(d[layer.mapping.group]) : String(layer.label || "Series");
+      return {
+        title: { text: title },
+        items: dimensions.map(function(dimension) {
+          return {
+            color: chart.colorDiscrete ? chart.colorDiscrete(layer.mapping.group ? d[layer.mapping.group] : layer.label) : layer.color,
+            label: dimension,
+            value: String(d[dimension])
+          };
+        })
+      };
+    }
+    remove(chart, layer) {
+      chart.dom.chartArea.selectAll(".tag-parallel-" + layer.id).remove();
+    }
+  };
+
   // inst/htmlwidgets/myIO/src/registry.js
   var rendererRegistry = /* @__PURE__ */ new Map();
   function registerRenderer(type, RendererClass) {
@@ -2984,6 +3334,15 @@
     }
     if (!rendererRegistry.has(BumpRenderer.type)) {
       registerRenderer(BumpRenderer.type, new BumpRenderer());
+    }
+    if (!rendererRegistry.has(RadarRenderer.type)) {
+      registerRenderer(RadarRenderer.type, new RadarRenderer());
+    }
+    if (!rendererRegistry.has(FunnelRenderer.type)) {
+      registerRenderer(FunnelRenderer.type, new FunnelRenderer());
+    }
+    if (!rendererRegistry.has(ParallelRenderer.type)) {
+      registerRenderer(ParallelRenderer.type, new ParallelRenderer());
     }
     if (!rendererRegistry.has(TextRenderer.type)) {
       registerRenderer(TextRenderer.type, new TextRenderer());
@@ -4198,7 +4557,10 @@
     donut: "standalone-donut",
     gauge: "standalone-gauge",
     text: "axes-continuous",
-    bracket: "axes-continuous"
+    bracket: "axes-continuous",
+    radar: "standalone-radar",
+    funnel: "standalone-funnel",
+    parallel: "standalone-parallel"
   };
   var CROSS_GROUP_ALLOWED = /* @__PURE__ */ new Set([
     "axes-continuous:axes-categorical",
