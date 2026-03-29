@@ -795,3 +795,42 @@
 .bump-line { pointer-events: none; }
 .bump-dot { cursor: pointer; transition: r 0.15s ease; }
 .bump-dot:hover { r: 7; }
+
+/* Keyboard focus ring on data points */
+.myIO-kb-focus {
+  outline: none;
+  stroke: rgba(59, 130, 246, 0.8) !important;
+  stroke-width: 3 !important;
+}
+
+/* Screen reader only */
+.myIO-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Data table (visible when toggled) */
+.myIO-data-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--chart-font, system-ui);
+  font-size: 12px;
+}
+
+.myIO-data-table th, .myIO-data-table td {
+  padding: 4px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--chart-grid-color, #e5e7eb);
+}
+
+.myIO-data-table th {
+  font-weight: 600;
+  color: var(--chart-text-color);
+}
