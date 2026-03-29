@@ -841,8 +841,9 @@ server <- function(input, output) {
 
   output$beeswarmPlot <- renderMyIO({
     myIO() |>
-      addIoLayer("beeswarm", label = "Iris", color = "#76B7B2",
-        data = iris, mapping = list(x_var = "Sepal.Length", y_var = "Sepal.Width"))
+      addIoLayer("point", label = "Iris", color = "#76B7B2",
+        data = iris, mapping = list(x_var = "Sepal.Length", y_var = "Sepal.Width"),
+        options = list(radius = 3))
   })
 
   output$bumpPlot <- renderMyIO({
@@ -853,6 +854,7 @@ server <- function(input, output) {
     myIO() |>
       addIoLayer("bump", label = "Rankings",
         data = df, mapping = list(x_var = "quarter", y_var = "rank", group = "team")) |>
+      defineCategoricalAxis(xAxis = TRUE) |>
       setAxisFormat(xLabel = "Quarter", yLabel = "Rank")
   })
 
@@ -885,6 +887,7 @@ server <- function(input, output) {
     myIO() |>
       addIoLayer("survfit", label = "Survival",
         data = df, mapping = list(time = "time", status = "status")) |>
+      setAxisLimits(ylim = list(min = 0, max = 1)) |>
       setAxisFormat(xLabel = "Time (months)", yLabel = "Survival Probability")
   })
 
@@ -901,31 +904,25 @@ server <- function(input, output) {
   output$sparkline1 <- renderMyIO({
     set.seed(1)
     df <- data.frame(x = 1:20, y = cumsum(rnorm(20, 0.5, 1)))
-    myIO() |>
+    myIO(data = df, sparkline = TRUE) |>
       addIoLayer("line", label = "Revenue", color = "#59A14F",
-        data = df, mapping = list(x_var = "x", y_var = "y")) |>
-      suppressAxis(xAxis = TRUE, yAxis = TRUE) |>
-      suppressLegend()
+        mapping = list(x_var = "x", y_var = "y"))
   })
 
   output$sparkline2 <- renderMyIO({
     set.seed(2)
     df <- data.frame(x = 1:20, y = cumsum(rnorm(20, 0.3, 0.8)))
-    myIO() |>
+    myIO(data = df, sparkline = TRUE) |>
       addIoLayer("line", label = "Users", color = "#4E79A7",
-        data = df, mapping = list(x_var = "x", y_var = "y")) |>
-      suppressAxis(xAxis = TRUE, yAxis = TRUE) |>
-      suppressLegend()
+        mapping = list(x_var = "x", y_var = "y"))
   })
 
   output$sparkline3 <- renderMyIO({
     set.seed(3)
     df <- data.frame(x = 1:20, y = pmax(0, 5 + cumsum(rnorm(20, -0.1, 0.5))))
-    myIO() |>
+    myIO(data = df, sparkline = TRUE) |>
       addIoLayer("line", label = "Errors", color = "#E15759",
-        data = df, mapping = list(x_var = "x", y_var = "y")) |>
-      suppressAxis(xAxis = TRUE, yAxis = TRUE) |>
-      suppressLegend()
+        mapping = list(x_var = "x", y_var = "y"))
   })
 
   output$facetPlot <- renderMyIO({
