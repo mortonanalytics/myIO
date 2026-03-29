@@ -754,13 +754,61 @@
     }
   }
 
+  // inst/htmlwidgets/myIO/src/utils/resolve-css-vars.js
+  var CHART_CSS_VARS = [
+    "--chart-text-color",
+    "--chart-grid-color",
+    "--chart-grid-opacity",
+    "--chart-bg",
+    "--chart-ref-line-color",
+    "--chart-annotation-ring",
+    "--chart-font"
+  ];
+  function resolveCSSVariables(svgClone, container) {
+    var computed = getComputedStyle(container);
+    var resolved = {};
+    for (var i = 0; i < CHART_CSS_VARS.length; i++) {
+      var prop = CHART_CSS_VARS[i];
+      var val = computed.getPropertyValue(prop).trim();
+      if (val) resolved[prop] = val;
+    }
+    var elements = svgClone.querySelectorAll("*");
+    var allEls = [svgClone].concat(Array.prototype.slice.call(elements));
+    for (var j = 0; j < allEls.length; j++) {
+      var el = allEls[j];
+      var style = el.getAttribute("style");
+      if (style && style.indexOf("var(") !== -1) {
+        var newStyle = style;
+        for (var key in resolved) {
+          newStyle = newStyle.split("var(" + key + ")").join(resolved[key]);
+        }
+        el.setAttribute("style", newStyle);
+      }
+      var attrs = ["fill", "stroke", "color", "stop-color"];
+      for (var a = 0; a < attrs.length; a++) {
+        var attrVal = el.getAttribute(attrs[a]);
+        if (attrVal && attrVal.indexOf("var(") !== -1) {
+          var match = attrVal.match(/var\((--[\w-]+)\)/);
+          if (match && resolved[match[1]]) {
+            el.setAttribute(attrs[a], resolved[match[1]]);
+          }
+        }
+      }
+    }
+  }
+
   // inst/htmlwidgets/myIO/src/utils/export-svg.js
   function getSVGString(svgNode) {
-    svgNode.setAttribute("xlink", "http://www.w3.org/1999/xlink");
-    var cssStyleText = getCSSStyles(svgNode);
-    appendCSS(cssStyleText, svgNode);
+    var svgClone = svgNode.cloneNode(true);
+    var container = svgNode.parentNode || document.body;
+    svgClone.setAttribute("xlink", "http://www.w3.org/1999/xlink");
+    if (container && typeof getComputedStyle === "function") {
+      resolveCSSVariables(svgClone, container);
+    }
+    var cssStyleText = getCSSStyles(svgClone);
+    appendCSS(cssStyleText, svgClone);
     var serializer = new XMLSerializer();
-    var svgString = serializer.serializeToString(svgNode);
+    var svgString = serializer.serializeToString(svgClone);
     svgString = svgString.replace(/(\w+)?:?xlink=/g, "xmlns:xlink=");
     svgString = svgString.replace(/NS\d+:href/g, "xlink:href");
     return svgString;
@@ -846,6 +894,18 @@
       });
     };
     image.src = imgsrc;
+  }
+  function downloadSVG(svgNode, filename) {
+    var svgString = getSVGString(svgNode);
+    var blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = filename || "chart.svg";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   // inst/htmlwidgets/myIO/src/layout/legend-data.js
@@ -1181,11 +1241,25 @@
   // inst/htmlwidgets/myIO/src/interactions/buttons.js
   var BUTTON_LABELS = {
     image: "Export as PNG",
+    svg: "Download as SVG",
     chart: "Download CSV data",
     percent: "Toggle percent view",
     group2stack: "Toggle grouped/stacked layout"
   };
   function handleAction(chart, layers, name) {
+    if (name === "svg") {
+      var svgLegend = injectExportLegend(chart);
+      if (typeof saveAs === "function") {
+        var svgString = getSVGString(chart.svg.node());
+        svgLegend.cleanup();
+        var blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+        saveAs(blob, chart.element.id + ".svg");
+      } else {
+        downloadSVG(chart.svg.node(), chart.element.id + ".svg");
+        svgLegend.cleanup();
+      }
+      return;
+    }
     if (name === "image") {
       var legend = injectExportLegend(chart);
       var exportHeight = chart.height + legend.extraHeight;
@@ -4047,6 +4121,396 @@
     }
   };
 
+  // inst/htmlwidgets/myIO/src/layout/facet-panel.js
+  var FACET_PANEL_HEIGHT = 200;
+  var FacetPanel = class {
+    constructor(controller, facetValue, element, index, total) {
+      this.controller = controller;
+      this.facetValue = facetValue;
+      this.element = element;
+      this.index = index;
+      this.total = total;
+      this.layers = [];
+      this.panelChart = null;
+      this.suppressX = false;
+      this.suppressY = false;
+      if (!this.element.id) {
+        this.element.id = controller.chart.dom.element.id + "-facet-panel-" + index;
+      }
+    }
+    initialize(layers) {
+      this.layers = layers || [];
+      this.destroy();
+      this.updateGridPosition();
+      var labelPos = this.controller.config.labelPosition || "top";
+      if (labelPos === "top") {
+        this.addLabel();
+      }
+      if (this.hasPanelData()) {
+        this.renderPanel();
+      } else {
+        this.renderEmptyPanel();
+      }
+      if (labelPos === "bottom") {
+        this.addLabel();
+      }
+    }
+    updateGridPosition() {
+      var ncol = this.getColumnCount();
+      var lastRow = Math.floor((this.total - 1) / ncol);
+      var gridRow = Math.floor(this.index / ncol);
+      var gridCol = this.index % ncol;
+      this.suppressX = this.controller.config.scales === "fixed" && gridRow !== lastRow;
+      this.suppressY = this.controller.config.scales === "fixed" && gridCol !== 0;
+    }
+    getColumnCount() {
+      var configured = this.controller.config.ncol;
+      if (configured) {
+        return Math.max(configured, 1);
+      }
+      var container = this.controller.container && this.controller.container.node ? this.controller.container.node() : null;
+      if (container && window.getComputedStyle) {
+        var template = window.getComputedStyle(container).gridTemplateColumns || "";
+        var parts = template.split(" ").filter(function(part) {
+          return !!part && part !== "none";
+        });
+        if (parts.length > 0) {
+          return parts.length;
+        }
+      }
+      var containerWidth = container ? container.clientWidth : this.controller.chart.runtime.totalWidth;
+      return Math.max(Math.floor(containerWidth / (this.controller.config.minWidth || 200)), 1);
+    }
+    hasPanelData() {
+      for (var i = 0; i < this.layers.length; i += 1) {
+        if (this.layers[i].data && this.layers[i].data.length > 0) {
+          return true;
+        }
+      }
+      return false;
+    }
+    addLabel() {
+      d3.select(this.element).append("div").attr("class", "myIO-facet-label").text(this.facetValue);
+    }
+    renderPanel() {
+      var panelChart = this.buildPanelChart();
+      var renderState = deriveChartRender(panelChart);
+      if (renderState.axesChart) {
+        applyDerivedScales(panelChart, renderState);
+        this.applySharedDomains(panelChart);
+      }
+      initializeScaffold(panelChart);
+      panelChart.dom.svg = panelChart.svg;
+      panelChart.dom.plot = panelChart.plot;
+      panelChart.dom.chartArea = panelChart.chart;
+      if (renderState.axesChart && this.requiresClipPath(renderState.type)) {
+        this.setClipPath(panelChart);
+        syncAxes(panelChart, renderState, { isInitialRender: true });
+        this.applyAxisSuppression(panelChart);
+        syncReferenceLines(panelChart, renderState, { isInitialRender: true });
+      }
+      this.renderLayers(panelChart, this.layers);
+      this.panelChart = panelChart;
+    }
+    buildPanelChart() {
+      var parentChart = this.controller.chart;
+      var width = Math.max(this.element.clientWidth || this.controller.config.minWidth || 200, 1);
+      var margin = this.buildMargin();
+      var panelConfig = Object.assign({}, parentChart.config, {
+        layers: this.layers
+      });
+      var options = {
+        margin,
+        suppressLegend: true,
+        suppressAxis: { xAxis: this.suppressX, yAxis: this.suppressY },
+        xlim: panelConfig.scales.xlim,
+        ylim: panelConfig.scales.ylim,
+        categoricalScale: panelConfig.scales.categoricalScale,
+        flipAxis: panelConfig.scales.flipAxis,
+        colorScheme: panelConfig.scales.colorScheme ? panelConfig.scales.colorScheme.enabled ? [panelConfig.scales.colorScheme.colors, panelConfig.scales.colorScheme.domain, "on"] : [panelConfig.scales.colorScheme.colors, panelConfig.scales.colorScheme.domain, "off"] : null,
+        xAxisFormat: panelConfig.axes.xAxisFormat,
+        yAxisFormat: panelConfig.axes.yAxisFormat,
+        toolTipFormat: panelConfig.axes.toolTipFormat,
+        xAxisLabel: panelConfig.axes.xAxisLabel,
+        yAxisLabel: panelConfig.axes.yAxisLabel,
+        dragPoints: false,
+        toggleY: null,
+        toolTipOptions: panelConfig.interactions.toolTipOptions,
+        transition: { speed: 0 },
+        referenceLine: panelConfig.referenceLines
+      };
+      return {
+        element: this.element,
+        dom: { element: this.element },
+        config: panelConfig,
+        derived: { currentLayers: this.layers.slice() },
+        runtime: {
+          totalWidth: width,
+          width,
+          height: FACET_PANEL_HEIGHT,
+          layout: parentChart.runtime.layout,
+          activeY: parentChart.runtime.activeY,
+          activeYFormat: parentChart.runtime.activeYFormat
+        },
+        options,
+        margin,
+        width,
+        height: FACET_PANEL_HEIGHT,
+        totalWidth: width,
+        layout: parentChart.runtime.layout,
+        newY: parentChart.runtime.activeY,
+        newScaleY: parentChart.runtime.activeYFormat,
+        plotLayers: this.layers,
+        emit: function() {
+        },
+        dragPoints: function() {
+        },
+        updateRegression: function() {
+        },
+        syncLegacyAliases: function() {
+          this.xScale = this.derived ? this.derived.xScale : null;
+          this.yScale = this.derived ? this.derived.yScale : null;
+          this.colorDiscrete = this.derived ? this.derived.colorDiscrete : null;
+          this.colorContinuous = this.derived ? this.derived.colorContinuous : null;
+          this.x_banded = this.derived ? this.derived.xBanded : null;
+          this.y_banded = this.derived ? this.derived.yBanded : null;
+          this.x_check = this.derived ? this.derived.xCheck : null;
+          this.currentLayers = this.derived ? this.derived.currentLayers : null;
+        },
+        captureLegacyAliases: function() {
+        }
+      };
+    }
+    buildMargin() {
+      var baseMargin = this.controller.chart.config.layout.margin || {};
+      var margin = {
+        top: baseMargin.top != null ? baseMargin.top : 30,
+        right: baseMargin.right != null ? baseMargin.right : 5,
+        bottom: baseMargin.bottom != null ? baseMargin.bottom : 60,
+        left: baseMargin.left != null ? baseMargin.left : 50
+      };
+      if (this.suppressX) {
+        margin.bottom = Math.min(margin.bottom, 12);
+      }
+      if (this.suppressY) {
+        margin.left = Math.min(margin.left, 12);
+      }
+      return margin;
+    }
+    applySharedDomains(panelChart) {
+      var snapshot = this.controller.globalScaleSnapshot;
+      if (!snapshot || !panelChart.derived || !panelChart.derived.xScale || !panelChart.derived.yScale) {
+        return;
+      }
+      if (snapshot.xDomain) {
+        panelChart.derived.xScale.domain(snapshot.xDomain.slice());
+      }
+      if (snapshot.yDomain) {
+        panelChart.derived.yScale.domain(snapshot.yDomain.slice());
+      }
+      if (snapshot.xBanded) {
+        panelChart.derived.xBanded = snapshot.xBanded.slice();
+      }
+      if (snapshot.yBanded) {
+        panelChart.derived.yBanded = snapshot.yBanded.slice();
+      }
+      if (typeof snapshot.xCheck !== "undefined") {
+        panelChart.derived.xCheck = snapshot.xCheck;
+      }
+      if (snapshot.colorDiscrete) {
+        panelChart.derived.colorDiscrete = snapshot.colorDiscrete;
+      }
+      if (snapshot.colorContinuous) {
+        panelChart.derived.colorContinuous = snapshot.colorContinuous;
+      }
+      panelChart.syncLegacyAliases();
+    }
+    requiresClipPath(type) {
+      return type !== "donut" && type !== "gauge";
+    }
+    setClipPath(panelChart) {
+      var chartHeight = panelChart.height - (panelChart.margin.top + panelChart.margin.bottom);
+      panelChart.dom.clipPath = panelChart.dom.chartArea.append("defs").append("svg:clipPath").attr("id", panelChart.dom.element.id + "clip").append("svg:rect").attr("x", 0).attr("y", 0).attr("width", panelChart.width - (panelChart.margin.left + panelChart.margin.right)).attr("height", chartHeight);
+      panelChart.dom.chartArea.attr("clip-path", "url(#" + panelChart.dom.element.id + "clip)");
+      panelChart.clipPath = panelChart.dom.clipPath;
+    }
+    applyAxisSuppression(panelChart) {
+      if (this.suppressX) {
+        panelChart.plot.selectAll(".x-axis").remove();
+      }
+      if (this.suppressY) {
+        panelChart.plot.selectAll(".y-axis").remove();
+      }
+    }
+    renderLayers(panelChart, layers) {
+      for (var i = 0; i < layers.length; i += 1) {
+        var renderer = getRendererForLayer(layers[i]);
+        if (renderer && typeof renderer.render === "function") {
+          renderer.render(panelChart, layers[i], layers);
+        }
+      }
+    }
+    renderEmptyPanel() {
+      d3.select(this.element).classed("myIO-facet-empty", true);
+      var width = Math.max(this.element.clientWidth || this.controller.config.minWidth || 200, 1);
+      this.panelChart = {
+        svg: d3.select(this.element).append("svg").attr("class", "myIO-svg").attr("width", "100%").attr("height", FACET_PANEL_HEIGHT).attr("viewBox", "0 0 " + width + " " + FACET_PANEL_HEIGHT)
+      };
+      this.panelChart.svg.append("text").attr("x", width / 2).attr("y", FACET_PANEL_HEIGHT / 2).attr("text-anchor", "middle").attr("fill", "var(--chart-grid-color)").style("font-size", "11px").style("font-style", "italic").text("No data");
+    }
+    resize() {
+      if (!this.element || !this.element.isConnected) {
+        return;
+      }
+      this.initialize(this.layers);
+    }
+    destroy() {
+      d3.select(this.element).classed("myIO-facet-empty", false);
+      d3.select(this.element).selectAll("*").remove();
+      this.panelChart = null;
+    }
+  };
+
+  // inst/htmlwidgets/myIO/src/layout/facet-controller.js
+  var FACET_PANEL_HEIGHT2 = 200;
+  var FacetController = class {
+    constructor(chart) {
+      this.chart = chart;
+      this.config = chart.config.facet || {};
+      this.panels = /* @__PURE__ */ new Map();
+      this.container = null;
+      this.resizeObserver = null;
+      this.validatedLayers = [];
+      this.globalScaleSnapshot = null;
+    }
+    initialize() {
+      this.destroy();
+      this.config = this.chart.config.facet || {};
+      this.validatedLayers = this.getValidatedLayers();
+      if (this.chart.dom && this.chart.dom.svg) {
+        this.chart.dom.svg.style("display", "none");
+      }
+      d3.select(this.chart.dom.element).selectAll(".myIO-fab, .myIO-panel, .myIO-sheet-backdrop").remove();
+      if (this.validatedLayers.length === 0) {
+        this.createGrid([]);
+        return;
+      }
+      var facetValues = this.groupData();
+      this.globalScaleSnapshot = this.config.scales === "fixed" ? this.captureGlobalScaleSnapshot(this.validatedLayers) : null;
+      this.createGrid(facetValues);
+      for (var i = 0; i < facetValues.length; i += 1) {
+        var value = facetValues[i];
+        var panelDiv = this.container.append("div").attr("class", "myIO-facet-panel").attr("data-facet-value", value);
+        var panel = new FacetPanel(this, value, panelDiv.node(), i, facetValues.length);
+        panel.initialize(this.filterLayersForValue(value));
+        this.panels.set(value, panel);
+      }
+    }
+    getValidatedLayers() {
+      var previousLayers = this.chart.derived.currentLayers;
+      this.chart.derived.currentLayers = this.chart.config.layers || [];
+      var layers = validateLayers(this.chart);
+      this.chart.derived.currentLayers = previousLayers;
+      return layers;
+    }
+    groupData() {
+      var facetVar = this.config.var;
+      var valueSet = {};
+      for (var i = 0; i < this.validatedLayers.length; i += 1) {
+        var data = this.validatedLayers[i].data || [];
+        for (var j = 0; j < data.length; j += 1) {
+          var val = String(data[j][facetVar]);
+          valueSet[val] = true;
+        }
+      }
+      return Object.keys(valueSet).sort();
+    }
+    filterLayersForValue(value) {
+      var facetVar = this.config.var;
+      return this.validatedLayers.map(function(layer) {
+        return Object.assign({}, layer, {
+          data: (layer.data || []).filter(function(d) {
+            return String(d[facetVar]) === value;
+          })
+        });
+      });
+    }
+    createGrid(facetValues) {
+      d3.select(this.chart.dom.element).select(".myIO-facet-grid").remove();
+      this.container = d3.select(this.chart.dom.element).append("div").attr("class", "myIO-facet-grid").attr("role", "group").attr("aria-label", "Small multiples chart faceted by " + this.config.var);
+      if (this.config.ncol) {
+        this.container.style("grid-template-columns", "repeat(" + this.config.ncol + ", 1fr)");
+      } else {
+        this.container.style(
+          "grid-template-columns",
+          "repeat(auto-fill, minmax(" + (this.config.minWidth || 200) + "px, 1fr))"
+        );
+      }
+      if (!facetValues.length) {
+        this.container.append("div").attr("class", "myIO-facet-panel myIO-facet-empty").text("No data");
+      }
+    }
+    captureGlobalScaleSnapshot(layers) {
+      if (!layers || !layers.length) {
+        return null;
+      }
+      var scaleChart = {
+        config: this.chart.config,
+        derived: { currentLayers: layers.slice() },
+        margin: Object.assign({}, this.chart.config.layout.margin),
+        width: Math.max(this.config.minWidth || 200, 1),
+        height: FACET_PANEL_HEIGHT2,
+        runtime: {
+          totalWidth: Math.max(this.config.minWidth || 200, 1)
+        },
+        syncLegacyAliases: function() {
+        }
+      };
+      var renderState = deriveChartRender(scaleChart);
+      if (!renderState.axesChart) {
+        return {
+          renderState
+        };
+      }
+      applyDerivedScales(scaleChart, renderState);
+      return {
+        renderState,
+        xDomain: scaleChart.derived.xScale ? scaleChart.derived.xScale.domain().slice() : null,
+        yDomain: scaleChart.derived.yScale ? scaleChart.derived.yScale.domain().slice() : null,
+        xBanded: scaleChart.derived.xBanded ? scaleChart.derived.xBanded.slice() : null,
+        yBanded: scaleChart.derived.yBanded ? scaleChart.derived.yBanded.slice() : null,
+        xCheck: scaleChart.derived.xCheck,
+        colorDiscrete: scaleChart.derived.colorDiscrete || null,
+        colorContinuous: scaleChart.derived.colorContinuous || null
+      };
+    }
+    resize() {
+      var width = this.chart.dom && this.chart.dom.element ? this.chart.dom.element.clientWidth : 0;
+      if (this.chart.runtime) {
+        this.chart.runtime.totalWidth = Math.max(width || this.chart.runtime.totalWidth || 0, 1);
+        this.chart.runtime.width = this.chart.runtime.totalWidth;
+      }
+      if (this.config.scales === "fixed") {
+        this.globalScaleSnapshot = this.captureGlobalScaleSnapshot(this.validatedLayers);
+      }
+      for (var panel of this.panels.values()) {
+        panel.resize();
+      }
+    }
+    destroy() {
+      for (var panel of this.panels.values()) {
+        panel.destroy();
+      }
+      this.panels.clear();
+      d3.select(this.chart.dom.element).select(".myIO-facet-grid").remove();
+      this.container = null;
+      this.globalScaleSnapshot = null;
+      if (this.chart.dom && this.chart.dom.svg) {
+        this.chart.dom.svg.style("display", null);
+      }
+    }
+  };
+
   // inst/htmlwidgets/myIO/src/Chart.js
   var MIN_CHART_WIDTH = 280;
   var RESIZE_DEBOUNCE_MS = 100;
@@ -4217,6 +4681,16 @@
       const options = opts || {};
       const generation = ++this.runtime.renderGen;
       const isCurrent = () => this.runtime && this.runtime.renderGen === generation;
+      if (this.config.facet && this.config.facet.enabled) {
+        if (!this.facetController) {
+          this.facetController = new FacetController(this);
+        }
+        this.facetController.initialize();
+        return;
+      } else if (this.facetController) {
+        this.facetController.destroy();
+        this.facetController = null;
+      }
       try {
         if (this.dom.chartArea) {
           this.dom.chartArea.selectAll("*").interrupt();
@@ -4444,6 +4918,10 @@
       this.emit("destroy", {});
       clearTimeout(this.runtime && this.runtime.resizeTimer);
       clearTimeout(this.runtime && this.runtime.tooltipHideTimer);
+      if (this.facetController) {
+        this.facetController.destroy();
+        this.facetController = null;
+      }
       if (this.themeManager) {
         this.themeManager.destroy();
       }
