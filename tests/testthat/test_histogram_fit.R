@@ -76,7 +76,7 @@ test_that("composite expands correctly", {
   )
   expect_equal(length(layers), 2)
   types <- vapply(layers, function(l) l$type, character(1))
-  expect_true("histogram" %in% types)
+  expect_true("bar" %in% types)
   expect_true("line" %in% types)
   roles <- vapply(layers, function(l) l$role, character(1))
   expect_true("histogram" %in% roles)
@@ -97,6 +97,6 @@ test_that("end-to-end widget creation works", {
   layers <- w$x$config$layers
   expect_true(length(layers) >= 2)
   types <- vapply(layers, function(l) l$type, character(1))
-  expect_true("histogram" %in% types)
+  expect_true("bar" %in% types)
   expect_true("line" %in% types)
 })
