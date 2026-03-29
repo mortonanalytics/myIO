@@ -1,5 +1,11 @@
 # myIO 1.2.0 (development)
 
+## Small multiples / faceting
+
+* `setFacet(var, ncol, scales)` splits charts into a CSS grid of panels, one per
+  unique value of the faceting variable. Supports fixed and free scale modes,
+  auto-layout with configurable minimum panel width, and responsive breakpoints.
+
 ## Export enhancements
 
 * `setExportOptions()` controls which export buttons appear in the toolbar

@@ -730,3 +730,45 @@
     animation-duration: 0ms !important;
   }
 }
+
+/* Facet Grid */
+.myIO-facet-grid {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.myIO-facet-panel {
+  position: relative;
+  min-height: 150px;
+}
+
+.myIO-facet-label {
+  font-family: var(--chart-font, system-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--chart-text-color);
+  text-align: center;
+  padding: 4px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.myIO-facet-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 480px) {
+  .myIO-facet-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 768px) and (min-width: 481px) {
+  .myIO-facet-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}

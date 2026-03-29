@@ -17,6 +17,7 @@ import { addFAB, closePanel, openPanel } from "./interactions/bottom-sheet.js";
 import { linearRegression } from "./utils/math.js";
 import { tagName } from "./utils/responsive.js";
 import { ThemeManager } from "./theme/theme-manager.js";
+import { FacetController } from "./layout/facet-controller.js";
 
 const MIN_CHART_WIDTH = 280;
 const RESIZE_DEBOUNCE_MS = 100;
@@ -204,6 +205,19 @@ export class myIOchart {
     const options = opts || {};
     const generation = ++this.runtime.renderGen;
     const isCurrent = () => this.runtime && this.runtime.renderGen === generation;
+
+    // Faceted rendering: delegate to FacetController
+    if (this.config.facet && this.config.facet.enabled) {
+      if (!this.facetController) {
+        this.facetController = new FacetController(this);
+      }
+      this.facetController.initialize();
+      return;
+    } else if (this.facetController) {
+      this.facetController.destroy();
+      this.facetController = null;
+    }
+
     try {
       if (this.dom.chartArea) {
         this.dom.chartArea.selectAll("*").interrupt();
@@ -451,6 +465,10 @@ export class myIOchart {
     this.emit("destroy", {});
     clearTimeout(this.runtime && this.runtime.resizeTimer);
     clearTimeout(this.runtime && this.runtime.tooltipHideTimer);
+    if (this.facetController) {
+      this.facetController.destroy();
+      this.facetController = null;
+    }
     if (this.themeManager) {
       this.themeManager.destroy();
     }

@@ -44,7 +44,11 @@ HTMLWidgets.widget({
       },
       resize: function(width, height) {
         if (this.myIOchart) {
-          this.myIOchart.resize(width, height);
+          if (this.myIOchart.facetController) {
+            this.myIOchart.facetController.resize();
+          } else {
+            this.myIOchart.resize(width, height);
+          }
         }
       }
     };
