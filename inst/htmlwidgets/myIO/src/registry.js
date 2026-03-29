@@ -19,6 +19,9 @@ import { TextRenderer } from "./renderers/TextRenderer.js";
 import { BracketRenderer } from "./renderers/BracketRenderer.js";
 import { LollipopRenderer } from "./renderers/LollipopRenderer.js";
 import { DumbbellRenderer } from "./renderers/DumbbellRenderer.js";
+import { WaffleRenderer } from "./renderers/WaffleRenderer.js";
+import { BeeswarmRenderer } from "./renderers/BeeswarmRenderer.js";
+import { BumpRenderer } from "./renderers/BumpRenderer.js";
 
 export function registerRenderer(type, RendererClass) {
   if (rendererRegistry.has(type)) {
@@ -102,6 +105,15 @@ export function registerBuiltInRenderers() {
   }
   if (!rendererRegistry.has(DumbbellRenderer.type)) {
     registerRenderer(DumbbellRenderer.type, new DumbbellRenderer());
+  }
+  if (!rendererRegistry.has(WaffleRenderer.type)) {
+    registerRenderer(WaffleRenderer.type, new WaffleRenderer());
+  }
+  if (!rendererRegistry.has(BeeswarmRenderer.type)) {
+    registerRenderer(BeeswarmRenderer.type, new BeeswarmRenderer());
+  }
+  if (!rendererRegistry.has(BumpRenderer.type)) {
+    registerRenderer(BumpRenderer.type, new BumpRenderer());
   }
 
   if (!rendererRegistry.has(TextRenderer.type)) {

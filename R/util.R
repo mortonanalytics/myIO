@@ -30,7 +30,8 @@ ALLOWED_TYPES <- c(
   "candlestick", "waterfall", "sankey", "boxplot", "violin",
   "ridgeline", "rangeBar", "text", "regression", "bracket",
   "comparison", "qq",
-  "lollipop", "dumbbell"
+  "lollipop", "dumbbell",
+  "waffle", "beeswarm", "bump"
 )
 
 COMPATIBILITY_GROUPS <- list(
@@ -58,7 +59,10 @@ COMPATIBILITY_GROUPS <- list(
   comparison = "axes-categorical",
   qq = "axes-continuous",
   lollipop = "axes-categorical",
-  dumbbell = "axes-categorical"
+  dumbbell = "axes-categorical",
+  waffle = "standalone-waffle",
+  beeswarm = "axes-continuous",
+  bump = "axes-continuous"
 )
 
 GROUP_MATRIX <- list(
@@ -70,7 +74,8 @@ GROUP_MATRIX <- list(
   "standalone-flow" = c("standalone-flow"),
   "standalone-treemap" = c("standalone-treemap"),
   "standalone-donut" = c("standalone-donut"),
-  "standalone-gauge" = c("standalone-gauge")
+  "standalone-gauge" = c("standalone-gauge"),
+  "standalone-waffle" = c("standalone-waffle")
 )
 
 VALID_COMBINATIONS <- list(
@@ -95,7 +100,10 @@ VALID_COMBINATIONS <- list(
   text = c("identity"),
   bracket = c("identity", "pairwise_test"),
   lollipop = c("identity", "mean", "summary"),
-  dumbbell = c("identity")
+  dumbbell = c("identity"),
+  waffle = c("identity"),
+  beeswarm = c("identity"),
+  bump = c("identity")
 )
 
 composite_registry <- function() {
