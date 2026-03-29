@@ -1,0 +1,196 @@
+---
+title: "Migrating from plotly to myIO"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Migrating from plotly to myIO}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Why switch from plotly?
+
+Three things changed in 2025 that make plotly a risky dependency for new work:
+
+1. **Documentation retired.** The official plotly-r docs site went offline. Learning the API now means reading source code or archived pages.
+2. **Broken statistical features.** Regression CI bands ([#1472](https://github.com/plotly/plotly.R/issues/1472)) and statistical annotations ([#1687](https://github.com/plotly/plotly.R/issues/1687)) have been broken for years with no fix in sight.
+3. **Heavy dependency chain.** plotly pulls in htmlwidgets, tidyr, dplyr, rlang, and the full plotly.js bundle (~3.5 MB minified). myIO depends only on htmlwidgets and jsonlite.
+
+If your charts need statistical overlays, the cost of working around plotly's gaps exceeds the cost of switching.
+
+## Side-by-side: 8 common patterns
+
+### 1. Basic scatter plot
+
+```{r plotly-scatter, eval = FALSE}
+# plotly
+plot_ly(mtcars, x = ~wt, y = ~mpg, type = "scatter", mode = "markers")
+```
+
+```{r myio-scatter, eval = FALSE}
+# myIO
+myIO(data = mtcars) |>
+  addIoLayer(type = "point", label = "Cars",
+    mapping = list(x_var = "wt", y_var = "mpg"))
+```
+
+myIO uses a layered pipe API instead of a single function with mode flags.
+
+### 2. Line chart with multiple series
+
+```{r plotly-lines, eval = FALSE}
+# plotly
+plot_ly(economics_long, x = ~date, y = ~value, color = ~variable,
+        type = "scatter", mode = "lines")
+```
+
+```{r myio-lines, eval = FALSE}
+# myIO
+myIO(data = economics_long) |>
+  addIoLayer(type = "line", label = "Trends",
+    mapping = list(x_var = "date", y_var = "value", group = "variable"))
+```
+
+Groups are declared in the mapping, not as a top-level aesthetic.
+
+### 3. Bar chart
+
+```{r plotly-bar, eval = FALSE}
+# plotly
+plot_ly(data.frame(x = c("A","B","C"), y = c(10,20,15)),
+        x = ~x, y = ~y, type = "bar")
+```
+
+```{r myio-bar, eval = FALSE}
+# myIO
+myIO(data = data.frame(x = c("A","B","C"), y = c(10,20,15))) |>
+  addIoLayer(type = "bar", label = "Values",
+    mapping = list(x_var = "x", y_var = "y")) |>
+  defineCategoricalAxis(xAxis = TRUE)
+```
+
+myIO requires an explicit `defineCategoricalAxis()` call for discrete x-axes.
+
+### 4. Histogram
+
+```{r plotly-hist, eval = FALSE}
+# plotly
+plot_ly(mtcars, x = ~mpg, type = "histogram")
+```
+
+```{r myio-hist, eval = FALSE}
+# myIO
+myIO(data = mtcars) |>
+  addIoLayer(type = "histogram", label = "MPG Distribution",
+    mapping = list(x_var = "mpg"),
+    options = list(bins = 15))
+```
+
+Bin count is set via `options$bins` rather than a layout parameter.
+
+### 5. Box plot
+
+```{r plotly-box, eval = FALSE}
+# plotly
+plot_ly(iris, y = ~Sepal.Length, color = ~Species, type = "box")
+```
+
+```{r myio-box, eval = FALSE}
+# myIO
+myIO(data = iris) |>
+  addIoLayer(type = "boxplot", label = "Sepal Length",
+    mapping = list(x_var = "Species", y_var = "Sepal.Length"),
+    options = list(showOutliers = TRUE)) |>
+  defineCategoricalAxis(xAxis = TRUE)
+```
+
+myIO boxplots decompose into sub-layers (IQR box, whiskers, median, outliers), each independently styled and interactive.
+
+### 6. Regression line with CI band
+
+plotly [#1472](https://github.com/plotly/plotly.R/issues/1472) -- CI ribbons on regression lines do not render correctly.
+
+```{r plotly-reg, eval = FALSE}
+# plotly (broken — CI band misaligns or disappears)
+model <- lm(mpg ~ wt, data = mtcars)
+preds <- data.frame(wt = seq(min(mtcars$wt), max(mtcars$wt), length.out = 50))
+preds <- cbind(preds, predict(model, preds, interval = "confidence"))
+plot_ly() |>
+  add_markers(data = mtcars, x = ~wt, y = ~mpg) |>
+  add_ribbons(data = preds, x = ~wt, ymin = ~lwr, ymax = ~upr) |>
+  add_lines(data = preds, x = ~wt, y = ~fit)
+```
+
+```{r myio-reg, eval = FALSE}
+# myIO (one call, CI computed internally)
+myIO(data = mtcars) |>
+  addIoLayer(type = "regression", label = "MPG vs Weight",
+    mapping = list(x_var = "wt", y_var = "mpg"),
+    options = list(method = "lm", showCI = TRUE, showStats = TRUE))
+```
+
+myIO computes the CI via `stats::predict()` and renders it as a first-class area layer -- no manual pre-computation.
+
+### 7. Statistical annotations
+
+plotly [#1687](https://github.com/plotly/plotly.R/issues/1687) -- `ggplotly()` drops `stat_compare_means()` annotations.
+
+```{r plotly-annot, eval = FALSE}
+# plotly (annotations lost in ggplotly conversion)
+library(ggpubr)
+p <- ggboxplot(iris, x = "Species", y = "Sepal.Length") +
+  stat_compare_means(method = "t.test", comparisons = list(
+    c("setosa", "versicolor"), c("versicolor", "virginica")))
+ggplotly(p)  # brackets and p-values vanish
+```
+
+```{r myio-annot, eval = FALSE}
+# myIO (pairwise tests rendered natively)
+myIO(data = iris) |>
+  addIoLayer(type = "comparison", label = "Sepal Length",
+    mapping = list(x_var = "Species", y_var = "Sepal.Length"),
+    options = list(method = "t.test"))
+```
+
+The `comparison` composite expands into boxplots plus significance brackets with p-values, computed in R and rendered in D3.js.
+
+### 8. Dark mode theming
+
+```{r plotly-dark, eval = FALSE}
+# plotly
+plot_ly(mtcars, x = ~wt, y = ~mpg, type = "scatter", mode = "markers") |>
+  layout(template = "plotly_dark")
+```
+
+```{r myio-dark, eval = FALSE}
+# myIO
+myIO(data = mtcars) |>
+  addIoLayer(type = "point", label = "Cars",
+    mapping = list(x_var = "wt", y_var = "mpg")) |>
+  setTheme(background = "#1a1a2e", text = "#e0e0e0",
+           grid = "#2a2a4a", font = "Inter")
+```
+
+myIO theming uses CSS custom properties, so colors apply consistently across
+all layers including CI bands, annotations, and export buttons.
+
+## What myIO does that plotly can't
+
+- **Composite charts.** `regression`, `comparison`, `qq`, `violin`, and `ridgeline` auto-expand into coordinated sub-layers.
+- **Composable transforms.** `lm`, `loess`, `ci`, `mean_ci`, `residuals`, `pairwise_test`, and `qq` mix freely across layers.
+- **Bidirectional I/O.** `setBrush()` returns selected rows; `setAnnotation()` enables click-to-label with CSV export.
+
+## What plotly does that myIO doesn't
+
+- **3D charts.** `scatter3d`, `surface`, `mesh3d` -- myIO is 2D only.
+- **Geographic maps.** `scattergeo`, `choropleth`, Mapbox -- myIO has no map types.
+- **ggplotly conversion.** No equivalent one-liner for converting existing ggplot2 code.
+- **40+ chart types.** Funnel, icicle, sunburst, parallel coordinates, etc. myIO has 23 types focused on statistical workflows.
+
+If you need 3D, maps, or broad chart-type coverage, plotly remains the better choice. If you need statistical overlays that actually work, myIO is worth the switch.
