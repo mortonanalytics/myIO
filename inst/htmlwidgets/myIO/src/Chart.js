@@ -383,6 +383,15 @@ export class myIOchart {
       if (renderer && typeof renderer.render === "function") {
         renderer.render(that, layer, layers);
         that.captureLegacyAliases();
+
+        // Apply per-layer opacity
+        var opacity = (layer.options && layer.options.opacity != null)
+          ? layer.options.opacity : 1;
+        if (opacity < 1) {
+          var safeName = String(layer.label).replace(/\s+/g, "");
+          that.dom.chartArea.selectAll("[class*='tag-'][class*='-" + safeName + "']")
+            .style("opacity", opacity);
+        }
       }
     });
   }

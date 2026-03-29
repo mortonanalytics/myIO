@@ -31,7 +31,8 @@ ALLOWED_TYPES <- c(
   "ridgeline", "rangeBar", "text", "regression", "bracket",
   "comparison", "qq",
   "lollipop", "dumbbell",
-  "waffle", "beeswarm", "bump"
+  "waffle", "beeswarm", "bump",
+  "survfit", "histogram_fit"
 )
 
 COMPATIBILITY_GROUPS <- list(
@@ -62,7 +63,9 @@ COMPATIBILITY_GROUPS <- list(
   dumbbell = "axes-categorical",
   waffle = "standalone-waffle",
   beeswarm = "axes-continuous",
-  bump = "axes-continuous"
+  bump = "axes-continuous",
+  survfit = "axes-continuous",
+  histogram_fit = "axes-binned"
 )
 
 GROUP_MATRIX <- list(
@@ -103,7 +106,9 @@ VALID_COMBINATIONS <- list(
   dumbbell = c("identity"),
   waffle = c("identity"),
   beeswarm = c("identity"),
-  bump = c("identity")
+  bump = c("identity"),
+  survfit = c("identity"),
+  histogram_fit = c("identity")
 )
 
 composite_registry <- function() {
@@ -113,7 +118,9 @@ composite_registry <- function() {
     ridgeline = composite_ridgeline,
     regression = composite_regression,
     comparison = composite_comparison,
-    qq = composite_qq
+    qq = composite_qq,
+    survfit = composite_survfit,
+    histogram_fit = composite_histogram_fit
   )
 }
 
