@@ -1,5 +1,23 @@
 # myIO 1.2.0 (development)
 
+## Survival curves (Kaplan-Meier)
+
+* `addIoLayer(type = "survfit", mapping = list(time = "time", status = "status"))`
+  computes Kaplan-Meier estimator with Greenwood CI using base R only (no
+  `survival` package dependency). Composite expands to step-curve line, CI band,
+  and censored-observation markers. Group stratification supported.
+
+## Distribution fitting overlay
+
+* `addIoLayer(type = "histogram_fit", mapping = list(value = "x"), options = list(family = "normal"))`
+  fits normal, lognormal, or exponential distributions via MLE. Composite
+  renders histogram + fitted density curve + optional parameter annotation.
+
+## Layer opacity control
+
+* `setLayerOpacity(label, opacity)` sets per-layer opacity (0-1). Critical for
+  CI bands overlaying scatter data.
+
 ## SVG accessibility
 
 * ARIA roles (`graphics-document`, `graphics-object`, `graphics-symbol`) applied

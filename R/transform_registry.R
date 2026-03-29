@@ -19,7 +19,9 @@ transform_registry <- function() {
     ci = transform_ci,
     mean_ci = transform_mean_ci,
     pairwise_test = transform_pairwise_test,
-    qq = transform_qq
+    qq = transform_qq,
+    survfit = transform_survfit,
+    fit_distribution = transform_fit_distribution
   )
 }
 

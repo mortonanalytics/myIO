@@ -210,13 +210,15 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
       boxplot = c("x_var", "y_var"),
       violin = c("x_var", "y_var"),
       qq = c("y_var"),
+      survfit = c("time", "status"),
+      histogram_fit = c("value"),
+      dumbbell = c("x_var", "low_y", "high_y"),
+      waffle = c("category", "value"),
+      bump = c("x_var", "y_var", "group"),
       ridgeline = c("x_var", "y_var", "group"),
       rangeBar = c("x_var", "low_y", "high_y"),
       area = c("x_var", "low_y", "high_y"),
       hexbin = c("x_var", "y_var", "radius"),
-      dumbbell = c("x_var", "low_y", "high_y"),
-      waffle = c("category", "value"),
-      bump = c("x_var", "y_var", "group"),
       c("x_var", "y_var")
     )
   }
@@ -347,6 +349,12 @@ TRANSFORM_INPUT_CONTRACTS <- list(
                            "p_value", "label", "method", "statistic"),
     auto_mapping = list(x1 = "x1", x2 = "x2", y = "y",
                          label = "label", p_value = "p_value")
+  ),
+  survfit = list(
+    required_map = c("time", "status"),
+    skip_column_check = c("x_var", "y_var", "low_y", "high_y"),
+    auto_mapping = list(x_var = "time", y_var = "surv",
+                        low_y = "ci_lower", high_y = "ci_upper")
   )
 )
 
