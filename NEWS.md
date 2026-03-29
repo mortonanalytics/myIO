@@ -1,5 +1,11 @@
 # myIO 1.2.0 (development)
 
+## Theme gallery
+
+* 12 named theme presets: `setTheme(preset = "midnight")`. Available presets:
+  midnight, ocean, forest, sunset, monochrome, neon, corporate, academic,
+  nature, minimal, retro, warm. Plus light/dark via mode parameter.
+
 ## Linked brushing
 
 * `linkCharts(chart1, chart2, on = "column")` enables cross-chart selection.

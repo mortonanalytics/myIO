@@ -1,4 +1,4 @@
-import { LIGHT, DARK } from "./palettes.js";
+import { LIGHT, DARK, PRESETS } from "./palettes.js";
 
 function normalizeThemeValues(values) {
   if (!values || typeof values !== "object") {
@@ -80,6 +80,11 @@ export class ThemeManager {
   apply(mode) {
     this.currentMode = mode;
     var palette = mode === "dark" ? DARK : LIGHT;
+
+    // Override with named preset if specified
+    if (this.config.preset && PRESETS[this.config.preset]) {
+      palette = PRESETS[this.config.preset];
+    }
 
     for (var prop of Object.keys(palette)) {
       this.element.style.setProperty(prop, palette[prop]);
