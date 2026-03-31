@@ -1,4 +1,4 @@
-import { BUTTON_LABELS, handleAction, iconCamera, iconFileDown, iconLayers, iconPercent } from "./buttons.js";
+import { BUTTON_LABELS, handleAction, iconDownload, iconImage, iconLayers, iconLegend, iconPercent } from "./buttons.js";
 import { buildLegendData } from "../layout/legend-data.js";
 import { isMobile } from "../utils/responsive.js";
 
@@ -23,9 +23,9 @@ export function addFAB(chart) {
     .append("button")
     .attr("type", "button")
     .attr("class", "myIO-fab")
-    .attr("aria-label", "Open chart controls")
+    .attr("aria-label", "Legend and actions")
     .attr("aria-expanded", "false")
-    .html(iconMore());
+    .html(iconLegend());
 
   fab.on("click", function() {
     openPanel(chart);
@@ -78,41 +78,49 @@ export function openPanel(chart) {
     .attr("aria-label", getDialogLabel(chart))
     .attr("tabindex", "-1");
 
-  panel.append("div")
+  var header = panel.append("div")
+    .attr("class", "myIO-sheet-header");
+
+  header.append("div")
     .attr("class", "myIO-sheet-handle");
+
+  header.append("button")
+    .attr("type", "button")
+    .attr("class", "myIO-sheet-close")
+    .attr("aria-label", "Close")
+    .html(iconClose())
+    .on("click", function() {
+      closePanel(chart);
+    })
+    .on("keydown", function(event) {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        closePanel(chart);
+      }
+    });
 
   chart.dom.backdrop = backdrop;
   chart.dom.panel = panel;
   chart.dom.sheetLegendSection = null;
   chart.dom.sheetLegendBody = null;
-  chart.dom.sheetActionsSection = null;
   chart.dom.sheetActionsBody = null;
 
   if (!chart.options || chart.options.suppressLegend !== true) {
-    var legendSection = panel.append("section")
-      .attr("class", "myIO-sheet-section myIO-sheet-legend-section")
+    var legendSection = panel.append("div")
+      .attr("class", "myIO-sheet-legend-section")
       .attr("data-sheet-section", "legend");
-
-    legendSection.append("h2")
-      .attr("class", "myIO-sheet-section-title")
-      .text("Legend");
 
     chart.dom.sheetLegendSection = legendSection;
     chart.dom.sheetLegendBody = legendSection.append("div")
       .attr("class", "myIO-sheet-legend");
+
+    legendSection.append("hr")
+      .attr("class", "myIO-sheet-divider");
   }
 
-  var actionSection = panel.append("section")
-    .attr("class", "myIO-sheet-section myIO-sheet-actions-section")
+  chart.dom.sheetActionsBody = panel.append("div")
+    .attr("class", "myIO-sheet-actions")
     .attr("data-sheet-section", "actions");
-
-  actionSection.append("h2")
-    .attr("class", "myIO-sheet-section-title")
-    .text("Actions");
-
-  chart.dom.sheetActionsSection = actionSection;
-  chart.dom.sheetActionsBody = actionSection.append("div")
-    .attr("class", "myIO-sheet-actions");
 
   renderSheetLegend(chart);
   renderSheetActions(chart);
@@ -126,6 +134,8 @@ export function openPanel(chart) {
     panel.classed(PANEL_OPEN_CLASS, true);
     focusFirstInteractive(panel.node());
   });
+
+  attachSwipeDismiss(chart);
 
   return panel;
 }
@@ -199,9 +209,9 @@ export function renderSheetLegend(chart) {
     return;
   }
 
-  var legendSection = chart.dom.sheetLegendSection;
   var legendBody = chart.dom.sheetLegendBody;
-  if (!legendSection || !legendBody) {
+  var legendSection = chart.dom.sheetLegendSection;
+  if (!legendBody) {
     return;
   }
 
@@ -210,16 +220,23 @@ export function renderSheetLegend(chart) {
   var legendData = getLegendData(chart);
 
   legendBody.selectAll("*").remove();
+  if (legendSection) {
+    legendSection.selectAll(".myIO-sheet-legend-reset").remove();
+  }
 
   if (!legendData || !legendData.type) {
-    legendSection.style("display", "none");
+    if (legendSection) {
+      legendSection.style("display", "none");
+    }
     if (panelNode) {
       panelNode.scrollTop = scrollTop;
     }
     return;
   }
 
-  legendSection.style("display", null);
+  if (legendSection) {
+    legendSection.style("display", null);
+  }
 
   if (legendData.type === "continuous") {
     renderContinuousLegend(chart, legendBody, legendData);
@@ -246,11 +263,16 @@ function renderSheetActions(chart) {
   actions.forEach(function(action) {
     var button = body.append("button")
       .attr("type", "button")
-      .attr("class", "button myIO-sheet-action")
+      .attr("class", "myIO-sheet-action")
       .attr("data-action", action.name)
-      .attr("aria-label", action.label)
       .on("click", function() {
-        handleAction(chart, chart.currentLayers || chart.derived && chart.derived.currentLayers || chart.plotLayers || [], action.name);
+        handleAction(chart, chart.currentLayers || (chart.derived && chart.derived.currentLayers) || chart.plotLayers || [], action.name);
+      })
+      .on("keydown", function(event) {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          handleAction(chart, chart.currentLayers || (chart.derived && chart.derived.currentLayers) || chart.plotLayers || [], action.name);
+        }
       });
 
     button.append("span")
@@ -265,6 +287,9 @@ function renderSheetActions(chart) {
 }
 
 function renderLayerLegend(chart, container, legendData) {
+  var useGrid = isMobile(chart) && legendData.items.length > 4;
+  container.classed("myIO-sheet-legend--grid", useGrid);
+
   legendData.items.forEach(function(item) {
     var button = container.append("button")
       .attr("type", "button")
@@ -284,20 +309,20 @@ function renderLayerLegend(chart, container, legendData) {
 
     button.append("span")
       .attr("class", "myIO-sheet-swatch")
-      .style("background-color", item.color)
-      .style("border", "1px solid " + item.color);
+      .style("background-color", item.color);
 
     button.append("span")
       .attr("class", "myIO-sheet-legend-label")
       .text(item.label);
-
-    button.append("span")
-      .attr("class", "myIO-sheet-legend-state")
-      .text(item.visible ? "On" : "Off");
   });
+
+  appendShowAllButton(chart, legendData);
 }
 
 function renderOrdinalLegend(chart, container, legendData) {
+  var useGrid = isMobile(chart) && legendData.items.length > 4;
+  container.classed("myIO-sheet-legend--grid", useGrid);
+
   legendData.items.forEach(function(item) {
     var button = container.append("button")
       .attr("type", "button")
@@ -317,17 +342,14 @@ function renderOrdinalLegend(chart, container, legendData) {
 
     button.append("span")
       .attr("class", "myIO-sheet-swatch")
-      .style("background-color", item.color)
-      .style("border", "1px solid " + item.color);
+      .style("background-color", item.color);
 
     button.append("span")
       .attr("class", "myIO-sheet-legend-label")
       .text(item.label);
-
-    button.append("span")
-      .attr("class", "myIO-sheet-legend-state")
-      .text(item.visible ? "On" : "Off");
   });
+
+  appendShowAllButton(chart, legendData);
 }
 
 function renderContinuousLegend(chart, container, legendData) {
@@ -353,12 +375,22 @@ function renderContinuousLegend(chart, container, legendData) {
 }
 
 function buildActionData(chart) {
-  var layers = chart.currentLayers || chart.derived && chart.derived.currentLayers || chart.plotLayers || [];
+  var layers = chart.currentLayers || (chart.derived && chart.derived.currentLayers) || chart.plotLayers || [];
   var primaryType = layers[0] ? layers[0].type : null;
-  var data = [
-    { name: "image", label: BUTTON_LABELS.image, icon: iconCamera() },
-    { name: "chart", label: BUTTON_LABELS.chart, icon: iconFileDown() }
-  ];
+  var exportConfig = chart.config && chart.config.export;
+  var data = [];
+
+  if (!exportConfig || exportConfig.csv !== false) {
+    data.push({ name: "chart", label: BUTTON_LABELS.chart, icon: iconDownload() });
+  }
+
+  if (!exportConfig || exportConfig.png !== false) {
+    data.push({ name: "image", label: BUTTON_LABELS.image, icon: iconImage() });
+  }
+
+  if (exportConfig && exportConfig.svg === true) {
+    data.push({ name: "svg", label: BUTTON_LABELS.svg, icon: iconDownload() });
+  }
 
   if (chart.options && chart.options.toggleY) {
     data.push({ name: "percent", label: BUTTON_LABELS.percent, icon: iconPercent() });
@@ -411,8 +443,83 @@ function toggleOrdinalSegment(chart, item) {
   }
 
   chart.runtime._suppressOrdinalLegendRebuild = true;
-  chart.routeLayers(chart.currentLayers || chart.derived && chart.derived.currentLayers || []);
-  chart.runtime._suppressOrdinalLegendRebuild = false;
+  try {
+    chart.routeLayers(chart.currentLayers || (chart.derived && chart.derived.currentLayers) || []);
+  } finally {
+    chart.runtime._suppressOrdinalLegendRebuild = false;
+  }
+}
+
+function appendShowAllButton(chart, legendData) {
+  var hasHidden = legendData.items.some(function(item) { return !item.visible; });
+  if (hasHidden && chart.dom.sheetLegendSection) {
+    chart.dom.sheetLegendSection.selectAll(".myIO-sheet-legend-reset").remove();
+    chart.dom.sheetLegendSection.append("button")
+      .attr("type", "button")
+      .attr("class", "myIO-sheet-legend-reset")
+      .text("Show All")
+      .on("click", function() {
+        resetLegendVisibility(chart, legendData.type);
+      });
+  }
+}
+
+export function resetLegendVisibility(chart, type) {
+  chart.runtime = chart.runtime || {};
+  if (type === "ordinal") {
+    chart.runtime._hiddenOrdinalSegments = [];
+    chart.runtime._suppressOrdinalLegendRebuild = true;
+    try {
+      chart.routeLayers(chart.currentLayers || (chart.derived && chart.derived.currentLayers) || []);
+    } finally {
+      chart.runtime._suppressOrdinalLegendRebuild = false;
+    }
+  } else {
+    chart.runtime._hiddenLayerKeys = [];
+    chart.derived = chart.derived || {};
+    chart.derived.currentLayers = (chart.plotLayers || []).slice();
+    chart.syncLegacyAliases();
+    chart.renderCurrentLayers();
+  }
+}
+
+function attachSwipeDismiss(chart) {
+  var panel = chart.dom.panel;
+  if (!panel || !isMobile(chart)) return;
+
+  var node = panel.node();
+  var startY = 0;
+  var currentY = 0;
+  var dragging = false;
+
+  node.addEventListener("touchstart", function(e) {
+    var rect = node.getBoundingClientRect();
+    var touch = e.touches[0];
+    if (touch.clientY - rect.top > 40) return;
+    startY = touch.clientY;
+    currentY = touch.clientY;
+    dragging = true;
+    node.style.transition = "none";
+  }, { passive: true });
+
+  node.addEventListener("touchmove", function(e) {
+    if (!dragging) return;
+    currentY = e.touches[0].clientY;
+    var dy = Math.max(0, currentY - startY);
+    node.style.transform = "translateY(" + dy + "px)";
+  }, { passive: true });
+
+  node.addEventListener("touchend", function() {
+    if (!dragging) return;
+    dragging = false;
+    node.style.transition = "";
+    var dy = currentY - startY;
+    if (dy > 80) {
+      closePanel(chart);
+    } else {
+      node.style.transform = "";
+    }
+  });
 }
 
 function getLegendData(chart) {
@@ -431,8 +538,8 @@ function syncFABState(chart) {
   var isOpen = chart.runtime && chart.runtime._sheetOpen === true;
   chart.dom.fab
     .attr("aria-expanded", isOpen ? "true" : "false")
-    .attr("aria-label", isOpen ? "Close chart controls" : "Open chart controls")
-    .html(isOpen ? iconClose() : iconMore());
+    .attr("aria-label", isOpen ? "Close legend and actions" : "Legend and actions")
+    .html(isOpen ? iconClose() : iconLegend());
 }
 
 function attachSheetKeydown(chart) {
@@ -500,7 +607,6 @@ function cleanupPanelNodes(chart) {
     chart.dom.backdrop = null;
     chart.dom.sheetLegendSection = null;
     chart.dom.sheetLegendBody = null;
-    chart.dom.sheetActionsSection = null;
     chart.dom.sheetActionsBody = null;
   }
 }
@@ -574,10 +680,6 @@ function buildContinuousTicks(scale, domain) {
 
 function iconWrapper(paths) {
   return '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true">' + paths + "</svg>";
-}
-
-function iconMore() {
-  return iconWrapper('<circle cx="12" cy="5" r="1.75"></circle><circle cx="12" cy="12" r="1.75"></circle><circle cx="12" cy="19" r="1.75"></circle>');
 }
 
 function iconClose() {
