@@ -448,6 +448,7 @@ function toggleOrdinalSegment(chart, item) {
   } finally {
     chart.runtime._suppressOrdinalLegendRebuild = false;
   }
+  renderSheetLegend(chart);
 }
 
 function appendShowAllButton(chart, legendData) {
@@ -474,6 +475,7 @@ export function resetLegendVisibility(chart, type) {
     } finally {
       chart.runtime._suppressOrdinalLegendRebuild = false;
     }
+    renderSheetLegend(chart);
   } else {
     chart.runtime._hiddenLayerKeys = [];
     chart.derived = chart.derived || {};

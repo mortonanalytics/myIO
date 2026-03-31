@@ -1621,6 +1621,7 @@
     } finally {
       chart.runtime._suppressOrdinalLegendRebuild = false;
     }
+    renderSheetLegend(chart);
   }
   function appendShowAllButton(chart, legendData) {
     var hasHidden = legendData.items.some(function(item) {
@@ -1643,6 +1644,7 @@
       } finally {
         chart.runtime._suppressOrdinalLegendRebuild = false;
       }
+      renderSheetLegend(chart);
     } else {
       chart.runtime._hiddenLayerKeys = [];
       chart.derived = chart.derived || {};
