@@ -1178,12 +1178,58 @@
     }
   })("undefined" != typeof self && self || "undefined" != typeof window && window || (void 0).content);
 
+  // inst/htmlwidgets/myIO/src/utils/export-clipboard.js
+  async function copyAsSVG(chart) {
+    var legend = injectExportLegend(chart);
+    var svgString = getSVGString(chart.svg.node());
+    legend.cleanup();
+    try {
+      if (navigator.clipboard && navigator.clipboard.write && typeof ClipboardItem !== "undefined") {
+        var blob = new Blob([svgString], { type: "image/svg+xml" });
+        var htmlBlob = new Blob([svgString], { type: "text/html" });
+        await navigator.clipboard.write([
+          new ClipboardItem({ "text/html": htmlBlob, "image/svg+xml": blob })
+        ]);
+      } else {
+        await navigator.clipboard.writeText(svgString);
+      }
+      return true;
+    } catch (err) {
+      console.warn("[myIO] Clipboard copy failed", err);
+      return false;
+    }
+  }
+  async function copyAsPNG(chart) {
+    var legend = injectExportLegend(chart);
+    var exportHeight = chart.height + legend.extraHeight;
+    var svgString = getSVGString(chart.svg.node());
+    legend.cleanup();
+    var width = (chart.totalWidth || chart.width) * 2;
+    var height = exportHeight * 2;
+    return new Promise(function(resolve) {
+      svgString2Image(svgString, width, height, "png", function(blob) {
+        if (navigator.clipboard && navigator.clipboard.write && typeof ClipboardItem !== "undefined") {
+          navigator.clipboard.write([
+            new ClipboardItem({ "image/png": blob })
+          ]).then(function() {
+            resolve(true);
+          }).catch(function() {
+            resolve(false);
+          });
+        } else {
+          resolve(false);
+        }
+      });
+    });
+  }
+
   // inst/htmlwidgets/myIO/src/interactions/buttons.js
   var BUTTON_LABELS = {
     image: "Export as PNG",
     chart: "Download CSV data",
     percent: "Toggle percent view",
-    group2stack: "Toggle grouped/stacked layout"
+    group2stack: "Toggle grouped/stacked layout",
+    clipboard: "Copy to clipboard"
   };
   function handleAction(chart, layers, name) {
     if (name === "image") {
@@ -1209,6 +1255,11 @@
       exportToCsv(chart.element.id + "_data.csv", [].concat.apply([], csvData));
       return;
     }
+    if (name === "clipboard") {
+      var clipBtn = d3.select(chart.element).select('.button[aria-label="Copy to clipboard"]');
+      showCopyMenu(chart, clipBtn.node());
+      return;
+    }
     if (name === "percent") {
       var nextToggle = chart.runtime.activeY === chart.options.toggleY[0] ? [chart.plotLayers[0].mapping.y_var, chart.options.yAxisFormat] : chart.options.toggleY;
       chart.toggleVarY(nextToggle);
@@ -1232,6 +1283,76 @@
   }
   function iconLayers() {
     return iconWrapper('<rect x="4" y="5" width="14" height="4" rx="1"></rect><rect x="6" y="10" width="14" height="4" rx="1"></rect><rect x="8" y="15" width="14" height="4" rx="1"></rect>');
+  }
+  function showCopyMenu(chart, buttonNode) {
+    d3.select(chart.element).select(".myIO-copy-menu").remove();
+    var menu = d3.select(buttonNode.parentNode).append("div").attr("class", "myIO-copy-menu").style("position", "absolute");
+    var items = [
+      { label: "Copy as SVG", action: function() {
+        copyAsSVG(chart).then(function(ok) {
+          if (ok) showCopyFeedback(chart, buttonNode);
+        });
+      } },
+      { label: "Copy as PNG", action: function() {
+        copyAsPNG(chart).then(function(ok) {
+          if (ok) showCopyFeedback(chart, buttonNode);
+        });
+      } }
+    ];
+    if (typeof ClipboardItem === "undefined") {
+      items = items.slice(0, 1);
+    }
+    items.forEach(function(item, i) {
+      menu.append("button").attr("class", "myIO-copy-menu-item").attr("role", "menuitem").attr("tabindex", "0").text(item.label).on("click", function() {
+        menu.remove();
+        item.action();
+      }).on("keydown", function(event) {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          menu.remove();
+          item.action();
+        } else if (event.key === "Escape") {
+          menu.remove();
+          buttonNode.focus();
+        } else if (event.key === "ArrowDown" && i < items.length - 1) {
+          event.preventDefault();
+          menu.selectAll(".myIO-copy-menu-item").nodes()[i + 1].focus();
+        } else if (event.key === "ArrowUp" && i > 0) {
+          event.preventDefault();
+          menu.selectAll(".myIO-copy-menu-item").nodes()[i - 1].focus();
+        }
+      });
+    });
+    menu.select(".myIO-copy-menu-item").node().focus();
+    setTimeout(function() {
+      document.addEventListener("click", function handler(e) {
+        if (!menu.node() || !menu.node().contains(e.target)) {
+          menu.remove();
+          document.removeEventListener("click", handler);
+        }
+      });
+    }, 0);
+    d3.select(buttonNode).on("keydown.copymenu", function(event) {
+      if (event.key === "Escape") {
+        menu.remove();
+        d3.select(buttonNode).on("keydown.copymenu", null);
+      }
+    });
+  }
+  function showCopyFeedback(chart, buttonNode) {
+    var original = buttonNode.innerHTML;
+    buttonNode.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+    buttonNode.classList.add("myIO-btn-success");
+    var announce = d3.select(chart.element).select(".myIO-sr-announce");
+    if (announce.empty()) {
+      announce = d3.select(chart.element).append("div").attr("class", "myIO-sr-announce").attr("aria-live", "polite").attr("role", "status");
+    }
+    announce.text("Chart copied to clipboard");
+    setTimeout(function() {
+      buttonNode.innerHTML = original;
+      buttonNode.classList.remove("myIO-btn-success");
+      announce.text("");
+    }, 1500);
   }
 
   // inst/htmlwidgets/myIO/src/interactions/bottom-sheet.js
