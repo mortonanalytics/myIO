@@ -417,7 +417,7 @@
     return chart.height;
   }
   function initializeScaffold(chart) {
-    d3.select(chart.element).selectAll(".myIO-svg, .buttonDiv, .toolTip, .myIO-fab, .myIO-panel, .myIO-sheet-backdrop").remove();
+    d3.select(chart.element).selectAll(".myIO-svg, .toolTip, .myIO-fab, .myIO-panel, .myIO-sheet-backdrop").remove();
     d3.select(chart.element).classed("myIO-container", true).style("position", "relative");
     chart.svg = d3.select(chart.element).append("svg").attr("class", "myIO-svg").attr("id", "myIO-svg" + chart.element.id).attr("width", chart.totalWidth).attr("height", chart.height).attr("viewBox", "0 0 " + chart.totalWidth + " " + chart.height).attr("role", "img").attr("aria-label", buildAriaLabel(chart));
     chart.svg.append("rect").attr("class", "myIO-bg").attr("width", chart.totalWidth).attr("height", chart.height).attr("fill", "var(--chart-bg, #ffffff)");
@@ -912,18 +912,6 @@
     };
     image.src = imgsrc;
   }
-  function downloadSVG(svgNode, filename) {
-    var svgString = getSVGString(svgNode);
-    var blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement("a");
-    a.href = url;
-    a.download = filename || "chart.svg";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
 
   // inst/htmlwidgets/myIO/src/layout/legend-data.js
   function buildLegendData(chart, state) {
@@ -1267,27 +1255,88 @@
     }
   })("undefined" != typeof self && self || "undefined" != typeof window && window || (void 0).content);
 
-  // inst/htmlwidgets/myIO/src/utils/export-clipboard.js
-  async function copyAsSVG(chart) {
-    var legend = injectExportLegend(chart);
-    var svgString = getSVGString(chart.svg.node());
-    legend.cleanup();
-    try {
-      if (navigator.clipboard && navigator.clipboard.write && typeof ClipboardItem !== "undefined") {
-        var blob = new Blob([svgString], { type: "image/svg+xml" });
-        var htmlBlob = new Blob([svgString], { type: "text/html" });
-        await navigator.clipboard.write([
-          new ClipboardItem({ "text/html": htmlBlob, "image/svg+xml": blob })
-        ]);
-      } else {
-        await navigator.clipboard.writeText(svgString);
-      }
-      return true;
-    } catch (err) {
-      console.warn("[myIO] Clipboard copy failed", err);
-      return false;
+  // inst/htmlwidgets/myIO/src/utils/load-jspdf.js
+  var _jspdfPromise = null;
+  function loadJsPDF() {
+    if (window.jspdf && window.jspdf.jsPDF) {
+      return Promise.resolve(window.jspdf.jsPDF);
     }
+    if (_jspdfPromise) return _jspdfPromise;
+    _jspdfPromise = new Promise(function(resolve, reject) {
+      var scripts = document.querySelectorAll("script[src]");
+      var base = "";
+      for (var i = 0; i < scripts.length; i++) {
+        var src = scripts[i].getAttribute("src");
+        if (src && src.indexOf("myIOapi") !== -1) {
+          base = src.substring(0, src.lastIndexOf("/"));
+          base = base.substring(0, base.lastIndexOf("/"));
+          break;
+        }
+      }
+      var jspdfSrc = base + "/lib/jspdf/jspdf.umd.min.js";
+      var script = document.createElement("script");
+      script.src = jspdfSrc;
+      script.onload = function() {
+        if (window.jspdf && window.jspdf.jsPDF) {
+          resolve(window.jspdf.jsPDF);
+        } else {
+          _jspdfPromise = null;
+          reject(new Error("[myIO] jsPDF loaded but constructor not found"));
+        }
+      };
+      script.onerror = function() {
+        _jspdfPromise = null;
+        reject(new Error("[myIO] Failed to load jsPDF from " + jspdfSrc));
+      };
+      document.head.appendChild(script);
+    });
+    return _jspdfPromise;
   }
+
+  // inst/htmlwidgets/myIO/src/utils/export-pdf.js
+  function exportToPDF(chart) {
+    return loadJsPDF().then(function(JsPDF) {
+      var legend = injectExportLegend(chart);
+      var exportHeight = chart.height + legend.extraHeight;
+      var svgString = getSVGString(chart.svg.node());
+      legend.cleanup();
+      var w = chart.totalWidth || chart.width;
+      var h = exportHeight;
+      var scale = 3;
+      return new Promise(function(resolve) {
+        svgString2Image(svgString, w * scale, h * scale, "png", function(blob) {
+          var reader = new FileReader();
+          reader.onload = function() {
+            var dataUrl = reader.result;
+            var orientation = w > h ? "landscape" : "portrait";
+            var pageW = orientation === "landscape" ? 842 : 595;
+            var pageH = orientation === "landscape" ? 595 : 842;
+            var margin = 36;
+            var availW = pageW - 2 * margin;
+            var availH = pageH - 2 * margin;
+            var fitScale = Math.min(availW / w, availH / h);
+            var imgW = w * fitScale;
+            var imgH = h * fitScale;
+            var doc = new JsPDF({
+              orientation,
+              unit: "pt",
+              format: [pageW, pageH]
+            });
+            var title = chart.config.export && chart.config.export.title || chart.config.axes && chart.config.axes.xAxisLabel || "myIO Chart";
+            doc.setProperties({ title, creator: "myIO" });
+            var x = (pageW - imgW) / 2;
+            var y = (pageH - imgH) / 2;
+            doc.addImage(dataUrl, "PNG", x, y, imgW, imgH);
+            doc.save(chart.element.id + ".pdf");
+            resolve(true);
+          };
+          reader.readAsDataURL(blob);
+        });
+      });
+    });
+  }
+
+  // inst/htmlwidgets/myIO/src/utils/export-clipboard.js
   async function copyAsPNG(chart) {
     var legend = injectExportLegend(chart);
     var exportHeight = chart.height + legend.extraHeight;
@@ -1314,27 +1363,15 @@
 
   // inst/htmlwidgets/myIO/src/interactions/buttons.js
   var BUTTON_LABELS = {
-    image: "Export as PNG",
-    svg: "Download as SVG",
-    chart: "Download CSV data",
-    percent: "Toggle percent view",
-    group2stack: "Toggle grouped/stacked layout",
-    clipboard: "Copy to clipboard"
+    chart: "Download data",
+    image: "Save image",
+    svg: "Save as SVG",
+    pdf: "Export as PDF",
+    clipboard: "Copy to clipboard",
+    percent: "Toggle percent",
+    group2stack: "Toggle layout"
   };
   function handleAction(chart, layers, name) {
-    if (name === "svg") {
-      var svgLegend = injectExportLegend(chart);
-      if (typeof saveAs === "function") {
-        var svgString = getSVGString(chart.svg.node());
-        svgLegend.cleanup();
-        var blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
-        saveAs(blob, chart.element.id + ".svg");
-      } else {
-        downloadSVG(chart.svg.node(), chart.element.id + ".svg");
-        svgLegend.cleanup();
-      }
-      return;
-    }
     if (name === "image") {
       var legend = injectExportLegend(chart);
       var exportHeight = chart.height + legend.extraHeight;
@@ -1358,9 +1395,12 @@
       exportToCsv(chart.element.id + "_data.csv", [].concat.apply([], csvData));
       return;
     }
+    if (name === "pdf") {
+      exportToPDF(chart);
+      return;
+    }
     if (name === "clipboard") {
-      var clipBtn = d3.select(chart.element).select('.button[aria-label="Copy to clipboard"]');
-      showCopyMenu(chart, clipBtn.node());
+      copyAsPNG(chart);
       return;
     }
     if (name === "percent") {
@@ -1373,13 +1413,12 @@
     }
   }
   function iconWrapper(paths) {
-    return '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true">' + paths + "</svg>";
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true">' + paths + "</svg>";
   }
-  function iconCamera() {
-    return iconWrapper('<path d="M4 7h3l2-2h6l2 2h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"></path><circle cx="12" cy="13" r="4"></circle>');
-  }
-  function iconFileDown() {
-    return iconWrapper('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M12 12v6"></path><path d="m9 15 3 3 3-3"></path>');
+  function iconImage() {
+    return iconWrapper(
+      '<rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="m21 15-5-5L5 21"></path>'
+    );
   }
   function iconPercent() {
     return iconWrapper('<line x1="19" y1="5" x2="5" y2="19"></line><circle cx="7" cy="7" r="2"></circle><circle cx="17" cy="17" r="2"></circle>');
@@ -1387,75 +1426,25 @@
   function iconLayers() {
     return iconWrapper('<rect x="4" y="5" width="14" height="4" rx="1"></rect><rect x="6" y="10" width="14" height="4" rx="1"></rect><rect x="8" y="15" width="14" height="4" rx="1"></rect>');
   }
-  function showCopyMenu(chart, buttonNode) {
-    d3.select(chart.element).select(".myIO-copy-menu").remove();
-    var menu = d3.select(buttonNode.parentNode).append("div").attr("class", "myIO-copy-menu").style("position", "absolute");
-    var items = [
-      { label: "Copy as SVG", action: function() {
-        copyAsSVG(chart).then(function(ok) {
-          if (ok) showCopyFeedback(chart, buttonNode);
-        });
-      } },
-      { label: "Copy as PNG", action: function() {
-        copyAsPNG(chart).then(function(ok) {
-          if (ok) showCopyFeedback(chart, buttonNode);
-        });
-      } }
-    ];
-    if (typeof ClipboardItem === "undefined") {
-      items = items.slice(0, 1);
-    }
-    items.forEach(function(item, i) {
-      menu.append("button").attr("class", "myIO-copy-menu-item").attr("role", "menuitem").attr("tabindex", "0").text(item.label).on("click", function() {
-        menu.remove();
-        item.action();
-      }).on("keydown", function(event) {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          menu.remove();
-          item.action();
-        } else if (event.key === "Escape") {
-          menu.remove();
-          buttonNode.focus();
-        } else if (event.key === "ArrowDown" && i < items.length - 1) {
-          event.preventDefault();
-          menu.selectAll(".myIO-copy-menu-item").nodes()[i + 1].focus();
-        } else if (event.key === "ArrowUp" && i > 0) {
-          event.preventDefault();
-          menu.selectAll(".myIO-copy-menu-item").nodes()[i - 1].focus();
-        }
-      });
-    });
-    menu.select(".myIO-copy-menu-item").node().focus();
-    setTimeout(function() {
-      document.addEventListener("click", function handler(e) {
-        if (!menu.node() || !menu.node().contains(e.target)) {
-          menu.remove();
-          document.removeEventListener("click", handler);
-        }
-      });
-    }, 0);
-    d3.select(buttonNode).on("keydown.copymenu", function(event) {
-      if (event.key === "Escape") {
-        menu.remove();
-        d3.select(buttonNode).on("keydown.copymenu", null);
-      }
-    });
+  function iconLegend() {
+    return iconWrapper(
+      '<circle cx="5" cy="7" r="1.5"></circle><line x1="9" y1="7" x2="19" y2="7"></line><circle cx="5" cy="12" r="1.5"></circle><line x1="9" y1="12" x2="19" y2="12"></line><circle cx="5" cy="17" r="1.5"></circle><line x1="9" y1="17" x2="19" y2="17"></line>'
+    );
   }
-  function showCopyFeedback(chart, buttonNode) {
-    var original = buttonNode.innerHTML;
-    buttonNode.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
-    buttonNode.classList.add("myIO-btn-success");
-    var announce = d3.select(chart.element).select(".myIO-sr-announce");
-    if (announce.empty()) {
-      announce = d3.select(chart.element).append("div").attr("class", "myIO-sr-announce").attr("aria-live", "polite").attr("role", "status");
-    }
-    announce.text("Chart copied to clipboard");
-    setTimeout(function() {
-      buttonNode.innerHTML = original;
-      buttonNode.classList.remove("myIO-btn-success");
-      announce.text("");
-    }, 1500);
+  function iconPDF() {
+    return iconWrapper(
+      '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><text x="12" y="17" text-anchor="middle" font-size="7" fill="currentColor" stroke="none" font-weight="bold">PDF</text>'
+    );
+  }
+  function iconClipboard() {
+    return iconWrapper(
+      '<rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h1a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1"></path>'
+    );
+  }
+  function iconDownload() {
+    return iconWrapper(
+      '<path d="M12 4v12"></path><path d="m8 12 4 4 4-4"></path><path d="M4 17v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2"></path>'
+    );
   }
 
   // inst/htmlwidgets/myIO/src/interactions/bottom-sheet.js
@@ -1472,7 +1461,7 @@
       return null;
     }
     chart.dom = chart.dom || {};
-    var fab = d3.select(chart.element).append("button").attr("type", "button").attr("class", "myIO-fab").attr("aria-label", "Open chart controls").attr("aria-expanded", "false").html(iconMore());
+    var fab = d3.select(chart.element).append("button").attr("type", "button").attr("class", "myIO-fab").attr("aria-label", "Legend and actions").attr("aria-expanded", "false").html(iconLegend());
     fab.on("click", function() {
       openPanel(chart);
     });
@@ -1504,23 +1493,28 @@
       closePanel(chart);
     });
     var panel = d3.select(chart.element).append("div").attr("class", "myIO-panel " + (isMobile(chart) ? PANEL_LAYOUT_BOTTOM_CLASS : PANEL_LAYOUT_SIDE_CLASS)).attr("role", "dialog").attr("aria-modal", "true").attr("aria-label", getDialogLabel(chart)).attr("tabindex", "-1");
-    panel.append("div").attr("class", "myIO-sheet-handle");
+    var header = panel.append("div").attr("class", "myIO-sheet-header");
+    header.append("div").attr("class", "myIO-sheet-handle");
+    header.append("button").attr("type", "button").attr("class", "myIO-sheet-close").attr("aria-label", "Close").html(iconClose()).on("click", function() {
+      closePanel(chart);
+    }).on("keydown", function(event) {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        closePanel(chart);
+      }
+    });
     chart.dom.backdrop = backdrop;
     chart.dom.panel = panel;
     chart.dom.sheetLegendSection = null;
     chart.dom.sheetLegendBody = null;
-    chart.dom.sheetActionsSection = null;
     chart.dom.sheetActionsBody = null;
     if (!chart.options || chart.options.suppressLegend !== true) {
-      var legendSection = panel.append("section").attr("class", "myIO-sheet-section myIO-sheet-legend-section").attr("data-sheet-section", "legend");
-      legendSection.append("h2").attr("class", "myIO-sheet-section-title").text("Legend");
+      var legendSection = panel.append("div").attr("class", "myIO-sheet-legend-section").attr("data-sheet-section", "legend");
       chart.dom.sheetLegendSection = legendSection;
       chart.dom.sheetLegendBody = legendSection.append("div").attr("class", "myIO-sheet-legend");
+      legendSection.append("hr").attr("class", "myIO-sheet-divider");
     }
-    var actionSection = panel.append("section").attr("class", "myIO-sheet-section myIO-sheet-actions-section").attr("data-sheet-section", "actions");
-    actionSection.append("h2").attr("class", "myIO-sheet-section-title").text("Actions");
-    chart.dom.sheetActionsSection = actionSection;
-    chart.dom.sheetActionsBody = actionSection.append("div").attr("class", "myIO-sheet-actions");
+    chart.dom.sheetActionsBody = panel.append("div").attr("class", "myIO-sheet-actions").attr("data-sheet-section", "actions");
     renderSheetLegend(chart);
     renderSheetActions(chart);
     chart.runtime._sheetOpen = true;
@@ -1531,6 +1525,7 @@
       panel.classed(PANEL_OPEN_CLASS, true);
       focusFirstInteractive(panel.node());
     });
+    attachSwipeDismiss(chart);
     return panel;
   }
   function closePanel(chart, opts) {
@@ -1588,23 +1583,30 @@
     if (!chart || !chart.dom || !chart.dom.panel) {
       return;
     }
-    var legendSection = chart.dom.sheetLegendSection;
     var legendBody = chart.dom.sheetLegendBody;
-    if (!legendSection || !legendBody) {
+    var legendSection = chart.dom.sheetLegendSection;
+    if (!legendBody) {
       return;
     }
     var panelNode = chart.dom.panel.node();
     var scrollTop = panelNode ? panelNode.scrollTop : 0;
     var legendData = getLegendData(chart);
     legendBody.selectAll("*").remove();
+    if (legendSection) {
+      legendSection.selectAll(".myIO-sheet-legend-reset").remove();
+    }
     if (!legendData || !legendData.type) {
-      legendSection.style("display", "none");
+      if (legendSection) {
+        legendSection.style("display", "none");
+      }
       if (panelNode) {
         panelNode.scrollTop = scrollTop;
       }
       return;
     }
-    legendSection.style("display", null);
+    if (legendSection) {
+      legendSection.style("display", null);
+    }
     if (legendData.type === "continuous") {
       renderContinuousLegend(chart, legendBody, legendData);
     } else if (legendData.type === "ordinal") {
@@ -1624,14 +1626,21 @@
     var body = chart.dom.sheetActionsBody;
     body.selectAll("*").remove();
     actions.forEach(function(action) {
-      var button = body.append("button").attr("type", "button").attr("class", "button myIO-sheet-action").attr("data-action", action.name).attr("aria-label", action.label).on("click", function() {
+      var button = body.append("button").attr("type", "button").attr("class", "myIO-sheet-action").attr("data-action", action.name).on("click", function() {
         handleAction(chart, chart.currentLayers || chart.derived && chart.derived.currentLayers || chart.plotLayers || [], action.name);
+      }).on("keydown", function(event) {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          handleAction(chart, chart.currentLayers || chart.derived && chart.derived.currentLayers || chart.plotLayers || [], action.name);
+        }
       });
       button.append("span").attr("class", "myIO-sheet-action-icon").attr("aria-hidden", "true").html(action.icon);
       button.append("span").attr("class", "myIO-sheet-action-label").text(action.label);
     });
   }
   function renderLayerLegend(chart, container, legendData) {
+    var useGrid = isMobile(chart) && legendData.items.length > 4;
+    container.classed("myIO-sheet-legend--grid", useGrid);
     legendData.items.forEach(function(item) {
       var button = container.append("button").attr("type", "button").attr("class", "myIO-sheet-legend-item").attr("role", "switch").attr("aria-checked", item.visible ? "true" : "false").attr("data-key", item.key).on("click", function() {
         toggleLayerVisibility(chart, item);
@@ -1641,12 +1650,14 @@
           toggleLayerVisibility(chart, item);
         }
       });
-      button.append("span").attr("class", "myIO-sheet-swatch").style("background-color", item.color).style("border", "1px solid " + item.color);
+      button.append("span").attr("class", "myIO-sheet-swatch").style("background-color", item.color);
       button.append("span").attr("class", "myIO-sheet-legend-label").text(item.label);
-      button.append("span").attr("class", "myIO-sheet-legend-state").text(item.visible ? "On" : "Off");
     });
+    appendShowAllButton(chart, legendData);
   }
   function renderOrdinalLegend(chart, container, legendData) {
+    var useGrid = isMobile(chart) && legendData.items.length > 4;
+    container.classed("myIO-sheet-legend--grid", useGrid);
     legendData.items.forEach(function(item) {
       var button = container.append("button").attr("type", "button").attr("class", "myIO-sheet-legend-item").attr("role", "switch").attr("aria-checked", item.visible ? "true" : "false").attr("data-key", item.key).on("click", function() {
         toggleOrdinalSegment(chart, item);
@@ -1656,10 +1667,10 @@
           toggleOrdinalSegment(chart, item);
         }
       });
-      button.append("span").attr("class", "myIO-sheet-swatch").style("background-color", item.color).style("border", "1px solid " + item.color);
+      button.append("span").attr("class", "myIO-sheet-swatch").style("background-color", item.color);
       button.append("span").attr("class", "myIO-sheet-legend-label").text(item.label);
-      button.append("span").attr("class", "myIO-sheet-legend-state").text(item.visible ? "On" : "Off");
     });
+    appendShowAllButton(chart, legendData);
   }
   function renderContinuousLegend(chart, container, legendData) {
     var scale = legendData.colorScale || chart.colorContinuous;
@@ -1678,10 +1689,23 @@
   function buildActionData(chart) {
     var layers = chart.currentLayers || chart.derived && chart.derived.currentLayers || chart.plotLayers || [];
     var primaryType = layers[0] ? layers[0].type : null;
-    var data = [
-      { name: "image", label: BUTTON_LABELS.image, icon: iconCamera() },
-      { name: "chart", label: BUTTON_LABELS.chart, icon: iconFileDown() }
-    ];
+    var exportConfig = chart.config && chart.config.export;
+    var data = [];
+    if (!exportConfig || exportConfig.csv !== false) {
+      data.push({ name: "chart", label: BUTTON_LABELS.chart, icon: iconDownload() });
+    }
+    if (!exportConfig || exportConfig.png !== false) {
+      data.push({ name: "image", label: BUTTON_LABELS.image, icon: iconImage() });
+    }
+    if (!exportConfig || exportConfig.svg !== false) {
+      data.push({ name: "svg", label: BUTTON_LABELS.svg, icon: iconDownload() });
+    }
+    if (!exportConfig || exportConfig.pdf !== false) {
+      data.push({ name: "pdf", label: BUTTON_LABELS.pdf, icon: iconPDF() });
+    }
+    if (!exportConfig || exportConfig.clipboard !== false) {
+      data.push({ name: "clipboard", label: BUTTON_LABELS.clipboard, icon: iconClipboard() });
+    }
     if (chart.options && chart.options.toggleY) {
       data.push({ name: "percent", label: BUTTON_LABELS.percent, icon: iconPercent() });
     }
@@ -1724,8 +1748,76 @@
       hidden.splice(index, 1);
     }
     chart.runtime._suppressOrdinalLegendRebuild = true;
-    chart.routeLayers(chart.currentLayers || chart.derived && chart.derived.currentLayers || []);
-    chart.runtime._suppressOrdinalLegendRebuild = false;
+    try {
+      chart.routeLayers(chart.currentLayers || chart.derived && chart.derived.currentLayers || []);
+    } finally {
+      chart.runtime._suppressOrdinalLegendRebuild = false;
+    }
+    renderSheetLegend(chart);
+  }
+  function appendShowAllButton(chart, legendData) {
+    var hasHidden = legendData.items.some(function(item) {
+      return !item.visible;
+    });
+    if (hasHidden && chart.dom.sheetLegendSection) {
+      chart.dom.sheetLegendSection.selectAll(".myIO-sheet-legend-reset").remove();
+      chart.dom.sheetLegendSection.append("button").attr("type", "button").attr("class", "myIO-sheet-legend-reset").text("Show All").on("click", function() {
+        resetLegendVisibility(chart, legendData.type);
+      });
+    }
+  }
+  function resetLegendVisibility(chart, type) {
+    chart.runtime = chart.runtime || {};
+    if (type === "ordinal") {
+      chart.runtime._hiddenOrdinalSegments = [];
+      chart.runtime._suppressOrdinalLegendRebuild = true;
+      try {
+        chart.routeLayers(chart.currentLayers || chart.derived && chart.derived.currentLayers || []);
+      } finally {
+        chart.runtime._suppressOrdinalLegendRebuild = false;
+      }
+      renderSheetLegend(chart);
+    } else {
+      chart.runtime._hiddenLayerKeys = [];
+      chart.derived = chart.derived || {};
+      chart.derived.currentLayers = (chart.plotLayers || []).slice();
+      chart.syncLegacyAliases();
+      chart.renderCurrentLayers();
+    }
+  }
+  function attachSwipeDismiss(chart) {
+    var panel = chart.dom.panel;
+    if (!panel || !isMobile(chart)) return;
+    var node = panel.node();
+    var startY = 0;
+    var currentY = 0;
+    var dragging = false;
+    node.addEventListener("touchstart", function(e) {
+      var rect = node.getBoundingClientRect();
+      var touch = e.touches[0];
+      if (touch.clientY - rect.top > 40) return;
+      startY = touch.clientY;
+      currentY = touch.clientY;
+      dragging = true;
+      node.style.transition = "none";
+    }, { passive: true });
+    node.addEventListener("touchmove", function(e) {
+      if (!dragging) return;
+      currentY = e.touches[0].clientY;
+      var dy = Math.max(0, currentY - startY);
+      node.style.transform = "translateY(" + dy + "px)";
+    }, { passive: true });
+    node.addEventListener("touchend", function() {
+      if (!dragging) return;
+      dragging = false;
+      node.style.transition = "";
+      var dy = currentY - startY;
+      if (dy > 80) {
+        closePanel(chart);
+      } else {
+        node.style.transform = "";
+      }
+    });
   }
   function getLegendData(chart) {
     if (chart.runtime && chart.runtime._legendData) {
@@ -1738,7 +1830,7 @@
       return;
     }
     var isOpen = chart.runtime && chart.runtime._sheetOpen === true;
-    chart.dom.fab.attr("aria-expanded", isOpen ? "true" : "false").attr("aria-label", isOpen ? "Close chart controls" : "Open chart controls").html(isOpen ? iconClose() : iconMore());
+    chart.dom.fab.attr("aria-expanded", isOpen ? "true" : "false").attr("aria-label", isOpen ? "Close legend and actions" : "Legend and actions").html(isOpen ? iconClose() : iconLegend());
   }
   function attachSheetKeydown(chart) {
     detachSheetKeydown(chart);
@@ -1793,7 +1885,6 @@
       chart.dom.backdrop = null;
       chart.dom.sheetLegendSection = null;
       chart.dom.sheetLegendBody = null;
-      chart.dom.sheetActionsSection = null;
       chart.dom.sheetActionsBody = null;
     }
   }
@@ -1854,9 +1945,6 @@
   }
   function iconWrapper2(paths) {
     return '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true">' + paths + "</svg>";
-  }
-  function iconMore() {
-    return iconWrapper2('<circle cx="12" cy="5" r="1.75"></circle><circle cx="12" cy="12" r="1.75"></circle><circle cx="12" cy="19" r="1.75"></circle>');
   }
   function iconClose() {
     return iconWrapper2('<path d="M6 6 18 18"></path><path d="M18 6 6 18"></path>');
@@ -6263,7 +6351,7 @@
         this.dom.tooltip.remove();
       }
       if (this.dom && this.dom.element) {
-        d3.select(this.dom.element).selectAll(".buttonDiv, .myIO-fab, .myIO-panel, .myIO-sheet-backdrop").remove();
+        d3.select(this.dom.element).selectAll(".myIO-fab, .myIO-panel, .myIO-sheet-backdrop").remove();
       }
       removeHoverOverlay(this);
       this._listeners = {};

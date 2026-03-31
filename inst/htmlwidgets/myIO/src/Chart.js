@@ -520,7 +520,7 @@ export class myIOchart {
       this.dom.tooltip.remove();
     }
     if (this.dom && this.dom.element) {
-      d3.select(this.dom.element).selectAll(".buttonDiv, .myIO-fab, .myIO-panel, .myIO-sheet-backdrop").remove();
+      d3.select(this.dom.element).selectAll(".myIO-fab, .myIO-panel, .myIO-sheet-backdrop").remove();
     }
     removeHoverOverlay(this);
     this._listeners = {};
