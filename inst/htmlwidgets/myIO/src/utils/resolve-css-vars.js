@@ -1,7 +1,27 @@
 const CHART_CSS_VARS = [
-  "--chart-text-color", "--chart-grid-color", "--chart-grid-opacity",
-  "--chart-bg", "--chart-ref-line-color", "--chart-annotation-ring",
-  "--chart-font"
+  // Text & font
+  "--chart-text-color",
+  "--chart-font",
+  "--chart-annotation-font-size",
+  // Grid
+  "--chart-grid-color",
+  "--chart-grid-opacity",
+  // Backgrounds
+  "--chart-bg",
+  // Reference lines
+  "--chart-ref-line-color",
+  "--chart-ref-line-width",
+  // Annotations & accents
+  "--chart-annotation-ring",
+  "--chart-primary-color",
+  // Brush
+  "--chart-brush-fill",
+  "--chart-brush-stroke",
+  "--chart-brush-dim-opacity",
+  // Legend
+  "--chart-legend-inactive-opacity",
+  // Status bar
+  "--chart-status-bar-color"
 ];
 
 export function resolveCSSVariables(svgClone, container) {

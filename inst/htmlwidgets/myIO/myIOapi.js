@@ -757,13 +757,29 @@
 
   // inst/htmlwidgets/myIO/src/utils/resolve-css-vars.js
   var CHART_CSS_VARS = [
+    // Text & font
     "--chart-text-color",
+    "--chart-font",
+    "--chart-annotation-font-size",
+    // Grid
     "--chart-grid-color",
     "--chart-grid-opacity",
+    // Backgrounds
     "--chart-bg",
+    // Reference lines
     "--chart-ref-line-color",
+    "--chart-ref-line-width",
+    // Annotations & accents
     "--chart-annotation-ring",
-    "--chart-font"
+    "--chart-primary-color",
+    // Brush
+    "--chart-brush-fill",
+    "--chart-brush-stroke",
+    "--chart-brush-dim-opacity",
+    // Legend
+    "--chart-legend-inactive-opacity",
+    // Status bar
+    "--chart-status-bar-color"
   ];
   function resolveCSSVariables(svgClone, container) {
     var computed = getComputedStyle(container);
