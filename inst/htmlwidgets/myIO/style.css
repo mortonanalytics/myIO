@@ -777,6 +777,59 @@
   color: var(--chart-text-color);
 }
 
+/* ── Export: copy submenu ── */
+.myIO-copy-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 10;
+  background: var(--chart-sheet-bg);
+  border: 1px solid var(--chart-sheet-border);
+  border-radius: var(--chart-radius-md);
+  box-shadow: var(--chart-popover-shadow);
+  padding: var(--chart-spacing-xs) 0;
+  min-width: 140px;
+}
+
+.myIO-copy-menu-item {
+  display: block;
+  width: 100%;
+  padding: var(--chart-spacing-sm) var(--chart-spacing-md);
+  font-family: var(--chart-font);
+  font-size: 13px;
+  color: var(--chart-text-color);
+  cursor: pointer;
+  border: none;
+  background: none;
+  text-align: left;
+}
+
+.myIO-copy-menu-item:hover,
+.myIO-copy-menu-item:focus {
+  background: var(--chart-button-hover-bg);
+  outline: none;
+}
+
+.myIO-copy-menu-item:focus-visible {
+  box-shadow: var(--chart-focus-ring);
+}
+
+/* ── Export: success feedback ── */
+.myIO-btn-success svg {
+  color: #22c55e;
+}
+
+/* ── Screen reader announcements ── */
+.myIO-sr-announce {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 @media print {
   .myIO-fab,
   .myIO-panel,

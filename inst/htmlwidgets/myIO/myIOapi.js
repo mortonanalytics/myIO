@@ -1255,11 +1255,119 @@
     }
   })("undefined" != typeof self && self || "undefined" != typeof window && window || (void 0).content);
 
+  // inst/htmlwidgets/myIO/src/utils/load-jspdf.js
+  var _jspdfPromise = null;
+  function loadJsPDF() {
+    if (window.jspdf && window.jspdf.jsPDF) {
+      return Promise.resolve(window.jspdf.jsPDF);
+    }
+    if (_jspdfPromise) return _jspdfPromise;
+    _jspdfPromise = new Promise(function(resolve, reject) {
+      var scripts = document.querySelectorAll("script[src]");
+      var base = "";
+      for (var i = 0; i < scripts.length; i++) {
+        var src = scripts[i].getAttribute("src");
+        if (src && src.indexOf("myIOapi") !== -1) {
+          base = src.substring(0, src.lastIndexOf("/"));
+          base = base.substring(0, base.lastIndexOf("/"));
+          break;
+        }
+      }
+      var jspdfSrc = base + "/lib/jspdf/jspdf.umd.min.js";
+      var script = document.createElement("script");
+      script.src = jspdfSrc;
+      script.onload = function() {
+        if (window.jspdf && window.jspdf.jsPDF) {
+          resolve(window.jspdf.jsPDF);
+        } else {
+          _jspdfPromise = null;
+          reject(new Error("[myIO] jsPDF loaded but constructor not found"));
+        }
+      };
+      script.onerror = function() {
+        _jspdfPromise = null;
+        reject(new Error("[myIO] Failed to load jsPDF from " + jspdfSrc));
+      };
+      document.head.appendChild(script);
+    });
+    return _jspdfPromise;
+  }
+
+  // inst/htmlwidgets/myIO/src/utils/export-pdf.js
+  function exportToPDF(chart) {
+    return loadJsPDF().then(function(JsPDF) {
+      var legend = injectExportLegend(chart);
+      var exportHeight = chart.height + legend.extraHeight;
+      var svgString = getSVGString(chart.svg.node());
+      legend.cleanup();
+      var w = chart.totalWidth || chart.width;
+      var h = exportHeight;
+      var scale = 3;
+      return new Promise(function(resolve) {
+        svgString2Image(svgString, w * scale, h * scale, "png", function(blob) {
+          var reader = new FileReader();
+          reader.onload = function() {
+            var dataUrl = reader.result;
+            var orientation = w > h ? "landscape" : "portrait";
+            var pageW = orientation === "landscape" ? 842 : 595;
+            var pageH = orientation === "landscape" ? 595 : 842;
+            var margin = 36;
+            var availW = pageW - 2 * margin;
+            var availH = pageH - 2 * margin;
+            var fitScale = Math.min(availW / w, availH / h);
+            var imgW = w * fitScale;
+            var imgH = h * fitScale;
+            var doc = new JsPDF({
+              orientation,
+              unit: "pt",
+              format: [pageW, pageH]
+            });
+            var title = chart.config.export && chart.config.export.title || chart.config.axes && chart.config.axes.xAxisLabel || "myIO Chart";
+            doc.setProperties({ title, creator: "myIO" });
+            var x = (pageW - imgW) / 2;
+            var y = (pageH - imgH) / 2;
+            doc.addImage(dataUrl, "PNG", x, y, imgW, imgH);
+            doc.save(chart.element.id + ".pdf");
+            resolve(true);
+          };
+          reader.readAsDataURL(blob);
+        });
+      });
+    });
+  }
+
+  // inst/htmlwidgets/myIO/src/utils/export-clipboard.js
+  async function copyAsPNG(chart) {
+    var legend = injectExportLegend(chart);
+    var exportHeight = chart.height + legend.extraHeight;
+    var svgString = getSVGString(chart.svg.node());
+    legend.cleanup();
+    var width = (chart.totalWidth || chart.width) * 2;
+    var height = exportHeight * 2;
+    return new Promise(function(resolve) {
+      svgString2Image(svgString, width, height, "png", function(blob) {
+        if (navigator.clipboard && navigator.clipboard.write && typeof ClipboardItem !== "undefined") {
+          navigator.clipboard.write([
+            new ClipboardItem({ "image/png": blob })
+          ]).then(function() {
+            resolve(true);
+          }).catch(function() {
+            resolve(false);
+          });
+        } else {
+          resolve(false);
+        }
+      });
+    });
+  }
+
   // inst/htmlwidgets/myIO/src/interactions/buttons.js
   var BUTTON_LABELS = {
     chart: "Download data",
     image: "Save image",
     svg: "Save as SVG",
+    pdf: "Export as PDF",
+    clipboard: "Copy to clipboard",
     percent: "Toggle percent",
     group2stack: "Toggle layout"
   };
@@ -1285,6 +1393,14 @@
         });
       }
       exportToCsv(chart.element.id + "_data.csv", [].concat.apply([], csvData));
+      return;
+    }
+    if (name === "pdf") {
+      exportToPDF(chart);
+      return;
+    }
+    if (name === "clipboard") {
+      copyAsPNG(chart);
       return;
     }
     if (name === "percent") {
@@ -1313,6 +1429,16 @@
   function iconLegend() {
     return iconWrapper(
       '<circle cx="5" cy="7" r="1.5"></circle><line x1="9" y1="7" x2="19" y2="7"></line><circle cx="5" cy="12" r="1.5"></circle><line x1="9" y1="12" x2="19" y2="12"></line><circle cx="5" cy="17" r="1.5"></circle><line x1="9" y1="17" x2="19" y2="17"></line>'
+    );
+  }
+  function iconPDF() {
+    return iconWrapper(
+      '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><text x="12" y="17" text-anchor="middle" font-size="7" fill="currentColor" stroke="none" font-weight="bold">PDF</text>'
+    );
+  }
+  function iconClipboard() {
+    return iconWrapper(
+      '<rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h1a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1"></path>'
     );
   }
   function iconDownload() {
@@ -1571,8 +1697,14 @@
     if (!exportConfig || exportConfig.png !== false) {
       data.push({ name: "image", label: BUTTON_LABELS.image, icon: iconImage() });
     }
-    if (exportConfig && exportConfig.svg === true) {
+    if (!exportConfig || exportConfig.svg !== false) {
       data.push({ name: "svg", label: BUTTON_LABELS.svg, icon: iconDownload() });
+    }
+    if (!exportConfig || exportConfig.pdf !== false) {
+      data.push({ name: "pdf", label: BUTTON_LABELS.pdf, icon: iconPDF() });
+    }
+    if (!exportConfig || exportConfig.clipboard !== false) {
+      data.push({ name: "clipboard", label: BUTTON_LABELS.clipboard, icon: iconClipboard() });
     }
     if (chart.options && chart.options.toggleY) {
       data.push({ name: "percent", label: BUTTON_LABELS.percent, icon: iconPercent() });

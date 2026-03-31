@@ -1,4 +1,4 @@
-import { BUTTON_LABELS, handleAction, iconDownload, iconImage, iconLayers, iconLegend, iconPercent } from "./buttons.js";
+import { BUTTON_LABELS, handleAction, iconDownload, iconImage, iconLayers, iconLegend, iconPercent, iconPDF, iconClipboard } from "./buttons.js";
 import { buildLegendData } from "../layout/legend-data.js";
 import { isMobile } from "../utils/responsive.js";
 
@@ -388,8 +388,16 @@ function buildActionData(chart) {
     data.push({ name: "image", label: BUTTON_LABELS.image, icon: iconImage() });
   }
 
-  if (exportConfig && exportConfig.svg === true) {
+  if (!exportConfig || exportConfig.svg !== false) {
     data.push({ name: "svg", label: BUTTON_LABELS.svg, icon: iconDownload() });
+  }
+
+  if (!exportConfig || exportConfig.pdf !== false) {
+    data.push({ name: "pdf", label: BUTTON_LABELS.pdf, icon: iconPDF() });
+  }
+
+  if (!exportConfig || exportConfig.clipboard !== false) {
+    data.push({ name: "clipboard", label: BUTTON_LABELS.clipboard, icon: iconClipboard() });
   }
 
   if (chart.options && chart.options.toggleY) {

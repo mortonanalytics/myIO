@@ -121,7 +121,7 @@ describe("bottom sheet", function() {
 
     expect(chart.runtime._sheetOpen).toBe(true);
     expect(chart.element.querySelector(".myIO-panel")).toBeTruthy();
-    expect(chart.element.querySelectorAll(".myIO-sheet-action")).toHaveLength(4);
+    expect(chart.element.querySelectorAll(".myIO-sheet-action")).toHaveLength(7);
     expect(chart.element.querySelectorAll(".myIO-sheet-legend-item")).toHaveLength(2);
     expect(chart.element.querySelector("h2")).toBeFalsy();
     expect(chart.element.querySelector(".myIO-sheet-close")).toBeTruthy();
@@ -186,7 +186,7 @@ describe("bottom sheet", function() {
     await flush();
 
     expect(chart.element.querySelector("[data-sheet-section='legend']")).toBeFalsy();
-    expect(chart.element.querySelectorAll(".myIO-sheet-action")).toHaveLength(2);
+    expect(chart.element.querySelectorAll(".myIO-sheet-action")).toHaveLength(5);
     expect(chart.element.querySelector(".myIO-sheet-divider")).toBeFalsy();
   });
 

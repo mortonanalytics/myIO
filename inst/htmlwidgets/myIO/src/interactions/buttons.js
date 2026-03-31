@@ -2,11 +2,15 @@ import { exportToCsv } from "../utils/export-csv.js";
 import { getSVGString, svgString2Image } from "../utils/export-svg.js";
 import { injectExportLegend } from "../utils/export-legend.js";
 import { saveAs } from "../utils/file-saver.js";
+import { exportToPDF } from "../utils/export-pdf.js";
+import { copyAsSVG, copyAsPNG } from "../utils/export-clipboard.js";
 
 export const BUTTON_LABELS = {
   chart: "Download data",
   image: "Save image",
   svg: "Save as SVG",
+  pdf: "Export as PDF",
+  clipboard: "Copy to clipboard",
   percent: "Toggle percent",
   group2stack: "Toggle layout"
 };
@@ -36,6 +40,16 @@ export function handleAction(chart, layers, name) {
       });
     }
     exportToCsv(chart.element.id + "_data.csv", [].concat.apply([], csvData));
+    return;
+  }
+
+  if (name === "pdf") {
+    exportToPDF(chart);
+    return;
+  }
+
+  if (name === "clipboard") {
+    copyAsPNG(chart);
     return;
   }
 
@@ -86,6 +100,21 @@ export function iconLegend() {
     '<line x1="9" y1="12" x2="19" y2="12"></line>' +
     '<circle cx="5" cy="17" r="1.5"></circle>' +
     '<line x1="9" y1="17" x2="19" y2="17"></line>'
+  );
+}
+
+export function iconPDF() {
+  return iconWrapper(
+    '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>' +
+    '<path d="M14 2v6h6"></path>' +
+    '<text x="12" y="17" text-anchor="middle" font-size="7" fill="currentColor" stroke="none" font-weight="bold">PDF</text>'
+  );
+}
+
+export function iconClipboard() {
+  return iconWrapper(
+    '<rect x="8" y="2" width="8" height="4" rx="1"></rect>' +
+    '<path d="M16 4h1a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1"></path>'
   );
 }
 
