@@ -2,13 +2,15 @@ import { exportToCsv } from "../utils/export-csv.js";
 import { downloadSVG, getSVGString, svgString2Image } from "../utils/export-svg.js";
 import { injectExportLegend } from "../utils/export-legend.js";
 import { saveAs } from "../utils/file-saver.js";
+import { copyAsSVG, copyAsPNG } from "../utils/export-clipboard.js";
 
 export const BUTTON_LABELS = {
   image: "Export as PNG",
   svg: "Download as SVG",
   chart: "Download CSV data",
   percent: "Toggle percent view",
-  group2stack: "Toggle grouped/stacked layout"
+  group2stack: "Toggle grouped/stacked layout",
+  clipboard: "Copy to clipboard"
 };
 
 export function addButtons(chart, layers) {
@@ -19,24 +21,21 @@ export function addButtons(chart, layers) {
     { name: "svg", html: iconSVG() },
     { name: "chart", html: iconFileDown() },
     { name: "percent", html: iconPercent() },
-    { name: "group2stack", html: iconLayers() }
+    { name: "group2stack", html: iconLayers() },
+    { name: "clipboard", html: iconClipboard() }
   ];
 
-  var data2Use = chart.options.toggleY ? (chart.plotLayers[0].type === "groupedBar" ? buttonData : buttonData.slice(0, 4)) : buttonData.slice(0, 3);
+  var data2Use = chart.options.toggleY ? (chart.plotLayers[0].type === "groupedBar" ? buttonData : buttonData.slice(0, -2).concat(buttonData.slice(-1))) : buttonData.slice(0, 3).concat(buttonData.slice(-1));
   var exportConfig = chart.config && chart.config.export;
   if (exportConfig) {
     data2Use = data2Use.filter(function(d) {
       if (d.name === "image") return exportConfig.png !== false;
-      if (d.name === "svg") return exportConfig.svg === true;
+      if (d.name === "svg") return exportConfig.svg !== false;
       if (d.name === "chart") return exportConfig.csv !== false;
+      if (d.name === "clipboard") return exportConfig.clipboard !== false;
       return true;
     });
-  } else {
-    data2Use = data2Use.filter(function(d) {
-      return d.name !== "svg";
-    });
   }
-
   var buttonDiv = d3.select(chart.element).append("div")
     .attr("class", "buttonDiv")
     .style("display", chart.runtime.totalWidth < 400 ? "none" : "inline-flex")
@@ -111,6 +110,12 @@ export function handleAction(chart, layers, name) {
     return;
   }
 
+  if (name === "clipboard") {
+    var clipBtn = d3.select(chart.element).select('.button[aria-label="Copy to clipboard"]');
+    showCopyMenu(chart, clipBtn.node());
+    return;
+  }
+
   if (name === "percent") {
     var nextToggle = chart.runtime.activeY === chart.options.toggleY[0]
       ? [chart.plotLayers[0].mapping.y_var, chart.options.yAxisFormat]
@@ -146,4 +151,101 @@ export function iconPercent() {
 
 export function iconLayers() {
   return iconWrapper('<rect x="4" y="5" width="14" height="4" rx="1"></rect><rect x="6" y="10" width="14" height="4" rx="1"></rect><rect x="8" y="15" width="14" height="4" rx="1"></rect>');
+}
+
+export function iconClipboard() {
+  return iconWrapper(
+    '<rect x="8" y="2" width="8" height="4" rx="1"></rect>' +
+    '<path d="M16 4h1a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1"></path>'
+  );
+}
+
+function showCopyMenu(chart, buttonNode) {
+  // Remove any existing menu
+  d3.select(chart.element).select(".myIO-copy-menu").remove();
+
+  var menu = d3.select(buttonNode.parentNode).append("div")
+    .attr("class", "myIO-copy-menu")
+    .style("position", "absolute");
+
+  var items = [
+    { label: "Copy as SVG", action: function() { copyAsSVG(chart).then(function(ok) { if (ok) showCopyFeedback(chart, buttonNode); }); } },
+    { label: "Copy as PNG", action: function() { copyAsPNG(chart).then(function(ok) { if (ok) showCopyFeedback(chart, buttonNode); }); } }
+  ];
+
+  // Hide PNG option if ClipboardItem not available
+  if (typeof ClipboardItem === "undefined") {
+    items = items.slice(0, 1);
+  }
+
+  items.forEach(function(item, i) {
+    menu.append("button")
+      .attr("class", "myIO-copy-menu-item")
+      .attr("role", "menuitem")
+      .attr("tabindex", "0")
+      .text(item.label)
+      .on("click", function() {
+        menu.remove();
+        item.action();
+      })
+      .on("keydown", function(event) {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          menu.remove();
+          item.action();
+        } else if (event.key === "Escape") {
+          menu.remove();
+          buttonNode.focus();
+        } else if (event.key === "ArrowDown" && i < items.length - 1) {
+          event.preventDefault();
+          menu.selectAll(".myIO-copy-menu-item").nodes()[i + 1].focus();
+        } else if (event.key === "ArrowUp" && i > 0) {
+          event.preventDefault();
+          menu.selectAll(".myIO-copy-menu-item").nodes()[i - 1].focus();
+        }
+      });
+  });
+
+  // Focus first item
+  menu.select(".myIO-copy-menu-item").node().focus();
+
+  // Close on click outside
+  setTimeout(function() {
+    document.addEventListener("click", function handler(e) {
+      if (!menu.node() || !menu.node().contains(e.target)) {
+        menu.remove();
+        document.removeEventListener("click", handler);
+      }
+    });
+  }, 0);
+
+  // Close on Escape from the button itself
+  d3.select(buttonNode).on("keydown.copymenu", function(event) {
+    if (event.key === "Escape") {
+      menu.remove();
+      d3.select(buttonNode).on("keydown.copymenu", null);
+    }
+  });
+}
+
+function showCopyFeedback(chart, buttonNode) {
+  var original = buttonNode.innerHTML;
+  buttonNode.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+  buttonNode.classList.add("myIO-btn-success");
+
+  // Screen reader announcement
+  var announce = d3.select(chart.element).select(".myIO-sr-announce");
+  if (announce.empty()) {
+    announce = d3.select(chart.element).append("div")
+      .attr("class", "myIO-sr-announce")
+      .attr("aria-live", "polite")
+      .attr("role", "status");
+  }
+  announce.text("Chart copied to clipboard");
+
+  setTimeout(function() {
+    buttonNode.innerHTML = original;
+    buttonNode.classList.remove("myIO-btn-success");
+    announce.text("");
+  }, 1500);
 }
