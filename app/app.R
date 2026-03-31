@@ -387,6 +387,31 @@ ui <- navbarPage(
       ),
       column(9, myIOOutput("themePlot", height = "500px"))
     )
+  ),
+
+  # -- Export Demo --
+  tabPanel("Export Demo",
+    icon = icon("download"),
+    fluidRow(
+      column(3,
+        wellPanel(
+          h5("Export Options"),
+          p(class = "text-muted", style = "font-size: 0.85rem;",
+            "Toggle which export buttons appear in the chart toolbar."),
+          checkboxInput("exp_png", "PNG download", TRUE),
+          checkboxInput("exp_svg", "SVG download", TRUE),
+          checkboxInput("exp_pdf", "PDF download", TRUE),
+          checkboxInput("exp_csv", "CSV download", TRUE),
+          checkboxInput("exp_clipboard", "Clipboard copy", TRUE),
+          hr(),
+          selectInput("exp_theme", "Theme",
+            choices = c("light", "dark", "midnight", "ocean"),
+            selected = "light"),
+          helpText("Try exporting in dark mode to verify CSS variable resolution.")
+        )
+      ),
+      column(9, myIOOutput("exportPlot", height = "500px"))
+    )
   )
 )
 
@@ -944,6 +969,30 @@ server <- function(input, output) {
       setTheme(preset = input$theme_preset) %>%
       setAxisFormat(xLabel = "Horsepower", yLabel = "MPG") %>%
       setReferenceLines(yRef = mean(df$mpg))
+  })
+
+  # -- Export Demo --
+
+  output$exportPlot <- renderMyIO({
+    df <- datasets::mtcars %>% mutate(cyl = as.character(cyl))
+    myIO() %>%
+      addIoLayer(type = "point", color = c("#4E79A7", "#F28E2B", "#E15759"),
+        label = "MPG by Weight",
+        data = df, mapping = list(x_var = "wt", y_var = "mpg", group = "cyl")) %>%
+      addIoLayer(type = "line", transform = "lm",
+        data = df, mapping = list(x_var = "wt", y_var = "mpg"),
+        color = "#999999", label = "Trend") %>%
+      setTheme(preset = input$exp_theme) %>%
+      setAxisFormat(xAxis = ".1f", yAxis = ".0f",
+        xLabel = "Weight (1000 lbs)", yLabel = "Miles per Gallon") %>%
+      setExportOptions(
+        png = input$exp_png,
+        svg = input$exp_svg,
+        pdf = input$exp_pdf,
+        csv = input$exp_csv,
+        clipboard = input$exp_clipboard,
+        title = "MPG by Weight — myIO Export Demo"
+      )
   })
 }
 
