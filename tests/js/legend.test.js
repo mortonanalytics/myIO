@@ -1,5 +1,6 @@
 import * as d3 from "d3";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
+import { resetLegendVisibility } from "../../inst/htmlwidgets/myIO/src/interactions/bottom-sheet.js";
 import { syncLegend, syncOrdinalLegendData } from "../../inst/htmlwidgets/myIO/src/layout/legend.js";
 
 globalThis.d3 = d3;
@@ -79,5 +80,37 @@ describe("legend data sync", function() {
     expect(chart.runtime._legendData.type).toBe("ordinal");
     expect(chart.runtime._legendData.items).toHaveLength(2);
     expect(chart.runtime._legendData.items[0].color).toBe("#E69F00");
+  });
+
+  test("resetLegendVisibility clears hidden layer keys", function() {
+    const chart = {
+      runtime: { _hiddenLayerKeys: ["alpha", "beta"] },
+      derived: { currentLayers: [] },
+      plotLayers: [
+        { label: "alpha", color: "#E69F00", type: "line" },
+        { label: "beta", color: "#56B4E9", type: "line" }
+      ],
+      syncLegacyAliases: vi.fn(),
+      renderCurrentLayers: vi.fn()
+    };
+
+    resetLegendVisibility(chart, "layer");
+
+    expect(chart.runtime._hiddenLayerKeys).toEqual([]);
+    expect(chart.derived.currentLayers).toHaveLength(2);
+    expect(chart.renderCurrentLayers).toHaveBeenCalled();
+  });
+
+  test("resetLegendVisibility clears hidden ordinal segments", function() {
+    const chart = {
+      runtime: { _hiddenOrdinalSegments: ["A", "B"] },
+      currentLayers: [{ label: "donut", type: "donut" }],
+      routeLayers: vi.fn()
+    };
+
+    resetLegendVisibility(chart, "ordinal");
+
+    expect(chart.runtime._hiddenOrdinalSegments).toEqual([]);
+    expect(chart.routeLayers).toHaveBeenCalled();
   });
 });
