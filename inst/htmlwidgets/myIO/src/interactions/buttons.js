@@ -3,7 +3,7 @@ import { getSVGString, svgString2Image } from "../utils/export-svg.js";
 import { injectExportLegend } from "../utils/export-legend.js";
 import { saveAs } from "../utils/file-saver.js";
 import { exportToPDF } from "../utils/export-pdf.js";
-import { copyAsSVG, copyAsPNG } from "../utils/export-clipboard.js";
+import { copyAsPNG } from "../utils/export-clipboard.js";
 
 export const BUTTON_LABELS = {
   chart: "Download data",
@@ -24,6 +24,15 @@ export function handleAction(chart, layers, name) {
     svgString2Image(svgString, 2 * chart.width, 2 * exportHeight, "png", function(dataBlob) {
       saveAs(dataBlob, chart.element.id + ".png");
     });
+    return;
+  }
+
+  if (name === "svg") {
+    var svgLegend = injectExportLegend(chart);
+    var svgOut = getSVGString(chart.svg.node());
+    svgLegend.cleanup();
+    var svgBlob = new Blob([svgOut], { type: "image/svg+xml;charset=utf-8" });
+    saveAs(svgBlob, chart.element.id + ".svg");
     return;
   }
 

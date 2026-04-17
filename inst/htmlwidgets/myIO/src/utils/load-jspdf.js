@@ -13,21 +13,21 @@ export function loadJsPDF() {
 
   _jspdfPromise = new Promise(function(resolve, reject) {
     // Find the myIO widget script to derive the base path.
+    // myIOapi.js is at .../myIO-x.y.z/myIOapi.js; jsPDF is at .../lib/jspdf/jspdf.umd.min.js
+    // Use URL resolution so '/./' segments (Shiny htmlwidgets) normalize correctly.
     var scripts = document.querySelectorAll("script[src]");
-    var base = "";
+    var scriptUrl = null;
     for (var i = 0; i < scripts.length; i++) {
       var src = scripts[i].getAttribute("src");
       if (src && src.indexOf("myIOapi") !== -1) {
-        // myIOapi.js is at .../myIO-x.y.z/myIOapi.js
-        // jsPDF is at .../lib/jspdf/jspdf.umd.min.js
-        base = src.substring(0, src.lastIndexOf("/"));
-        // Go up one level from the myIO widget dir to htmlwidgets root.
-        base = base.substring(0, base.lastIndexOf("/"));
+        scriptUrl = new URL(scripts[i].src, document.baseURI);
         break;
       }
     }
 
-    var jspdfSrc = base + "/lib/jspdf/jspdf.umd.min.js";
+    var jspdfSrc = scriptUrl
+      ? new URL("lib/jspdf/jspdf.umd.min.js", scriptUrl).href
+      : "lib/jspdf/jspdf.umd.min.js";
 
     var script = document.createElement("script");
     script.src = jspdfSrc;

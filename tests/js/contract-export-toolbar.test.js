@@ -41,7 +41,7 @@ describe("Export toolbar contract", function() {
 
   test("jsPDF library is vendored", async function() {
     var fs = await import("fs");
-    var exists = fs.existsSync("inst/htmlwidgets/lib/jspdf/jspdf.umd.min.js");
+    var exists = fs.existsSync("inst/htmlwidgets/myIO/lib/jspdf/jspdf.umd.min.js");
     expect(exists).toBe(true);
   });
 
