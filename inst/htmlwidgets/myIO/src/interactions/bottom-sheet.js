@@ -397,7 +397,8 @@ function buildActionData(chart) {
   }
 
   if (!exportConfig || exportConfig.clipboard !== false) {
-    data.push({ name: "clipboard", label: BUTTON_LABELS.clipboard, icon: iconClipboard() });
+    data.push({ name: "clipboard-png", label: BUTTON_LABELS["clipboard-png"], icon: iconClipboard() });
+    data.push({ name: "clipboard-svg", label: BUTTON_LABELS["clipboard-svg"], icon: iconClipboard() });
   }
 
   if (chart.options && chart.options.toggleY) {

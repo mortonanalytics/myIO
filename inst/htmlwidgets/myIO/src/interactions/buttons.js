@@ -3,7 +3,7 @@ import { getSVGString, svgString2Image } from "../utils/export-svg.js";
 import { injectExportLegend } from "../utils/export-legend.js";
 import { saveAs } from "../utils/file-saver.js";
 import { exportToPDF } from "../utils/export-pdf.js";
-import { copyAsPNG } from "../utils/export-clipboard.js";
+import { copyAsPNG, copyAsSVG } from "../utils/export-clipboard.js";
 
 export const BUTTON_LABELS = {
   chart: "Download data",
@@ -11,6 +11,8 @@ export const BUTTON_LABELS = {
   svg: "Save as SVG",
   pdf: "Export as PDF",
   clipboard: "Copy to clipboard",
+  "clipboard-png": "Copy as PNG",
+  "clipboard-svg": "Copy as SVG",
   percent: "Toggle percent",
   group2stack: "Toggle layout"
 };
@@ -57,8 +59,13 @@ export function handleAction(chart, layers, name) {
     return;
   }
 
-  if (name === "clipboard") {
+  if (name === "clipboard" || name === "clipboard-png") {
     copyAsPNG(chart);
+    return;
+  }
+
+  if (name === "clipboard-svg") {
+    copyAsSVG(chart);
     return;
   }
 

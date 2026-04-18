@@ -1352,6 +1352,26 @@
   }
 
   // inst/htmlwidgets/myIO/src/utils/export-clipboard.js
+  async function copyAsSVG(chart) {
+    var legend = injectExportLegend(chart);
+    var svgString = getSVGString(chart.svg.node());
+    legend.cleanup();
+    try {
+      if (navigator.clipboard && navigator.clipboard.write && typeof ClipboardItem !== "undefined") {
+        var blob = new Blob([svgString], { type: "image/svg+xml" });
+        var htmlBlob = new Blob([svgString], { type: "text/html" });
+        await navigator.clipboard.write([
+          new ClipboardItem({ "text/html": htmlBlob, "image/svg+xml": blob })
+        ]);
+      } else {
+        await navigator.clipboard.writeText(svgString);
+      }
+      return true;
+    } catch (err) {
+      console.warn("[myIO] Clipboard copy failed", err);
+      return false;
+    }
+  }
   async function copyAsPNG(chart) {
     var legend = injectExportLegend(chart);
     var exportHeight = chart.height + legend.extraHeight;
@@ -1383,6 +1403,8 @@
     svg: "Save as SVG",
     pdf: "Export as PDF",
     clipboard: "Copy to clipboard",
+    "clipboard-png": "Copy as PNG",
+    "clipboard-svg": "Copy as SVG",
     percent: "Toggle percent",
     group2stack: "Toggle layout"
   };
@@ -1422,8 +1444,12 @@
       exportToPDF(chart);
       return;
     }
-    if (name === "clipboard") {
+    if (name === "clipboard" || name === "clipboard-png") {
       copyAsPNG(chart);
+      return;
+    }
+    if (name === "clipboard-svg") {
+      copyAsSVG(chart);
       return;
     }
     if (name === "percent") {
@@ -1727,7 +1753,8 @@
       data.push({ name: "pdf", label: BUTTON_LABELS.pdf, icon: iconPDF() });
     }
     if (!exportConfig || exportConfig.clipboard !== false) {
-      data.push({ name: "clipboard", label: BUTTON_LABELS.clipboard, icon: iconClipboard() });
+      data.push({ name: "clipboard-png", label: BUTTON_LABELS["clipboard-png"], icon: iconClipboard() });
+      data.push({ name: "clipboard-svg", label: BUTTON_LABELS["clipboard-svg"], icon: iconClipboard() });
     }
     if (chart.options && chart.options.toggleY) {
       data.push({ name: "percent", label: BUTTON_LABELS.percent, icon: iconPercent() });
