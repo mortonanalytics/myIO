@@ -3,6 +3,7 @@ import { bindPointDrag } from "./interactions/drag.js";
 import { bindBrush, removeBrush } from "./interactions/brush.js";
 import { bindAnnotation, removeAnnotationBindings } from "./interactions/annotate.js";
 import { bindLinked, cleanupLinked } from "./interactions/linked.js";
+import { registerLinkedCursor } from "./interactions/linked-cursor.js";
 import { bindSliders, removeSliders } from "./interactions/slider.js";
 import { bindRollover } from "./interactions/rollover.js";
 import { deriveChartRender, applyDerivedScales } from "./derive/chart-render.js";
@@ -277,6 +278,9 @@ export class myIOchart {
       }
       if (this.config.interactions.linked && this.config.interactions.linked.enabled) {
         bindLinked(this);
+      }
+      if (this.config.interactions.linked && this.config.interactions.linked.cursor === true) {
+        registerLinkedCursor(this);
       }
       if (this.config.interactions.sliders && this.config.interactions.sliders.length > 0) {
         bindSliders(this);

@@ -35,6 +35,9 @@
   --chart-transition-speed: 300ms;
   --chart-ref-line-color: #9ca3af;
   --chart-ref-line-width: 2px;
+  --chart-cursor-rule-color: #6b7280;
+  --chart-cursor-rule-width: 1px;
+  --chart-cursor-rule-dasharray: 3 3;
   --chart-legend-inactive-opacity: 0.4;
   --chart-sheet-bg: #ffffff;
   --chart-sheet-border: rgba(17, 24, 39, 0.1);
@@ -62,6 +65,13 @@
 
 .myIO-svg {
   background: var(--chart-bg);
+}
+
+.myIO-hover-rule {
+  stroke: var(--chart-cursor-rule-color);
+  stroke-width: var(--chart-cursor-rule-width);
+  stroke-dasharray: var(--chart-cursor-rule-dasharray);
+  pointer-events: none;
 }
 
 .inner-text,

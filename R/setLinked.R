@@ -14,6 +14,11 @@
 #' @param group Optional character string. When supplied, overrides the
 #'   Crosstalk group name from \code{shared_data}, allowing manual control
 #'   over which widgets share selections.
+#' @param cursor Logical. When \code{TRUE}, a hover in any linked chart draws
+#'   a synchronized crosshair on every sibling chart in the same group.
+#'   Default \code{FALSE}.
+#' @param cursorAxis Character. Which axis to sync: \code{"x"} (default),
+#'   \code{"y"}, or \code{"xy"}. Only \code{"x"} is active in v1.2.
 #'
 #' @return A modified \code{myIO} htmlwidget with Crosstalk linking.
 #' @examples
@@ -29,7 +34,8 @@
 #'
 #' @export
 setLinked <- function(myIO, shared_data, mode = "both", filter = FALSE,
-                      key = NULL, group = NULL) {
+                      key = NULL, group = NULL, cursor = FALSE,
+                      cursorAxis = "x") {
   assert_myIO(myIO)
   if (!requireNamespace("crosstalk", quietly = TRUE)) {
     stop("Package 'crosstalk' is required for linked brushing. ",
@@ -38,6 +44,8 @@ setLinked <- function(myIO, shared_data, mode = "both", filter = FALSE,
 
   check_class(shared_data, "SharedData", "shared_data", "setLinked")
   check_choice(mode, c("source", "target", "both"), "mode", "setLinked")
+  check_flag(cursor, "cursor", "setLinked")
+  check_choice(cursorAxis, c("x", "y", "xy"), "cursorAxis", "setLinked")
 
   resolved_key <- if (!is.null(key)) key else shared_data$key()
   resolved_group <- if (!is.null(group)) group else shared_data$groupName()
@@ -50,7 +58,9 @@ setLinked <- function(myIO, shared_data, mode = "both", filter = FALSE,
     group = resolved_group,
     key = as.list(resolved_key),
     mode = mode,
-    filter = filter
+    filter = filter,
+    cursor = cursor,
+    cursorAxis = cursorAxis
   )
 
   myIO$dependencies <- c(myIO$dependencies, crosstalk::crosstalkLibs())

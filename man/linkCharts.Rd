@@ -4,7 +4,7 @@
 \alias{linkCharts}
 \title{Link Charts for Cross-Selection}
 \usage{
-linkCharts(..., on, group = NULL)
+linkCharts(..., on, group = NULL, cursor = FALSE, cursorAxis = "x")
 }
 \arguments{
 \item{...}{myIO widget objects to link.}
@@ -12,6 +12,14 @@ linkCharts(..., on, group = NULL)
 \item{on}{Character. Column name to match rows across charts.}
 
 \item{group}{Character. Group identifier. Default auto-generated.}
+
+\item{cursor}{Logical. When \code{TRUE}, a hover in any linked chart draws
+a synchronized crosshair (and optional tooltip) on every sibling chart
+in the same group. Default \code{FALSE}.}
+
+\item{cursorAxis}{Character. Which axis to sync: \code{"x"} (default),
+\code{"y"}, or \code{"xy"}. Only \code{"x"} is active in v1.2; other
+values are accepted but not yet rendered.}
 }
 \value{
 A list of modified myIO widgets with matching link config.

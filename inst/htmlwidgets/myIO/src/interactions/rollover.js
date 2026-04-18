@@ -1,6 +1,7 @@
 import { getRendererForLayer } from "../registry.js";
 import { createHoverOverlay, hideChartTooltip, removeHoverOverlay, showChartTooltip } from "../tooltip.js";
 import { pointRadius, resolveColor, tagName } from "../utils/responsive.js";
+import { maybeEmitCursor, maybeClearCursor } from "./linked-cursor.js";
 
 const HOVER_TRANSITION_MS = 300;
 
@@ -115,11 +116,19 @@ export function bindRollover(chart, layers) {
       title: tooltip.title,
       items: tooltip.items
     });
+
+    var xValue = layer.type === "hexbin"
+      ? (that.xScale ? that.xScale.invert(data.x) : null)
+      : layer.type === "histogram"
+        ? data.x0
+        : data[layer.mapping.x_var];
+    maybeEmitCursor(that, data, xValue, tooltip);
   }
 
   function clearElementHover(layer) {
     removeElementHighlight(this, layer);
     hideChartTooltip(that);
+    maybeClearCursor(that);
   }
 
   function buildTooltip(layer, renderer, data, node) {
@@ -203,11 +212,16 @@ export function bindRollover(chart, layers) {
       .style("stroke-width", "2px")
       .style("stroke-opacity", 0.8);
 
-    showChartTooltip(that, {
-      pointer: getContainerPointer(event),
+    var groupedTooltip = {
       title: { text: thisLayer.mapping.x_var + ": " + xFormat(data.data[0]) },
       items: [{ color: color, label: thisLayer.mapping.y_var, value: currentFormatY(data[1] - data[0]) }]
+    };
+    showChartTooltip(that, {
+      pointer: getContainerPointer(event),
+      title: groupedTooltip.title,
+      items: groupedTooltip.items
     });
+    maybeEmitCursor(that, data.data, data.data[0], groupedTooltip);
   }
 
   function clearGroupedBar() {
@@ -216,6 +230,7 @@ export function bindRollover(chart, layers) {
       .style("stroke", "transparent")
       .style("stroke-opacity", null);
     hideChartTooltip(that);
+    maybeClearCursor(that);
   }
 
   function showOverlayTooltip(event) {
@@ -280,13 +295,18 @@ export function bindRollover(chart, layers) {
       .attr("stroke", function(d) { return d.color; })
       .attr("stroke-width", 2);
 
-    showChartTooltip(that, {
-      pointer: getContainerPointer(event),
+    var overlayTooltip = {
       title: { text: tipText[0].xVar + ": " + xFormat(xValue) },
       items: tipText.map(function(d) {
         return { color: d.color, label: d.label, value: currentFormatY(d.displayValue) };
       })
+    };
+    showChartTooltip(that, {
+      pointer: getContainerPointer(event),
+      title: overlayTooltip.title,
+      items: overlayTooltip.items
     });
+    maybeEmitCursor(that, tipText[0].value, xValue, overlayTooltip);
   }
 
   function clearOverlayTooltip() {
@@ -297,6 +317,7 @@ export function bindRollover(chart, layers) {
       that.toolPointLayer.selectAll("*").remove();
     }
     hideChartTooltip(that);
+    maybeClearCursor(that);
   }
 
   function bindOrdinalHover(selector, layerType, tooltipBuilder) {

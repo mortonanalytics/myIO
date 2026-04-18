@@ -12,6 +12,16 @@
   Brush in one chart highlights matching rows in linked charts. Works in Shiny
   and static HTML. Aggregation-to-source-row key resolution for summary views.
 
+## Linked cursor
+
+* `linkCharts()` and `setLinked()` gain a `cursor = TRUE` argument that draws a
+  synchronized vertical crosshair on every linked chart when the user hovers
+  any chart in the group. Supports point, bar, line, area, groupedBar, hexbin,
+  and histogram layers (donut and treemap are excluded — no x-axis to sync on).
+  Off by default; enable per-link or retrofit with `setLinkedCursor()` on a
+  pre-linked widget. New `--chart-cursor-rule-color`/`-width`/`-dasharray` CSS
+  variables theme the crosshair.
+
 ## Group-by auto-series
 
 * Pass a `dplyr::group_by()` tibble to `addIoLayer()` and it auto-creates one

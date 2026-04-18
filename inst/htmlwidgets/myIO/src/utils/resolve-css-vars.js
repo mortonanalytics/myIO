@@ -11,6 +11,9 @@ const CHART_CSS_VARS = [
   // Reference lines
   "--chart-ref-line-color",
   "--chart-ref-line-width",
+  // Linked cursor crosshair
+  "--chart-cursor-rule-color",
+  "--chart-cursor-rule-width",
   // Annotations & accents
   "--chart-annotation-ring",
   "--chart-primary-color",

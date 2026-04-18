@@ -1,4 +1,5 @@
 import { tagName } from "../utils/responsive.js";
+import { unregisterLinkedCursor } from "./linked-cursor.js";
 
 var LINKABLE_TYPES = ["point", "bar", "histogram", "hexbin", "groupedBar"];
 
@@ -90,4 +91,5 @@ export function cleanupLinked(chart) {
     chart.runtime._crosstalkFil.close();
     chart.runtime._crosstalkFil = null;
   }
+  unregisterLinkedCursor(chart);
 }

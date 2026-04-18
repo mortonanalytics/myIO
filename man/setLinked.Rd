@@ -10,7 +10,9 @@ setLinked(
   mode = "both",
   filter = FALSE,
   key = NULL,
-  group = NULL
+  group = NULL,
+  cursor = FALSE,
+  cursorAxis = "x"
 )
 }
 \arguments{
@@ -30,6 +32,13 @@ keys do not match the column used for cross-chart matching.}
 \item{group}{Optional character string. When supplied, overrides the
 Crosstalk group name from \code{shared_data}, allowing manual control
 over which widgets share selections.}
+
+\item{cursor}{Logical. When \code{TRUE}, a hover in any linked chart draws
+a synchronized crosshair on every sibling chart in the same group.
+Default \code{FALSE}.}
+
+\item{cursorAxis}{Character. Which axis to sync: \code{"x"} (default),
+\code{"y"}, or \code{"xy"}. Only \code{"x"} is active in v1.2.}
 }
 \value{
 A modified \code{myIO} htmlwidget with Crosstalk linking.

@@ -769,6 +769,9 @@
     // Reference lines
     "--chart-ref-line-color",
     "--chart-ref-line-width",
+    // Linked cursor crosshair
+    "--chart-cursor-rule-color",
+    "--chart-cursor-rule-width",
     // Annotations & accents
     "--chart-annotation-ring",
     "--chart-primary-color",
@@ -4011,6 +4014,127 @@
     removePopover(chart);
   }
 
+  // inst/htmlwidgets/myIO/src/interactions/linked-cursor.js
+  var _registry = /* @__PURE__ */ new Map();
+  function linkedConfig(chart) {
+    return chart && chart.config && chart.config.interactions && chart.config.interactions.linked;
+  }
+  function groupOf(chart) {
+    var linked = linkedConfig(chart);
+    return linked && linked.cursor === true && linked.group ? linked.group : null;
+  }
+  function registerLinkedCursor(chart) {
+    var g = groupOf(chart);
+    if (!g) return;
+    var set = _registry.get(g);
+    if (!set) {
+      set = /* @__PURE__ */ new Set();
+      _registry.set(g, set);
+    }
+    set.add(chart);
+    chart.runtime = chart.runtime || {};
+    if (!chart.runtime._linkedCursor) {
+      chart.runtime._linkedCursor = { lastTs: 0 };
+    }
+  }
+  function unregisterLinkedCursor(chart) {
+    _registry.forEach(function(set, key) {
+      if (set.delete(chart) && set.size === 0) {
+        _registry.delete(key);
+      }
+    });
+  }
+  function emitCursor(chart, payload) {
+    var g = groupOf(chart);
+    if (!g) return;
+    var set = _registry.get(g);
+    if (!set) return;
+    set.forEach(function(sibling) {
+      if (sibling === chart) return;
+      _receive(sibling, payload);
+    });
+  }
+  function clearCursor(chart) {
+    var g = groupOf(chart);
+    if (!g) return;
+    emitCursor(chart, {
+      sourceId: chart.element && chart.element.id,
+      group: g,
+      ts: typeof performance !== "undefined" ? performance.now() : Date.now(),
+      clear: true
+    });
+  }
+  function maybeEmitCursor(chart, row, xValue, tooltipPayload) {
+    var linked = linkedConfig(chart);
+    if (!linked || linked.cursor !== true) return;
+    var keyColumn = linked.keyColumn;
+    var keyValue = row && keyColumn && row[keyColumn] !== void 0 ? row[keyColumn] : null;
+    emitCursor(chart, {
+      sourceId: chart.element && chart.element.id,
+      group: linked.group,
+      keyValue,
+      xValue,
+      tooltip: tooltipPayload || null,
+      ts: typeof performance !== "undefined" ? performance.now() : Date.now()
+    });
+  }
+  function maybeClearCursor(chart) {
+    var linked = linkedConfig(chart);
+    if (!linked || linked.cursor !== true) return;
+    clearCursor(chart);
+  }
+  function _receive(chart, payload) {
+    var rt = chart.runtime && chart.runtime._linkedCursor;
+    if (!rt) return;
+    if (typeof payload.ts === "number" && payload.ts < rt.lastTs) return;
+    rt.lastTs = typeof payload.ts === "number" ? payload.ts : rt.lastTs;
+    rt.lastPayload = payload;
+    if (payload.clear) {
+      removeCrosshair(chart);
+      return;
+    }
+    var xPx = coerceXToPixel(chart, payload.xValue);
+    if (xPx == null) {
+      removeCrosshair(chart);
+      return;
+    }
+    drawCrosshair(chart, xPx);
+  }
+  function coerceXToPixel(chart, xValue) {
+    var xScale = chart.xScale;
+    if (!xScale || typeof xScale !== "function") return null;
+    if (typeof xScale.domain === "function" && typeof xScale.invert === "function") {
+      var domain = xScale.domain();
+      var lo = domain[0];
+      var hi = domain[domain.length - 1];
+      var coerced = xValue;
+      if (lo instanceof Date && !(xValue instanceof Date)) {
+        coerced = new Date(xValue);
+      }
+      var numeric = +coerced;
+      if (!Number.isFinite(numeric)) return null;
+      if (numeric < +lo || numeric > +hi) return null;
+      var px = xScale(coerced);
+      return Number.isFinite(px) ? px : null;
+    }
+    var ordDomain = typeof xScale.domain === "function" ? xScale.domain() : [];
+    if (ordDomain.indexOf(xValue) === -1) return null;
+    var opx = xScale(xValue);
+    return Number.isFinite(opx) ? opx : null;
+  }
+  function drawCrosshair(chart, xPx) {
+    if (!chart.svg || typeof chart.svg.select !== "function") return;
+    var line = chart.svg.select("line.myIO-hover-rule");
+    if (line.empty()) {
+      line = chart.svg.append("line").attr("class", "myIO-hover-rule");
+    }
+    line.attr("x1", xPx).attr("x2", xPx).attr("y1", 0).attr("y2", chart.height || 0).style("display", null);
+  }
+  function removeCrosshair(chart) {
+    if (!chart.svg || typeof chart.svg.select !== "function") return;
+    chart.svg.select("line.myIO-hover-rule").remove();
+  }
+
   // inst/htmlwidgets/myIO/src/interactions/linked.js
   var LINKABLE_TYPES = ["point", "bar", "histogram", "hexbin", "groupedBar"];
   function bindLinked(chart) {
@@ -4088,6 +4212,7 @@
       chart.runtime._crosstalkFil.close();
       chart.runtime._crosstalkFil = null;
     }
+    unregisterLinkedCursor(chart);
   }
 
   // inst/htmlwidgets/myIO/src/interactions/slider.js
@@ -4344,10 +4469,13 @@
         title: tooltip.title,
         items: tooltip.items
       });
+      var xValue = layer.type === "hexbin" ? that.xScale ? that.xScale.invert(data.x) : null : layer.type === "histogram" ? data.x0 : data[layer.mapping.x_var];
+      maybeEmitCursor(that, data, xValue, tooltip);
     }
     function clearElementHover(layer) {
       removeElementHighlight(this, layer);
       hideChartTooltip(that);
+      maybeClearCursor(that);
     }
     function buildTooltip(layer, renderer, data, node) {
       if (layer.type === "hexbin") {
@@ -4405,15 +4533,21 @@
         Shiny.onInputChange("myIO-" + that.element.id + "-rollover", JSON.stringify(data.data.values));
       }
       d3.select(this).interrupt().style("stroke", color).style("stroke-width", "2px").style("stroke-opacity", 0.8);
-      showChartTooltip(that, {
-        pointer: getContainerPointer(event),
+      var groupedTooltip = {
         title: { text: thisLayer.mapping.x_var + ": " + xFormat(data.data[0]) },
         items: [{ color, label: thisLayer.mapping.y_var, value: currentFormatY(data[1] - data[0]) }]
+      };
+      showChartTooltip(that, {
+        pointer: getContainerPointer(event),
+        title: groupedTooltip.title,
+        items: groupedTooltip.items
       });
+      maybeEmitCursor(that, data.data, data.data[0], groupedTooltip);
     }
     function clearGroupedBar() {
       d3.select(this).interrupt().transition().duration(HOVER_TRANSITION_MS).style("stroke-width", "0px").style("stroke", "transparent").style("stroke-opacity", null);
       hideChartTooltip(that);
+      maybeClearCursor(that);
     }
     function showOverlayTooltip(event) {
       var mouse = d3.pointer(event, this);
@@ -4465,13 +4599,18 @@
       }).attr("fill", "#ffffff").attr("stroke", function(d) {
         return d.color;
       }).attr("stroke-width", 2);
-      showChartTooltip(that, {
-        pointer: getContainerPointer(event),
+      var overlayTooltip = {
         title: { text: tipText[0].xVar + ": " + xFormat(xValue) },
         items: tipText.map(function(d) {
           return { color: d.color, label: d.label, value: currentFormatY(d.displayValue) };
         })
+      };
+      showChartTooltip(that, {
+        pointer: getContainerPointer(event),
+        title: overlayTooltip.title,
+        items: overlayTooltip.items
       });
+      maybeEmitCursor(that, tipText[0].value, xValue, overlayTooltip);
     }
     function clearOverlayTooltip() {
       if (that.toolLine) {
@@ -4481,6 +4620,7 @@
         that.toolPointLayer.selectAll("*").remove();
       }
       hideChartTooltip(that);
+      maybeClearCursor(that);
     }
     function bindOrdinalHover(selector, layerType, tooltipBuilder) {
       var layer = lys.filter(function(candidate) {
@@ -6186,6 +6326,9 @@
         }
         if (this.config.interactions.linked && this.config.interactions.linked.enabled) {
           bindLinked(this);
+        }
+        if (this.config.interactions.linked && this.config.interactions.linked.cursor === true) {
+          registerLinkedCursor(this);
         }
         if (this.config.interactions.sliders && this.config.interactions.sliders.length > 0) {
           bindSliders(this);
