@@ -115,9 +115,19 @@ jobs:
             fi
           } > "$BODY_FILE"
 
-          gh issue create \
-            --repo mortonanalytics/pymyIO \
-            --title "$TITLE" \
-            --body-file "$BODY_FILE" \
-            --label engine-bump-pending \
-            --label "$UPSTREAM_KIND"
+          # Use REST API directly (gh api) rather than `gh issue create` so
+          # that fine-grained PATs work — `gh issue create` routes through
+          # GraphQL, which fine-grained PATs don't fully support.
+          BODY="$(cat "$BODY_FILE")"
+          jq -n \
+            --arg title "$TITLE" \
+            --arg body "$BODY" \
+            --arg kind "$UPSTREAM_KIND" \
+            '{title: $title, body: $body, labels: ["engine-bump-pending", $kind]}' \
+            > payload.json
+
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            /repos/mortonanalytics/pymyIO/issues \
+            --input payload.json
