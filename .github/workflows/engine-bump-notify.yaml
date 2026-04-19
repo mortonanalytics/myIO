@@ -1,0 +1,113 @@
+name: engine-bump-notify
+
+# When a push to main touches the d3 engine, open a tracking issue in
+# pymyIO so the Python wrapper can pick up the change on its next
+# submodule bump. See AGENTS.md for context.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'inst/htmlwidgets/myIO/**'
+
+permissions:
+  contents: read
+
+jobs:
+  open-tracking-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Collect commit metadata
+        id: meta
+        run: |
+          SHA="${{ github.sha }}"
+          SHORT_SHA="$(git rev-parse --short=12 "$SHA")"
+          SUBJECT="$(git log -1 --pretty=%s "$SHA")"
+          BODY_FILE="$(mktemp)"
+          git log -1 --pretty=%B "$SHA" > "$BODY_FILE"
+
+          # Label the bump by scanning the commit message for a tag.
+          # Authors can prefix commit subjects with [engine-breaking] or
+          # [engine-additive] to pre-classify; default is "engine-additive".
+          KIND="engine-additive"
+          if grep -qiE '\[engine-breaking\]' "$BODY_FILE"; then
+            KIND="engine-breaking"
+          fi
+
+          # List the engine files touched in this push.
+          BEFORE="${{ github.event.before }}"
+          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            FILES="$(git show --name-only --pretty='' "$SHA" | grep '^inst/htmlwidgets/myIO/' || true)"
+          else
+            FILES="$(git diff --name-only "$BEFORE" "$SHA" -- 'inst/htmlwidgets/myIO/**' || true)"
+          fi
+
+          {
+            echo "sha=$SHA"
+            echo "short_sha=$SHORT_SHA"
+            echo "kind=$KIND"
+            echo "subject<<__EOF__"
+            echo "$SUBJECT"
+            echo "__EOF__"
+            echo "files<<__EOF__"
+            echo "$FILES"
+            echo "__EOF__"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Open tracking issue in pymyIO
+        env:
+          GH_TOKEN: ${{ secrets.PYMYIO_SYNC_TOKEN }}
+          UPSTREAM_SHA: ${{ steps.meta.outputs.sha }}
+          UPSTREAM_SHORT: ${{ steps.meta.outputs.short_sha }}
+          UPSTREAM_KIND: ${{ steps.meta.outputs.kind }}
+          UPSTREAM_SUBJECT: ${{ steps.meta.outputs.subject }}
+          UPSTREAM_FILES: ${{ steps.meta.outputs.files }}
+          SERVER_URL: ${{ github.server_url }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "PYMYIO_SYNC_TOKEN not set — skipping tracking issue." >&2
+            echo "Add a fine-scoped PAT with 'issues: write' on mortonanalytics/pymyIO as repo secret PYMYIO_SYNC_TOKEN." >&2
+            exit 0
+          fi
+
+          TITLE="Engine bump pending: ${UPSTREAM_SHORT} — ${UPSTREAM_SUBJECT}"
+          BODY_FILE="$(mktemp)"
+          {
+            echo "Upstream myIO commit: [\`${UPSTREAM_SHORT}\`](${SERVER_URL}/${REPO}/commit/${UPSTREAM_SHA})"
+            echo
+            echo "**Subject:** ${UPSTREAM_SUBJECT}"
+            echo "**Classification:** \`${UPSTREAM_KIND}\`"
+            echo
+            echo "### Files touched"
+            echo '```'
+            echo "${UPSTREAM_FILES:-(none reported)}"
+            echo '```'
+            echo
+            echo "### Checklist"
+            echo "- [ ] Bump \`vendor/myIO\` submodule to \`${UPSTREAM_SHA}\`"
+            echo "- [ ] Verify symlinks under \`src/pymyio/static/\` resolve correctly"
+            echo "- [ ] Update Python builder surface if the engine contract changed"
+            if [ "$UPSTREAM_KIND" = "engine-breaking" ]; then
+              echo "- [ ] **Breaking:** bump pymyIO major version; note in CHANGELOG"
+              echo "- [ ] **Breaking:** update parity tests (R ↔ Python JSON byte-for-byte)"
+            else
+              echo "- [ ] Add parity test if new chart type / option surfaced"
+              echo "- [ ] CHANGELOG entry under Unreleased"
+            fi
+            echo "- [ ] \`pytest\` passes"
+            echo
+            echo "_Auto-opened by \`engine-bump-notify.yaml\` in mortonanalytics/myIO._"
+          } > "$BODY_FILE"
+
+          gh issue create \
+            --repo mortonanalytics/pymyIO \
+            --title "$TITLE" \
+            --body-file "$BODY_FILE" \
+            --label engine-bump-pending \
+            --label "$UPSTREAM_KIND"
