@@ -9,6 +9,12 @@ on:
     branches: [main]
     paths:
       - 'inst/htmlwidgets/myIO/**'
+  workflow_dispatch:
+    inputs:
+      note:
+        description: "Optional note to append to the tracking issue body"
+        required: false
+        default: "(manual smoke test — safe to close)"
 
 permissions:
   contents: read
@@ -103,6 +109,10 @@ jobs:
             echo "- [ ] \`pytest\` passes"
             echo
             echo "_Auto-opened by \`engine-bump-notify.yaml\` in mortonanalytics/myIO._"
+            if [ -n "${{ github.event.inputs.note }}" ]; then
+              echo
+              echo "> ${{ github.event.inputs.note }}"
+            fi
           } > "$BODY_FILE"
 
           gh issue create \
