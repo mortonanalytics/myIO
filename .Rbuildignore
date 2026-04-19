@@ -24,6 +24,7 @@
 ^design$
 ^md$
 ^review-home\.png$
+^AGENTS\.md$
 ^screenshots-review$
 ^scripts$
 ^inst/test_rmarkdown
