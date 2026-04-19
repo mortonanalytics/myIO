@@ -24,7 +24,10 @@ Suggests:
   pkgdown,
   shiny,
   crosstalk (>= 1.2.0),
-  dplyr
+  dplyr,
+  DT,
+  reactable,
+  htmltools
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 Imports:

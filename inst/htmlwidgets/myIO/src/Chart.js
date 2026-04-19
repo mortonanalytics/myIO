@@ -470,6 +470,7 @@ export class myIOchart {
   }
 
   resize(width, height) {
+    if (!width || !height || width < 2 || height < 2) return;
     const wasSheetOpen = this.runtime && this.runtime._sheetOpen === true;
     if (wasSheetOpen) {
       closePanel(this, { returnFocus: false });

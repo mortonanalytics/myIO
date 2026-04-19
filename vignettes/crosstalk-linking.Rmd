@@ -1,0 +1,177 @@
+---
+title: "Linking myIO with Crosstalk"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Linking myIO with Crosstalk}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  eval = requireNamespace("crosstalk", quietly = TRUE)
+)
+```
+
+[Crosstalk](https://rstudio.github.io/crosstalk/) is a standard for
+widget-to-widget communication that lets users interact with several
+visualizations at once — brushing points in one chart dims matching rows
+in a companion table, filtering a table hides the non-matching points on
+the chart, and so on. myIO participates in this protocol via
+`setLinked()`.
+
+## Which myIO layers participate
+
+As of v1.2, nine chart-layer types respond to crosstalk selection and
+filter events:
+
+| Layer type | Selection (target) | Filter (target) | Brush source |
+|------------|:------------------:|:---------------:|:------------:|
+| `point`     | yes | yes | yes (with `setBrush()`) |
+| `bar`       | yes | yes | yes (with `setBrush()`) |
+| `groupedBar`| yes | yes | yes (with `setBrush()`) |
+| `histogram` | yes | yes | yes (with `setBrush()`) |
+| `hexbin`    | yes | yes | yes (with `setBrush()`) |
+| `waffle`    | yes | yes | — |
+| `beeswarm`  | yes | yes | yes (with `setBrush()`) |
+| `lollipop`  | yes | yes | — |
+| `dumbbell`  | yes | yes | — |
+
+Aggregate layer types (`boxplot`, `violin`, `qq`, `regression`,
+`density`, `ridgeline`, `survfit`, `comparison`) do not participate in
+v1.2. To drive selection over aggregate views, layer a linked scatter
+next to the aggregate chart.
+
+## Selection vs filter
+
+- **Selection** dims non-matching elements (sets their CSS opacity to
+  the `--chart-brush-dim-opacity` variable). Other widgets are not
+  affected by their layout.
+- **Filter** hides non-matching elements entirely (`display: none`).
+  Use it when linked partners have a filter UI — e.g. a
+  `crosstalk::filter_select()` dropdown — that genuinely narrows the
+  dataset.
+
+Pass `filter = TRUE` to `setLinked()` to enable filter-driven hiding.
+
+## Source and target modes
+
+`setLinked(mode = ...)` accepts three values:
+
+- `"source"` — this chart emits selections (via its brush) but does not
+  react to incoming ones.
+- `"target"` — this chart reacts to incoming selections but does not
+  emit its own.
+- `"both"` (default) — bidirectional.
+
+## Example 1: scatter + DT
+
+```{r dt-example, eval = requireNamespace("DT", quietly = TRUE) && requireNamespace("crosstalk", quietly = TRUE)}
+library(crosstalk)
+library(myIO)
+library(DT)
+
+shared <- SharedData$new(mtcars, key = ~rownames(mtcars))
+
+bscols(
+  widths = c(7, 5),
+  myIO(data = shared$data()) |>
+    addIoLayer(
+      type = "point", label = "cars",
+      mapping = list(x_var = "wt", y_var = "mpg")
+    ) |>
+    setBrush(direction = "xy") |>
+    setLinked(shared),
+  datatable(shared, rownames = FALSE, options = list(pageLength = 5))
+)
+```
+
+Brush a rectangle in the chart: the matching rows in the table stay
+bold and the rest dim. Click rows in the table: the matching points
+stay solid, the rest dim.
+
+## Example 2: lollipop + reactable
+
+```{r reactable-example, eval = requireNamespace("reactable", quietly = TRUE) && requireNamespace("crosstalk", quietly = TRUE)}
+library(crosstalk)
+library(myIO)
+library(reactable)
+
+# Aggregate mtcars by cyl for a simple lollipop
+by_cyl <- data.frame(
+  cyl = c("4", "6", "8"),
+  avg_mpg = c(
+    mean(mtcars$mpg[mtcars$cyl == 4]),
+    mean(mtcars$mpg[mtcars$cyl == 6]),
+    mean(mtcars$mpg[mtcars$cyl == 8])
+  )
+)
+shared <- SharedData$new(by_cyl, key = ~cyl)
+
+bscols(
+  widths = c(6, 6),
+  myIO(data = shared$data()) |>
+    addIoLayer(
+      type = "lollipop", label = "by-cyl",
+      mapping = list(x_var = "cyl", y_var = "avg_mpg")
+    ) |>
+    setLinked(shared),
+  reactable(shared, selection = "multiple", onClick = "select")
+)
+```
+
+## Example 3: plotly bridge (static listing)
+
+plotly's own crosstalk integration means you can link a myIO chart
+directly to a plotly chart over the same `SharedData`:
+
+```{r plotly-listing, eval = FALSE}
+library(crosstalk)
+library(myIO)
+library(plotly)
+
+shared <- SharedData$new(mtcars, key = ~rownames(mtcars))
+bscols(
+  myIO(data = shared$data()) |>
+    addIoLayer(type = "point", label = "m",
+               mapping = list(x_var = "wt", y_var = "mpg")) |>
+    setBrush(direction = "xy") |>
+    setLinked(shared),
+  plot_ly(shared, x = ~hp, y = ~mpg, type = "scatter", mode = "markers")
+)
+```
+
+Not evaluated in this vignette. Install `plotly` and run locally.
+
+## Example 4: leaflet map (static listing)
+
+```{r leaflet-listing, eval = FALSE}
+library(crosstalk)
+library(myIO)
+library(leaflet)
+
+quakes_small <- head(quakes, 50)
+shared <- SharedData$new(quakes_small)
+bscols(
+  leaflet(shared) |> addTiles() |> addMarkers(),
+  myIO(data = shared$data()) |>
+    addIoLayer(type = "point", label = "mag",
+               mapping = list(x_var = "depth", y_var = "mag")) |>
+    setLinked(shared)
+)
+```
+
+Not evaluated in this vignette. Install `leaflet` and run locally.
+
+## Troubleshooting
+
+- **My boxplot/violin doesn't respond.** Aggregate layer types are not
+  linkable in v1.2. Drive selection through a sibling scatter or bar
+  layer.
+- **My chart is in the linked group but brushing doesn't emit.** Add
+  `setBrush()` to the chart layer. Without a brush, the chart can only
+  be a target, not a source.
+- **Selections don't visually change anything on the linked widget.**
+  Confirm the `SharedData$new()` key vector matches the row identity
+  the other widget expects. Mismatched keys silently fail.

@@ -1,5 +1,27 @@
 # myIO 1.2.0 (development)
 
+## Crosstalk: expanded chart-type coverage
+
+* `setLinked()` now links `waffle`, `beeswarm`, `lollipop`, and `dumbbell`
+  layers in addition to the previously supported `point`, `bar`, `groupedBar`,
+  `histogram`, and `hexbin`. Selection dims non-matching elements; filter
+  hides them. Aggregate chart types (`boxplot`, `violin`, `qq`, `regression`,
+  `density`, `ridgeline`, `survfit`, `comparison`) remain outside crosstalk
+  in v1.2.
+* New vignette `crosstalk-linking` demonstrates linking myIO with
+  `DT::datatable()` and `reactable::reactable()`, with code listings for
+  plotly and leaflet.
+
+## bslib and Quarto Dashboards integration
+
+* `myIO()` widgets now declare a sizing policy with `browser.fill = TRUE`
+  and are tagged as `html-fill-item` via `htmltools::bindFillRole()`, so
+  they fill container height inside `bslib::card()`, Quarto Dashboard
+  `{.fill}` cards, and flexdashboard layouts. Rendering in plain RMarkdown
+  and Shiny at the default 400px height is unchanged.
+* Widget resize is now guarded against zero-dimension containers that can
+  appear briefly during fill-layout transitions.
+
 ## Calendar heatmap
 
 * New `calendarHeatmap` chart type — GitHub-contributions-style grid of daily

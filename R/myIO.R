@@ -1,3 +1,18 @@
+#' @noRd
+sizingPolicy_myIO <- function() {
+  htmlwidgets::sizingPolicy(
+    defaultWidth    = "100%",
+    defaultHeight   = 400,
+    padding         = 0,
+    browser.fill    = TRUE,
+    browser.padding = 0,
+    knitr.figure    = FALSE,
+    viewer.fill     = TRUE,
+    viewer.suppress = FALSE,
+    fill            = TRUE
+  )
+}
+
 #' Create a myIO Chart Widget
 #'
 #' Create an interactive D3.js chart widget
@@ -78,7 +93,8 @@ myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL
     width = width,
     height = height,
     package = "myIO",
-    elementId = elementId
+    elementId = elementId,
+    sizingPolicy = sizingPolicy_myIO()
   )
 }
 

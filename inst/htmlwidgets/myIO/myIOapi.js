@@ -4300,7 +4300,17 @@
   }
 
   // inst/htmlwidgets/myIO/src/interactions/linked.js
-  var LINKABLE_TYPES = ["point", "bar", "histogram", "hexbin", "groupedBar"];
+  var LINKABLE_TYPES = [
+    "point",
+    "bar",
+    "histogram",
+    "hexbin",
+    "groupedBar",
+    "waffle",
+    "beeswarm",
+    "lollipop",
+    "dumbbell"
+  ];
   function bindLinked(chart) {
     var cfg = chart.config.interactions.linked;
     if (!cfg || !cfg.enabled) return;
@@ -6666,6 +6676,7 @@
       this.renderCurrentLayers();
     }
     resize(width, height) {
+      if (!width || !height || width < 2 || height < 2) return;
       const wasSheetOpen = this.runtime && this.runtime._sheetOpen === true;
       if (wasSheetOpen) {
         closePanel(this, { returnFocus: false });
