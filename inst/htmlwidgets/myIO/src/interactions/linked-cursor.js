@@ -151,20 +151,28 @@ function coerceXToPixel(chart, xValue) {
 }
 
 function drawCrosshair(chart, xPx) {
-  if (!chart.svg || typeof chart.svg.select !== "function") return;
-  var line = chart.svg.select("line.myIO-hover-rule");
+  // Append to the translated plot-area group when present (production charts)
+  // so xPx — which comes from chart.xScale, itself in plot-local coords —
+  // lands inside the plot area. Fall back to chart.svg for synthetic fixtures
+  // that don't build a plot group (e.g. unit-test mounts).
+  var host = chart.plot || chart.svg;
+  if (!host || typeof host.select !== "function") return;
+  var line = host.select("line.myIO-hover-rule");
   if (line.empty()) {
-    line = chart.svg.append("line").attr("class", "myIO-hover-rule");
+    line = host.append("line").attr("class", "myIO-hover-rule");
   }
+  var m = chart.margin || {};
+  var innerH = (chart.height || 0) - ((+m.top || 0) + (+m.bottom || 0));
   line
     .attr("x1", xPx)
     .attr("x2", xPx)
     .attr("y1", 0)
-    .attr("y2", chart.height || 0)
+    .attr("y2", innerH)
     .style("display", null);
 }
 
 function removeCrosshair(chart) {
-  if (!chart.svg || typeof chart.svg.select !== "function") return;
-  chart.svg.select("line.myIO-hover-rule").remove();
+  var host = chart.plot || chart.svg;
+  if (!host || typeof host.select !== "function") return;
+  host.select("line.myIO-hover-rule").remove();
 }

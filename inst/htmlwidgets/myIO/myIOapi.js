@@ -4123,16 +4123,20 @@
     return Number.isFinite(opx) ? opx : null;
   }
   function drawCrosshair(chart, xPx) {
-    if (!chart.svg || typeof chart.svg.select !== "function") return;
-    var line = chart.svg.select("line.myIO-hover-rule");
+    var host = chart.plot || chart.svg;
+    if (!host || typeof host.select !== "function") return;
+    var line = host.select("line.myIO-hover-rule");
     if (line.empty()) {
-      line = chart.svg.append("line").attr("class", "myIO-hover-rule");
+      line = host.append("line").attr("class", "myIO-hover-rule");
     }
-    line.attr("x1", xPx).attr("x2", xPx).attr("y1", 0).attr("y2", chart.height || 0).style("display", null);
+    var m = chart.margin || {};
+    var innerH = (chart.height || 0) - ((+m.top || 0) + (+m.bottom || 0));
+    line.attr("x1", xPx).attr("x2", xPx).attr("y1", 0).attr("y2", innerH).style("display", null);
   }
   function removeCrosshair(chart) {
-    if (!chart.svg || typeof chart.svg.select !== "function") return;
-    chart.svg.select("line.myIO-hover-rule").remove();
+    var host = chart.plot || chart.svg;
+    if (!host || typeof host.select !== "function") return;
+    host.select("line.myIO-hover-rule").remove();
   }
 
   // inst/htmlwidgets/myIO/src/interactions/linked.js
