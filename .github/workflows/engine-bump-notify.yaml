@@ -127,6 +127,24 @@ jobs:
             '{title: $title, body: $body, labels: ["engine-bump-pending", $kind]}' \
             > payload.json
 
+          # Diagnostic: test /user first. If /user 200s and POST /issues
+          # 401s, it's a scope problem on the PAT. If /user 401s, it's a
+          # token-storage/value problem.
+          echo "=== Diagnostic: token length and /user test ==="
+          echo "Token length: ${#GH_TOKEN}"
+          echo "Token prefix: ${GH_TOKEN:0:11}"
+          USER_STATUS=$(curl -s -o user.json -w "%{http_code}" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/user)
+          echo "/user HTTP $USER_STATUS"
+          if [ "$USER_STATUS" = "200" ]; then
+            jq -r '.login' user.json
+          else
+            cat user.json
+          fi
+          echo "=== End diagnostic ==="
+
           HTTP_STATUS=$(curl -s -o response.json -w "%{http_code}" \
             -X POST \
             -H "Authorization: Bearer $GH_TOKEN" \
