@@ -33,7 +33,8 @@ ALLOWED_TYPES <- c(
   "lollipop", "dumbbell",
   "waffle", "beeswarm", "bump",
   "radar", "funnel", "parallel",
-  "survfit", "histogram_fit"
+  "survfit", "histogram_fit",
+  "calendarHeatmap"
 )
 
 COMPATIBILITY_GROUPS <- list(
@@ -69,7 +70,8 @@ COMPATIBILITY_GROUPS <- list(
   funnel = "standalone-funnel",
   parallel = "standalone-parallel",
   survfit = "axes-continuous",
-  histogram_fit = "axes-binned"
+  histogram_fit = "axes-binned",
+  calendarHeatmap = "standalone-calendar"
 )
 
 GROUP_MATRIX <- list(
@@ -85,7 +87,8 @@ GROUP_MATRIX <- list(
   "standalone-waffle" = c("standalone-waffle"),
   "standalone-radar" = c("standalone-radar"),
   "standalone-funnel" = c("standalone-funnel"),
-  "standalone-parallel" = c("standalone-parallel")
+  "standalone-parallel" = c("standalone-parallel"),
+  "standalone-calendar" = c("standalone-calendar")
 )
 
 VALID_COMBINATIONS <- list(
@@ -118,7 +121,8 @@ VALID_COMBINATIONS <- list(
   funnel = c("identity"),
   parallel = c("identity"),
   survfit = c("identity"),
-  histogram_fit = c("identity")
+  histogram_fit = c("identity"),
+  calendarHeatmap = c("identity")
 )
 
 composite_registry <- function() {

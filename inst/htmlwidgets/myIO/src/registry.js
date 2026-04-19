@@ -11,6 +11,7 @@ import { TreemapRenderer } from "./renderers/TreemapRenderer.js";
 import { DonutRenderer } from "./renderers/DonutRenderer.js";
 import { GaugeRenderer } from "./renderers/GaugeRenderer.js";
 import { HeatmapRenderer } from "./renderers/HeatmapRenderer.js";
+import { CalendarHeatmapRenderer } from "./renderers/CalendarHeatmapRenderer.js";
 import { CandlestickRenderer } from "./renderers/CandlestickRenderer.js";
 import { WaterfallRenderer } from "./renderers/WaterfallRenderer.js";
 import { SankeyRenderer } from "./renderers/SankeyRenderer.js";
@@ -90,6 +91,9 @@ export function registerBuiltInRenderers() {
   }
   if (!rendererRegistry.has(HeatmapRenderer.type)) {
     registerRenderer(HeatmapRenderer.type, new HeatmapRenderer());
+  }
+  if (!rendererRegistry.has(CalendarHeatmapRenderer.type)) {
+    registerRenderer(CalendarHeatmapRenderer.type, new CalendarHeatmapRenderer());
   }
   if (!rendererRegistry.has(CandlestickRenderer.type)) {
     registerRenderer(CandlestickRenderer.type, new CandlestickRenderer());

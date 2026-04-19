@@ -226,6 +226,7 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
       radar = c("axis", "value"),
       funnel = c("stage", "value"),
       parallel = c("dimensions"),
+      calendarHeatmap = c("date", "value"),
       c("x_var", "y_var")
     )
   }
@@ -238,7 +239,7 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
   # Fields produced by the transform should be skipped in column-existence checks
   skip_fields <- if (!is.null(transform_contract)) transform_contract$skip_column_check else character(0)
 
-  mapped_fields <- intersect(c("x_var", "y_var", "group", "level_1", "level_2", "value", "low_y", "high_y", "open", "high", "low", "close", "total", "source", "target"), names(mapping))
+  mapped_fields <- intersect(c("x_var", "y_var", "group", "level_1", "level_2", "value", "low_y", "high_y", "open", "high", "low", "close", "total", "source", "target", "date"), names(mapping))
   mapped_fields <- setdiff(mapped_fields, skip_fields)
   for (field in mapped_fields) {
     if (!mapping[[field]] %in% colnames(data)) {
@@ -260,6 +261,31 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
 
   if (type == "heatmap" && !is.numeric(data[[mapping[["value"]]]])) {
     stop("addIoLayer(): Mapped field '", mapping[["value"]], "' must be numeric for type '", type, "'.", call. = FALSE)
+  }
+
+  if (type == "calendarHeatmap") {
+    if (nrow(data) == 0L) {
+      stop("addIoLayer(): type 'calendarHeatmap' requires data with at least 1 row (got no rows).", call. = FALSE)
+    }
+    if (!is.numeric(data[[mapping[["value"]]]])) {
+      stop("addIoLayer(): Mapped field '", mapping[["value"]],
+           "' must be numeric for type 'calendarHeatmap'.", call. = FALSE)
+    }
+    date_col <- data[[mapping[["date"]]]]
+    dates <- tryCatch(as.Date(date_col), error = function(e) NULL)
+    if (is.null(dates) || any(is.na(dates))) {
+      stop("addIoLayer(): Mapped field '", mapping[["date"]],
+           "' must be Date or coercible via as.Date() for type 'calendarHeatmap'.",
+           call. = FALSE)
+    }
+    years <- unique(as.integer(format(dates, "%Y")))
+    if (length(years) > 1L) {
+      stop("addIoLayer(): type 'calendarHeatmap' data spans multiple calendar years (",
+           paste(range(years), collapse = "-"),
+           "). v1.2 supports a single year per layer. Use setFacet() for multi-year layouts (planned for v1.3).",
+           call. = FALSE)
+    }
+    data[[mapping[["date"]]]] <- format(dates, "%Y-%m-%d")
   }
 
   if (type == "waterfall" && !is.numeric(data[[mapping[["y_var"]]]])) {

@@ -325,6 +325,9 @@ ui <- navbarPage(
     ),
     tabPanel("Funnel",
       div(class = "chart-container", myIOOutput("funnelPlot", height = "500px"))
+    ),
+    tabPanel("Calendar Heatmap",
+      div(class = "chart-container", myIOOutput("calendarPlot", height = "220px"))
     )
   ),
 
@@ -890,6 +893,19 @@ server <- function(input, output) {
     myIO() |>
       addIoLayer("radar", label = "Fighter Stats", color = "#4E79A7",
         data = df, mapping = list(axis = "axis", value = "value"))
+  })
+
+  output$calendarPlot <- renderMyIO({
+    set.seed(1)
+    df <- data.frame(
+      day = as.Date("2026-01-01") + 0:364,
+      activity = rpois(365, lambda = 4)
+    )
+    myIO() |>
+      addIoLayer(type = "calendarHeatmap", color = "#4E79A7",
+                 label = "Daily activity",
+                 data = df,
+                 mapping = list(date = "day", value = "activity"))
   })
 
   output$funnelPlot <- renderMyIO({

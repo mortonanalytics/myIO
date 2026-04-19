@@ -38,6 +38,9 @@
   --chart-cursor-rule-color: #6b7280;
   --chart-cursor-rule-width: 1px;
   --chart-cursor-rule-dasharray: 3 3;
+  --chart-calendar-cell-gap: 2;
+  --chart-calendar-cell-stroke: none;
+  --chart-calendar-empty-fill: #ebedf0;
   --chart-legend-inactive-opacity: 0.4;
   --chart-sheet-bg: #ffffff;
   --chart-sheet-border: rgba(17, 24, 39, 0.1);
@@ -838,6 +841,24 @@
   clip: rect(0 0 0 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* ── Calendar heatmap ── */
+.myIO-calendar-cell {
+  stroke: var(--chart-calendar-cell-stroke);
+  shape-rendering: crispEdges;
+  cursor: pointer;
+}
+
+.myIO-calendar-month,
+.myIO-calendar-dow {
+  font-size: 10px;
+  fill: var(--chart-text-color, #6b7280);
+  font-family: var(--chart-font, system-ui, sans-serif);
+}
+
+[data-theme="dark"] {
+  --chart-calendar-empty-fill: #27272a;
 }
 
 @media print {

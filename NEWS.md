@@ -1,5 +1,16 @@
 # myIO 1.2.0 (development)
 
+## Calendar heatmap
+
+* New `calendarHeatmap` chart type — GitHub-contributions-style grid of daily
+  cells over a single calendar year. Usage:
+  `addIoLayer(type = "calendarHeatmap", data, mapping = list(date = "day", value = "x"))`.
+  Supports Sunday or Monday week starts via `options$weekStart`, continuous
+  color legend, and linked-cursor sync across two linked calendars. Multi-year
+  data is rejected in v1.2; multi-year layouts are planned for v1.3. New CSS
+  variables: `--chart-calendar-cell-gap`, `--chart-calendar-cell-stroke`,
+  `--chart-calendar-empty-fill`.
+
 ## Theme gallery
 
 * 12 named theme presets: `setTheme(preset = "midnight")`. Available presets:

@@ -18,7 +18,7 @@ export function bindRollover(chart, layers) {
   removeHoverOverlay(chart);
 
   lys.forEach(function(layer) {
-    if (["bar", "point", "hexbin", "histogram"].indexOf(layer.type) > -1) {
+    if (["bar", "point", "hexbin", "histogram", "calendarHeatmap"].indexOf(layer.type) > -1) {
       bindElementLayer(layer);
     }
   });
@@ -121,7 +121,9 @@ export function bindRollover(chart, layers) {
       ? (that.xScale ? that.xScale.invert(data.x) : null)
       : layer.type === "histogram"
         ? data.x0
-        : data[layer.mapping.x_var];
+        : layer.type === "calendarHeatmap"
+          ? (data.date instanceof Date ? data.date : new Date(data[layer.mapping.date] + "T00:00:00Z"))
+          : data[layer.mapping.x_var];
     maybeEmitCursor(that, data, xValue, tooltip);
   }
 
@@ -144,6 +146,18 @@ export function bindRollover(chart, layers) {
       return {
         title: { text: "Bin: " + data.x0 + " to " + data.x1 },
         items: [{ color: d3.select(node).attr("fill"), label: "Count", value: data.length }]
+      };
+    }
+
+    if (layer.type === "calendarHeatmap") {
+      var calFormatted = renderer.formatTooltip(that, data, layer);
+      return {
+        title: { text: typeof calFormatted.title === "string" ? calFormatted.title : calFormatted.title.text },
+        items: [{
+          color: calFormatted.color || d3.select(node).attr("fill"),
+          label: calFormatted.label || layer.label,
+          value: calFormatted.value
+        }]
       };
     }
 

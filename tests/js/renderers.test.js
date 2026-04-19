@@ -46,7 +46,7 @@ describe("Renderer static properties", function() {
   });
 
   test("all built-in renderer types are registered", function() {
-    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge", "heatmap", "candlestick", "waterfall", "sankey", "rangeBar", "text", "bracket", "lollipop", "dumbbell", "waffle", "beeswarm", "bump", "radar", "funnel", "parallel"];
+    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge", "heatmap", "candlestick", "waterfall", "sankey", "rangeBar", "text", "bracket", "lollipop", "dumbbell", "waffle", "beeswarm", "bump", "radar", "funnel", "parallel", "calendarHeatmap"];
     types.forEach(function(type) {
       var renderer = getRenderer(type);
       expect(renderer).toBeDefined();
@@ -55,7 +55,7 @@ describe("Renderer static properties", function() {
   });
 
   test("each renderer has traits and dataContract", function() {
-    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge", "heatmap", "candlestick", "waterfall", "sankey", "rangeBar", "text", "bracket", "lollipop", "dumbbell", "waffle", "beeswarm", "bump", "radar", "funnel", "parallel"];
+    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge", "heatmap", "candlestick", "waterfall", "sankey", "rangeBar", "text", "bracket", "lollipop", "dumbbell", "waffle", "beeswarm", "bump", "radar", "funnel", "parallel", "calendarHeatmap"];
     types.forEach(function(type) {
       var renderer = getRenderer(type);
       expect(renderer.constructor.traits).toBeDefined();
@@ -65,7 +65,7 @@ describe("Renderer static properties", function() {
   });
 
   test("standalone types have hasAxes=false", function() {
-    ["treemap", "donut", "gauge", "sankey", "waffle", "radar", "funnel", "parallel"].forEach(function(type) {
+    ["treemap", "donut", "gauge", "sankey", "waffle", "radar", "funnel", "parallel", "calendarHeatmap"].forEach(function(type) {
       expect(getRenderer(type).constructor.traits.hasAxes).toBe(false);
     });
   });
