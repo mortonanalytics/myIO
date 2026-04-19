@@ -7,7 +7,7 @@ export function getPrimaryType(chart) {
 }
 
 export function isAxesChart(type) {
-  return ["treemap", "gauge", "donut", "sankey"].indexOf(type) === -1;
+  return ["treemap", "gauge", "donut", "sankey", "radar", "funnel", "parallel"].indexOf(type) === -1;
 }
 
 export function usesHistogramBins(type) {
@@ -19,7 +19,7 @@ export function usesContinuousLegend(type) {
 }
 
 export function usesOrdinalLegend(type) {
-  return type === "treemap" || type === "donut" || type === "sankey";
+  return type === "treemap" || type === "donut" || type === "sankey" || type === "radar" || type === "funnel" || type === "parallel";
 }
 
 export function needsReferenceLines(type) {

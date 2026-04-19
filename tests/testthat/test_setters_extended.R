@@ -4,23 +4,23 @@
 
 test_that("setTheme sets all theme properties", {
   w <- myIO::setTheme(myIO::myIO(), text_color = "white", grid_color = "#333", bg = "#1a1a2e", font = "monospace")
-  expect_equal(w$x$config$theme[["chart-text-color"]], "white")
-  expect_equal(w$x$config$theme[["chart-grid-color"]], "#333")
-  expect_equal(w$x$config$theme[["chart-bg"]], "#1a1a2e")
-  expect_equal(w$x$config$theme[["chart-font"]], "monospace")
+  expect_equal(w$x$config$theme$values[["--chart-text-color"]], "white")
+  expect_equal(w$x$config$theme$values[["--chart-grid-color"]], "#333")
+  expect_equal(w$x$config$theme$values[["--chart-bg"]], "#1a1a2e")
+  expect_equal(w$x$config$theme$values[["--chart-font"]], "monospace")
 })
 
 test_that("setTheme removes NULL properties", {
   w <- myIO::setTheme(myIO::myIO(), text_color = "red")
-  expect_equal(w$x$config$theme[["chart-text-color"]], "red")
-  expect_null(w$x$config$theme[["chart-grid-color"]])
-  expect_null(w$x$config$theme[["chart-bg"]])
+  expect_equal(w$x$config$theme$values[["--chart-text-color"]], "red")
+  expect_null(w$x$config$theme$values[["--chart-grid-color"]])
+  expect_null(w$x$config$theme$values[["--chart-bg"]])
 })
 
 test_that("setTheme supports extra custom properties via ...", {
-  w <- myIO::setTheme(myIO::myIO(), "ref-line-color" = "yellow", "legend-inactive-opacity" = "0.3")
-  expect_equal(w$x$config$theme[["chart-ref-line-color"]], "yellow")
-  expect_equal(w$x$config$theme[["chart-legend-inactive-opacity"]], "0.3")
+  w <- myIO::setTheme(myIO::myIO(), "--chart-ref-line-color" = "yellow", "--chart-legend-inactive-opacity" = "0.3")
+  expect_equal(w$x$config$theme$values[["--chart-ref-line-color"]], "yellow")
+  expect_equal(w$x$config$theme$values[["--chart-legend-inactive-opacity"]], "0.3")
 })
 
 # --- suppressAxis ---

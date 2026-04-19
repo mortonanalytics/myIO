@@ -417,9 +417,10 @@
     return chart.height;
   }
   function initializeScaffold(chart) {
-    d3.select(chart.element).selectAll(".myIO-svg, .buttonDiv, .toolTip, .myIO-fab, .myIO-panel, .myIO-sheet-backdrop").remove();
-    d3.select(chart.element).style("position", "relative");
+    d3.select(chart.element).selectAll(".myIO-svg, .toolTip, .myIO-fab, .myIO-panel, .myIO-sheet-backdrop").remove();
+    d3.select(chart.element).classed("myIO-container", true).style("position", "relative");
     chart.svg = d3.select(chart.element).append("svg").attr("class", "myIO-svg").attr("id", "myIO-svg" + chart.element.id).attr("width", chart.totalWidth).attr("height", chart.height).attr("viewBox", "0 0 " + chart.totalWidth + " " + chart.height).attr("role", "img").attr("aria-label", buildAriaLabel(chart));
+    chart.svg.append("rect").attr("class", "myIO-bg").attr("width", chart.totalWidth).attr("height", chart.height).attr("fill", "var(--chart-bg, #ffffff)");
     applyPlotTransform(chart);
     chart.chart = chart.plot.append("g").attr("class", "myIO-chart-area");
   }
@@ -754,13 +755,96 @@
     }
   }
 
+  // inst/htmlwidgets/myIO/src/utils/resolve-css-vars.js
+  var CHART_CSS_VARS = [
+    // Text & font
+    "--chart-text-color",
+    "--chart-font",
+    "--chart-annotation-font-size",
+    // Grid
+    "--chart-grid-color",
+    "--chart-grid-opacity",
+    // Backgrounds
+    "--chart-bg",
+    // Reference lines
+    "--chart-ref-line-color",
+    "--chart-ref-line-width",
+    // Linked cursor crosshair
+    "--chart-cursor-rule-color",
+    "--chart-cursor-rule-width",
+    // Annotations & accents
+    "--chart-annotation-ring",
+    "--chart-primary-color",
+    // Brush
+    "--chart-brush-fill",
+    "--chart-brush-stroke",
+    "--chart-brush-dim-opacity",
+    // Legend
+    "--chart-legend-inactive-opacity",
+    // Status bar
+    "--chart-status-bar-color"
+  ];
+  function resolveCSSVariables(svgClone, container) {
+    var computed = getComputedStyle(container);
+    var resolved = {};
+    for (var i = 0; i < CHART_CSS_VARS.length; i++) {
+      var prop = CHART_CSS_VARS[i];
+      var val = computed.getPropertyValue(prop).trim();
+      if (val) resolved[prop] = val;
+    }
+    var rootStyle = svgClone.getAttribute("style") || "";
+    for (var p in resolved) {
+      if (rootStyle.indexOf(p + ":") === -1) {
+        rootStyle += (rootStyle && !/;\s*$/.test(rootStyle) ? ";" : "") + p + ":" + resolved[p];
+      }
+    }
+    if (rootStyle) svgClone.setAttribute("style", rootStyle);
+    function escapeRegex(s) {
+      return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+    var replacers = [];
+    for (var key in resolved) {
+      replacers.push({
+        re: new RegExp("var\\(\\s*" + escapeRegex(key) + "\\s*(?:,\\s*[^)]*)?\\)", "g"),
+        value: resolved[key]
+      });
+    }
+    function applyReplacers(str) {
+      for (var k = 0; k < replacers.length; k++) {
+        str = str.replace(replacers[k].re, replacers[k].value);
+      }
+      return str;
+    }
+    var elements = svgClone.querySelectorAll("*");
+    var allEls = [svgClone].concat(Array.prototype.slice.call(elements));
+    for (var j = 0; j < allEls.length; j++) {
+      var el = allEls[j];
+      var style = el.getAttribute("style");
+      if (style && style.indexOf("var(") !== -1) {
+        el.setAttribute("style", applyReplacers(style));
+      }
+      var attrs = ["fill", "stroke", "color", "stop-color"];
+      for (var a = 0; a < attrs.length; a++) {
+        var attrVal = el.getAttribute(attrs[a]);
+        if (attrVal && attrVal.indexOf("var(") !== -1) {
+          el.setAttribute(attrs[a], applyReplacers(attrVal));
+        }
+      }
+    }
+  }
+
   // inst/htmlwidgets/myIO/src/utils/export-svg.js
   function getSVGString(svgNode) {
-    svgNode.setAttribute("xlink", "http://www.w3.org/1999/xlink");
-    var cssStyleText = getCSSStyles(svgNode);
-    appendCSS(cssStyleText, svgNode);
+    var svgClone = svgNode.cloneNode(true);
+    var container = svgNode.parentNode || document.body;
+    svgClone.setAttribute("xlink", "http://www.w3.org/1999/xlink");
+    if (container && typeof getComputedStyle === "function") {
+      resolveCSSVariables(svgClone, container);
+    }
+    var cssStyleText = getCSSStyles(svgClone);
+    appendCSS(cssStyleText, svgClone);
     var serializer = new XMLSerializer();
-    var svgString = serializer.serializeToString(svgNode);
+    var svgString = serializer.serializeToString(svgClone);
     svgString = svgString.replace(/(\w+)?:?xlink=/g, "xmlns:xlink=");
     svgString = svgString.replace(/NS\d+:href/g, "xlink:href");
     return svgString;
@@ -886,6 +970,18 @@
       keys = layer.data.map(function(d) {
         return d[layer.mapping.x_var];
       });
+    } else if (layer.type === "funnel" && Array.isArray(layer.data)) {
+      keys = layer.data.map(function(d) {
+        return d[layer.mapping.stage];
+      });
+    } else if (layer.type === "radar" && Array.isArray(layer.data)) {
+      keys = layer.mapping.group ? Array.from(new Set(layer.data.map(function(d) {
+        return d[layer.mapping.group];
+      }))) : [layer.label];
+    } else if (layer.type === "parallel" && Array.isArray(layer.data)) {
+      keys = layer.mapping.group ? Array.from(new Set(layer.data.map(function(d) {
+        return d[layer.mapping.group];
+      }))) : [layer.label];
     }
     return {
       type: "ordinal",
@@ -1178,12 +1274,142 @@
     }
   })("undefined" != typeof self && self || "undefined" != typeof window && window || (void 0).content);
 
+  // inst/htmlwidgets/myIO/src/utils/load-jspdf.js
+  var _jspdfPromise = null;
+  function loadJsPDF() {
+    if (window.jspdf && window.jspdf.jsPDF) {
+      return Promise.resolve(window.jspdf.jsPDF);
+    }
+    if (_jspdfPromise) return _jspdfPromise;
+    _jspdfPromise = new Promise(function(resolve, reject) {
+      var scripts = document.querySelectorAll("script[src]");
+      var scriptUrl = null;
+      for (var i = 0; i < scripts.length; i++) {
+        var src = scripts[i].getAttribute("src");
+        if (src && src.indexOf("myIOapi") !== -1) {
+          scriptUrl = new URL(scripts[i].src, document.baseURI);
+          break;
+        }
+      }
+      var jspdfSrc = scriptUrl ? new URL("lib/jspdf/jspdf.umd.min.js", scriptUrl).href : "lib/jspdf/jspdf.umd.min.js";
+      var script = document.createElement("script");
+      script.src = jspdfSrc;
+      script.onload = function() {
+        if (window.jspdf && window.jspdf.jsPDF) {
+          resolve(window.jspdf.jsPDF);
+        } else {
+          _jspdfPromise = null;
+          reject(new Error("[myIO] jsPDF loaded but constructor not found"));
+        }
+      };
+      script.onerror = function() {
+        _jspdfPromise = null;
+        reject(new Error("[myIO] Failed to load jsPDF from " + jspdfSrc));
+      };
+      document.head.appendChild(script);
+    });
+    return _jspdfPromise;
+  }
+
+  // inst/htmlwidgets/myIO/src/utils/export-pdf.js
+  function exportToPDF(chart) {
+    return loadJsPDF().then(function(JsPDF) {
+      var legend = injectExportLegend(chart);
+      var exportHeight = chart.height + legend.extraHeight;
+      var svgString = getSVGString(chart.svg.node());
+      legend.cleanup();
+      var w = chart.totalWidth || chart.width;
+      var h = exportHeight;
+      var scale = 3;
+      return new Promise(function(resolve) {
+        svgString2Image(svgString, w * scale, h * scale, "png", function(blob) {
+          var reader = new FileReader();
+          reader.onload = function() {
+            var dataUrl = reader.result;
+            var orientation = w > h ? "landscape" : "portrait";
+            var pageW = orientation === "landscape" ? 842 : 595;
+            var pageH = orientation === "landscape" ? 595 : 842;
+            var margin = 36;
+            var availW = pageW - 2 * margin;
+            var availH = pageH - 2 * margin;
+            var fitScale = Math.min(availW / w, availH / h);
+            var imgW = w * fitScale;
+            var imgH = h * fitScale;
+            var doc = new JsPDF({
+              orientation,
+              unit: "pt",
+              format: [pageW, pageH]
+            });
+            var title = chart.config.export && chart.config.export.title || chart.config.axes && chart.config.axes.xAxisLabel || "myIO Chart";
+            doc.setProperties({ title, creator: "myIO" });
+            var x = (pageW - imgW) / 2;
+            var y = (pageH - imgH) / 2;
+            doc.addImage(dataUrl, "PNG", x, y, imgW, imgH);
+            doc.save(chart.element.id + ".pdf");
+            resolve(true);
+          };
+          reader.readAsDataURL(blob);
+        });
+      });
+    });
+  }
+
+  // inst/htmlwidgets/myIO/src/utils/export-clipboard.js
+  async function copyAsSVG(chart) {
+    var legend = injectExportLegend(chart);
+    var svgString = getSVGString(chart.svg.node());
+    legend.cleanup();
+    try {
+      if (navigator.clipboard && navigator.clipboard.write && typeof ClipboardItem !== "undefined") {
+        var blob = new Blob([svgString], { type: "image/svg+xml" });
+        var htmlBlob = new Blob([svgString], { type: "text/html" });
+        await navigator.clipboard.write([
+          new ClipboardItem({ "text/html": htmlBlob, "image/svg+xml": blob })
+        ]);
+      } else {
+        await navigator.clipboard.writeText(svgString);
+      }
+      return true;
+    } catch (err) {
+      console.warn("[myIO] Clipboard copy failed", err);
+      return false;
+    }
+  }
+  async function copyAsPNG(chart) {
+    var legend = injectExportLegend(chart);
+    var exportHeight = chart.height + legend.extraHeight;
+    var svgString = getSVGString(chart.svg.node());
+    legend.cleanup();
+    var width = (chart.totalWidth || chart.width) * 2;
+    var height = exportHeight * 2;
+    return new Promise(function(resolve) {
+      svgString2Image(svgString, width, height, "png", function(blob) {
+        if (navigator.clipboard && navigator.clipboard.write && typeof ClipboardItem !== "undefined") {
+          navigator.clipboard.write([
+            new ClipboardItem({ "image/png": blob })
+          ]).then(function() {
+            resolve(true);
+          }).catch(function() {
+            resolve(false);
+          });
+        } else {
+          resolve(false);
+        }
+      });
+    });
+  }
+
   // inst/htmlwidgets/myIO/src/interactions/buttons.js
   var BUTTON_LABELS = {
-    image: "Export as PNG",
-    chart: "Download CSV data",
-    percent: "Toggle percent view",
-    group2stack: "Toggle grouped/stacked layout"
+    chart: "Download data",
+    image: "Save image",
+    svg: "Save as SVG",
+    pdf: "Export as PDF",
+    clipboard: "Copy to clipboard",
+    "clipboard-png": "Copy as PNG",
+    "clipboard-svg": "Copy as SVG",
+    percent: "Toggle percent",
+    group2stack: "Toggle layout"
   };
   function handleAction(chart, layers, name) {
     if (name === "image") {
@@ -1194,6 +1420,14 @@
       svgString2Image(svgString, 2 * chart.width, 2 * exportHeight, "png", function(dataBlob) {
         saveAs(dataBlob, chart.element.id + ".png");
       });
+      return;
+    }
+    if (name === "svg") {
+      var svgLegend = injectExportLegend(chart);
+      var svgOut = getSVGString(chart.svg.node());
+      svgLegend.cleanup();
+      var svgBlob = new Blob([svgOut], { type: "image/svg+xml;charset=utf-8" });
+      saveAs(svgBlob, chart.element.id + ".svg");
       return;
     }
     if (name === "chart") {
@@ -1209,6 +1443,18 @@
       exportToCsv(chart.element.id + "_data.csv", [].concat.apply([], csvData));
       return;
     }
+    if (name === "pdf") {
+      exportToPDF(chart);
+      return;
+    }
+    if (name === "clipboard" || name === "clipboard-png") {
+      copyAsPNG(chart);
+      return;
+    }
+    if (name === "clipboard-svg") {
+      copyAsSVG(chart);
+      return;
+    }
     if (name === "percent") {
       var nextToggle = chart.runtime.activeY === chart.options.toggleY[0] ? [chart.plotLayers[0].mapping.y_var, chart.options.yAxisFormat] : chart.options.toggleY;
       chart.toggleVarY(nextToggle);
@@ -1219,19 +1465,38 @@
     }
   }
   function iconWrapper(paths) {
-    return '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true">' + paths + "</svg>";
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true">' + paths + "</svg>";
   }
-  function iconCamera() {
-    return iconWrapper('<path d="M4 7h3l2-2h6l2 2h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"></path><circle cx="12" cy="13" r="4"></circle>');
-  }
-  function iconFileDown() {
-    return iconWrapper('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M12 12v6"></path><path d="m9 15 3 3 3-3"></path>');
+  function iconImage() {
+    return iconWrapper(
+      '<rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="m21 15-5-5L5 21"></path>'
+    );
   }
   function iconPercent() {
     return iconWrapper('<line x1="19" y1="5" x2="5" y2="19"></line><circle cx="7" cy="7" r="2"></circle><circle cx="17" cy="17" r="2"></circle>');
   }
   function iconLayers() {
     return iconWrapper('<rect x="4" y="5" width="14" height="4" rx="1"></rect><rect x="6" y="10" width="14" height="4" rx="1"></rect><rect x="8" y="15" width="14" height="4" rx="1"></rect>');
+  }
+  function iconLegend() {
+    return iconWrapper(
+      '<circle cx="5" cy="7" r="1.5"></circle><line x1="9" y1="7" x2="19" y2="7"></line><circle cx="5" cy="12" r="1.5"></circle><line x1="9" y1="12" x2="19" y2="12"></line><circle cx="5" cy="17" r="1.5"></circle><line x1="9" y1="17" x2="19" y2="17"></line>'
+    );
+  }
+  function iconPDF() {
+    return iconWrapper(
+      '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><text x="12" y="17" text-anchor="middle" font-size="7" fill="currentColor" stroke="none" font-weight="bold">PDF</text>'
+    );
+  }
+  function iconClipboard() {
+    return iconWrapper(
+      '<rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h1a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1"></path>'
+    );
+  }
+  function iconDownload() {
+    return iconWrapper(
+      '<path d="M12 4v12"></path><path d="m8 12 4 4 4-4"></path><path d="M4 17v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2"></path>'
+    );
   }
 
   // inst/htmlwidgets/myIO/src/interactions/bottom-sheet.js
@@ -1248,7 +1513,7 @@
       return null;
     }
     chart.dom = chart.dom || {};
-    var fab = d3.select(chart.element).append("button").attr("type", "button").attr("class", "myIO-fab").attr("aria-label", "Open chart controls").attr("aria-expanded", "false").html(iconMore());
+    var fab = d3.select(chart.element).append("button").attr("type", "button").attr("class", "myIO-fab").attr("aria-label", "Legend and actions").attr("aria-expanded", "false").html(iconLegend());
     fab.on("click", function() {
       openPanel(chart);
     });
@@ -1280,23 +1545,28 @@
       closePanel(chart);
     });
     var panel = d3.select(chart.element).append("div").attr("class", "myIO-panel " + (isMobile(chart) ? PANEL_LAYOUT_BOTTOM_CLASS : PANEL_LAYOUT_SIDE_CLASS)).attr("role", "dialog").attr("aria-modal", "true").attr("aria-label", getDialogLabel(chart)).attr("tabindex", "-1");
-    panel.append("div").attr("class", "myIO-sheet-handle");
+    var header = panel.append("div").attr("class", "myIO-sheet-header");
+    header.append("div").attr("class", "myIO-sheet-handle");
+    header.append("button").attr("type", "button").attr("class", "myIO-sheet-close").attr("aria-label", "Close").html(iconClose()).on("click", function() {
+      closePanel(chart);
+    }).on("keydown", function(event) {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        closePanel(chart);
+      }
+    });
     chart.dom.backdrop = backdrop;
     chart.dom.panel = panel;
     chart.dom.sheetLegendSection = null;
     chart.dom.sheetLegendBody = null;
-    chart.dom.sheetActionsSection = null;
     chart.dom.sheetActionsBody = null;
     if (!chart.options || chart.options.suppressLegend !== true) {
-      var legendSection = panel.append("section").attr("class", "myIO-sheet-section myIO-sheet-legend-section").attr("data-sheet-section", "legend");
-      legendSection.append("h2").attr("class", "myIO-sheet-section-title").text("Legend");
+      var legendSection = panel.append("div").attr("class", "myIO-sheet-legend-section").attr("data-sheet-section", "legend");
       chart.dom.sheetLegendSection = legendSection;
       chart.dom.sheetLegendBody = legendSection.append("div").attr("class", "myIO-sheet-legend");
+      legendSection.append("hr").attr("class", "myIO-sheet-divider");
     }
-    var actionSection = panel.append("section").attr("class", "myIO-sheet-section myIO-sheet-actions-section").attr("data-sheet-section", "actions");
-    actionSection.append("h2").attr("class", "myIO-sheet-section-title").text("Actions");
-    chart.dom.sheetActionsSection = actionSection;
-    chart.dom.sheetActionsBody = actionSection.append("div").attr("class", "myIO-sheet-actions");
+    chart.dom.sheetActionsBody = panel.append("div").attr("class", "myIO-sheet-actions").attr("data-sheet-section", "actions");
     renderSheetLegend(chart);
     renderSheetActions(chart);
     chart.runtime._sheetOpen = true;
@@ -1307,6 +1577,7 @@
       panel.classed(PANEL_OPEN_CLASS, true);
       focusFirstInteractive(panel.node());
     });
+    attachSwipeDismiss(chart);
     return panel;
   }
   function closePanel(chart, opts) {
@@ -1364,23 +1635,30 @@
     if (!chart || !chart.dom || !chart.dom.panel) {
       return;
     }
-    var legendSection = chart.dom.sheetLegendSection;
     var legendBody = chart.dom.sheetLegendBody;
-    if (!legendSection || !legendBody) {
+    var legendSection = chart.dom.sheetLegendSection;
+    if (!legendBody) {
       return;
     }
     var panelNode = chart.dom.panel.node();
     var scrollTop = panelNode ? panelNode.scrollTop : 0;
     var legendData = getLegendData(chart);
     legendBody.selectAll("*").remove();
+    if (legendSection) {
+      legendSection.selectAll(".myIO-sheet-legend-reset").remove();
+    }
     if (!legendData || !legendData.type) {
-      legendSection.style("display", "none");
+      if (legendSection) {
+        legendSection.style("display", "none");
+      }
       if (panelNode) {
         panelNode.scrollTop = scrollTop;
       }
       return;
     }
-    legendSection.style("display", null);
+    if (legendSection) {
+      legendSection.style("display", null);
+    }
     if (legendData.type === "continuous") {
       renderContinuousLegend(chart, legendBody, legendData);
     } else if (legendData.type === "ordinal") {
@@ -1400,14 +1678,21 @@
     var body = chart.dom.sheetActionsBody;
     body.selectAll("*").remove();
     actions.forEach(function(action) {
-      var button = body.append("button").attr("type", "button").attr("class", "button myIO-sheet-action").attr("data-action", action.name).attr("aria-label", action.label).on("click", function() {
+      var button = body.append("button").attr("type", "button").attr("class", "myIO-sheet-action").attr("data-action", action.name).on("click", function() {
         handleAction(chart, chart.currentLayers || chart.derived && chart.derived.currentLayers || chart.plotLayers || [], action.name);
+      }).on("keydown", function(event) {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          handleAction(chart, chart.currentLayers || chart.derived && chart.derived.currentLayers || chart.plotLayers || [], action.name);
+        }
       });
       button.append("span").attr("class", "myIO-sheet-action-icon").attr("aria-hidden", "true").html(action.icon);
       button.append("span").attr("class", "myIO-sheet-action-label").text(action.label);
     });
   }
   function renderLayerLegend(chart, container, legendData) {
+    var useGrid = isMobile(chart) && legendData.items.length > 4;
+    container.classed("myIO-sheet-legend--grid", useGrid);
     legendData.items.forEach(function(item) {
       var button = container.append("button").attr("type", "button").attr("class", "myIO-sheet-legend-item").attr("role", "switch").attr("aria-checked", item.visible ? "true" : "false").attr("data-key", item.key).on("click", function() {
         toggleLayerVisibility(chart, item);
@@ -1417,12 +1702,14 @@
           toggleLayerVisibility(chart, item);
         }
       });
-      button.append("span").attr("class", "myIO-sheet-swatch").style("background-color", item.color).style("border", "1px solid " + item.color);
+      button.append("span").attr("class", "myIO-sheet-swatch").style("background-color", item.color);
       button.append("span").attr("class", "myIO-sheet-legend-label").text(item.label);
-      button.append("span").attr("class", "myIO-sheet-legend-state").text(item.visible ? "On" : "Off");
     });
+    appendShowAllButton(chart, legendData);
   }
   function renderOrdinalLegend(chart, container, legendData) {
+    var useGrid = isMobile(chart) && legendData.items.length > 4;
+    container.classed("myIO-sheet-legend--grid", useGrid);
     legendData.items.forEach(function(item) {
       var button = container.append("button").attr("type", "button").attr("class", "myIO-sheet-legend-item").attr("role", "switch").attr("aria-checked", item.visible ? "true" : "false").attr("data-key", item.key).on("click", function() {
         toggleOrdinalSegment(chart, item);
@@ -1432,10 +1719,10 @@
           toggleOrdinalSegment(chart, item);
         }
       });
-      button.append("span").attr("class", "myIO-sheet-swatch").style("background-color", item.color).style("border", "1px solid " + item.color);
+      button.append("span").attr("class", "myIO-sheet-swatch").style("background-color", item.color);
       button.append("span").attr("class", "myIO-sheet-legend-label").text(item.label);
-      button.append("span").attr("class", "myIO-sheet-legend-state").text(item.visible ? "On" : "Off");
     });
+    appendShowAllButton(chart, legendData);
   }
   function renderContinuousLegend(chart, container, legendData) {
     var scale = legendData.colorScale || chart.colorContinuous;
@@ -1454,10 +1741,24 @@
   function buildActionData(chart) {
     var layers = chart.currentLayers || chart.derived && chart.derived.currentLayers || chart.plotLayers || [];
     var primaryType = layers[0] ? layers[0].type : null;
-    var data = [
-      { name: "image", label: BUTTON_LABELS.image, icon: iconCamera() },
-      { name: "chart", label: BUTTON_LABELS.chart, icon: iconFileDown() }
-    ];
+    var exportConfig = chart.config && chart.config.export;
+    var data = [];
+    if (!exportConfig || exportConfig.csv !== false) {
+      data.push({ name: "chart", label: BUTTON_LABELS.chart, icon: iconDownload() });
+    }
+    if (!exportConfig || exportConfig.png !== false) {
+      data.push({ name: "image", label: BUTTON_LABELS.image, icon: iconImage() });
+    }
+    if (!exportConfig || exportConfig.svg !== false) {
+      data.push({ name: "svg", label: BUTTON_LABELS.svg, icon: iconDownload() });
+    }
+    if (!exportConfig || exportConfig.pdf !== false) {
+      data.push({ name: "pdf", label: BUTTON_LABELS.pdf, icon: iconPDF() });
+    }
+    if (!exportConfig || exportConfig.clipboard !== false) {
+      data.push({ name: "clipboard-png", label: BUTTON_LABELS["clipboard-png"], icon: iconClipboard() });
+      data.push({ name: "clipboard-svg", label: BUTTON_LABELS["clipboard-svg"], icon: iconClipboard() });
+    }
     if (chart.options && chart.options.toggleY) {
       data.push({ name: "percent", label: BUTTON_LABELS.percent, icon: iconPercent() });
     }
@@ -1500,8 +1801,76 @@
       hidden.splice(index, 1);
     }
     chart.runtime._suppressOrdinalLegendRebuild = true;
-    chart.routeLayers(chart.currentLayers || chart.derived && chart.derived.currentLayers || []);
-    chart.runtime._suppressOrdinalLegendRebuild = false;
+    try {
+      chart.routeLayers(chart.currentLayers || chart.derived && chart.derived.currentLayers || []);
+    } finally {
+      chart.runtime._suppressOrdinalLegendRebuild = false;
+    }
+    renderSheetLegend(chart);
+  }
+  function appendShowAllButton(chart, legendData) {
+    var hasHidden = legendData.items.some(function(item) {
+      return !item.visible;
+    });
+    if (hasHidden && chart.dom.sheetLegendSection) {
+      chart.dom.sheetLegendSection.selectAll(".myIO-sheet-legend-reset").remove();
+      chart.dom.sheetLegendSection.append("button").attr("type", "button").attr("class", "myIO-sheet-legend-reset").text("Show All").on("click", function() {
+        resetLegendVisibility(chart, legendData.type);
+      });
+    }
+  }
+  function resetLegendVisibility(chart, type) {
+    chart.runtime = chart.runtime || {};
+    if (type === "ordinal") {
+      chart.runtime._hiddenOrdinalSegments = [];
+      chart.runtime._suppressOrdinalLegendRebuild = true;
+      try {
+        chart.routeLayers(chart.currentLayers || chart.derived && chart.derived.currentLayers || []);
+      } finally {
+        chart.runtime._suppressOrdinalLegendRebuild = false;
+      }
+      renderSheetLegend(chart);
+    } else {
+      chart.runtime._hiddenLayerKeys = [];
+      chart.derived = chart.derived || {};
+      chart.derived.currentLayers = (chart.plotLayers || []).slice();
+      chart.syncLegacyAliases();
+      chart.renderCurrentLayers();
+    }
+  }
+  function attachSwipeDismiss(chart) {
+    var panel = chart.dom.panel;
+    if (!panel || !isMobile(chart)) return;
+    var node = panel.node();
+    var startY = 0;
+    var currentY = 0;
+    var dragging = false;
+    node.addEventListener("touchstart", function(e) {
+      var rect = node.getBoundingClientRect();
+      var touch = e.touches[0];
+      if (touch.clientY - rect.top > 40) return;
+      startY = touch.clientY;
+      currentY = touch.clientY;
+      dragging = true;
+      node.style.transition = "none";
+    }, { passive: true });
+    node.addEventListener("touchmove", function(e) {
+      if (!dragging) return;
+      currentY = e.touches[0].clientY;
+      var dy = Math.max(0, currentY - startY);
+      node.style.transform = "translateY(" + dy + "px)";
+    }, { passive: true });
+    node.addEventListener("touchend", function() {
+      if (!dragging) return;
+      dragging = false;
+      node.style.transition = "";
+      var dy = currentY - startY;
+      if (dy > 80) {
+        closePanel(chart);
+      } else {
+        node.style.transform = "";
+      }
+    });
   }
   function getLegendData(chart) {
     if (chart.runtime && chart.runtime._legendData) {
@@ -1514,7 +1883,7 @@
       return;
     }
     var isOpen = chart.runtime && chart.runtime._sheetOpen === true;
-    chart.dom.fab.attr("aria-expanded", isOpen ? "true" : "false").attr("aria-label", isOpen ? "Close chart controls" : "Open chart controls").html(isOpen ? iconClose() : iconMore());
+    chart.dom.fab.attr("aria-expanded", isOpen ? "true" : "false").attr("aria-label", isOpen ? "Close legend and actions" : "Legend and actions").html(isOpen ? iconClose() : iconLegend());
   }
   function attachSheetKeydown(chart) {
     detachSheetKeydown(chart);
@@ -1569,7 +1938,6 @@
       chart.dom.backdrop = null;
       chart.dom.sheetLegendSection = null;
       chart.dom.sheetLegendBody = null;
-      chart.dom.sheetActionsSection = null;
       chart.dom.sheetActionsBody = null;
     }
   }
@@ -1630,9 +1998,6 @@
   }
   function iconWrapper2(paths) {
     return '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true">' + paths + "</svg>";
-  }
-  function iconMore() {
-    return iconWrapper2('<circle cx="12" cy="5" r="1.75"></circle><circle cx="12" cy="12" r="1.75"></circle><circle cx="12" cy="19" r="1.75"></circle>');
   }
   function iconClose() {
     return iconWrapper2('<path d="M6 6 18 18"></path><path d="M18 6 6 18"></path>');
@@ -1978,6 +2343,163 @@
     }
     remove(chart, layer) {
       chart.dom.chartArea.selectAll("." + tagName("heatmap", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
+    }
+  };
+
+  // inst/htmlwidgets/myIO/src/renderers/CalendarHeatmapRenderer.js
+  var CalendarHeatmapRenderer = class {
+    static type = "calendarHeatmap";
+    static traits = {
+      hasAxes: false,
+      referenceLines: false,
+      legendType: "continuous",
+      binning: false,
+      rolloverStyle: "element"
+    };
+    static dataContract = {
+      date: { required: true },
+      value: { required: true, numeric: true }
+    };
+    static scaleHints = null;
+    getHoverSelector() {
+      return ".myIO-calendar-cell";
+    }
+    formatTooltip(chart, d, layer) {
+      var fmt = d3.utcFormat("%b %-d, %Y");
+      var date = d.date instanceof Date ? d.date : /* @__PURE__ */ new Date((d[layer.mapping.date] || "") + "T00:00:00Z");
+      var value = d.value != null ? d.value : +d[layer.mapping.value];
+      return {
+        title: fmt(date),
+        body: layer.label + ": " + value,
+        color: d.color || layer.color,
+        label: layer.label,
+        value,
+        raw: d
+      };
+    }
+    render(chart, layer) {
+      var opts = layer.options || {};
+      var weekStart = opts.weekStart === "monday" ? 1 : 0;
+      var showDow = opts.showWeekdayLabels !== false;
+      var dateKey = layer.mapping.date;
+      var valueKey = layer.mapping.value;
+      var datums = (layer.data || []).map(function(row) {
+        return {
+          date: /* @__PURE__ */ new Date(row[dateKey] + "T00:00:00Z"),
+          value: +row[valueKey],
+          raw: row
+        };
+      }).filter(function(d) {
+        return !isNaN(d.date.getTime());
+      }).sort(function(a, b) {
+        return a.date - b.date;
+      });
+      if (datums.length === 0) return;
+      var year = datums[0].date.getUTCFullYear();
+      var jan1 = new Date(Date.UTC(year, 0, 1));
+      var dec31 = new Date(Date.UTC(year, 11, 31));
+      var weekdayIdx = function(d) {
+        var js = d.getUTCDay();
+        return (js - weekStart + 7) % 7;
+      };
+      var jan1Offset = weekdayIdx(jan1);
+      var weekCol = function(d) {
+        var daysFromJan1 = Math.floor((d - jan1) / 864e5);
+        return Math.floor((daysFromJan1 + jan1Offset) / 7);
+      };
+      var totalWeeks = weekCol(dec31) + 1;
+      var margin = chart.margin || { top: 0, right: 0, bottom: 0, left: 0 };
+      var innerW = (chart.width || 0) - (margin.left || 0) - (margin.right || 0);
+      var innerH = (chart.height || 0) - (margin.top || 0) - (margin.bottom || 0);
+      var leftPad = showDow ? 24 : 0;
+      var topPad = 18;
+      var gridW = Math.max(1, innerW - leftPad);
+      var gridH = Math.max(1, innerH - topPad);
+      var cellSize = Math.max(
+        4,
+        Math.min(Math.floor(gridW / totalWeeks), Math.floor(gridH / 7))
+      );
+      var cs = chart.element && typeof getComputedStyle === "function" ? getComputedStyle(chart.element) : null;
+      var gapRaw = cs ? cs.getPropertyValue("--chart-calendar-cell-gap") : "";
+      var gap = parseFloat(gapRaw);
+      if (!isFinite(gap)) gap = 2;
+      var vlim = chart.config && chart.config.axis && chart.config.axis.vlim;
+      var vmax = d3.max(datums, function(d) {
+        return d.value;
+      });
+      if (!(vmax > 0)) vmax = 1;
+      var domain = vlim && vlim.max !== void 0 && vlim.max !== null ? [vlim.min || 0, vlim.max] : [0, vmax];
+      var interp = d3.interpolateRgb("#ffffff", layer.color || "#4E79A7");
+      var scale = d3.scaleSequential(interp).domain(domain);
+      chart.colorContinuous = scale;
+      if (chart.derived) chart.derived.colorContinuous = scale;
+      var xScale = function(d) {
+        var dd = d instanceof Date ? d : new Date(d);
+        return leftPad + weekCol(dd) * (cellSize + gap);
+      };
+      xScale.domain = function() {
+        return [jan1, dec31];
+      };
+      xScale.range = function() {
+        return [leftPad, leftPad + (totalWeeks - 1) * (cellSize + gap)];
+      };
+      xScale.invert = function(px) {
+        var col = Math.round((px - leftPad) / (cellSize + gap));
+        var offset = col * 7 - jan1Offset;
+        return new Date(jan1.getTime() + offset * 864e5);
+      };
+      chart.xScale = xScale;
+      var root = chart.chart.append("g").attr("class", "myIO-calendar-root");
+      if (showDow) {
+        var dowLabels = weekStart === 0 ? ["", "Mon", "", "Wed", "", "Fri", ""] : ["", "Tue", "", "Thu", "", "Sat", ""];
+        var dowData = dowLabels.map(function(t, i) {
+          return { t, i };
+        }).filter(function(d) {
+          return d.t;
+        });
+        root.selectAll("text.myIO-calendar-dow").data(dowData).enter().append("text").attr("class", "myIO-calendar-dow").attr("x", 0).attr("y", function(d) {
+          return topPad + d.i * (cellSize + gap) + cellSize * 0.75;
+        }).text(function(d) {
+          return d.t;
+        });
+      }
+      var monthFmt = d3.utcFormat("%b");
+      var monthLabels = d3.range(12).map(function(m) {
+        var first = new Date(Date.UTC(year, m, 1));
+        return { m, text: monthFmt(first), col: weekCol(first) };
+      });
+      root.selectAll("text.myIO-calendar-month").data(monthLabels).enter().append("text").attr("class", "myIO-calendar-month").attr("x", function(d) {
+        return leftPad + d.col * (cellSize + gap);
+      }).attr("y", topPad - 4).text(function(d) {
+        return d.text;
+      });
+      var toIso = function(d) {
+        return d.date.toISOString().slice(0, 10);
+      };
+      root.selectAll("rect.myIO-calendar-cell").data(datums).enter().append("rect").attr("class", "myIO-calendar-cell").attr("data-date", toIso).attr("data-row", function(d) {
+        return String(weekdayIdx(d.date));
+      }).attr("data-col", function(d) {
+        return String(weekCol(d.date));
+      }).attr("x", function(d) {
+        return leftPad + weekCol(d.date) * (cellSize + gap);
+      }).attr("y", function(d) {
+        return topPad + weekdayIdx(d.date) * (cellSize + gap);
+      }).attr("width", cellSize).attr("height", cellSize).attr("fill", function(d) {
+        if (d.value == null || isNaN(d.value) || d.value === 0) {
+          return "var(--chart-calendar-empty-fill, #ebedf0)";
+        }
+        return scale(d.value);
+      }).each(function(d) {
+        d.label = layer.label;
+        d.color = d.value == null || isNaN(d.value) || d.value === 0 ? "var(--chart-calendar-empty-fill, #ebedf0)" : scale(d.value);
+        d[dateKey] = toIso({ date: d.date });
+        d[valueKey] = d.value;
+      });
+    }
+    remove(chart) {
+      if (chart && chart.chart && typeof chart.chart.selectAll === "function") {
+        chart.chart.selectAll(".myIO-calendar-root").remove();
+      }
     }
   };
 
@@ -2386,6 +2908,781 @@
     }
   };
 
+  // inst/htmlwidgets/myIO/src/renderers/LollipopRenderer.js
+  var LollipopRenderer = class {
+    static type = "lollipop";
+    static traits = {
+      hasAxes: true,
+      referenceLines: true,
+      legendType: "layer",
+      binning: false,
+      rolloverStyle: "element",
+      scaleCapabilities: { invertX: false }
+    };
+    static scaleHints = {
+      xScaleType: "band",
+      yScaleType: "linear",
+      xExtentFields: [],
+      yExtentFields: ["y_var"],
+      domainMerge: "union"
+    };
+    static dataContract = {
+      x_var: { required: true, numeric: false },
+      y_var: { required: true, numeric: true }
+    };
+    render(chart, layer, layers) {
+      var xScale = chart.derived.xScale;
+      var yScale = chart.derived.yScale;
+      var flipAxis = chart.config.scales.flipAxis;
+      var speed = chart.config.transitions.speed;
+      var group = chart.dom.chartArea.selectAll(".tag-lollipop-" + layer.id).data([null]).join("g").attr("class", "tag-lollipop-" + layer.id);
+      var headRadius = layer.options && layer.options.headRadius || 5;
+      var stemWidth = layer.options && layer.options.stemWidth || 2;
+      var xVar = layer.mapping.x_var;
+      var yVar = layer.mapping.y_var;
+      var bandOffset = xScale.bandwidth ? xScale.bandwidth() / 2 : 0;
+      var baseline = typeof yScale(0) === "number" ? yScale(0) : yScale.range()[0];
+      var stems = group.selectAll(".lollipop-stem").data(layer.data, function(d) {
+        return d._source_key;
+      });
+      stems.exit().transition().duration(speed).style("opacity", 0).remove();
+      if (flipAxis) {
+        stems.join("line").attr("class", "lollipop-stem").transition().duration(speed).attr("x1", 0).attr("x2", function(d) {
+          return xScale(d[xVar]);
+        }).attr("y1", function(d) {
+          return yScale(d[yVar]) + bandOffset;
+        }).attr("y2", function(d) {
+          return yScale(d[yVar]) + bandOffset;
+        }).attr("stroke", layer.color).attr("stroke-width", stemWidth);
+      } else {
+        stems.join("line").attr("class", "lollipop-stem").transition().duration(speed).attr("x1", function(d) {
+          return xScale(d[xVar]) + bandOffset;
+        }).attr("x2", function(d) {
+          return xScale(d[xVar]) + bandOffset;
+        }).attr("y1", baseline).attr("y2", function(d) {
+          return yScale(d[yVar]);
+        }).attr("stroke", layer.color).attr("stroke-width", stemWidth);
+      }
+      var heads = group.selectAll(".lollipop-head").data(layer.data, function(d) {
+        return d._source_key;
+      });
+      heads.exit().transition().duration(speed).style("opacity", 0).remove();
+      if (flipAxis) {
+        heads.join("circle").attr("class", "lollipop-head").transition().duration(speed).attr("cx", function(d) {
+          return xScale(d[xVar]);
+        }).attr("cy", function(d) {
+          return yScale(d[yVar]) + bandOffset;
+        }).attr("r", headRadius).attr("fill", layer.color);
+      } else {
+        heads.join("circle").attr("class", "lollipop-head").transition().duration(speed).attr("cx", function(d) {
+          return xScale(d[xVar]) + bandOffset;
+        }).attr("cy", function(d) {
+          return yScale(d[yVar]);
+        }).attr("r", headRadius).attr("fill", layer.color);
+      }
+    }
+    getHoverSelector(chart, layer) {
+      return ".tag-lollipop-" + layer.id + " .lollipop-head";
+    }
+    formatTooltip(chart, d, layer) {
+      var yFormat = chart.runtime.activeYFormat || d3.format("s");
+      return {
+        title: { text: String(d[layer.mapping.x_var]) },
+        items: [{
+          color: layer.color,
+          label: layer.label,
+          value: yFormat(d[layer.mapping.y_var])
+        }]
+      };
+    }
+    remove(chart, layer) {
+      chart.dom.chartArea.selectAll(".tag-lollipop-" + layer.id).remove();
+    }
+  };
+
+  // inst/htmlwidgets/myIO/src/renderers/DumbbellRenderer.js
+  var DumbbellRenderer = class {
+    static type = "dumbbell";
+    static traits = {
+      hasAxes: true,
+      referenceLines: true,
+      legendType: "layer",
+      binning: false,
+      rolloverStyle: "element",
+      scaleCapabilities: { invertX: false }
+    };
+    static scaleHints = {
+      xScaleType: "band",
+      yScaleType: "linear",
+      xExtentFields: [],
+      yExtentFields: ["low_y", "high_y"],
+      domainMerge: "union"
+    };
+    static dataContract = {
+      x_var: { required: true, numeric: false },
+      low_y: { required: true, numeric: true },
+      high_y: { required: true, numeric: true }
+    };
+    render(chart, layer, layers) {
+      var xScale = chart.derived.xScale;
+      var yScale = chart.derived.yScale;
+      var flipAxis = chart.config.scales.flipAxis;
+      var speed = chart.config.transitions.speed;
+      var group = chart.dom.chartArea.selectAll(".tag-dumbbell-" + layer.id).data([null]).join("g").attr("class", "tag-dumbbell-" + layer.id);
+      var dotRadius = layer.options && layer.options.dotRadius || 5;
+      var lineWidth = layer.options && layer.options.lineWidth || 2;
+      var xVar = layer.mapping.x_var;
+      var lowVar = layer.mapping.low_y;
+      var highVar = layer.mapping.high_y;
+      var bandOffset = xScale.bandwidth ? xScale.bandwidth() / 2 : 0;
+      var lines = group.selectAll(".dumbbell-line").data(layer.data, function(d) {
+        return d._source_key;
+      });
+      lines.exit().transition().duration(speed).style("opacity", 0).remove();
+      if (flipAxis) {
+        lines.join("line").attr("class", "dumbbell-line").transition().duration(speed).attr("x1", function(d) {
+          return xScale(d[lowVar]);
+        }).attr("x2", function(d) {
+          return xScale(d[highVar]);
+        }).attr("y1", function(d) {
+          return yScale(d[xVar]) + bandOffset;
+        }).attr("y2", function(d) {
+          return yScale(d[xVar]) + bandOffset;
+        }).attr("stroke", "var(--chart-grid-color, #ccc)").attr("stroke-width", lineWidth);
+      } else {
+        lines.join("line").attr("class", "dumbbell-line").transition().duration(speed).attr("x1", function(d) {
+          return xScale(d[xVar]) + bandOffset;
+        }).attr("x2", function(d) {
+          return xScale(d[xVar]) + bandOffset;
+        }).attr("y1", function(d) {
+          return yScale(d[lowVar]);
+        }).attr("y2", function(d) {
+          return yScale(d[highVar]);
+        }).attr("stroke", "var(--chart-grid-color, #ccc)").attr("stroke-width", lineWidth);
+      }
+      var lowDots = group.selectAll(".dumbbell-low").data(layer.data, function(d) {
+        return d._source_key;
+      });
+      lowDots.exit().transition().duration(speed).style("opacity", 0).remove();
+      if (flipAxis) {
+        lowDots.join("circle").attr("class", "dumbbell-low").transition().duration(speed).attr("cx", function(d) {
+          return xScale(d[lowVar]);
+        }).attr("cy", function(d) {
+          return yScale(d[xVar]) + bandOffset;
+        }).attr("r", dotRadius).attr("fill", layer.color).attr("opacity", 0.6);
+      } else {
+        lowDots.join("circle").attr("class", "dumbbell-low").transition().duration(speed).attr("cx", function(d) {
+          return xScale(d[xVar]) + bandOffset;
+        }).attr("cy", function(d) {
+          return yScale(d[lowVar]);
+        }).attr("r", dotRadius).attr("fill", layer.color).attr("opacity", 0.6);
+      }
+      var highDots = group.selectAll(".dumbbell-high").data(layer.data, function(d) {
+        return d._source_key;
+      });
+      highDots.exit().transition().duration(speed).style("opacity", 0).remove();
+      if (flipAxis) {
+        highDots.join("circle").attr("class", "dumbbell-high").transition().duration(speed).attr("cx", function(d) {
+          return xScale(d[highVar]);
+        }).attr("cy", function(d) {
+          return yScale(d[xVar]) + bandOffset;
+        }).attr("r", dotRadius).attr("fill", layer.color);
+      } else {
+        highDots.join("circle").attr("class", "dumbbell-high").transition().duration(speed).attr("cx", function(d) {
+          return xScale(d[xVar]) + bandOffset;
+        }).attr("cy", function(d) {
+          return yScale(d[highVar]);
+        }).attr("r", dotRadius).attr("fill", layer.color);
+      }
+    }
+    getHoverSelector(chart, layer) {
+      return ".tag-dumbbell-" + layer.id + " .dumbbell-high, .tag-dumbbell-" + layer.id + " .dumbbell-low";
+    }
+    formatTooltip(chart, d, layer) {
+      var yFormat = chart.runtime.activeYFormat || d3.format("s");
+      return {
+        title: { text: String(d[layer.mapping.x_var]) },
+        items: [
+          { color: layer.color, label: "Low", value: yFormat(d[layer.mapping.low_y]) },
+          { color: layer.color, label: "High", value: yFormat(d[layer.mapping.high_y]) }
+        ]
+      };
+    }
+    remove(chart, layer) {
+      chart.dom.chartArea.selectAll(".tag-dumbbell-" + layer.id).remove();
+    }
+  };
+
+  // inst/htmlwidgets/myIO/src/renderers/WaffleRenderer.js
+  var WaffleRenderer = class {
+    static type = "waffle";
+    static traits = {
+      hasAxes: false,
+      referenceLines: false,
+      legendType: "ordinal",
+      binning: false,
+      rolloverStyle: "element",
+      scaleCapabilities: {}
+    };
+    static scaleHints = null;
+    static dataContract = {
+      category: { required: true },
+      value: { required: true, numeric: true }
+    };
+    render(chart, layer) {
+      var rows = layer.options && layer.options.rows || 10;
+      var cols = layer.options && layer.options.cols || 10;
+      var totalCells = rows * cols;
+      var cellGap = layer.options && layer.options.cellGap || 2;
+      var cellRadius = layer.options && layer.options.cellRadius || 2;
+      var m = chart.config.layout.margin;
+      var chartWidth = chart.runtime.width - m.left - m.right;
+      var chartHeight = chart.runtime.height - m.top - m.bottom;
+      var cellSize = Math.min(
+        (chartWidth - (cols - 1) * cellGap) / cols,
+        (chartHeight - (rows - 1) * cellGap) / rows
+      );
+      var total = 0;
+      for (var i = 0; i < layer.data.length; i++) {
+        total += layer.data[i][layer.mapping.value];
+      }
+      var cells = [];
+      var cellIndex = 0;
+      var colorScale = chart.derived.colorDiscrete || d3.scaleOrdinal(d3.schemeCategory10);
+      for (var i = 0; i < layer.data.length; i++) {
+        var d = layer.data[i];
+        var count = Math.round(d[layer.mapping.value] / total * totalCells);
+        for (var j = 0; j < count && cellIndex < totalCells; j++) {
+          cells.push({
+            category: d[layer.mapping.category],
+            row: Math.floor(cellIndex / cols),
+            col: cellIndex % cols,
+            color: colorScale(d[layer.mapping.category]),
+            datum: d,
+            _source_key: d._source_key
+          });
+          cellIndex++;
+        }
+      }
+      var gridWidth = cols * cellSize + (cols - 1) * cellGap;
+      var gridHeight = rows * cellSize + (rows - 1) * cellGap;
+      var offsetX = (chartWidth - gridWidth) / 2;
+      var offsetY = (chartHeight - gridHeight) / 2;
+      var group = chart.dom.chartArea.selectAll(".tag-waffle-" + layer.id).data([null]).join("g").attr("class", "tag-waffle-" + layer.id).attr("transform", "translate(" + offsetX + "," + offsetY + ")");
+      group.selectAll(".waffle-cell").data(cells).join("rect").attr("class", "waffle-cell").attr("x", function(d2) {
+        return d2.col * (cellSize + cellGap);
+      }).attr("y", function(d2) {
+        return d2.row * (cellSize + cellGap);
+      }).attr("width", cellSize).attr("height", cellSize).attr("rx", cellRadius).attr("fill", function(d2) {
+        return d2.color;
+      });
+    }
+    getHoverSelector(chart, layer) {
+      return ".tag-waffle-" + layer.id + " .waffle-cell";
+    }
+    formatTooltip(chart, d, layer) {
+      return {
+        title: { text: d.category },
+        items: [{ color: d.color, label: d.category, value: String(d.datum[layer.mapping.value]) }]
+      };
+    }
+    remove(chart, layer) {
+      chart.dom.chartArea.selectAll(".tag-waffle-" + layer.id).remove();
+    }
+  };
+
+  // inst/htmlwidgets/myIO/src/renderers/BeeswarmRenderer.js
+  var BeeswarmRenderer = class {
+    static type = "beeswarm";
+    static traits = {
+      hasAxes: true,
+      referenceLines: true,
+      legendType: "layer",
+      binning: false,
+      rolloverStyle: "element",
+      scaleCapabilities: { invertX: false }
+    };
+    static scaleHints = {
+      xScaleType: "linear",
+      yScaleType: "linear",
+      xExtentFields: ["x_var"],
+      yExtentFields: ["y_var"],
+      domainMerge: "union"
+    };
+    static dataContract = {
+      x_var: { required: true, numeric: true },
+      y_var: { required: true }
+    };
+    render(chart, layer) {
+      var xScale = chart.derived.xScale;
+      var yScale = chart.derived.yScale;
+      var radius = layer.options && layer.options.radius || 3;
+      var padding = layer.options && layer.options.padding || 1;
+      var xVar = layer.mapping.x_var;
+      var yVar = layer.mapping.y_var;
+      var data = layer.data.slice().sort(function(a, b) {
+        return xScale(a[xVar]) - xScale(b[xVar]);
+      });
+      var placed = [];
+      var diameter = 2 * radius + padding;
+      for (var i = 0; i < data.length; i++) {
+        var cx = xScale(data[i][xVar]);
+        var baseY = yScale(data[i][yVar]);
+        var dy = 0;
+        var found = false;
+        for (var attempt = 0; attempt < 500 && !found; attempt++) {
+          var candidateY = attempt === 0 ? baseY : attempt % 2 === 1 ? baseY + Math.ceil(attempt / 2) * diameter : baseY - Math.ceil(attempt / 2) * diameter;
+          var collision = false;
+          for (var j = 0; j < placed.length; j++) {
+            var dx2 = cx - placed[j].cx;
+            var dy2 = candidateY - placed[j].cy;
+            if (dx2 * dx2 + dy2 * dy2 < diameter * diameter) {
+              collision = true;
+              break;
+            }
+          }
+          if (!collision) {
+            dy = candidateY;
+            found = true;
+          }
+        }
+        data[i]._beeswarm_cx = cx;
+        data[i]._beeswarm_cy = dy;
+        placed.push({ cx, cy: dy });
+      }
+      var group = chart.dom.chartArea.selectAll(".tag-beeswarm-" + layer.id).data([null]).join("g").attr("class", "tag-beeswarm-" + layer.id);
+      group.selectAll(".beeswarm-point").data(data, function(d) {
+        return d._source_key;
+      }).join("circle").attr("class", "beeswarm-point").attr("cx", function(d) {
+        return d._beeswarm_cx;
+      }).attr("cy", function(d) {
+        return d._beeswarm_cy;
+      }).attr("r", radius).attr("fill", layer.color).attr("fill-opacity", 0.7);
+    }
+    getHoverSelector(chart, layer) {
+      return ".tag-beeswarm-" + layer.id + " .beeswarm-point";
+    }
+    formatTooltip(chart, d, layer) {
+      var yFormat = chart.runtime.activeYFormat || d3.format("s");
+      return {
+        title: { text: String(d[layer.mapping.x_var]) },
+        items: [{ color: layer.color, label: layer.label, value: yFormat(d[layer.mapping.y_var]) }]
+      };
+    }
+    remove(chart, layer) {
+      chart.dom.chartArea.selectAll(".tag-beeswarm-" + layer.id).remove();
+    }
+  };
+
+  // inst/htmlwidgets/myIO/src/renderers/BumpRenderer.js
+  var BumpRenderer = class {
+    static type = "bump";
+    static traits = {
+      hasAxes: true,
+      referenceLines: false,
+      legendType: "layer",
+      binning: false,
+      rolloverStyle: "element",
+      scaleCapabilities: {}
+    };
+    static scaleHints = {
+      xScaleType: "point",
+      yScaleType: "linear",
+      xExtentFields: [],
+      yExtentFields: ["y_var"],
+      domainMerge: "union"
+    };
+    static dataContract = {
+      x_var: { required: true },
+      y_var: { required: true, numeric: true },
+      group: { required: true }
+    };
+    render(chart, layer) {
+      var xScale = chart.derived.xScale;
+      var yScale = chart.derived.yScale;
+      var xVar = layer.mapping.x_var;
+      var yVar = layer.mapping.y_var;
+      var groupVar = layer.mapping.group;
+      var dotRadius = layer.options && layer.options.dotRadius || 5;
+      var colorScale = chart.derived.colorDiscrete || d3.scaleOrdinal(d3.schemeCategory10);
+      var groups = d3.group(layer.data, function(d) {
+        return d[groupVar];
+      });
+      var group = chart.dom.chartArea.selectAll(".tag-bump-" + layer.id).data([null]).join("g").attr("class", "tag-bump-" + layer.id);
+      var line = d3.line().x(function(d) {
+        return xScale(d[xVar]);
+      }).y(function(d) {
+        return yScale(d[yVar]);
+      }).curve(d3.curveBumpX);
+      var groupIndex = 0;
+      groups.forEach(function(data, name) {
+        var color = colorScale(name);
+        var sorted = data.slice().sort(function(a, b) {
+          return String(a[xVar]).localeCompare(String(b[xVar]));
+        });
+        group.selectAll(".bump-line-" + groupIndex).data([sorted]).join("path").attr("class", "bump-line bump-line-" + groupIndex).attr("d", line).attr("fill", "none").attr("stroke", color).attr("stroke-width", 2.5).attr("stroke-opacity", 0.8);
+        group.selectAll(".bump-dot-" + groupIndex).data(sorted).join("circle").attr("class", "bump-dot bump-dot-" + groupIndex).attr("cx", function(d) {
+          return xScale(d[xVar]);
+        }).attr("cy", function(d) {
+          return yScale(d[yVar]);
+        }).attr("r", dotRadius).attr("fill", color).attr("stroke", "#fff").attr("stroke-width", 1.5);
+        groupIndex++;
+      });
+    }
+    getHoverSelector(chart, layer) {
+      return ".tag-bump-" + layer.id + " .bump-dot";
+    }
+    formatTooltip(chart, d, layer) {
+      return {
+        title: { text: String(d[layer.mapping.group]) },
+        items: [
+          { color: layer.color, label: String(d[layer.mapping.x_var]), value: String(d[layer.mapping.y_var]) }
+        ]
+      };
+    }
+    remove(chart, layer) {
+      chart.dom.chartArea.selectAll(".tag-bump-" + layer.id).remove();
+    }
+  };
+
+  // inst/htmlwidgets/myIO/src/renderers/RadarRenderer.js
+  var RadarRenderer = class {
+    static type = "radar";
+    static traits = {
+      hasAxes: false,
+      referenceLines: false,
+      legendType: "ordinal",
+      binning: false,
+      rolloverStyle: "element",
+      scaleCapabilities: {}
+    };
+    static scaleHints = null;
+    static dataContract = {
+      axis: { required: true },
+      value: { required: true, numeric: true }
+    };
+    render(chart, layer) {
+      var margin = chart.margin || (chart.config && chart.config.layout ? chart.config.layout.margin : { top: 0, right: 0, bottom: 0, left: 0 });
+      var width = (chart.width || chart.runtime && chart.runtime.width || 0) - margin.left - margin.right;
+      var height = (chart.height || chart.runtime && chart.runtime.height || 0) - margin.top - margin.bottom;
+      var axisVar = layer.mapping.axis;
+      var valueVar = layer.mapping.value;
+      var groupVar = layer.mapping.group;
+      var labelOffset = layer.options && layer.options.labelOffset || 16;
+      var centerX = width / 2;
+      var centerY = height / 2;
+      var maxRadius = Math.max(0, Math.min(width, height) / 2 - labelOffset - 8);
+      var axisOrder = [];
+      var axisSeen = /* @__PURE__ */ new Set();
+      var maxValue = d3.max(layer.data, function(d) {
+        return +d[valueVar];
+      }) || 0;
+      var radiusScale = d3.scaleLinear().domain([0, maxValue > 0 ? maxValue : 1]).range([0, maxRadius]);
+      var groups = [];
+      var groupMap = groupVar ? d3.group(layer.data, function(d) {
+        return d[groupVar];
+      }) : /* @__PURE__ */ new Map([[layer.label || "Series", layer.data]]);
+      var colorScale = chart.derived.colorDiscrete || d3.scaleOrdinal(d3.schemeCategory10);
+      var axisCount;
+      var root;
+      var axisLayer;
+      var polygonLayer;
+      var lineGenerator;
+      layer.data.forEach(function(d) {
+        var axisName = d[axisVar];
+        if (!axisSeen.has(axisName)) {
+          axisSeen.add(axisName);
+          axisOrder.push(axisName);
+        }
+      });
+      axisCount = axisOrder.length;
+      if (axisCount === 0) {
+        return;
+      }
+      root = chart.dom.chartArea.selectAll(".tag-radar-" + layer.id).data([null]).join("g").attr("class", "tag-radar-" + layer.id);
+      axisLayer = root.selectAll(".radar-axis-layer").data([null]).join("g").attr("class", "radar-axis-layer");
+      polygonLayer = root.selectAll(".radar-polygon-layer").data([null]).join("g").attr("class", "radar-polygon-layer");
+      axisLayer.selectAll(".radar-axis").data(axisOrder).join(function(enter) {
+        var group = enter.append("g").attr("class", "radar-axis");
+        group.append("line").attr("class", "radar-axis-line");
+        group.append("text").attr("class", "radar-axis-label");
+        return group;
+      }).each(function(axisName, index) {
+        var angle = 2 * Math.PI * index / axisCount;
+        var lineX = centerX + maxRadius * Math.sin(angle);
+        var lineY = centerY - maxRadius * Math.cos(angle);
+        var labelX = centerX + (maxRadius + labelOffset) * Math.sin(angle);
+        var labelY = centerY - (maxRadius + labelOffset) * Math.cos(angle);
+        var textAnchor = "middle";
+        if (Math.sin(angle) > 0.25) {
+          textAnchor = "start";
+        } else if (Math.sin(angle) < -0.25) {
+          textAnchor = "end";
+        }
+        d3.select(this).select(".radar-axis-line").attr("x1", centerX).attr("y1", centerY).attr("x2", lineX).attr("y2", lineY);
+        d3.select(this).select(".radar-axis-label").attr("x", labelX).attr("y", labelY).attr("dy", "0.35em").attr("text-anchor", textAnchor).text(axisName);
+      });
+      groupMap.forEach(function(rows, key) {
+        var rowByAxis = /* @__PURE__ */ new Map();
+        var polygonPoints = [];
+        rows.forEach(function(d) {
+          rowByAxis.set(d[axisVar], d);
+        });
+        axisOrder.forEach(function(axisName, index) {
+          var angle = 2 * Math.PI * index / axisCount;
+          var datum = rowByAxis.get(axisName);
+          var rawValue = datum ? +datum[valueVar] : 0;
+          var scaledRadius = radiusScale(Number.isFinite(rawValue) ? rawValue : 0);
+          polygonPoints.push({
+            axis: axisName,
+            angle,
+            value: Number.isFinite(rawValue) ? rawValue : 0,
+            x: centerX + scaledRadius * Math.sin(angle),
+            y: centerY - scaledRadius * Math.cos(angle),
+            datum: datum || null
+          });
+        });
+        groups.push({
+          key,
+          color: colorScale(key),
+          points: polygonPoints,
+          rows
+        });
+      });
+      chart.derived.colorDiscrete = colorScale.domain(groups.map(function(group) {
+        return group.key;
+      }));
+      chart.colorDiscrete = chart.derived.colorDiscrete;
+      lineGenerator = d3.line().x(function(d) {
+        return d.x;
+      }).y(function(d) {
+        return d.y;
+      }).curve(d3.curveLinearClosed);
+      polygonLayer.selectAll(".radar-polygon").data(groups).join("path").attr("class", "radar-polygon").attr("d", function(d) {
+        return lineGenerator(d.points);
+      }).attr("fill", function(d) {
+        return d.color;
+      }).attr("fill-opacity", 0.2).attr("stroke", function(d) {
+        return d.color;
+      }).attr("stroke-width", 2);
+    }
+    getHoverSelector(chart, layer) {
+      return ".tag-radar-" + layer.id + " .radar-polygon";
+    }
+    formatTooltip(chart, d) {
+      return {
+        title: { text: String(d.key) },
+        items: d.points.map(function(point) {
+          return {
+            color: d.color,
+            label: point.axis,
+            value: String(point.value)
+          };
+        })
+      };
+    }
+    remove(chart, layer) {
+      chart.dom.chartArea.selectAll(".tag-radar-" + layer.id).remove();
+    }
+  };
+
+  // inst/htmlwidgets/myIO/src/renderers/FunnelRenderer.js
+  var FunnelRenderer = class {
+    static type = "funnel";
+    static traits = {
+      hasAxes: false,
+      referenceLines: false,
+      legendType: "ordinal",
+      binning: false,
+      rolloverStyle: "element",
+      scaleCapabilities: {}
+    };
+    static scaleHints = null;
+    static dataContract = {
+      stage: { required: true },
+      value: { required: true, numeric: true }
+    };
+    render(chart, layer) {
+      var margin = chart.margin || (chart.config && chart.config.layout ? chart.config.layout.margin : { top: 0, right: 0, bottom: 0, left: 0 });
+      var width = (chart.width || chart.runtime && chart.runtime.width || 0) - margin.left - margin.right;
+      var height = (chart.height || chart.runtime && chart.runtime.height || 0) - margin.top - margin.bottom;
+      var stageVar = layer.mapping.stage;
+      var valueVar = layer.mapping.value;
+      var stageGap = layer.options && layer.options.stageGap || 6;
+      var maxValue = d3.max(layer.data, function(d) {
+        return +d[valueVar];
+      }) || 0;
+      var widthScale = d3.scaleLinear().domain([0, maxValue > 0 ? maxValue : 1]).range([0, width * 0.95]);
+      var colorScale = chart.derived.colorDiscrete || d3.scaleOrdinal(d3.schemeTableau10);
+      var stageHeight = layer.data.length > 0 ? height / layer.data.length : 0;
+      var stages;
+      var root;
+      var stageGroups;
+      stages = layer.data.map(function(d, index) {
+        var nextDatum = layer.data[index + 1] || null;
+        var topWidth = widthScale(+d[valueVar] || 0);
+        var bottomWidth = nextDatum ? widthScale(+nextDatum[valueVar] || 0) : topWidth * 0.55;
+        var y0 = index * stageHeight;
+        var y1 = Math.max(y0, y0 + stageHeight - stageGap);
+        var centerX = width / 2;
+        var topLeft = centerX - topWidth / 2;
+        var topRight = centerX + topWidth / 2;
+        var bottomLeft = centerX - bottomWidth / 2;
+        var bottomRight = centerX + bottomWidth / 2;
+        return {
+          stage: d[stageVar],
+          value: +d[valueVar],
+          color: colorScale(d[stageVar]),
+          datum: d,
+          points: [
+            [topLeft, y0],
+            [topRight, y0],
+            [bottomRight, y1],
+            [bottomLeft, y1]
+          ],
+          labelX: centerX,
+          labelY: (y0 + y1) / 2
+        };
+      });
+      chart.derived.colorDiscrete = colorScale.domain(stages.map(function(stage) {
+        return stage.stage;
+      }));
+      chart.colorDiscrete = chart.derived.colorDiscrete;
+      root = chart.dom.chartArea.selectAll(".tag-funnel-" + layer.id).data([null]).join("g").attr("class", "tag-funnel-" + layer.id);
+      stageGroups = root.selectAll(".funnel-stage-group").data(stages).join(function(enter) {
+        var group = enter.append("g").attr("class", "funnel-stage-group");
+        group.append("path").attr("class", "funnel-stage");
+        group.append("text").attr("class", "funnel-label");
+        return group;
+      });
+      stageGroups.select(".funnel-stage").attr("d", function(d) {
+        return "M" + d.points[0][0] + "," + d.points[0][1] + "L" + d.points[1][0] + "," + d.points[1][1] + "L" + d.points[2][0] + "," + d.points[2][1] + "L" + d.points[3][0] + "," + d.points[3][1] + "Z";
+      }).attr("fill", function(d) {
+        return d.color;
+      });
+      stageGroups.select(".funnel-label").attr("x", function(d) {
+        return d.labelX;
+      }).attr("y", function(d) {
+        return d.labelY;
+      }).attr("dy", "0.35em").attr("text-anchor", "middle").text(function(d) {
+        return d.stage;
+      });
+    }
+    getHoverSelector(chart, layer) {
+      return ".tag-funnel-" + layer.id + " .funnel-stage";
+    }
+    formatTooltip(chart, d) {
+      return {
+        title: { text: String(d.stage) },
+        items: [{ color: d.color, label: String(d.stage), value: String(d.value) }]
+      };
+    }
+    remove(chart, layer) {
+      chart.dom.chartArea.selectAll(".tag-funnel-" + layer.id).remove();
+    }
+  };
+
+  // inst/htmlwidgets/myIO/src/renderers/ParallelRenderer.js
+  var ParallelRenderer = class {
+    static type = "parallel";
+    static traits = {
+      hasAxes: false,
+      referenceLines: false,
+      legendType: "ordinal",
+      binning: false,
+      rolloverStyle: "element",
+      scaleCapabilities: {}
+    };
+    static scaleHints = null;
+    static dataContract = {
+      dimensions: { required: true }
+    };
+    render(chart, layer) {
+      var margin = chart.margin || (chart.config && chart.config.layout ? chart.config.layout.margin : { top: 0, right: 0, bottom: 0, left: 0 });
+      var width = (chart.width || chart.runtime && chart.runtime.width || 0) - margin.left - margin.right;
+      var height = (chart.height || chart.runtime && chart.runtime.height || 0) - margin.top - margin.bottom;
+      var rawDimensions = layer.mapping.dimensions;
+      var dimensions = Array.isArray(rawDimensions) ? rawDimensions.slice() : [rawDimensions];
+      var groupVar = layer.mapping.group;
+      var xScale = d3.scalePoint().domain(dimensions).range([0, width]).padding(0.5);
+      var yScales = {};
+      var colorScale = chart.derived.colorDiscrete || d3.scaleOrdinal(d3.schemeCategory10);
+      var root;
+      var axisGroups;
+      var lineGenerator;
+      dimensions.forEach(function(dimension) {
+        var extent = d3.extent(layer.data, function(row) {
+          var value = +row[dimension];
+          return Number.isFinite(value) ? value : null;
+        });
+        if (!extent || extent[0] === void 0 || extent[1] === void 0) {
+          extent = [0, 1];
+        }
+        if (extent[0] === extent[1]) {
+          extent = [extent[0] - 1, extent[1] + 1];
+        }
+        yScales[dimension] = d3.scaleLinear().domain(extent).range([height, 0]);
+      });
+      chart.derived.colorDiscrete = colorScale.domain(Array.from(new Set(layer.data.map(function(row) {
+        return groupVar ? row[groupVar] : layer.label;
+      }))));
+      chart.colorDiscrete = chart.derived.colorDiscrete;
+      root = chart.dom.chartArea.selectAll(".tag-parallel-" + layer.id).data([null]).join("g").attr("class", "tag-parallel-" + layer.id);
+      axisGroups = root.selectAll(".parallel-axis").data(dimensions).join(function(enter) {
+        var group = enter.append("g").attr("class", "parallel-axis");
+        group.append("text").attr("class", "parallel-axis-label");
+        return group;
+      }).attr("transform", function(dimension) {
+        return "translate(" + xScale(dimension) + ",0)";
+      }).each(function(dimension) {
+        d3.select(this).call(d3.axisLeft(yScales[dimension]).ticks(5));
+      });
+      axisGroups.select(".parallel-axis-label").attr("x", 0).attr("y", -10).attr("text-anchor", "middle").text(function(dimension) {
+        return dimension;
+      });
+      lineGenerator = d3.line().defined(function(point) {
+        return point && point[1] !== null;
+      }).x(function(point) {
+        return point[0];
+      }).y(function(point) {
+        return point[1];
+      });
+      root.selectAll(".parallel-line").data(layer.data).join("path").attr("class", "parallel-line").attr("d", function(row) {
+        var points = dimensions.map(function(dimension) {
+          var value = +row[dimension];
+          if (!Number.isFinite(value)) {
+            return [xScale(dimension), null];
+          }
+          return [xScale(dimension), yScales[dimension](value)];
+        });
+        return lineGenerator(points);
+      }).attr("stroke", function(row) {
+        var colorKey = groupVar ? row[groupVar] : layer.label;
+        return colorScale(colorKey);
+      });
+    }
+    getHoverSelector(chart, layer) {
+      return ".tag-parallel-" + layer.id + " .parallel-line";
+    }
+    formatTooltip(chart, d, layer) {
+      var dimensions = Array.isArray(layer.mapping.dimensions) ? layer.mapping.dimensions : [layer.mapping.dimensions];
+      var title = layer.mapping.group ? String(d[layer.mapping.group]) : String(layer.label || "Series");
+      return {
+        title: { text: title },
+        items: dimensions.map(function(dimension) {
+          return {
+            color: chart.colorDiscrete ? chart.colorDiscrete(layer.mapping.group ? d[layer.mapping.group] : layer.label) : layer.color,
+            label: dimension,
+            value: String(d[dimension])
+          };
+        })
+      };
+    }
+    remove(chart, layer) {
+      chart.dom.chartArea.selectAll(".tag-parallel-" + layer.id).remove();
+    }
+  };
+
   // inst/htmlwidgets/myIO/src/registry.js
   var rendererRegistry = /* @__PURE__ */ new Map();
   function registerRenderer(type, RendererClass) {
@@ -2447,6 +3744,9 @@
     if (!rendererRegistry.has(HeatmapRenderer.type)) {
       registerRenderer(HeatmapRenderer.type, new HeatmapRenderer());
     }
+    if (!rendererRegistry.has(CalendarHeatmapRenderer.type)) {
+      registerRenderer(CalendarHeatmapRenderer.type, new CalendarHeatmapRenderer());
+    }
     if (!rendererRegistry.has(CandlestickRenderer.type)) {
       registerRenderer(CandlestickRenderer.type, new CandlestickRenderer());
     }
@@ -2458,6 +3758,30 @@
     }
     if (!rendererRegistry.has(RangeBarRenderer.type)) {
       registerRenderer(RangeBarRenderer.type, new RangeBarRenderer());
+    }
+    if (!rendererRegistry.has(LollipopRenderer.type)) {
+      registerRenderer(LollipopRenderer.type, new LollipopRenderer());
+    }
+    if (!rendererRegistry.has(DumbbellRenderer.type)) {
+      registerRenderer(DumbbellRenderer.type, new DumbbellRenderer());
+    }
+    if (!rendererRegistry.has(WaffleRenderer.type)) {
+      registerRenderer(WaffleRenderer.type, new WaffleRenderer());
+    }
+    if (!rendererRegistry.has(BeeswarmRenderer.type)) {
+      registerRenderer(BeeswarmRenderer.type, new BeeswarmRenderer());
+    }
+    if (!rendererRegistry.has(BumpRenderer.type)) {
+      registerRenderer(BumpRenderer.type, new BumpRenderer());
+    }
+    if (!rendererRegistry.has(RadarRenderer.type)) {
+      registerRenderer(RadarRenderer.type, new RadarRenderer());
+    }
+    if (!rendererRegistry.has(FunnelRenderer.type)) {
+      registerRenderer(FunnelRenderer.type, new FunnelRenderer());
+    }
+    if (!rendererRegistry.has(ParallelRenderer.type)) {
+      registerRenderer(ParallelRenderer.type, new ParallelRenderer());
     }
     if (!rendererRegistry.has(TextRenderer.type)) {
       registerRenderer(TextRenderer.type, new TextRenderer());
@@ -2850,8 +4174,143 @@
     removePopover(chart);
   }
 
+  // inst/htmlwidgets/myIO/src/interactions/linked-cursor.js
+  var _registry = /* @__PURE__ */ new Map();
+  function linkedConfig(chart) {
+    return chart && chart.config && chart.config.interactions && chart.config.interactions.linked;
+  }
+  function groupOf(chart) {
+    var linked = linkedConfig(chart);
+    return linked && linked.cursor === true && linked.group ? linked.group : null;
+  }
+  function registerLinkedCursor(chart) {
+    var g = groupOf(chart);
+    if (!g) return;
+    var set = _registry.get(g);
+    if (!set) {
+      set = /* @__PURE__ */ new Set();
+      _registry.set(g, set);
+    }
+    set.add(chart);
+    chart.runtime = chart.runtime || {};
+    if (!chart.runtime._linkedCursor) {
+      chart.runtime._linkedCursor = { lastTs: 0 };
+    }
+  }
+  function unregisterLinkedCursor(chart) {
+    _registry.forEach(function(set, key) {
+      if (set.delete(chart) && set.size === 0) {
+        _registry.delete(key);
+      }
+    });
+  }
+  function emitCursor(chart, payload) {
+    var g = groupOf(chart);
+    if (!g) return;
+    var set = _registry.get(g);
+    if (!set) return;
+    set.forEach(function(sibling) {
+      if (sibling === chart) return;
+      _receive(sibling, payload);
+    });
+  }
+  function clearCursor(chart) {
+    var g = groupOf(chart);
+    if (!g) return;
+    emitCursor(chart, {
+      sourceId: chart.element && chart.element.id,
+      group: g,
+      ts: typeof performance !== "undefined" ? performance.now() : Date.now(),
+      clear: true
+    });
+  }
+  function maybeEmitCursor(chart, row, xValue, tooltipPayload) {
+    var linked = linkedConfig(chart);
+    if (!linked || linked.cursor !== true) return;
+    var keyColumn = linked.keyColumn;
+    var keyValue = row && keyColumn && row[keyColumn] !== void 0 ? row[keyColumn] : null;
+    emitCursor(chart, {
+      sourceId: chart.element && chart.element.id,
+      group: linked.group,
+      keyValue,
+      xValue,
+      tooltip: tooltipPayload || null,
+      ts: typeof performance !== "undefined" ? performance.now() : Date.now()
+    });
+  }
+  function maybeClearCursor(chart) {
+    var linked = linkedConfig(chart);
+    if (!linked || linked.cursor !== true) return;
+    clearCursor(chart);
+  }
+  function _receive(chart, payload) {
+    var rt = chart.runtime && chart.runtime._linkedCursor;
+    if (!rt) return;
+    if (typeof payload.ts === "number" && payload.ts < rt.lastTs) return;
+    rt.lastTs = typeof payload.ts === "number" ? payload.ts : rt.lastTs;
+    rt.lastPayload = payload;
+    if (payload.clear) {
+      removeCrosshair(chart);
+      return;
+    }
+    var xPx = coerceXToPixel(chart, payload.xValue);
+    if (xPx == null) {
+      removeCrosshair(chart);
+      return;
+    }
+    drawCrosshair(chart, xPx);
+  }
+  function coerceXToPixel(chart, xValue) {
+    var xScale = chart.xScale;
+    if (!xScale || typeof xScale !== "function") return null;
+    if (typeof xScale.domain === "function" && typeof xScale.invert === "function") {
+      var domain = xScale.domain();
+      var lo = domain[0];
+      var hi = domain[domain.length - 1];
+      var coerced = xValue;
+      if (lo instanceof Date && !(xValue instanceof Date)) {
+        coerced = new Date(xValue);
+      }
+      var numeric = +coerced;
+      if (!Number.isFinite(numeric)) return null;
+      if (numeric < +lo || numeric > +hi) return null;
+      var px = xScale(coerced);
+      return Number.isFinite(px) ? px : null;
+    }
+    var ordDomain = typeof xScale.domain === "function" ? xScale.domain() : [];
+    if (ordDomain.indexOf(xValue) === -1) return null;
+    var opx = xScale(xValue);
+    return Number.isFinite(opx) ? opx : null;
+  }
+  function drawCrosshair(chart, xPx) {
+    var host = chart.plot || chart.svg;
+    if (!host || typeof host.select !== "function") return;
+    var line = host.select("line.myIO-hover-rule");
+    if (line.empty()) {
+      line = host.append("line").attr("class", "myIO-hover-rule");
+    }
+    var m = chart.margin || {};
+    var innerH = (chart.height || 0) - ((+m.top || 0) + (+m.bottom || 0));
+    line.attr("x1", xPx).attr("x2", xPx).attr("y1", 0).attr("y2", innerH).style("display", null);
+  }
+  function removeCrosshair(chart) {
+    var host = chart.plot || chart.svg;
+    if (!host || typeof host.select !== "function") return;
+    host.select("line.myIO-hover-rule").remove();
+  }
+
   // inst/htmlwidgets/myIO/src/interactions/linked.js
-  var LINKABLE_TYPES = ["point", "bar", "histogram", "hexbin", "groupedBar"];
+  var LINKABLE_TYPES = [
+    "point",
+    "bar",
+    "histogram",
+    "hexbin",
+    "groupedBar",
+    "waffle",
+    "beeswarm",
+    "lollipop",
+    "dumbbell"
+  ];
   function bindLinked(chart) {
     var cfg = chart.config.interactions.linked;
     if (!cfg || !cfg.enabled) return;
@@ -2927,6 +4386,7 @@
       chart.runtime._crosstalkFil.close();
       chart.runtime._crosstalkFil = null;
     }
+    unregisterLinkedCursor(chart);
   }
 
   // inst/htmlwidgets/myIO/src/interactions/slider.js
@@ -3106,7 +4566,7 @@
     var currentFormatY = chart.newScaleY ? d3.format(chart.newScaleY) : yFormat;
     removeHoverOverlay(chart);
     lys.forEach(function(layer) {
-      if (["bar", "point", "hexbin", "histogram"].indexOf(layer.type) > -1) {
+      if (["bar", "point", "hexbin", "histogram", "calendarHeatmap"].indexOf(layer.type) > -1) {
         bindElementLayer(layer);
       }
     });
@@ -3183,10 +4643,13 @@
         title: tooltip.title,
         items: tooltip.items
       });
+      var xValue = layer.type === "hexbin" ? that.xScale ? that.xScale.invert(data.x) : null : layer.type === "histogram" ? data.x0 : layer.type === "calendarHeatmap" ? data.date instanceof Date ? data.date : /* @__PURE__ */ new Date(data[layer.mapping.date] + "T00:00:00Z") : data[layer.mapping.x_var];
+      maybeEmitCursor(that, data, xValue, tooltip);
     }
     function clearElementHover(layer) {
       removeElementHighlight(this, layer);
       hideChartTooltip(that);
+      maybeClearCursor(that);
     }
     function buildTooltip(layer, renderer, data, node) {
       if (layer.type === "hexbin") {
@@ -3200,6 +4663,17 @@
         return {
           title: { text: "Bin: " + data.x0 + " to " + data.x1 },
           items: [{ color: d3.select(node).attr("fill"), label: "Count", value: data.length }]
+        };
+      }
+      if (layer.type === "calendarHeatmap") {
+        var calFormatted = renderer.formatTooltip(that, data, layer);
+        return {
+          title: { text: typeof calFormatted.title === "string" ? calFormatted.title : calFormatted.title.text },
+          items: [{
+            color: calFormatted.color || d3.select(node).attr("fill"),
+            label: calFormatted.label || layer.label,
+            value: calFormatted.value
+          }]
         };
       }
       var titleText = layer.mapping.x_var + ": " + xFormat(data[layer.mapping.x_var]);
@@ -3244,15 +4718,21 @@
         Shiny.onInputChange("myIO-" + that.element.id + "-rollover", JSON.stringify(data.data.values));
       }
       d3.select(this).interrupt().style("stroke", color).style("stroke-width", "2px").style("stroke-opacity", 0.8);
-      showChartTooltip(that, {
-        pointer: getContainerPointer(event),
+      var groupedTooltip = {
         title: { text: thisLayer.mapping.x_var + ": " + xFormat(data.data[0]) },
         items: [{ color, label: thisLayer.mapping.y_var, value: currentFormatY(data[1] - data[0]) }]
+      };
+      showChartTooltip(that, {
+        pointer: getContainerPointer(event),
+        title: groupedTooltip.title,
+        items: groupedTooltip.items
       });
+      maybeEmitCursor(that, data.data, data.data[0], groupedTooltip);
     }
     function clearGroupedBar() {
       d3.select(this).interrupt().transition().duration(HOVER_TRANSITION_MS).style("stroke-width", "0px").style("stroke", "transparent").style("stroke-opacity", null);
       hideChartTooltip(that);
+      maybeClearCursor(that);
     }
     function showOverlayTooltip(event) {
       var mouse = d3.pointer(event, this);
@@ -3304,13 +4784,18 @@
       }).attr("fill", "#ffffff").attr("stroke", function(d) {
         return d.color;
       }).attr("stroke-width", 2);
-      showChartTooltip(that, {
-        pointer: getContainerPointer(event),
+      var overlayTooltip = {
         title: { text: tipText[0].xVar + ": " + xFormat(xValue) },
         items: tipText.map(function(d) {
           return { color: d.color, label: d.label, value: currentFormatY(d.displayValue) };
         })
+      };
+      showChartTooltip(that, {
+        pointer: getContainerPointer(event),
+        title: overlayTooltip.title,
+        items: overlayTooltip.items
       });
+      maybeEmitCursor(that, tipText[0].value, xValue, overlayTooltip);
     }
     function clearOverlayTooltip() {
       if (that.toolLine) {
@@ -3320,6 +4805,7 @@
         that.toolPointLayer.selectAll("*").remove();
       }
       hideChartTooltip(that);
+      maybeClearCursor(that);
     }
     function bindOrdinalHover(selector, layerType, tooltipBuilder) {
       var layer = lys.filter(function(candidate) {
@@ -3672,7 +5158,10 @@
     donut: "standalone-donut",
     gauge: "standalone-gauge",
     text: "axes-continuous",
-    bracket: "axes-continuous"
+    bracket: "axes-continuous",
+    radar: "standalone-radar",
+    funnel: "standalone-funnel",
+    parallel: "standalone-parallel"
   };
   var CROSS_GROUP_ALLOWED = /* @__PURE__ */ new Set([
     "axes-continuous:axes-categorical",
@@ -3873,6 +5362,915 @@
     return lr;
   }
 
+  // inst/htmlwidgets/myIO/src/theme/palettes.js
+  var LIGHT = {
+    "--chart-text-color": "#6b7280",
+    "--chart-grid-color": "#9ca3af",
+    "--chart-grid-opacity": "0.4",
+    "--chart-bg": "#ffffff",
+    "--chart-tooltip-bg": "#ffffff",
+    "--chart-tooltip-border": "#e5e7eb",
+    "--chart-tooltip-shadow": "0 4px 12px rgba(0, 0, 0, 0.12)",
+    "--chart-button-color": "#6b7280",
+    "--chart-button-hover-bg": "rgba(107, 114, 128, 0.1)",
+    "--chart-sheet-bg": "#ffffff",
+    "--chart-sheet-border": "rgba(17, 24, 39, 0.1)",
+    "--chart-sheet-shadow": "0 20px 45px rgba(15, 23, 42, 0.18)",
+    "--chart-sheet-backdrop": "rgba(15, 23, 42, 0.32)",
+    "--chart-sheet-surface": "rgba(243, 244, 246, 0.9)",
+    "--chart-sheet-accent": "#111827",
+    "--chart-brush-fill": "rgba(0, 0, 0, 0.08)",
+    "--chart-brush-stroke": "#6b7280",
+    "--chart-status-bar-bg": "#f9fafb",
+    "--chart-slider-track": "#e5e7eb",
+    "--chart-ref-line-color": "#9ca3af",
+    "--chart-annotation-ring": "#E63946"
+  };
+  var DARK = {
+    "--chart-text-color": "#d1d5db",
+    "--chart-grid-color": "#4b5563",
+    "--chart-grid-opacity": "0.5",
+    "--chart-bg": "#1e1e2e",
+    "--chart-tooltip-bg": "#2d2d44",
+    "--chart-tooltip-border": "#3f3f5c",
+    "--chart-tooltip-shadow": "0 4px 12px rgba(0, 0, 0, 0.4)",
+    "--chart-button-color": "#9ca3af",
+    "--chart-button-hover-bg": "rgba(156, 163, 175, 0.15)",
+    "--chart-sheet-bg": "#2d2d44",
+    "--chart-sheet-border": "rgba(255, 255, 255, 0.1)",
+    "--chart-sheet-shadow": "0 20px 45px rgba(0, 0, 0, 0.5)",
+    "--chart-sheet-backdrop": "rgba(0, 0, 0, 0.6)",
+    "--chart-sheet-surface": "rgba(45, 45, 68, 0.95)",
+    "--chart-sheet-accent": "#f3f4f6",
+    "--chart-brush-fill": "rgba(255, 255, 255, 0.08)",
+    "--chart-brush-stroke": "#9ca3af",
+    "--chart-status-bar-bg": "#252540",
+    "--chart-slider-track": "#3f3f5c",
+    "--chart-ref-line-color": "#4b5563",
+    "--chart-annotation-ring": "#ff6b6b"
+  };
+  var PRESETS = {
+    light: LIGHT,
+    dark: DARK,
+    midnight: { "--chart-bg": "#0f172a", "--chart-text-color": "#e2e8f0", "--chart-grid-color": "#334155", "--chart-grid-opacity": "0.5", "--chart-tooltip-bg": "#1e293b", "--chart-tooltip-border": "#475569", "--chart-button-color": "#94a3b8", "--chart-sheet-bg": "#1e293b", "--chart-annotation-ring": "#f472b6", "--chart-ref-line-color": "#475569", "--chart-status-bar-bg": "#1e293b", "--chart-slider-track": "#334155", "--chart-brush-fill": "rgba(255,255,255,0.06)", "--chart-brush-stroke": "#64748b" },
+    ocean: { "--chart-bg": "#0c4a6e", "--chart-text-color": "#e0f2fe", "--chart-grid-color": "#0369a1", "--chart-grid-opacity": "0.4", "--chart-tooltip-bg": "#075985", "--chart-tooltip-border": "#0284c7", "--chart-button-color": "#7dd3fc", "--chart-sheet-bg": "#075985", "--chart-annotation-ring": "#fbbf24", "--chart-ref-line-color": "#0284c7", "--chart-status-bar-bg": "#0c4a6e", "--chart-slider-track": "#0369a1", "--chart-brush-fill": "rgba(255,255,255,0.08)", "--chart-brush-stroke": "#38bdf8" },
+    forest: { "--chart-bg": "#14532d", "--chart-text-color": "#dcfce7", "--chart-grid-color": "#166534", "--chart-grid-opacity": "0.4", "--chart-tooltip-bg": "#15803d", "--chart-tooltip-border": "#22c55e", "--chart-button-color": "#86efac", "--chart-sheet-bg": "#15803d", "--chart-annotation-ring": "#fbbf24", "--chart-ref-line-color": "#22c55e", "--chart-status-bar-bg": "#14532d", "--chart-slider-track": "#166534", "--chart-brush-fill": "rgba(255,255,255,0.08)", "--chart-brush-stroke": "#4ade80" },
+    sunset: { "--chart-bg": "#fef3c7", "--chart-text-color": "#78350f", "--chart-grid-color": "#d97706", "--chart-grid-opacity": "0.3", "--chart-tooltip-bg": "#fffbeb", "--chart-tooltip-border": "#f59e0b", "--chart-button-color": "#92400e", "--chart-sheet-bg": "#fffbeb", "--chart-annotation-ring": "#dc2626", "--chart-ref-line-color": "#d97706", "--chart-status-bar-bg": "#fef3c7", "--chart-slider-track": "#fde68a", "--chart-brush-fill": "rgba(0,0,0,0.06)", "--chart-brush-stroke": "#b45309" },
+    monochrome: { "--chart-bg": "#fafafa", "--chart-text-color": "#404040", "--chart-grid-color": "#a3a3a3", "--chart-grid-opacity": "0.3", "--chart-tooltip-bg": "#ffffff", "--chart-tooltip-border": "#d4d4d4", "--chart-button-color": "#737373", "--chart-sheet-bg": "#ffffff", "--chart-annotation-ring": "#404040", "--chart-ref-line-color": "#a3a3a3", "--chart-status-bar-bg": "#f5f5f5", "--chart-slider-track": "#d4d4d4", "--chart-brush-fill": "rgba(0,0,0,0.06)", "--chart-brush-stroke": "#737373" },
+    neon: { "--chart-bg": "#09090b", "--chart-text-color": "#a1a1aa", "--chart-grid-color": "#27272a", "--chart-grid-opacity": "0.5", "--chart-tooltip-bg": "#18181b", "--chart-tooltip-border": "#3f3f46", "--chart-button-color": "#a1a1aa", "--chart-sheet-bg": "#18181b", "--chart-annotation-ring": "#22d3ee", "--chart-ref-line-color": "#3f3f46", "--chart-status-bar-bg": "#09090b", "--chart-slider-track": "#27272a", "--chart-brush-fill": "rgba(34,211,238,0.08)", "--chart-brush-stroke": "#22d3ee" },
+    corporate: { "--chart-bg": "#ffffff", "--chart-text-color": "#1e3a5f", "--chart-grid-color": "#bfdbfe", "--chart-grid-opacity": "0.5", "--chart-tooltip-bg": "#f0f9ff", "--chart-tooltip-border": "#93c5fd", "--chart-button-color": "#1e40af", "--chart-sheet-bg": "#f0f9ff", "--chart-annotation-ring": "#dc2626", "--chart-ref-line-color": "#93c5fd", "--chart-status-bar-bg": "#f0f9ff", "--chart-slider-track": "#bfdbfe", "--chart-brush-fill": "rgba(30,64,175,0.06)", "--chart-brush-stroke": "#3b82f6" },
+    academic: { "--chart-bg": "#fffbf0", "--chart-text-color": "#1c1917", "--chart-grid-color": "#d6d3d1", "--chart-grid-opacity": "0.4", "--chart-tooltip-bg": "#fafaf9", "--chart-tooltip-border": "#a8a29e", "--chart-button-color": "#57534e", "--chart-sheet-bg": "#fafaf9", "--chart-annotation-ring": "#b91c1c", "--chart-ref-line-color": "#a8a29e", "--chart-status-bar-bg": "#fffbf0", "--chart-slider-track": "#d6d3d1", "--chart-brush-fill": "rgba(0,0,0,0.04)", "--chart-brush-stroke": "#78716c" },
+    nature: { "--chart-bg": "#fefce8", "--chart-text-color": "#365314", "--chart-grid-color": "#a3e635", "--chart-grid-opacity": "0.3", "--chart-tooltip-bg": "#f7fee7", "--chart-tooltip-border": "#84cc16", "--chart-button-color": "#4d7c0f", "--chart-sheet-bg": "#f7fee7", "--chart-annotation-ring": "#ea580c", "--chart-ref-line-color": "#84cc16", "--chart-status-bar-bg": "#fefce8", "--chart-slider-track": "#d9f99d", "--chart-brush-fill": "rgba(0,0,0,0.04)", "--chart-brush-stroke": "#65a30d" },
+    minimal: { "--chart-bg": "#ffffff", "--chart-text-color": "#71717a", "--chart-grid-color": "#e4e4e7", "--chart-grid-opacity": "0.5", "--chart-tooltip-bg": "#ffffff", "--chart-tooltip-border": "#f4f4f5", "--chart-button-color": "#a1a1aa", "--chart-sheet-bg": "#ffffff", "--chart-annotation-ring": "#ef4444", "--chart-ref-line-color": "#e4e4e7", "--chart-status-bar-bg": "#fafafa", "--chart-slider-track": "#e4e4e7", "--chart-brush-fill": "rgba(0,0,0,0.03)", "--chart-brush-stroke": "#d4d4d8" },
+    retro: { "--chart-bg": "#fdf6e3", "--chart-text-color": "#586e75", "--chart-grid-color": "#93a1a1", "--chart-grid-opacity": "0.3", "--chart-tooltip-bg": "#eee8d5", "--chart-tooltip-border": "#93a1a1", "--chart-button-color": "#657b83", "--chart-sheet-bg": "#eee8d5", "--chart-annotation-ring": "#dc322f", "--chart-ref-line-color": "#93a1a1", "--chart-status-bar-bg": "#fdf6e3", "--chart-slider-track": "#eee8d5", "--chart-brush-fill": "rgba(0,0,0,0.04)", "--chart-brush-stroke": "#839496" },
+    warm: { "--chart-bg": "#fff7ed", "--chart-text-color": "#7c2d12", "--chart-grid-color": "#fed7aa", "--chart-grid-opacity": "0.4", "--chart-tooltip-bg": "#fffbeb", "--chart-tooltip-border": "#fdba74", "--chart-button-color": "#c2410c", "--chart-sheet-bg": "#fffbeb", "--chart-annotation-ring": "#b91c1c", "--chart-ref-line-color": "#fdba74", "--chart-status-bar-bg": "#fff7ed", "--chart-slider-track": "#fed7aa", "--chart-brush-fill": "rgba(194,65,12,0.06)", "--chart-brush-stroke": "#ea580c" }
+  };
+
+  // inst/htmlwidgets/myIO/src/theme/theme-manager.js
+  function normalizeThemeValues(values) {
+    if (!values || typeof values !== "object") {
+      return {};
+    }
+    var normalized = {};
+    for (var key of Object.keys(values)) {
+      var cssKey = key.startsWith("--") ? key : "--" + key;
+      normalized[cssKey] = values[key];
+    }
+    return normalized;
+  }
+  function normalizeThemeConfig(raw) {
+    if (!raw || typeof raw !== "object") {
+      return { mode: null, preset: null, values: {} };
+    }
+    if (!("mode" in raw) && !("preset" in raw) && !("values" in raw)) {
+      return { mode: null, preset: null, values: normalizeThemeValues(raw) };
+    }
+    return {
+      mode: raw.mode || null,
+      preset: raw.preset || null,
+      values: normalizeThemeValues(raw.values || {})
+    };
+  }
+  var ThemeManager = class {
+    constructor(element, config) {
+      this.element = element;
+      this.config = normalizeThemeConfig(config ? config.theme : null);
+      this.currentMode = null;
+      this.mutationObserver = null;
+      this.mediaQuery = null;
+      this._mediaHandler = null;
+      this.listeners = [];
+    }
+    initialize() {
+      var resolved = this.resolveMode();
+      this.apply(resolved);
+      if (this.config.mode === "auto") {
+        this.startListening();
+      }
+    }
+    resolveMode() {
+      var mode = this.config.mode;
+      if (mode === "light" || mode === "dark") {
+        return mode;
+      }
+      if (mode === "auto") {
+        return this.detectEnvironment();
+      }
+      return "light";
+    }
+    detectEnvironment() {
+      var bsTheme = this.element.closest && this.element.closest("[data-bs-theme]");
+      if (bsTheme) {
+        return bsTheme.getAttribute("data-bs-theme") === "dark" ? "dark" : "light";
+      }
+      if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        return "dark";
+      }
+      return "light";
+    }
+    apply(mode) {
+      this.currentMode = mode;
+      var palette = mode === "dark" ? DARK : LIGHT;
+      if (this.config.preset && PRESETS[this.config.preset]) {
+        palette = PRESETS[this.config.preset];
+      }
+      for (var prop of Object.keys(palette)) {
+        this.element.style.setProperty(prop, palette[prop]);
+      }
+      if (this.config.values) {
+        for (var key of Object.keys(this.config.values)) {
+          this.element.style.setProperty(key, this.config.values[key]);
+        }
+      }
+      this.element.dataset.theme = mode;
+      for (var fn of this.listeners) {
+        fn(mode);
+      }
+    }
+    startListening() {
+      var self2 = this;
+      this.mutationObserver = new MutationObserver(function() {
+        var newMode = self2.detectEnvironment();
+        if (newMode !== self2.currentMode) {
+          self2.apply(newMode);
+        }
+      });
+      var body = document.body;
+      if (body) {
+        this.mutationObserver.observe(body, {
+          attributes: true,
+          attributeFilter: ["data-bs-theme"]
+        });
+      }
+      if (window.matchMedia) {
+        this.mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+        this._mediaHandler = function() {
+          var newMode = self2.detectEnvironment();
+          if (newMode !== self2.currentMode) {
+            self2.apply(newMode);
+          }
+        };
+        if (typeof this.mediaQuery.addEventListener === "function") {
+          this.mediaQuery.addEventListener("change", this._mediaHandler);
+        } else if (typeof this.mediaQuery.addListener === "function") {
+          this.mediaQuery.addListener(this._mediaHandler);
+        }
+      }
+    }
+    onChange(fn) {
+      this.listeners.push(fn);
+    }
+    destroy() {
+      if (this.mutationObserver) {
+        this.mutationObserver.disconnect();
+      }
+      if (this.mediaQuery && this._mediaHandler) {
+        if (typeof this.mediaQuery.removeEventListener === "function") {
+          this.mediaQuery.removeEventListener("change", this._mediaHandler);
+        } else if (typeof this.mediaQuery.removeListener === "function") {
+          this.mediaQuery.removeListener(this._mediaHandler);
+        }
+      }
+      this.listeners = [];
+    }
+  };
+
+  // inst/htmlwidgets/myIO/src/layout/facet-panel.js
+  var FACET_PANEL_HEIGHT = 200;
+  var FacetPanel = class {
+    constructor(controller, facetValue, element, index, total) {
+      this.controller = controller;
+      this.facetValue = facetValue;
+      this.element = element;
+      this.index = index;
+      this.total = total;
+      this.layers = [];
+      this.panelChart = null;
+      this.suppressX = false;
+      this.suppressY = false;
+      if (!this.element.id) {
+        this.element.id = controller.chart.dom.element.id + "-facet-panel-" + index;
+      }
+    }
+    initialize(layers) {
+      this.layers = layers || [];
+      this.destroy();
+      this.updateGridPosition();
+      var labelPos = this.controller.config.labelPosition || "top";
+      if (labelPos === "top") {
+        this.addLabel();
+      }
+      if (this.hasPanelData()) {
+        this.renderPanel();
+      } else {
+        this.renderEmptyPanel();
+      }
+      if (labelPos === "bottom") {
+        this.addLabel();
+      }
+    }
+    updateGridPosition() {
+      var ncol = this.getColumnCount();
+      var lastRow = Math.floor((this.total - 1) / ncol);
+      var gridRow = Math.floor(this.index / ncol);
+      var gridCol = this.index % ncol;
+      this.suppressX = this.controller.config.scales === "fixed" && gridRow !== lastRow;
+      this.suppressY = this.controller.config.scales === "fixed" && gridCol !== 0;
+    }
+    getColumnCount() {
+      var configured = this.controller.config.ncol;
+      if (configured) {
+        return Math.max(configured, 1);
+      }
+      var container = this.controller.container && this.controller.container.node ? this.controller.container.node() : null;
+      if (container && window.getComputedStyle) {
+        var template = window.getComputedStyle(container).gridTemplateColumns || "";
+        var parts = template.split(" ").filter(function(part) {
+          return !!part && part !== "none";
+        });
+        if (parts.length > 0) {
+          return parts.length;
+        }
+      }
+      var containerWidth = container ? container.clientWidth : this.controller.chart.runtime.totalWidth;
+      return Math.max(Math.floor(containerWidth / (this.controller.config.minWidth || 200)), 1);
+    }
+    hasPanelData() {
+      for (var i = 0; i < this.layers.length; i += 1) {
+        if (this.layers[i].data && this.layers[i].data.length > 0) {
+          return true;
+        }
+      }
+      return false;
+    }
+    addLabel() {
+      d3.select(this.element).append("div").attr("class", "myIO-facet-label").text(this.facetValue);
+    }
+    renderPanel() {
+      var panelChart = this.buildPanelChart();
+      var renderState = deriveChartRender(panelChart);
+      if (renderState.axesChart) {
+        applyDerivedScales(panelChart, renderState);
+        this.applySharedDomains(panelChart);
+      }
+      initializeScaffold(panelChart);
+      panelChart.dom.svg = panelChart.svg;
+      panelChart.dom.plot = panelChart.plot;
+      panelChart.dom.chartArea = panelChart.chart;
+      if (renderState.axesChart && this.requiresClipPath(renderState.type)) {
+        this.setClipPath(panelChart);
+        syncAxes(panelChart, renderState, { isInitialRender: true });
+        this.applyAxisSuppression(panelChart);
+        syncReferenceLines(panelChart, renderState, { isInitialRender: true });
+      }
+      this.renderLayers(panelChart, this.layers);
+      this.panelChart = panelChart;
+    }
+    buildPanelChart() {
+      var parentChart = this.controller.chart;
+      var width = Math.max(this.element.clientWidth || this.controller.config.minWidth || 200, 1);
+      var margin = this.buildMargin();
+      var panelConfig = Object.assign({}, parentChart.config, {
+        layers: this.layers
+      });
+      var options = {
+        margin,
+        suppressLegend: true,
+        suppressAxis: { xAxis: this.suppressX, yAxis: this.suppressY },
+        xlim: panelConfig.scales.xlim,
+        ylim: panelConfig.scales.ylim,
+        categoricalScale: panelConfig.scales.categoricalScale,
+        flipAxis: panelConfig.scales.flipAxis,
+        colorScheme: panelConfig.scales.colorScheme ? panelConfig.scales.colorScheme.enabled ? [panelConfig.scales.colorScheme.colors, panelConfig.scales.colorScheme.domain, "on"] : [panelConfig.scales.colorScheme.colors, panelConfig.scales.colorScheme.domain, "off"] : null,
+        xAxisFormat: panelConfig.axes.xAxisFormat,
+        yAxisFormat: panelConfig.axes.yAxisFormat,
+        toolTipFormat: panelConfig.axes.toolTipFormat,
+        xAxisLabel: panelConfig.axes.xAxisLabel,
+        yAxisLabel: panelConfig.axes.yAxisLabel,
+        dragPoints: false,
+        toggleY: null,
+        toolTipOptions: panelConfig.interactions.toolTipOptions,
+        transition: { speed: 0 },
+        referenceLine: panelConfig.referenceLines
+      };
+      return {
+        element: this.element,
+        dom: { element: this.element },
+        config: panelConfig,
+        derived: { currentLayers: this.layers.slice() },
+        runtime: {
+          totalWidth: width,
+          width,
+          height: FACET_PANEL_HEIGHT,
+          layout: parentChart.runtime.layout,
+          activeY: parentChart.runtime.activeY,
+          activeYFormat: parentChart.runtime.activeYFormat
+        },
+        options,
+        margin,
+        width,
+        height: FACET_PANEL_HEIGHT,
+        totalWidth: width,
+        layout: parentChart.runtime.layout,
+        newY: parentChart.runtime.activeY,
+        newScaleY: parentChart.runtime.activeYFormat,
+        plotLayers: this.layers,
+        emit: function() {
+        },
+        dragPoints: function() {
+        },
+        updateRegression: function() {
+        },
+        syncLegacyAliases: function() {
+          this.xScale = this.derived ? this.derived.xScale : null;
+          this.yScale = this.derived ? this.derived.yScale : null;
+          this.colorDiscrete = this.derived ? this.derived.colorDiscrete : null;
+          this.colorContinuous = this.derived ? this.derived.colorContinuous : null;
+          this.x_banded = this.derived ? this.derived.xBanded : null;
+          this.y_banded = this.derived ? this.derived.yBanded : null;
+          this.x_check = this.derived ? this.derived.xCheck : null;
+          this.currentLayers = this.derived ? this.derived.currentLayers : null;
+        },
+        captureLegacyAliases: function() {
+        }
+      };
+    }
+    buildMargin() {
+      var baseMargin = this.controller.chart.config.layout.margin || {};
+      var margin = {
+        top: baseMargin.top != null ? baseMargin.top : 30,
+        right: baseMargin.right != null ? baseMargin.right : 5,
+        bottom: baseMargin.bottom != null ? baseMargin.bottom : 60,
+        left: baseMargin.left != null ? baseMargin.left : 50
+      };
+      if (this.suppressX) {
+        margin.bottom = Math.min(margin.bottom, 12);
+      }
+      if (this.suppressY) {
+        margin.left = Math.min(margin.left, 12);
+      }
+      return margin;
+    }
+    applySharedDomains(panelChart) {
+      var snapshot = this.controller.globalScaleSnapshot;
+      if (!snapshot || !panelChart.derived || !panelChart.derived.xScale || !panelChart.derived.yScale) {
+        return;
+      }
+      if (snapshot.xDomain) {
+        panelChart.derived.xScale.domain(snapshot.xDomain.slice());
+      }
+      if (snapshot.yDomain) {
+        panelChart.derived.yScale.domain(snapshot.yDomain.slice());
+      }
+      if (snapshot.xBanded) {
+        panelChart.derived.xBanded = snapshot.xBanded.slice();
+      }
+      if (snapshot.yBanded) {
+        panelChart.derived.yBanded = snapshot.yBanded.slice();
+      }
+      if (typeof snapshot.xCheck !== "undefined") {
+        panelChart.derived.xCheck = snapshot.xCheck;
+      }
+      if (snapshot.colorDiscrete) {
+        panelChart.derived.colorDiscrete = snapshot.colorDiscrete;
+      }
+      if (snapshot.colorContinuous) {
+        panelChart.derived.colorContinuous = snapshot.colorContinuous;
+      }
+      panelChart.syncLegacyAliases();
+    }
+    requiresClipPath(type) {
+      return type !== "donut" && type !== "gauge";
+    }
+    setClipPath(panelChart) {
+      var chartHeight = panelChart.height - (panelChart.margin.top + panelChart.margin.bottom);
+      panelChart.dom.clipPath = panelChart.dom.chartArea.append("defs").append("svg:clipPath").attr("id", panelChart.dom.element.id + "clip").append("svg:rect").attr("x", 0).attr("y", 0).attr("width", panelChart.width - (panelChart.margin.left + panelChart.margin.right)).attr("height", chartHeight);
+      panelChart.dom.chartArea.attr("clip-path", "url(#" + panelChart.dom.element.id + "clip)");
+      panelChart.clipPath = panelChart.dom.clipPath;
+    }
+    applyAxisSuppression(panelChart) {
+      if (this.suppressX) {
+        panelChart.plot.selectAll(".x-axis").remove();
+      }
+      if (this.suppressY) {
+        panelChart.plot.selectAll(".y-axis").remove();
+      }
+    }
+    renderLayers(panelChart, layers) {
+      for (var i = 0; i < layers.length; i += 1) {
+        var renderer = getRendererForLayer(layers[i]);
+        if (renderer && typeof renderer.render === "function") {
+          renderer.render(panelChart, layers[i], layers);
+        }
+      }
+    }
+    renderEmptyPanel() {
+      d3.select(this.element).classed("myIO-facet-empty", true);
+      var width = Math.max(this.element.clientWidth || this.controller.config.minWidth || 200, 1);
+      this.panelChart = {
+        svg: d3.select(this.element).append("svg").attr("class", "myIO-svg").attr("width", "100%").attr("height", FACET_PANEL_HEIGHT).attr("viewBox", "0 0 " + width + " " + FACET_PANEL_HEIGHT)
+      };
+      this.panelChart.svg.append("text").attr("x", width / 2).attr("y", FACET_PANEL_HEIGHT / 2).attr("text-anchor", "middle").attr("fill", "var(--chart-grid-color)").style("font-size", "11px").style("font-style", "italic").text("No data");
+    }
+    resize() {
+      if (!this.element || !this.element.isConnected) {
+        return;
+      }
+      this.initialize(this.layers);
+    }
+    destroy() {
+      d3.select(this.element).classed("myIO-facet-empty", false);
+      d3.select(this.element).selectAll("*").remove();
+      this.panelChart = null;
+    }
+  };
+
+  // inst/htmlwidgets/myIO/src/layout/facet-controller.js
+  var FACET_PANEL_HEIGHT2 = 200;
+  var FacetController = class {
+    constructor(chart) {
+      this.chart = chart;
+      this.config = chart.config.facet || {};
+      this.panels = /* @__PURE__ */ new Map();
+      this.container = null;
+      this.resizeObserver = null;
+      this.validatedLayers = [];
+      this.globalScaleSnapshot = null;
+    }
+    initialize() {
+      this.destroy();
+      this.config = this.chart.config.facet || {};
+      this.validatedLayers = this.getValidatedLayers();
+      if (this.chart.dom && this.chart.dom.svg) {
+        this.chart.dom.svg.style("display", "none");
+      }
+      d3.select(this.chart.dom.element).selectAll(".myIO-fab, .myIO-panel, .myIO-sheet-backdrop").remove();
+      if (this.validatedLayers.length === 0) {
+        this.createGrid([]);
+        return;
+      }
+      var facetValues = this.groupData();
+      this.globalScaleSnapshot = this.config.scales === "fixed" ? this.captureGlobalScaleSnapshot(this.validatedLayers) : null;
+      this.createGrid(facetValues);
+      for (var i = 0; i < facetValues.length; i += 1) {
+        var value = facetValues[i];
+        var panelDiv = this.container.append("div").attr("class", "myIO-facet-panel").attr("data-facet-value", value);
+        var panel = new FacetPanel(this, value, panelDiv.node(), i, facetValues.length);
+        panel.initialize(this.filterLayersForValue(value));
+        this.panels.set(value, panel);
+      }
+    }
+    getValidatedLayers() {
+      var previousLayers = this.chart.derived.currentLayers;
+      this.chart.derived.currentLayers = this.chart.config.layers || [];
+      var layers = validateLayers(this.chart);
+      this.chart.derived.currentLayers = previousLayers;
+      return layers;
+    }
+    groupData() {
+      var facetVar = this.config.var;
+      var valueSet = {};
+      for (var i = 0; i < this.validatedLayers.length; i += 1) {
+        var data = this.validatedLayers[i].data || [];
+        for (var j = 0; j < data.length; j += 1) {
+          var val = String(data[j][facetVar]);
+          valueSet[val] = true;
+        }
+      }
+      return Object.keys(valueSet).sort();
+    }
+    filterLayersForValue(value) {
+      var facetVar = this.config.var;
+      return this.validatedLayers.map(function(layer) {
+        return Object.assign({}, layer, {
+          data: (layer.data || []).filter(function(d) {
+            return String(d[facetVar]) === value;
+          })
+        });
+      });
+    }
+    createGrid(facetValues) {
+      d3.select(this.chart.dom.element).select(".myIO-facet-grid").remove();
+      this.container = d3.select(this.chart.dom.element).append("div").attr("class", "myIO-facet-grid").attr("role", "group").attr("aria-label", "Small multiples chart faceted by " + this.config.var);
+      if (this.config.ncol) {
+        this.container.style("grid-template-columns", "repeat(" + this.config.ncol + ", 1fr)");
+      } else {
+        this.container.style(
+          "grid-template-columns",
+          "repeat(auto-fill, minmax(" + (this.config.minWidth || 200) + "px, 1fr))"
+        );
+      }
+      if (!facetValues.length) {
+        this.container.append("div").attr("class", "myIO-facet-panel myIO-facet-empty").text("No data");
+      }
+    }
+    captureGlobalScaleSnapshot(layers) {
+      if (!layers || !layers.length) {
+        return null;
+      }
+      var scaleChart = {
+        config: this.chart.config,
+        derived: { currentLayers: layers.slice() },
+        margin: Object.assign({}, this.chart.config.layout.margin),
+        width: Math.max(this.config.minWidth || 200, 1),
+        height: FACET_PANEL_HEIGHT2,
+        runtime: {
+          totalWidth: Math.max(this.config.minWidth || 200, 1)
+        },
+        syncLegacyAliases: function() {
+        }
+      };
+      var renderState = deriveChartRender(scaleChart);
+      if (!renderState.axesChart) {
+        return {
+          renderState
+        };
+      }
+      applyDerivedScales(scaleChart, renderState);
+      return {
+        renderState,
+        xDomain: scaleChart.derived.xScale ? scaleChart.derived.xScale.domain().slice() : null,
+        yDomain: scaleChart.derived.yScale ? scaleChart.derived.yScale.domain().slice() : null,
+        xBanded: scaleChart.derived.xBanded ? scaleChart.derived.xBanded.slice() : null,
+        yBanded: scaleChart.derived.yBanded ? scaleChart.derived.yBanded.slice() : null,
+        xCheck: scaleChart.derived.xCheck,
+        colorDiscrete: scaleChart.derived.colorDiscrete || null,
+        colorContinuous: scaleChart.derived.colorContinuous || null
+      };
+    }
+    resize() {
+      var width = this.chart.dom && this.chart.dom.element ? this.chart.dom.element.clientWidth : 0;
+      if (this.chart.runtime) {
+        this.chart.runtime.totalWidth = Math.max(width || this.chart.runtime.totalWidth || 0, 1);
+        this.chart.runtime.width = this.chart.runtime.totalWidth;
+      }
+      if (this.config.scales === "fixed") {
+        this.globalScaleSnapshot = this.captureGlobalScaleSnapshot(this.validatedLayers);
+      }
+      for (var panel of this.panels.values()) {
+        panel.resize();
+      }
+    }
+    destroy() {
+      for (var panel of this.panels.values()) {
+        panel.destroy();
+      }
+      this.panels.clear();
+      d3.select(this.chart.dom.element).select(".myIO-facet-grid").remove();
+      this.container = null;
+      this.globalScaleSnapshot = null;
+      if (this.chart.dom && this.chart.dom.svg) {
+        this.chart.dom.svg.style("display", null);
+      }
+    }
+  };
+
+  // inst/htmlwidgets/myIO/src/a11y/descriptions.js
+  function generateChartLabel(config) {
+    var types = [];
+    var layers = config && config.layers || [];
+    for (var i = 0; i < layers.length; i++) {
+      var type = layers[i].type;
+      if (type && types.indexOf(type) === -1) {
+        types.push(type);
+      }
+    }
+    var xLabel = config && config.axes && config.axes.xAxisLabel || "x";
+    var yLabel = config && config.axes && config.axes.yAxisLabel || "y";
+    var prefix = types.length ? types.join(" and ") + " chart" : "chart";
+    return prefix + ": " + xLabel + " vs " + yLabel;
+  }
+  function generateLayerLabel(layer) {
+    var label = layer && (layer.label || layer.type) || "series";
+    var dataLength = layer && Array.isArray(layer.data) ? layer.data.length : 0;
+    return label + ": " + dataLength + " data points";
+  }
+  function generatePointLabel(d, layer) {
+    var mapping = layer && layer.mapping || {};
+    if (mapping.x_var && mapping.y_var && d) {
+      return String(d[mapping.x_var] != null ? d[mapping.x_var] : "") + ": " + String(d[mapping.y_var] != null ? d[mapping.y_var] : "");
+    }
+    if (mapping.category && mapping.value && d) {
+      return String(d[mapping.category] || "") + ": " + String(d[mapping.value] || "");
+    }
+    return "Data point";
+  }
+
+  // inst/htmlwidgets/myIO/src/a11y/aria.js
+  function sanitizeLabel(label) {
+    return String(label).replace(/[^a-zA-Z0-9_-]/g, "");
+  }
+  function getLayerGroup(chart, layer) {
+    if (!chart.dom || !chart.dom.chartArea || !layer) {
+      return null;
+    }
+    var chartArea = chart.dom.chartArea;
+    var selectors = [
+      ".tag-" + layer.type + "-" + layer.id,
+      ".tag-" + layer.type + "-" + chart.dom.element.id + "-" + sanitizeLabel(layer.label)
+    ];
+    for (var i = 0; i < selectors.length; i++) {
+      var selection = chartArea.select(selectors[i]);
+      if (!selection.empty()) {
+        return selection;
+      }
+    }
+    return null;
+  }
+  function getLayerElements(chart, layer) {
+    if (!chart.dom || !chart.dom.chartArea || !layer) {
+      return null;
+    }
+    var chartArea = chart.dom.chartArea;
+    var label = sanitizeLabel(layer.label);
+    var elementId = chart.dom.element.id;
+    var selectors = [];
+    if (layer.type === "line") {
+      selectors.push(".tag-point-" + elementId + "-" + label);
+    }
+    if (layer.type === "groupedBar") {
+      selectors.push(".tag-grouped-bar-g rect");
+    }
+    selectors.push(".tag-" + layer.type + "-" + elementId + "-" + label);
+    selectors.push(".tag-" + layer.type + "-" + layer.id + " circle");
+    selectors.push(".tag-" + layer.type + "-" + layer.id + " rect");
+    selectors.push(".tag-" + layer.type + "-" + layer.id + " path");
+    selectors.push(".tag-" + layer.type + "-" + layer.id + " line");
+    for (var i = 0; i < selectors.length; i++) {
+      var selection = chartArea.selectAll(selectors[i]);
+      if (!selection.empty()) {
+        return selection;
+      }
+    }
+    return null;
+  }
+  function applyARIA(chart) {
+    if (!chart || !chart.dom || !chart.dom.svg) {
+      return;
+    }
+    var svg = chart.dom.svg;
+    var layers = chart.config && chart.config.layers ? chart.config.layers : [];
+    svg.attr("role", "graphics-document").attr("aria-roledescription", "chart").attr("aria-label", generateChartLabel(chart.config)).attr("tabindex", "0");
+    if (chart.dom.chartArea) {
+      chart.dom.chartArea.attr("role", "graphics-object").attr("aria-roledescription", "plot area").attr("aria-label", "Plot area with " + layers.length + " data series");
+    }
+    for (var i = 0; i < layers.length; i++) {
+      var layer = layers[i];
+      var layerGroup = getLayerGroup(chart, layer);
+      var layerElements = getLayerElements(chart, layer);
+      if (layerGroup && !layerGroup.empty()) {
+        layerGroup.attr("role", "graphics-object").attr("aria-roledescription", layer.type + " series").attr("aria-label", generateLayerLabel(layer));
+      }
+      if (layerElements && !layerElements.empty()) {
+        layerElements.each(function(d) {
+          d3.select(this).attr("role", "graphics-symbol").attr("aria-roledescription", "data point").attr("aria-label", generatePointLabel(d, layer));
+        });
+      }
+    }
+  }
+
+  // inst/htmlwidgets/myIO/src/a11y/keyboard-nav.js
+  function sanitizeLabel2(label) {
+    return String(label).replace(/[^a-zA-Z0-9_-]/g, "");
+  }
+  function getLayerSymbols(chart, layer) {
+    if (!chart || !chart.dom || !chart.dom.chartArea || !layer) {
+      return d3.select(null);
+    }
+    var chartArea = chart.dom.chartArea;
+    var label = sanitizeLabel2(layer.label);
+    var elementId = chart.dom.element.id;
+    var selectors = [
+      ".tag-" + layer.type + "-" + layer.id + ' [role="graphics-symbol"]'
+    ];
+    if (layer.type === "line") {
+      selectors.push(".tag-point-" + elementId + "-" + label + '[role="graphics-symbol"]');
+    }
+    if (layer.type === "groupedBar") {
+      selectors.push('.tag-grouped-bar-g rect[role="graphics-symbol"]');
+    }
+    selectors.push(".tag-" + layer.type + "-" + elementId + "-" + label + '[role="graphics-symbol"]');
+    selectors.push(".tag-" + layer.type + "-" + layer.id + ' circle[role="graphics-symbol"]');
+    selectors.push(".tag-" + layer.type + "-" + layer.id + ' rect[role="graphics-symbol"]');
+    selectors.push(".tag-" + layer.type + "-" + layer.id + ' path[role="graphics-symbol"]');
+    selectors.push(".tag-" + layer.type + "-" + layer.id + ' line[role="graphics-symbol"]');
+    for (var i = 0; i < selectors.length; i++) {
+      var selection = chartArea.selectAll(selectors[i]);
+      if (!selection.empty()) {
+        return selection;
+      }
+    }
+    return d3.select(null);
+  }
+  var KeyboardNavigator = class {
+    constructor(chart) {
+      this.chart = chart;
+      this.state = "IDLE";
+      this.layerIndex = 0;
+      this.pointIndex = 0;
+      this.debounceTimer = null;
+      this.liveRegion = null;
+      this._keyHandler = null;
+    }
+    initialize() {
+      var self2 = this;
+      this.liveRegion = d3.select(this.chart.dom.element).append("div").attr("role", "status").attr("aria-live", "polite").attr("aria-atomic", "true").attr("class", "myIO-sr-only");
+      this._keyHandler = function(event) {
+        self2.handleKey(event);
+      };
+      this.chart.dom.svg.on("keydown.a11y", this._keyHandler);
+    }
+    handleKey(event) {
+      var key = event.key;
+      switch (key) {
+        case "ArrowRight":
+          event.preventDefault();
+          this.movePoint(1);
+          break;
+        case "ArrowLeft":
+          event.preventDefault();
+          this.movePoint(-1);
+          break;
+        case "ArrowDown":
+          event.preventDefault();
+          this.moveLayer(1);
+          break;
+        case "ArrowUp":
+          event.preventDefault();
+          this.moveLayer(-1);
+          break;
+        case "Escape":
+          event.preventDefault();
+          this.reset();
+          break;
+      }
+    }
+    movePoint(delta) {
+      var layers = this.getNavigableLayers();
+      if (!layers.length) {
+        return;
+      }
+      if (this.state === "IDLE") {
+        this.state = "POINT";
+        this.layerIndex = 0;
+        this.pointIndex = 0;
+      } else {
+        var maxIndex = layers[this.layerIndex].data.length - 1;
+        this.pointIndex = Math.max(0, Math.min(maxIndex, this.pointIndex + delta));
+      }
+      this.focusCurrent();
+    }
+    moveLayer(delta) {
+      var layers = this.getNavigableLayers();
+      if (!layers.length) {
+        return;
+      }
+      var maxIndex = layers.length - 1;
+      this.layerIndex = Math.max(0, Math.min(maxIndex, this.layerIndex + delta));
+      this.pointIndex = 0;
+      this.state = "POINT";
+      this.focusCurrent();
+    }
+    focusCurrent() {
+      var layers = this.getNavigableLayers();
+      var layer = layers[this.layerIndex];
+      if (!layer || !layer.data || !layer.data.length) {
+        return;
+      }
+      var d = layer.data[this.pointIndex];
+      if (!d) {
+        return;
+      }
+      this.chart.dom.chartArea.selectAll(".myIO-kb-focus").classed("myIO-kb-focus", false);
+      var elements = getLayerSymbols(this.chart, layer);
+      var pointIndex = this.pointIndex;
+      var target = elements.filter(function(dd, i) {
+        if (dd && d && dd._source_key != null && d._source_key != null) {
+          return dd._source_key === d._source_key;
+        }
+        return dd === d || i === pointIndex;
+      });
+      if (!target.empty()) {
+        target.classed("myIO-kb-focus", true);
+      }
+      var mapping = layer.mapping || {};
+      var text = "";
+      if (mapping.x_var && mapping.y_var && d) {
+        text = String(d[mapping.x_var]) + ": " + String(d[mapping.y_var]);
+      } else {
+        text = "Point " + (this.pointIndex + 1) + " of " + layer.data.length;
+      }
+      this.announce(text);
+    }
+    announce(text) {
+      var self2 = this;
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = setTimeout(function() {
+        if (self2.liveRegion) {
+          self2.liveRegion.text(text);
+        }
+      }, 150);
+    }
+    reset() {
+      this.state = "IDLE";
+      this.chart.dom.chartArea.selectAll(".myIO-kb-focus").classed("myIO-kb-focus", false);
+      if (this.liveRegion) {
+        this.liveRegion.text("");
+      }
+    }
+    getNavigableLayers() {
+      return this.chart.config.layers.filter(function(layer) {
+        return layer.data && layer.data.length > 0 && layer.visibility !== false;
+      });
+    }
+    destroy() {
+      this.chart.dom.svg.on("keydown.a11y", null);
+      if (this.liveRegion) {
+        this.liveRegion.remove();
+      }
+      clearTimeout(this.debounceTimer);
+    }
+  };
+
+  // inst/htmlwidgets/myIO/src/a11y/data-table.js
+  var DataTableFallback = class {
+    constructor(chart) {
+      this.chart = chart;
+      this.tableContainer = null;
+      this.visible = false;
+    }
+    initialize() {
+      this.tableContainer = d3.select(this.chart.dom.element).append("div").attr("class", "myIO-data-table myIO-sr-only").attr("role", "region").attr("aria-label", "Chart data table");
+    }
+    generate() {
+      if (!this.tableContainer) {
+        return;
+      }
+      this.tableContainer.selectAll("*").remove();
+      var layers = this.chart.config.layers;
+      var maxRows = 500;
+      for (var i = 0; i < layers.length; i++) {
+        var layer = layers[i];
+        var data = Array.isArray(layer.data) ? layer.data : [];
+        var display = data.slice(0, maxRows);
+        var columns = Object.values(layer.mapping || {}).filter(Boolean);
+        var table = this.tableContainer.append("table").attr("aria-label", "Data for " + (layer.label || layer.type));
+        var thead = table.append("thead");
+        var headerRow = thead.append("tr");
+        for (var c = 0; c < columns.length; c++) {
+          headerRow.append("th").attr("scope", "col").text(columns[c]);
+        }
+        var tbody = table.append("tbody");
+        for (var r = 0; r < display.length; r++) {
+          var row = tbody.append("tr");
+          for (var c2 = 0; c2 < columns.length; c2++) {
+            var value = display[r][columns[c2]];
+            row.append("td").text(value != null ? String(value) : "");
+          }
+        }
+        if (data.length > maxRows) {
+          this.tableContainer.append("p").text("Showing first " + maxRows + " of " + data.length + " rows");
+        }
+      }
+    }
+    toggle() {
+      this.visible = !this.visible;
+      if (this.visible) {
+        this.generate();
+        this.tableContainer.classed("myIO-sr-only", false);
+        this.chart.dom.svg.attr("aria-hidden", "true");
+      } else {
+        this.tableContainer.classed("myIO-sr-only", true);
+        this.chart.dom.svg.attr("aria-hidden", null);
+      }
+    }
+    destroy() {
+      if (this.tableContainer) {
+        this.tableContainer.remove();
+      }
+    }
+  };
+
   // inst/htmlwidgets/myIO/src/Chart.js
   var MIN_CHART_WIDTH = 280;
   var RESIZE_DEBOUNCE_MS = 100;
@@ -3920,6 +6318,9 @@
         activeYFormat: null,
         tooltipHideTimer: null
       };
+      if (this.config.sparkline) {
+        this.applySparklineOverrides();
+      }
       if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
         this.config.transitions.speed = 0;
       }
@@ -4015,25 +6416,48 @@
     initialize() {
       this.derived.currentLayers = this.config.layers;
       this.syncLegacyAliases();
-      if (this.config.theme) {
-        var el = this.dom.element;
-        Object.keys(this.config.theme).forEach(function(key) {
-          if (this.config.theme[key] != null) {
-            el.style.setProperty("--" + key, this.config.theme[key]);
-          }
-        }, this);
-      }
+      this.themeManager = new ThemeManager(this.dom.element, this.config);
+      this.themeManager.initialize();
       initializeTooltip(this);
+      if (!this.config.sparkline) {
+        this.keyboardNav = new KeyboardNavigator(this);
+        this.keyboardNav.initialize();
+        this.dataTable = new DataTableFallback(this);
+        this.dataTable.initialize();
+        applyARIA(this);
+      }
       this.captureLegacyAliases();
       if (this.derived.currentLayers.length > 0) {
         this.setClipPath(this.derived.currentLayers[0].type);
       }
       this.renderCurrentLayers({ isInitialRender: true });
     }
+    applySparklineOverrides() {
+      this.config.layout.margin = { top: 1, right: 1, bottom: 1, left: 1 };
+      this.config.layout.suppressLegend = true;
+      this.config.layout.suppressAxis = { xAxis: true, yAxis: true };
+      if (this.config.interactions.brush) this.config.interactions.brush.enabled = false;
+      if (this.config.interactions.annotation) this.config.interactions.annotation.enabled = false;
+      if (this.config.interactions.linked) this.config.interactions.linked.enabled = false;
+      this.config.interactions.sliders = [];
+      this.config.interactions.dragPoints = false;
+      this.config.referenceLines = { x: null, y: null };
+      this.dom.element.dataset.sparkline = "true";
+    }
     renderCurrentLayers(opts) {
       const options = opts || {};
       const generation = ++this.runtime.renderGen;
       const isCurrent = () => this.runtime && this.runtime.renderGen === generation;
+      if (this.config.facet && this.config.facet.enabled) {
+        if (!this.facetController) {
+          this.facetController = new FacetController(this);
+        }
+        this.facetController.initialize();
+        return;
+      } else if (this.facetController) {
+        this.facetController.destroy();
+        this.facetController = null;
+      }
       try {
         if (this.dom.chartArea) {
           this.dom.chartArea.selectAll("*").interrupt();
@@ -4060,6 +6484,9 @@
         }
         if (this.derived.currentLayers.length === 0) {
           this.renderEmptyState();
+          if (!this.config.sparkline) {
+            applyARIA(this);
+          }
           return;
         }
         const state = deriveChartRender(this);
@@ -4085,10 +6512,16 @@
         if (this.config.interactions.linked && this.config.interactions.linked.enabled) {
           bindLinked(this);
         }
+        if (this.config.interactions.linked && this.config.interactions.linked.cursor === true) {
+          registerLinkedCursor(this);
+        }
         if (this.config.interactions.sliders && this.config.interactions.sliders.length > 0) {
           bindSliders(this);
         }
         this.emit("afterRender", { state });
+        if (!this.config.sparkline) {
+          applyARIA(this);
+        }
       } catch (error) {
         console.warn("[myIO] Render error:", error.message);
         this.emit("error", { message: error.message, error });
@@ -4171,6 +6604,11 @@
         if (renderer && typeof renderer.render === "function") {
           renderer.render(that, layer, layers);
           that.captureLegacyAliases();
+          var opacity = layer.options && layer.options.opacity != null ? layer.options.opacity : 1;
+          if (opacity < 1) {
+            var safeName = String(layer.label).replace(/\s+/g, "");
+            that.dom.chartArea.selectAll("[class*='tag-'][class*='-" + safeName + "']").style("opacity", opacity);
+          }
         }
       });
     }
@@ -4238,6 +6676,7 @@
       this.renderCurrentLayers();
     }
     resize(width, height) {
+      if (!width || !height || width < 2 || height < 2) return;
       const wasSheetOpen = this.runtime && this.runtime._sheetOpen === true;
       if (wasSheetOpen) {
         closePanel(this, { returnFocus: false });
@@ -4261,6 +6700,15 @@
       this.emit("destroy", {});
       clearTimeout(this.runtime && this.runtime.resizeTimer);
       clearTimeout(this.runtime && this.runtime.tooltipHideTimer);
+      if (this.facetController) {
+        this.facetController.destroy();
+        this.facetController = null;
+      }
+      if (this.keyboardNav) this.keyboardNav.destroy();
+      if (this.dataTable) this.dataTable.destroy();
+      if (this.themeManager) {
+        this.themeManager.destroy();
+      }
       if (this.runtime && this.runtime._sheetOpen) {
         closePanel(this, { returnFocus: false });
       }
@@ -4282,7 +6730,7 @@
         this.dom.tooltip.remove();
       }
       if (this.dom && this.dom.element) {
-        d3.select(this.dom.element).selectAll(".buttonDiv, .myIO-fab, .myIO-panel, .myIO-sheet-backdrop").remove();
+        d3.select(this.dom.element).selectAll(".myIO-fab, .myIO-panel, .myIO-sheet-backdrop").remove();
       }
       removeHoverOverlay(this);
       this._listeners = {};

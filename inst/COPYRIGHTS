@@ -24,3 +24,10 @@ Version:   4.13
 License:   MIT
 Copyright: Jan Egil and Borge Refsnes
 URL:       https://www.w3schools.com/w3css/
+
+Name:      jsPDF
+Version:   2.5.2
+License:   MIT
+Copyright: 2010-2021 James Hall
+URL:       https://github.com/parallax/jsPDF
+Source:    https://www.npmjs.com/package/jspdf

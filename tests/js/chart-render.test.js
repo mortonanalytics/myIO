@@ -25,6 +25,9 @@ describe("chart-render utility functions", function() {
     expect(isAxesChart("gauge")).toBe(false);
     expect(isAxesChart("donut")).toBe(false);
     expect(isAxesChart("sankey")).toBe(false);
+    expect(isAxesChart("radar")).toBe(false);
+    expect(isAxesChart("funnel")).toBe(false);
+    expect(isAxesChart("parallel")).toBe(false);
   });
 
   test("isAxesChart returns true for axes types", function() {
@@ -53,6 +56,9 @@ describe("chart-render utility functions", function() {
     expect(usesOrdinalLegend("treemap")).toBe(true);
     expect(usesOrdinalLegend("donut")).toBe(true);
     expect(usesOrdinalLegend("sankey")).toBe(true);
+    expect(usesOrdinalLegend("radar")).toBe(true);
+    expect(usesOrdinalLegend("funnel")).toBe(true);
+    expect(usesOrdinalLegend("parallel")).toBe(true);
     expect(usesOrdinalLegend("bar")).toBe(false);
   });
 
@@ -112,6 +118,14 @@ describe("deriveChartRender", function() {
 
   test("derives correct state for treemap layers", function() {
     var chart = { derived: { currentLayers: [{ type: "treemap" }] } };
+    var state = deriveChartRender(chart);
+    expect(state.ordinalLegend).toBe(true);
+    expect(state.axesChart).toBe(false);
+    expect(state.referenceLines).toBe(false);
+  });
+
+  test("derives correct state for radar layers", function() {
+    var chart = { derived: { currentLayers: [{ type: "radar" }] } };
     var state = deriveChartRender(chart);
     expect(state.ordinalLegend).toBe(true);
     expect(state.axesChart).toBe(false);

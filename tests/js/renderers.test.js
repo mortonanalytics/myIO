@@ -45,8 +45,8 @@ describe("Renderer static properties", function() {
     registerBuiltInRenderers();
   });
 
-  test("all 17 renderer types are registered", function() {
-    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge", "heatmap", "candlestick", "waterfall", "sankey", "rangeBar", "text", "bracket"];
+  test("all built-in renderer types are registered", function() {
+    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge", "heatmap", "candlestick", "waterfall", "sankey", "rangeBar", "text", "bracket", "lollipop", "dumbbell", "waffle", "beeswarm", "bump", "radar", "funnel", "parallel", "calendarHeatmap"];
     types.forEach(function(type) {
       var renderer = getRenderer(type);
       expect(renderer).toBeDefined();
@@ -55,7 +55,7 @@ describe("Renderer static properties", function() {
   });
 
   test("each renderer has traits and dataContract", function() {
-    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge", "heatmap", "candlestick", "waterfall", "sankey", "rangeBar", "text", "bracket"];
+    var types = ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "treemap", "donut", "gauge", "heatmap", "candlestick", "waterfall", "sankey", "rangeBar", "text", "bracket", "lollipop", "dumbbell", "waffle", "beeswarm", "bump", "radar", "funnel", "parallel", "calendarHeatmap"];
     types.forEach(function(type) {
       var renderer = getRenderer(type);
       expect(renderer.constructor.traits).toBeDefined();
@@ -65,13 +65,13 @@ describe("Renderer static properties", function() {
   });
 
   test("standalone types have hasAxes=false", function() {
-    ["treemap", "donut", "gauge", "sankey"].forEach(function(type) {
+    ["treemap", "donut", "gauge", "sankey", "waffle", "radar", "funnel", "parallel", "calendarHeatmap"].forEach(function(type) {
       expect(getRenderer(type).constructor.traits.hasAxes).toBe(false);
     });
   });
 
   test("axes types have hasAxes=true", function() {
-    ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "heatmap", "candlestick", "waterfall", "rangeBar", "bracket"].forEach(function(type) {
+    ["line", "point", "area", "bar", "groupedBar", "histogram", "hexbin", "heatmap", "candlestick", "waterfall", "rangeBar", "bracket", "lollipop", "dumbbell", "beeswarm", "bump"].forEach(function(type) {
       expect(getRenderer(type).constructor.traits.hasAxes).toBe(true);
     });
   });
@@ -316,6 +316,93 @@ describe("Renderer formatTooltip methods", function() {
 
     expect(document.querySelectorAll("rect." + "tag-sankey-node-chart-flow").length).toBeGreaterThan(0);
     expect(document.querySelectorAll("path." + "tag-sankey-chart-flow").length).toBeGreaterThan(0);
+  });
+
+  test("RadarRenderer.render creates axes and group polygons", function() {
+    var renderer = getRenderer("radar");
+    document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
+    var el = document.getElementById("chart");
+    var chart = {
+      dom: { chartArea: d3.select(el).select(".myIO-chart-area") },
+      derived: {},
+      margin: { top: 30, bottom: 30, left: 30, right: 30 },
+      width: 320,
+      height: 320
+    };
+    var layer = {
+      id: "radar_1",
+      label: "skills",
+      mapping: { axis: "axis", value: "value", group: "series" },
+      data: [
+        { axis: "A", value: 3, series: "Alpha" },
+        { axis: "B", value: 5, series: "Alpha" },
+        { axis: "C", value: 4, series: "Alpha" },
+        { axis: "A", value: 4, series: "Beta" },
+        { axis: "B", value: 2, series: "Beta" },
+        { axis: "C", value: 5, series: "Beta" }
+      ]
+    };
+
+    renderer.render(chart, layer);
+
+    expect(document.querySelectorAll(".tag-radar-radar_1 .radar-axis").length).toBe(3);
+    expect(document.querySelectorAll(".tag-radar-radar_1 .radar-polygon").length).toBe(2);
+  });
+
+  test("FunnelRenderer.render creates trapezoid stages", function() {
+    var renderer = getRenderer("funnel");
+    document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
+    var el = document.getElementById("chart");
+    var chart = {
+      dom: { chartArea: d3.select(el).select(".myIO-chart-area") },
+      derived: {},
+      margin: { top: 20, bottom: 20, left: 20, right: 20 },
+      width: 360,
+      height: 260
+    };
+    var layer = {
+      id: "funnel_1",
+      label: "pipeline",
+      mapping: { stage: "stage", value: "value" },
+      data: [
+        { stage: "Visit", value: 100 },
+        { stage: "Lead", value: 60 },
+        { stage: "Won", value: 20 }
+      ]
+    };
+
+    renderer.render(chart, layer);
+
+    expect(document.querySelectorAll(".tag-funnel-funnel_1 .funnel-stage").length).toBe(3);
+    expect(document.querySelectorAll(".tag-funnel-funnel_1 .funnel-label").length).toBe(3);
+  });
+
+  test("ParallelRenderer.render creates axes and polylines", function() {
+    var renderer = getRenderer("parallel");
+    document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
+    var el = document.getElementById("chart");
+    var chart = {
+      dom: { chartArea: d3.select(el).select(".myIO-chart-area") },
+      derived: {},
+      margin: { top: 20, bottom: 20, left: 20, right: 20 },
+      width: 420,
+      height: 260
+    };
+    var layer = {
+      id: "parallel_1",
+      label: "rows",
+      color: "#4E79A7",
+      mapping: { dimensions: ["speed", "power", "stamina"], group: "team" },
+      data: [
+        { speed: 4, power: 8, stamina: 6, team: "A" },
+        { speed: 7, power: 5, stamina: 9, team: "B" }
+      ]
+    };
+
+    renderer.render(chart, layer);
+
+    expect(document.querySelectorAll(".tag-parallel-parallel_1 .parallel-axis").length).toBe(3);
+    expect(document.querySelectorAll(".tag-parallel-parallel_1 .parallel-line").length).toBe(2);
   });
 
   test("HistogramRenderer.formatTooltip shows bin range", function() {

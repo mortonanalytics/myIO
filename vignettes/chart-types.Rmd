@@ -34,6 +34,7 @@ types like treemap or gauge cannot be mixed with other types.
 | Categorical axes | `bar`, `groupedBar`, `waterfall`, `boxplot`, `violin`, `comparison` |
 | Binned axes | `histogram`, `ridgeline` |
 | Matrix axes | `heatmap` |
+| Calendar | `calendarHeatmap` |
 | Standalone | `hexbin`, `treemap`, `donut`, `gauge`, `sankey` |
 
 Continuous, categorical, and binned groups can be combined with each other.
@@ -215,6 +216,34 @@ myIO() |>
   defineCategoricalAxis(xAxis = TRUE, yAxis = TRUE) |>
   setAxisFormat(xLabel = "Quarter", yLabel = "Segment")
 ```
+
+### Calendar Heatmap
+
+Calendar heatmaps render daily values as a GitHub-contributions-style grid:
+one cell per day, seven rows per week, with month labels across the top. The
+chart is scoped to a single calendar year in v1.2. Mapping requires `date`
+(any Date or ISO `"YYYY-MM-DD"` string) and `value` (numeric):
+
+```{r calendar-heatmap, eval = FALSE}
+set.seed(42)
+df <- data.frame(
+  day     = as.Date("2026-01-01") + 0:364,
+  commits = rpois(365, lambda = 3)
+)
+
+myIO() |>
+  addIoLayer(
+    type = "calendarHeatmap",
+    color = "#4E79A7",
+    label = "Daily commits",
+    data = df,
+    mapping = list(date = "day", value = "commits")
+  )
+```
+
+Use `options$weekStart = "monday"` for ISO week ordering. Two calendars
+linked via `linkCharts(a, b, on = "day", cursor = TRUE)` synchronize the
+hover crosshair by date across both charts.
 
 ### Candlestick (OHLC)
 

@@ -1,6 +1,17 @@
 import { tagName } from "../utils/responsive.js";
+import { unregisterLinkedCursor } from "./linked-cursor.js";
 
-var LINKABLE_TYPES = ["point", "bar", "histogram", "hexbin", "groupedBar"];
+var LINKABLE_TYPES = [
+  "point",
+  "bar",
+  "histogram",
+  "hexbin",
+  "groupedBar",
+  "waffle",
+  "beeswarm",
+  "lollipop",
+  "dumbbell"
+];
 
 export function bindLinked(chart) {
   var cfg = chart.config.interactions.linked;
@@ -90,4 +101,5 @@ export function cleanupLinked(chart) {
     chart.runtime._crosstalkFil.close();
     chart.runtime._crosstalkFil = null;
   }
+  unregisterLinkedCursor(chart);
 }

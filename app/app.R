@@ -42,28 +42,37 @@ ui <- navbarPage(
           "Interactive D3.js visualizations, built entirely in R.")
       ),
       fluidRow(
-        column(4, div(class = "feature-card",
+        column(3, div(class = "feature-card",
           icon("layer-group", style = "font-size: 2rem; color: #4A5ACB;"),
-          h4("20 Chart Types"),
+          h4("30 Chart Types"),
           p("Scatter, line, bar, grouped bar, area, histogram,
              donut, gauge, treemap, hexbin, heatmap, candlestick,
              waterfall, sankey, boxplot, violin, ridgeline,
-             regression, Q-Q plots, and group comparisons
-             with significance brackets.")
+             regression, Q-Q plots, group comparisons,
+             lollipop, dumbbell, waffle, beeswarm, bump,
+             radar, funnel, survival curves, distribution fit,
+             sparklines, and small multiples.")
         )),
-        column(4, div(class = "feature-card",
+        column(3, div(class = "feature-card",
           icon("sliders", style = "font-size: 2rem; color: #4A5ACB;"),
           h4("Statistical Transforms"),
           p("Built-in CI bands, LOESS smoothing, moving averages,
              mean \u00B1 CI error bars, and regression diagnostics.
              Composable and chainable.")
         )),
-        column(4, div(class = "feature-card",
+        column(3, div(class = "feature-card",
           icon("hand-pointer", style = "font-size: 2rem; color: #4A5ACB;"),
           h4("Bidirectional I/O"),
           p("Brush to select, click to annotate, link charts
              with Crosstalk, and add parameter sliders.
              User actions flow back as structured data.")
+        )),
+        column(3, div(class = "feature-card",
+          icon("palette", style = "font-size: 2rem; color: #4A5ACB;"),
+          h4("Dark Mode + Themes"),
+          p("12 built-in theme presets including dark, midnight,
+             ocean, forest, sunset, neon, corporate, and academic.
+             One-line theming with setTheme().")
         ))
       ),
       div(
@@ -294,10 +303,118 @@ ui <- navbarPage(
     )
   ),
 
+  # -- New Charts --
+  navbarMenu("New Charts", icon = icon("star"),
+    tabPanel("Lollipop",
+      div(class = "chart-container", myIOOutput("lollipopPlot", height = "500px"))
+    ),
+    tabPanel("Dumbbell",
+      div(class = "chart-container", myIOOutput("dumbbellPlot", height = "500px"))
+    ),
+    tabPanel("Waffle",
+      div(class = "chart-container", myIOOutput("wafflePlot", height = "500px"))
+    ),
+    tabPanel("Beeswarm",
+      div(class = "chart-container", myIOOutput("beeswarmPlot", height = "500px"))
+    ),
+    tabPanel("Bump",
+      div(class = "chart-container", myIOOutput("bumpPlot", height = "500px"))
+    ),
+    tabPanel("Radar",
+      div(class = "chart-container", myIOOutput("radarPlot", height = "500px"))
+    ),
+    tabPanel("Funnel",
+      div(class = "chart-container", myIOOutput("funnelPlot", height = "500px"))
+    ),
+    tabPanel("Calendar Heatmap",
+      div(class = "chart-container", myIOOutput("calendarPlot", height = "220px"))
+    )
+  ),
+
+  # -- Advanced --
+  navbarMenu("Advanced", icon = icon("flask"),
+    tabPanel("Survival Curve",
+      div(class = "chart-container", myIOOutput("survivalPlot", height = "500px"))
+    ),
+    tabPanel("Distribution Fit",
+      fluidRow(
+        column(3,
+          wellPanel(
+            selectInput("dist_family", "Distribution Family",
+              choices = c("Normal" = "normal", "Log-Normal" = "lognormal", "Exponential" = "exponential"))
+          )
+        ),
+        column(9, myIOOutput("distFitPlot", height = "500px"))
+      )
+    ),
+    tabPanel("Sparklines",
+      div(class = "chart-container",
+        h4("Inline Sparklines"),
+        fluidRow(
+          column(4,
+            wellPanel(
+              h5("Revenue Trend"),
+              myIOOutput("sparkline1", height = "60px")
+            )
+          ),
+          column(4,
+            wellPanel(
+              h5("User Growth"),
+              myIOOutput("sparkline2", height = "60px")
+            )
+          ),
+          column(4,
+            wellPanel(
+              h5("Error Rate"),
+              myIOOutput("sparkline3", height = "60px")
+            )
+          )
+        )
+      )
+    ),
+    tabPanel("Small Multiples",
+      div(class = "chart-container", myIOOutput("facetPlot", height = "500px"))
+    )
+  ),
+
   # -- Theme Demo --
   tabPanel("Theme Demo",
     icon = icon("palette"),
-    div(class = "chart-container", myIOOutput("themePlot", height = "500px"))
+    fluidRow(
+      column(3,
+        wellPanel(
+          selectInput("theme_preset", "Theme Preset",
+            choices = c("light", "dark", "midnight", "ocean", "forest",
+                        "sunset", "monochrome", "neon", "corporate", "academic"))
+        )
+      ),
+      column(9, myIOOutput("themePlot", height = "500px"))
+    )
+  ),
+
+  # -- Export Demo --
+  tabPanel("Export Demo",
+    icon = icon("download"),
+    fluidRow(
+      column(3,
+        wellPanel(
+          h5("Export Options"),
+          p(class = "text-muted", style = "font-size: 0.85rem;",
+            "Toggle which export buttons appear in the chart toolbar."),
+          checkboxInput("exp_png", "PNG download", TRUE),
+          checkboxInput("exp_svg", "SVG download", TRUE),
+          checkboxInput("exp_pdf", "PDF download", TRUE),
+          checkboxInput("exp_csv", "CSV download", TRUE),
+          checkboxInput("exp_clipboard", "Clipboard copy", TRUE),
+          hr(),
+          selectInput("exp_theme", "Theme",
+            choices = c("light", "dark", "midnight", "ocean"),
+            selected = "light"),
+          helpText("Try exporting in dark mode to verify CSS variable resolution.")
+        )
+      ),
+      column(9, myIOOutput("exportPlot", height = "500px"))
+    )
   )
 )
 
@@ -718,15 +835,180 @@ server <- function(input, output) {
       setAxisFormat(xLabel = "Day of Experiment", yLabel = "Yield (mg)")
   })
 
+  # -- New Charts --
+
+  output$lollipopPlot <- renderMyIO({
+    df <- aggregate(mpg ~ cyl, mtcars, mean)
+    myIO() |>
+      addIoLayer("lollipop", label = "Avg MPG", color = "#4E79A7",
+        data = df, mapping = list(x_var = "cyl", y_var = "mpg")) |>
+      defineCategoricalAxis(xAxis = TRUE) |>
+      setAxisFormat(yAxis = ".1f", xLabel = "Cylinders", yLabel = "Average MPG")
+  })
+
+  output$dumbbellPlot <- renderMyIO({
+    df <- data.frame(
+      dept = c("Engineering", "Marketing", "Sales", "Support", "Design"),
+      q1 = c(3.2, 3.5, 3.8, 3.1, 4.0),
+      q4 = c(4.5, 4.2, 3.6, 4.1, 4.3))
+    myIO() |>
+      addIoLayer("dumbbell", label = "Satisfaction", color = "#E15759",
+        data = df, mapping = list(x_var = "dept", low_y = "q1", high_y = "q4")) |>
+      defineCategoricalAxis(xAxis = TRUE) |>
+      setAxisFormat(yAxis = ".1f", xLabel = "Department", yLabel = "Satisfaction Score")
+  })
+
+  output$wafflePlot <- renderMyIO({
+    df <- data.frame(
+      cat = c("Renewable", "Natural Gas", "Coal", "Nuclear", "Other"),
+      val = c(22, 38, 20, 12, 8))
+    myIO() |>
+      addIoLayer("waffle", label = "Energy Mix",
+        data = df, mapping = list(category = "cat", value = "val"))
+  })
+
+  output$beeswarmPlot <- renderMyIO({
+    myIO() |>
+      addIoLayer("point", label = "Iris", color = "#76B7B2",
+        data = iris, mapping = list(x_var = "Sepal.Length", y_var = "Sepal.Width"),
+        options = list(radius = 3))
+  })
+
+  output$bumpPlot <- renderMyIO({
+    df <- data.frame(
+      quarter = rep(c("Q1", "Q2", "Q3", "Q4"), each = 4),
+      rank = c(1,2,3,4, 2,1,4,3, 1,3,2,4, 3,1,4,2),
+      team = rep(c("Alpha", "Beta", "Gamma", "Delta"), 4))
+    myIO() |>
+      addIoLayer("bump", label = "Rankings",
+        data = df, mapping = list(x_var = "quarter", y_var = "rank", group = "team")) |>
+      defineCategoricalAxis(xAxis = TRUE) |>
+      setAxisFormat(xLabel = "Quarter", yLabel = "Rank")
+  })
+
+  output$radarPlot <- renderMyIO({
+    df <- data.frame(
+      axis = c("Speed", "Power", "Range", "Armor", "Stealth"),
+      value = c(85, 70, 90, 45, 75))
+    myIO() |>
+      addIoLayer("radar", label = "Fighter Stats", color = "#4E79A7",
+        data = df, mapping = list(axis = "axis", value = "value"))
+  })
+
+  output$calendarPlot <- renderMyIO({
+    set.seed(1)
+    df <- data.frame(
+      day = as.Date("2026-01-01") + 0:364,
+      activity = rpois(365, lambda = 4)
+    )
+    myIO() |>
+      addIoLayer(type = "calendarHeatmap", color = "#4E79A7",
+                 label = "Daily activity",
+                 data = df,
+                 mapping = list(date = "day", value = "activity"))
+  })
+
+  output$funnelPlot <- renderMyIO({
+    df <- data.frame(
+      stage = c("Visitors", "Leads", "Qualified", "Proposals", "Closed"),
+      value = c(10000, 5200, 2800, 1100, 450))
+    myIO() |>
+      addIoLayer("funnel", label = "Sales Pipeline",
+        data = df, mapping = list(stage = "stage", value = "value"))
+  })
+
+  # -- Advanced --
+
+  output$survivalPlot <- renderMyIO({
+    set.seed(42)
+    n <- 80
+    df <- data.frame(
+      time = rexp(n, rate = 0.05),
+      status = rbinom(n, 1, 0.7))
+    myIO() |>
+      addIoLayer("survfit", label = "Survival",
+        data = df, mapping = list(time = "time", status = "status")) |>
+      setAxisLimits(ylim = list(min = 0, max = 1)) |>
+      setAxisFormat(xLabel = "Time (months)", yLabel = "Survival Probability")
+  })
+
+  output$distFitPlot <- renderMyIO({
+    set.seed(123)
+    df <- data.frame(x = rnorm(500, mean = 50, sd = 10))
+    myIO() |>
+      addIoLayer("histogram_fit", label = "Fit",
+        data = df, mapping = list(value = "x"),
+        options = list(family = input$dist_family)) |>
+      setAxisFormat(xLabel = "Value", yLabel = "Count")
+  })
+
+  output$sparkline1 <- renderMyIO({
+    set.seed(1)
+    df <- data.frame(x = 1:20, y = cumsum(rnorm(20, 0.5, 1)))
+    myIO(data = df, sparkline = TRUE) |>
+      addIoLayer("line", label = "Revenue", color = "#59A14F",
+        mapping = list(x_var = "x", y_var = "y"))
+  })
+
+  output$sparkline2 <- renderMyIO({
+    set.seed(2)
+    df <- data.frame(x = 1:20, y = cumsum(rnorm(20, 0.3, 0.8)))
+    myIO(data = df, sparkline = TRUE) |>
+      addIoLayer("line", label = "Users", color = "#4E79A7",
+        mapping = list(x_var = "x", y_var = "y"))
+  })
+
+  output$sparkline3 <- renderMyIO({
+    set.seed(3)
+    df <- data.frame(x = 1:20, y = pmax(0, 5 + cumsum(rnorm(20, -0.1, 0.5))))
+    myIO(data = df, sparkline = TRUE) |>
+      addIoLayer("line", label = "Errors", color = "#E15759",
+        mapping = list(x_var = "x", y_var = "y"))
+  })
+
+  output$facetPlot <- renderMyIO({
+    myIO(iris) |>
+      addIoLayer("point", label = "Iris",
+        mapping = list(x_var = "Sepal.Length", y_var = "Sepal.Width")) |>
+      setFacet("Species", ncol = 3) |>
+      setAxisFormat(xLabel = "Sepal Length", yLabel = "Sepal Width")
+  })
+
+  # -- Theme Demo --
+
   output$themePlot <- renderMyIO({
     df <- datasets::mtcars %>% mutate(cyl = as.character(cyl))
     myIO() %>%
       addIoLayer(type = "point", color = c("#FF6B6B", "#4ECDC4", "#45B7D1"),
         label = "MPG by HP",
         data = df, mapping = list(x_var = "hp", y_var = "mpg", group = "cyl")) %>%
-      setTheme(text_color = "#e0e0e0", grid_color = "#333333", bg = "#1a1a2e", font = "monospace") %>%
+      setTheme(preset = input$theme_preset) %>%
       setAxisFormat(xLabel = "Horsepower", yLabel = "MPG") %>%
       setReferenceLines(yRef = mean(df$mpg))
+  })
+
+  # -- Export Demo --
+
+  output$exportPlot <- renderMyIO({
+    df <- datasets::mtcars %>% mutate(cyl = as.character(cyl))
+    myIO() %>%
+      addIoLayer(type = "point", color = c("#4E79A7", "#F28E2B", "#E15759"),
+        label = "MPG by Weight",
+        data = df, mapping = list(x_var = "wt", y_var = "mpg", group = "cyl")) %>%
+      addIoLayer(type = "line", transform = "lm",
+        data = df, mapping = list(x_var = "wt", y_var = "mpg"),
+        color = "#999999", label = "Trend") %>%
+      setTheme(preset = input$exp_theme) %>%
+      setAxisFormat(xAxis = ".1f", yAxis = ".0f",
+        xLabel = "Weight (1000 lbs)", yLabel = "Miles per Gallon") %>%
+      setExportOptions(
+        png = input$exp_png,
+        svg = input$exp_svg,
+        pdf = input$exp_pdf,
+        csv = input$exp_csv,
+        clipboard = input$exp_clipboard,
+        title = "MPG by Weight — myIO Export Demo"
+      )
   })
 }
 

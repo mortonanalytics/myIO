@@ -1,0 +1,51 @@
+---
+title: "Sparklines in Tables"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Sparklines in Tables}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(myIO)
+```
+
+## Overview
+
+myIO's sparkline mode renders compact, axes-free charts at 20px height, ideal
+for embedding inline in table cells. Enable it with `sparkline = TRUE`:
+
+```{r basic-sparkline, eval = FALSE}
+myIO(data.frame(x = 1:20, y = cumsum(rnorm(20))), sparkline = TRUE) |>
+  addIoLayer("line", label = "trend", mapping = list(x_var = "x", y_var = "y"))
+```
+
+## Supported types
+
+```{r supported-types, eval = FALSE}
+df <- data.frame(x = 1:12, y = c(4, 6, 5, 8, 7, 9, 6, 10, 8, 11, 9, 12))
+
+# Line sparkline
+myIO(df, sparkline = TRUE) |>
+  addIoLayer("line", label = "line", mapping = list(x_var = "x", y_var = "y"))
+
+# Bar sparkline
+myIO(df, sparkline = TRUE) |>
+  addIoLayer("bar", label = "bars", mapping = list(x_var = "x", y_var = "y"))
+
+# Area sparkline
+myIO(df, sparkline = TRUE) |>
+  addIoLayer("area", label = "area", mapping = list(x_var = "x", y_var = "y"))
+```
+
+## What sparkline mode does
+
+- Strips axes, legend, reference lines, and all interactions
+- Sets margins to 1px
+- Defaults height to 20px, width to 100%
+- Only supports `line`, `bar`, and `area` types

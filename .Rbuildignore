@@ -24,8 +24,12 @@
 ^design$
 ^md$
 ^review-home\.png$
+^calendar-smoke\.png$
+^linked-cursor-smoke\.png$
+^linked-cursor-fixed\.png$
 ^AGENTS\.md$
 ^screenshots-review$
 ^scripts$
 ^inst/test_rmarkdown
 ^inst/appTester$
+^CRAN-SUBMISSION$

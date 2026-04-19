@@ -29,7 +29,12 @@ ALLOWED_TYPES <- c(
   "donut", "area", "groupedBar", "histogram", "heatmap",
   "candlestick", "waterfall", "sankey", "boxplot", "violin",
   "ridgeline", "rangeBar", "text", "regression", "bracket",
-  "comparison", "qq"
+  "comparison", "qq",
+  "lollipop", "dumbbell",
+  "waffle", "beeswarm", "bump",
+  "radar", "funnel", "parallel",
+  "survfit", "histogram_fit",
+  "calendarHeatmap"
 )
 
 COMPATIBILITY_GROUPS <- list(
@@ -55,7 +60,18 @@ COMPATIBILITY_GROUPS <- list(
   regression = "axes-continuous",
   bracket = "axes-continuous",
   comparison = "axes-categorical",
-  qq = "axes-continuous"
+  qq = "axes-continuous",
+  lollipop = "axes-categorical",
+  dumbbell = "axes-categorical",
+  waffle = "standalone-waffle",
+  beeswarm = "axes-continuous",
+  bump = "axes-continuous",
+  radar = "standalone-radar",
+  funnel = "standalone-funnel",
+  parallel = "standalone-parallel",
+  survfit = "axes-continuous",
+  histogram_fit = "axes-binned",
+  calendarHeatmap = "standalone-calendar"
 )
 
 GROUP_MATRIX <- list(
@@ -67,7 +83,12 @@ GROUP_MATRIX <- list(
   "standalone-flow" = c("standalone-flow"),
   "standalone-treemap" = c("standalone-treemap"),
   "standalone-donut" = c("standalone-donut"),
-  "standalone-gauge" = c("standalone-gauge")
+  "standalone-gauge" = c("standalone-gauge"),
+  "standalone-waffle" = c("standalone-waffle"),
+  "standalone-radar" = c("standalone-radar"),
+  "standalone-funnel" = c("standalone-funnel"),
+  "standalone-parallel" = c("standalone-parallel"),
+  "standalone-calendar" = c("standalone-calendar")
 )
 
 VALID_COMBINATIONS <- list(
@@ -90,7 +111,18 @@ VALID_COMBINATIONS <- list(
   donut = c("identity"),
   gauge = c("identity"),
   text = c("identity"),
-  bracket = c("identity", "pairwise_test")
+  bracket = c("identity", "pairwise_test"),
+  lollipop = c("identity", "mean", "summary"),
+  dumbbell = c("identity"),
+  waffle = c("identity"),
+  beeswarm = c("identity"),
+  bump = c("identity"),
+  radar = c("identity"),
+  funnel = c("identity"),
+  parallel = c("identity"),
+  survfit = c("identity"),
+  histogram_fit = c("identity"),
+  calendarHeatmap = c("identity")
 )
 
 composite_registry <- function() {
@@ -100,7 +132,9 @@ composite_registry <- function() {
     ridgeline = composite_ridgeline,
     regression = composite_regression,
     comparison = composite_comparison,
-    qq = composite_qq
+    qq = composite_qq,
+    survfit = composite_survfit,
+    histogram_fit = composite_histogram_fit
   )
 }
 

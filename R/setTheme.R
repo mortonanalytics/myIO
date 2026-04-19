@@ -7,7 +7,13 @@
 #' @param grid_color grid line color
 #' @param bg background color
 #' @param font font family
-#' @param ... additional CSS custom property overrides without the `chart-` prefix
+#' @param mode Character or NULL. Theme mode: "light", "dark", or "auto".
+#'   Default NULL (no mode, manual CSS vars only).
+#' @param preset Character or NULL. Named preset (reserved for future use).
+#'   Default NULL.
+#' @param overrides Named list of CSS custom property overrides
+#'   (e.g., \code{list("--chart-tooltip-bg" = "#222")}).
+#' @param ... additional CSS custom property overrides with `--` prefix
 #'
 #' @return A modified \code{myIO} htmlwidget object with updated theme
 #'   configuration.
@@ -15,24 +21,41 @@
 #' myIO() |>
 #'   setTheme(text_color = "#222222", grid_color = "#d9d9d9")
 #'
+#' myIO() |>
+#'   setTheme(mode = "dark", bg = "#1a1a2e")
+#'
 #' @export
-setTheme <- function(myIO, text_color = NULL, grid_color = NULL, bg = NULL, font = NULL, ...) {
+setTheme <- function(myIO, text_color = NULL, grid_color = NULL, bg = NULL,
+                     font = NULL, mode = NULL, preset = NULL,
+                     overrides = list(), ...) {
   assert_myIO(myIO)
 
-  theme <- list(
-    "chart-text-color" = text_color,
-    "chart-grid-color" = grid_color,
-    "chart-bg" = bg,
-    "chart-font" = font
-  )
+  if (!is.null(mode)) {
+    stopifnot(mode %in% c("light", "dark", "auto"))
+  }
 
-  extras <- list(...)
-  if (length(extras) > 0) {
-    for (name in names(extras)) {
-      theme[[paste0("chart-", name)]] <- extras[[name]]
+  # Existing behavior: named args -> theme values (with -- prefix)
+  values <- list()
+  if (!is.null(text_color)) values[["--chart-text-color"]] <- text_color
+  if (!is.null(grid_color)) values[["--chart-grid-color"]] <- grid_color
+  if (!is.null(bg)) values[["--chart-bg"]] <- bg
+  if (!is.null(font)) values[["--chart-font"]] <- font
+
+  # Legacy ... args (backward compat)
+  dots <- list(...)
+  for (name in names(dots)) {
+    if (startsWith(name, "--")) {
+      values[[name]] <- dots[[name]]
     }
   }
 
-  myIO$x$config$theme <- Filter(Negate(is.null), theme)
+  # Explicit overrides
+  values <- c(values, overrides)
+
+  myIO$x$config$theme <- list(
+    mode = mode,
+    preset = preset,
+    values = if (length(values) > 0) values else list()
+  )
   myIO
 }

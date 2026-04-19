@@ -6,8 +6,12 @@ HTMLWidgets.widget({
       renderValue: function(x) {
         if (x.config && x.config.layers) {
           if (this.myIOchart) {
-            this.myIOchart.updateChart(x.config);
-          } else {
+            // Destroy and recreate to handle layer count/type changes cleanly
+            this.myIOchart.destroy();
+            d3.select(el).selectAll("*").remove();
+            this.myIOchart = null;
+          }
+          if (!this.myIOchart) {
             this.myIOchart = new myIOchart({
               element: document.getElementById(el.id),
               config: x.config,
@@ -44,7 +48,11 @@ HTMLWidgets.widget({
       },
       resize: function(width, height) {
         if (this.myIOchart) {
-          this.myIOchart.resize(width, height);
+          if (this.myIOchart.facetController) {
+            this.myIOchart.facetController.resize();
+          } else {
+            this.myIOchart.resize(width, height);
+          }
         }
       }
     };

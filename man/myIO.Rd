@@ -4,7 +4,13 @@
 \alias{myIO}
 \title{Create a myIO Chart Widget}
 \usage{
-myIO(data = NULL, width = "100\%", height = "400px", elementId = NULL)
+myIO(
+  data = NULL,
+  width = "100\%",
+  height = "400px",
+  elementId = NULL,
+  sparkline = FALSE
+)
 }
 \arguments{
 \item{data}{an optional point of entry for the data frame or vector}
@@ -14,6 +20,10 @@ myIO(data = NULL, width = "100\%", height = "400px", elementId = NULL)
 \item{height}{a string of pixel height}
 
 \item{elementId}{a unique id for the htmlwidget object}
+
+\item{sparkline}{Logical. If TRUE, renders a compact sparkline suitable for
+embedding in table cells. Strips axes, legend, and interactions.
+Only "line", "bar", and "area" layer types are supported. Default FALSE.}
 }
 \value{
 An htmlwidget object of class \code{myIO}.

@@ -23,7 +23,11 @@ Suggests:
   rmarkdown,
   pkgdown,
   shiny,
-  crosstalk (>= 1.2.0)
+  crosstalk (>= 1.2.0),
+  dplyr,
+  DT,
+  reactable,
+  htmltools
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 Imports:
