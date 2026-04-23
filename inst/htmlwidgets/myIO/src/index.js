@@ -1,6 +1,7 @@
 import { myIOchart } from "./Chart.js";
 import { registerBuiltInRenderers } from "./registry.js";
 import { Coordinator, bootCoordinator } from "./coordinator/index.js";
+import { CrosstalkAdapter } from "./crosstalk-adapter/index.js";
 import { createEngine } from "./engines/index.js";
 import {
   createWebGLRenderer,
@@ -15,6 +16,7 @@ if (typeof window !== "undefined") {
   window.myIO = window.myIO || {};
   window.myIO.Coordinator = Coordinator;
   window.myIO.bootCoordinator = bootCoordinator;
+  window.myIO.CrosstalkAdapter = CrosstalkAdapter;
   window.myIO.createEngine = createEngine;
   window.myIO.getCoordinator = function() { return globalThis.__myioCoordinator || null; };
   window.myIO.webglRenderers = {
