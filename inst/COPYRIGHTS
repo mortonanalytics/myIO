@@ -31,3 +31,17 @@ License:   MIT
 Copyright: 2010-2021 James Hall
 URL:       https://github.com/parallax/jsPDF
 Source:    https://www.npmjs.com/package/jspdf
+
+DuckDB-WASM (https://github.com/duckdb/duckdb-wasm)
+Licensed under the MIT License.
+Copyright (c) 2018-present Stichting DuckDB Foundation.
+
+The DuckDB-WASM runtime is NOT distributed with this source tarball.
+Users opt in to download it at runtime via myIO::install_duckdb_wasm(),
+which fetches the binary from the upstream jsDelivr mirror into
+tools::R_user_dir("myIO", "cache") and verifies the sha256 against
+inst/duckdb-wasm-manifest.csv before use.
+
+Attribution above is provided because a wrapping R package is a work
+based on the combined system even when the runtime is downloaded at
+install time rather than shipped in the tarball.

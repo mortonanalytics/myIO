@@ -33,3 +33,20 @@ The only NOTE is "New submission".
   them as composable D3.js layers, with bidirectional I/O (brush selection,
   click-to-annotate, Crosstalk linked brushing, parameter sliders).
   See `vignette("why-myio")` for details.
+
+## Optional DuckDB-WASM runtime (large-dataset engine)
+
+This release adds an optional in-browser big-data engine via the
+`install_duckdb_wasm()` helper. The DuckDB-WASM binary (~22 MB) is **not
+bundled** in the CRAN tarball; users opt in by calling
+`install_duckdb_wasm()` which downloads and sha256-verifies the binary
+into `tools::R_user_dir("myIO", "cache")`. This mirrors the pattern used
+by `keras3`, `torch`, and `reticulate` for optional runtime components.
+
+All dependencies the feature introduces (`arrow`, `duckdb`, `DBI`,
+`base64enc`, `cli`, `curl`, `openssl`) are in Suggests, and every code
+path that touches them is guarded by `requireNamespace()` with a clear
+`install.packages(...)` pointer on the error path.
+
+The pre-existing small-data rendering path exercises zero new code; the
+feature is gated by an explicit `setBigData()` call on the widget object.
