@@ -33,3 +33,6 @@
 ^inst/test_rmarkdown
 ^inst/appTester$
 ^CRAN-SUBMISSION$
+^tests/prototypes/shiny-transport$
+^inst/htmlwidgets/myIO/src/.*\.test\.js$
+^inst/htmlwidgets/lib/duckdb-wasm-cache$

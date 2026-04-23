@@ -27,7 +27,14 @@ Suggests:
   dplyr,
   DT,
   reactable,
-  htmltools
+  htmltools,
+  arrow,
+  base64enc,
+  cli,
+  curl,
+  DBI,
+  duckdb,
+  openssl
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 Imports:
