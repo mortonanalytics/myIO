@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+</head>
+<body>
+  <canvas id="chart" width="320" height="180"></canvas>
+  <script type="module">
+    import { MemoryEngine } from "../../../inst/htmlwidgets/myIO/src/engines/memory.js";
+
+    const sleep = (ms, signal) => new Promise((resolve, reject) => {
+      const timer = setTimeout(resolve, ms);
+      signal?.addEventListener("abort", () => {
+        clearTimeout(timer);
+        reject(Object.assign(new Error("cancelled"), { code: "cancelled" }));
+      }, { once: true });
+    });
+
+    class SlowMemoryEngine extends MemoryEngine {
+      constructor() {
+        super();
+        this.controllers = new Map();
+      }
+      async *query({ queryId, signal }) {
+        await sleep(120, signal);
+        if (signal?.aborted) {
+          throw Object.assign(new Error("cancelled"), { queryId, code: "cancelled" });
+        }
+        yield { rows: [{ x: 1, y: 1 }], queryId };
+        yield { __trailer: true, queryId, rowCount: 1, elapsedMs: 120 };
+      }
+      async cancel(queryId) {
+        this.controllers.get(queryId)?.abort();
+      }
+    }
+
+    const engine = new SlowMemoryEngine();
+    const controllers = new Map();
+    const canvas = document.getElementById("chart");
+    const ctx = canvas.getContext("2d");
+
+    function render(queryId) {
+      ctx.fillStyle = "#268bd2";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      window.__lastRenderedQuery = queryId;
+    }
+
+    window.__fireQuery = (queryId) => {
+      const ctrl = new AbortController();
+      controllers.set(queryId, ctrl);
+      engine.controllers.set(queryId, ctrl);
+      (async () => {
+        const batches = [];
+        for await (const item of engine.query({ queryId, signal: ctrl.signal })) {
+          if (!item.__trailer) batches.push(item);
+        }
+        if (!ctrl.signal.aborted && batches.length > 0) render(queryId);
+      })().catch((err) => {
+        if (err?.code !== "cancelled") throw err;
+      }).finally(() => {
+        controllers.delete(queryId);
+        engine.controllers.delete(queryId);
+      });
+    };
+
+    window.__cancelQuery = (queryId) => {
+      controllers.get(queryId)?.abort();
+      engine.cancel(queryId);
+    };
+
+    render("initial");
+    window.__myioTestReady = true;
+  </script>
+</body>
+</html>
