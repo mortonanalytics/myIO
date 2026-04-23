@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script type="importmap">
+    { "imports": { "regl-scatterplot": "../../../node_modules/regl-scatterplot/dist/regl-scatterplot.esm.js" } }
+  </script>
+  <style>
+    html, body, #plot { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+    #plot { position: relative; width: 800px; height: 600px; }
+  </style>
+</head>
+<body>
+  <div id="plot"></div>
+  <script type="module">
+    import { WebGLScatter } from "../../../inst/htmlwidgets/myIO/src/renderers/webgl/scatter.js";
+
+    let seed = 123456789;
+    const rand = () => {
+      seed = (1664525 * seed + 1013904223) >>> 0;
+      return seed / 4294967296;
+    };
+    const points = new Array(1000000);
+    points[0] = { x: 0.5, y: 0.5, category: 0, value: 1 };
+    for (let i = 1; i < points.length; i++) {
+      points[i] = { x: rand(), y: rand(), category: i % 6, value: 1 };
+    }
+    const scale = { domain: () => [0, 1], range: () => [0, 1] };
+    const scatter = new WebGLScatter({
+      el: document.getElementById("plot"),
+      width: 800,
+      height: 600,
+      xScale: scale,
+      yScale: scale
+    });
+    await scatter.update(points);
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    window.__myioTestReady = true;
+  </script>
+</body>
+</html>
