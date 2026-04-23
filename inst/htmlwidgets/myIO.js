@@ -4,12 +4,73 @@ HTMLWidgets.widget({
   factory: function(el, width, height) {
     return {
       renderValue: function(x) {
+        // Prior-render coordinator cleanup (if we previously registered).
+        if (this._myIO_chartId && window.myIO && window.myIO.getCoordinator) {
+          var prev = window.myIO.getCoordinator();
+          if (prev) {
+            try { prev.unregister(this._myIO_chartId); } catch (e) { /* ignore */ }
+          }
+        }
         if (x.config && x.config.layers) {
           if (this.myIOchart) {
             // Destroy and recreate to handle layer count/type changes cleanly
             this.myIOchart.destroy();
             d3.select(el).selectAll("*").remove();
             this.myIOchart = null;
+          }
+          // T1.7: Coordinator boot + file-protocol override.
+          // Gated on x.config.coordinator_enabled so charts without
+          // setBigData() exercise zero new code paths (contract §Backward-
+          // compatibility invariants).
+          if (x.config && x.config.specVersion === 2 && x.config.coordinator_enabled === true) {
+            // File-protocol fallback: Chromium blocks dynamic module imports
+            // from origin 'null'. Degrade to SVG silently but log once.
+            if (window.location.protocol === "file:") {
+              if (!window._myIO_fileProtoWarned) {
+                console.info(
+                  "myIO: file:// protocol detected — WASM engine unavailable; " +
+                  "using SVG path. Serve the HTML via servr::httd() or " +
+                  "`quarto preview` to use the big-data engine."
+                );
+                window._myIO_fileProtoWarned = true;
+              }
+              x.config.engine = "svg";
+            }
+            // Boot the page-level coordinator (idempotent).
+            if (window.myIO && typeof window.myIO.bootCoordinator === "function") {
+              var coord = window.myIO.bootCoordinator(x.config);
+              // On re-render, unregister the previous chart id before
+              // registering the new one (multi-widget lifecycle).
+              if (this._myIO_chartId) {
+                try { coord.unregister(this._myIO_chartId); } catch (e) { /* ignore */ }
+              }
+              this._myIO_chartId = (x.coordinator && x.coordinator.chart_id) || null;
+              if (x.bigdata && x.bigdata.mode !== "none") {
+                coord.registerSource({
+                  sourceId:   x.bigdata.source_id,
+                  mode:       x.bigdata.mode,
+                  ipcB64:     x.bigdata.ipc_b64,
+                  url:        x.bigdata.url,
+                  schema:     x.bigdata.schema || [],
+                  rowCount:   x.bigdata.row_count,
+                  rowkeyCol:  x.bigdata.rowkey_col
+                });
+                // Fire-and-forget async: adapter creation + init may touch WASM.
+                coord.ensureAdapterFor(x.bigdata.source_id, x.config.engine, x.config)
+                  .catch(function(err) {
+                    console.error("myIO: engine adapter init failed", err);
+                  });
+                if (this._myIO_chartId) {
+                  coord.register({
+                    chartId:       this._myIO_chartId,
+                    queryTemplate: "", // chart-type-specific templates wire in later phases
+                    markSpec:      (x.coordinator && x.coordinator.mark_spec) || { kind: "scatter" },
+                    sourceHandle:  { sourceId: x.bigdata.source_id },
+                    predicateFn:   function() { return null; }
+                  });
+                }
+              }
+            }
           }
           if (!this.myIOchart) {
             this.myIOchart = new myIOchart({
@@ -47,6 +108,13 @@ HTMLWidgets.widget({
         }
       },
       resize: function(width, height) {
+        if ((width === 0 || height === 0) && this._myIO_chartId && window.myIO && window.myIO.getCoordinator) {
+          var coord = window.myIO.getCoordinator();
+          if (coord) {
+            try { coord.unregister(this._myIO_chartId); } catch (e) { /* ignore */ }
+          }
+          this._myIO_chartId = null;
+        }
         if (this.myIOchart) {
           if (this.myIOchart.facetController) {
             this.myIOchart.facetController.resize();
