@@ -10,7 +10,7 @@ test_that("serialized config includes canonical spec fields", {
   config <- widget$x$config
   layer <- config$layers[[1]]
 
-  expect_equal(config$specVersion, 1L)
+  expect_equal(config$specVersion, 2L)
   expect_match(layer$id, "^layer_")
   expect_true(all(c("encoding", "sourceKey", "derivedFrom", "order", "visibility", "transform", "transformMeta") %in% names(layer)))
   expect_equal(layer$order, 1L)

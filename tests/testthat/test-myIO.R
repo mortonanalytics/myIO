@@ -15,7 +15,7 @@ test_that("myIO sets dimensions and elementId", {
 test_that("myIO has default config structure", {
   widget <- myIO::myIO()
   cfg <- widget$x$config
-  expect_equal(cfg$specVersion, 1L)
+  expect_equal(cfg$specVersion, 2L)
   expect_equal(cfg$layout$margin$top, 30)
   expect_equal(cfg$layout$margin$bottom, 60)
   expect_equal(cfg$layout$margin$left, 50)
