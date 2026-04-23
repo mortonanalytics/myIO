@@ -12,6 +12,7 @@
 
 import { SvgNullAdapter } from "./svg-null.js";
 import { MemoryEngine } from "./memory.js";
+import { ShinyEngineAdapter } from "./shiny.js";
 
 /**
  * @param {"wasm"|"server"|"svg"|"memory"} name
@@ -29,13 +30,10 @@ export function createEngine(name, config = {}) {
         "does not yet include the WASM engine."
       );
     case "server":
-      throw new Error(
-        "createEngine('server'): ShinyEngineAdapter lands in T1.5. This build " +
-        "does not yet include the Shiny engine."
-      );
+      return new ShinyEngineAdapter(config);
     default:
       throw new Error("createEngine: unknown engine '" + name + "'");
   }
 }
 
-export { SvgNullAdapter, MemoryEngine };
+export { SvgNullAdapter, MemoryEngine, ShinyEngineAdapter };
