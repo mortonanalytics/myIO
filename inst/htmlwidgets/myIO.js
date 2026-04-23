@@ -11,6 +11,10 @@ HTMLWidgets.widget({
             try { prev.unregister(this._myIO_chartId); } catch (e) { /* ignore */ }
           }
         }
+        if (this._myIO_xadapter) {
+          try { this._myIO_xadapter.destroy(); } catch (e) { /* ignore */ }
+          this._myIO_xadapter = null;
+        }
         if (x.config && x.config.layers) {
           if (this.myIOchart) {
             // Destroy and recreate to handle layer count/type changes cleanly
@@ -68,6 +72,31 @@ HTMLWidgets.widget({
                     sourceHandle:  { sourceId: x.bigdata.source_id },
                     predicateFn:   function() { return null; }
                   });
+                }
+              }
+              // T4.3: CrosstalkAdapter instantiation.
+              if (x.crosstalk && x.crosstalk.group && window.myIO &&
+                  typeof window.myIO.CrosstalkAdapter === "function") {
+                // Idempotent: same source + group combo reuses an existing adapter.
+                if (!this._myIO_xadapter) {
+                  var xAdapter = new window.myIO.CrosstalkAdapter({
+                    coordinator: coord,
+                    sourceId:    x.bigdata.source_id,
+                    group:       x.crosstalk.group[0] || x.crosstalk.group,
+                    rowkeyCol:   (x.bigdata && x.bigdata.rowkey_col) || "__myio_rowkey__",
+                    threshold:   (x.config && x.config.crosstalk_threshold) || 100000
+                  });
+                  xAdapter.attach();
+                  // Subscribe to coordinator selection changes on this source so
+                  // local brushes broadcast outward.
+                  coord.subscribe(x.bigdata.source_id, function(evt) {
+                    if (evt.chartId === "__crosstalk__:" + x.bigdata.source_id) {
+                      // Ignore - this was OUR incoming-translated predicate.
+                      return;
+                    }
+                    xAdapter.broadcast({ predicate: evt.predicate });
+                  });
+                  this._myIO_xadapter = xAdapter;
                 }
               }
             }

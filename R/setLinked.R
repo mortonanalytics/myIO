@@ -64,5 +64,6 @@ setLinked <- function(myIO, shared_data, mode = "both", filter = FALSE,
   )
 
   myIO$dependencies <- c(myIO$dependencies, crosstalk::crosstalkLibs())
+  myIO$x$config$crosstalk_threshold <- getOption("myIO.crosstalk_threshold", 100000L)
   myIO
 }
