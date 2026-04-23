@@ -1,0 +1,51 @@
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+name: bundle-size
+
+permissions: read-all
+
+jobs:
+  bundle-size:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build htmlwidget bundle
+        run: npm run build
+
+      - name: Check bundle size against budget
+        run: |
+          ACTUAL=$(gzip -c inst/htmlwidgets/myIO/myIOapi.js | wc -c)
+          BASELINE=$(cat .github/bundle-budget.txt)
+          SOFT_LIMIT=$(( BASELINE + 600*1024 ))
+          HARD_LIMIT=$(( BASELINE + 1024*1024 ))
+          DELTA=$(( ACTUAL - BASELINE ))
+          echo "Bundle: ${ACTUAL} bytes gz (baseline ${BASELINE}, soft ${SOFT_LIMIT}, hard ${HARD_LIMIT})"
+          {
+            echo "## Bundle size report"
+            echo ""
+            echo "| Metric | Bytes (gz) |"
+            echo "| --- | ---: |"
+            echo "| Actual | ${ACTUAL} |"
+            echo "| Baseline | ${BASELINE} |"
+            echo "| Delta | ${DELTA} |"
+            echo "| Soft limit (baseline + 600 KB) | ${SOFT_LIMIT} |"
+            echo "| Hard limit (baseline + 1 MB) | ${HARD_LIMIT} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$ACTUAL" -gt "$HARD_LIMIT" ]; then
+            echo "::error::Bundle exceeds hard ceiling. Fail."
+            exit 1
+          elif [ "$ACTUAL" -gt "$SOFT_LIMIT" ]; then
+            echo "::warning::Bundle exceeds soft threshold. Review required."
+          fi
