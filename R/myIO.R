@@ -27,6 +27,11 @@ sizingPolicy_myIO <- function() {
 #' @param sparkline Logical. If TRUE, renders a compact sparkline suitable for
 #'   embedding in table cells. Strips axes, legend, and interactions.
 #'   Only "line", "bar", and "area" layer types are supported. Default FALSE.
+#' @param engine one of \code{"auto"} (default), \code{"server"}, \code{"wasm"}, or
+#'   \code{"svg"}. Only consulted when big-data features are attached via
+#'   \code{\link{setBigData}()}. With no big-data attachment, charts render
+#'   identically to the small-data SVG path regardless of this argument. See
+#'   \code{vignette("large-data-linking")}.
 #'
 #' @return An htmlwidget object of class \code{myIO}.
 #' @examples
@@ -34,7 +39,8 @@ sizingPolicy_myIO <- function() {
 #'   setMargin(top = 40, bottom = 80, left = 60, right = 10)
 #'
 #' @export
-myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL, sparkline = FALSE) {
+myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL,
+                 sparkline = FALSE, engine = "auto") {
   validateCssDimension <- function(value, arg) {
     if (is.null(value) || (is.numeric(value) && length(value) == 1 && !is.na(value)) ||
         (is.character(value) && length(value) == 1 && !is.na(value))) {
@@ -43,13 +49,15 @@ myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL
     stop("'", arg, "' must be NULL, a single number, or a single character CSS unit.", call. = FALSE)
   }
 
+  engine <- match.arg(engine, c("auto", "server", "wasm", "svg"))
+
   validateCssDimension(width, "width")
   validateCssDimension(height, "height")
 
   x <- list(
     data = data,
     config = list(
-      specVersion = 1L,
+      specVersion = 2L,
       sparkline = if (isTRUE(sparkline)) TRUE else NULL,
       layers = list(),
       layout = list(
@@ -78,7 +86,24 @@ myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL
       ),
       theme = list(),
       transitions = list(speed = 1000),
-      referenceLines = list(x = NULL, y = NULL)
+      referenceLines = list(x = NULL, y = NULL),
+      engine = engine,
+      coordinator_enabled = FALSE,
+      crosstalk_threshold = getOption("myIO.crosstalk_threshold", 100000L),
+      duckdb_wasm = list(cache_url = NULL, worker_url = NULL)
+    ),
+    bigdata = list(
+      mode          = "none",
+      source_id     = NULL,
+      ipc_b64       = NULL,
+      url           = NULL,
+      schema        = NULL,
+      row_count     = NULL,
+      rowkey_col    = NULL
+    ),
+    coordinator = list(
+      chart_id  = new_chart_id(),
+      mark_spec = NULL
     )
   )
 
