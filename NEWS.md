@@ -1,6 +1,4 @@
-# myIO 1.3.0 (development)
-
-# myIO 1.2.0
+# myIO 1.2.0 (development)
 
 ## Crosstalk: expanded chart-type coverage
 
