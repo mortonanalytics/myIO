@@ -1,0 +1,2 @@
+version,wasm_url,worker_url,wasm_sha256,worker_sha256,size_bytes
+1.28.0,https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.28.0/dist/duckdb-mvp.wasm,https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.28.0/dist/duckdb-browser-mvp.worker.js,d4199293e3936621d0e4c8cd069169b922099d93442f46c09e0b1dc26ffb0aaf,48e59965bf2f210488815ef71b0c522f6406e4b086a934708cec5bd606ecb516,22411010
