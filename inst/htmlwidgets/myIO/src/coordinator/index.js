@@ -99,6 +99,43 @@ export class Coordinator {
       if (other.sourceHandle.sourceId !== sourceId) continue;
       this._scheduleDispatch(other.chartId);
     }
+
+    // Fire subscribers (e.g., crosstalk adapter) after selection store
+    // is consistent but independent of the _scheduleDispatch debounce.
+    if (this._subscribers) {
+      const subs = this._subscribers.get(reg.sourceHandle.sourceId);
+      if (subs) {
+        for (const cb of subs) {
+          try {
+            cb({ chartId, predicate });
+          } catch (e) {
+            console.error("[myIO coordinator] subscriber error:", e);
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Subscribe a callback to selection changes on a source. Called after
+   * the internal selection store updates but before dispatch fires for
+   * other charts. Useful for the crosstalk adapter which broadcasts
+   * row-key selections to sibling htmlwidgets.
+   *
+   * @param {string} sourceId
+   * @param {(evt: {chartId:string, predicate:string|null}) => void} callback
+   * @returns {() => void} unsubscribe function
+   */
+  subscribe(sourceId, callback) {
+    if (!this._subscribers) this._subscribers = new Map();
+    if (!this._subscribers.has(sourceId)) {
+      this._subscribers.set(sourceId, new Set());
+    }
+    this._subscribers.get(sourceId).add(callback);
+    return () => {
+      const set = this._subscribers.get(sourceId);
+      if (set) set.delete(callback);
+    };
   }
 
   /** Schedule preview (50ms trailing) + final (200ms trailing) dispatch. */
