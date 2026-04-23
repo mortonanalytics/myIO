@@ -9,7 +9,8 @@ myIO(
   width = "100\%",
   height = "400px",
   elementId = NULL,
-  sparkline = FALSE
+  sparkline = FALSE,
+  engine = "auto"
 )
 }
 \arguments{
@@ -24,6 +25,12 @@ myIO(
 \item{sparkline}{Logical. If TRUE, renders a compact sparkline suitable for
 embedding in table cells. Strips axes, legend, and interactions.
 Only "line", "bar", and "area" layer types are supported. Default FALSE.}
+
+\item{engine}{one of \code{"auto"} (default), \code{"server"}, \code{"wasm"}, or
+\code{"svg"}. Only consulted when big-data features are attached via
+\code{\link{setBigData}()}. With no big-data attachment, charts render
+identically to the small-data SVG path regardless of this argument. See
+\code{vignette("large-data-linking")}.}
 }
 \value{
 An htmlwidget object of class \code{myIO}.
