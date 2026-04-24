@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+</head>
+<body>
+  <div id="chart"></div>
+  <script type="module">
+    window.__resolvedEngine = "wasm";
+    await import("../../../inst/htmlwidgets/myIO/src/index.js");
+
+    const x = {
+      config: {
+        specVersion: 2,
+        coordinator_enabled: true,
+        engine: window.__resolvedEngine
+      }
+    };
+
+    if (x.config && x.config.specVersion === 2 && x.config.coordinator_enabled === true) {
+      if (window.location.protocol === "file:") {
+        if (!window._myIO_fileProtoWarned) {
+          console.info(
+            "myIO: file:// protocol detected - WASM engine unavailable; " +
+            "using SVG path. Serve the HTML via servr::httd() or " +
+            "`quarto preview` to use the big-data engine."
+          );
+          window._myIO_fileProtoWarned = true;
+        }
+        x.config.engine = "svg";
+      }
+      if (window.myIO && typeof window.myIO.bootCoordinator === "function") {
+        window.myIO.bootCoordinator(x.config);
+      }
+    }
+
+    window.__resolvedEngine = x.config.engine;
+    window.__myioTestReady = true;
+  </script>
+</body>
+</html>
