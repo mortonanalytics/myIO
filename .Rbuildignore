@@ -34,5 +34,9 @@
 ^inst/appTester$
 ^CRAN-SUBMISSION$
 ^tests/prototypes/shiny-transport$
+^tests/prototypes$
+^tests/playwright$
 ^inst/htmlwidgets/myIO/src/.*\.test\.js$
+^inst/htmlwidgets/myIO/src/coordinator/__tests__$
 ^inst/htmlwidgets/lib/duckdb-wasm-cache$
+^duckdb-fixture$
