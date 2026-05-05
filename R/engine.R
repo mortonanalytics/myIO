@@ -18,11 +18,17 @@ resolve_engine <- function(engine = c("auto", "server", "wasm", "svg")) {
     return(opt)
   }
 
-  if (requireNamespace("shiny", quietly = TRUE) && shiny::isRunning()) {
+  if (.shiny_is_running()) {
     return("server")
   }
 
   "wasm"
+}
+
+#' @keywords internal
+#' @noRd
+.shiny_is_running <- function() {
+  requireNamespace("shiny", quietly = TRUE) && shiny::isRunning()
 }
 
 #' @keywords internal

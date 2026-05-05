@@ -87,11 +87,26 @@ reference:
       - setBrush
       - setAnnotation
       - setLinked
+      - setLinkedCursor
       - setSlider
       - dragPoints
       - setReferenceLines
       - setToggle
       - setToolTipOptions
+      - linkCharts
+  - title: Layout & Composition
+    desc: Multi-panel composition, opacity, and export configuration
+    contents:
+      - setFacet
+      - setLayerOpacity
+      - setExportOptions
+  - title: Big-data
+    desc: Large-dataset virtualization, WebGL rendering, and DuckDB-WASM cache
+    contents:
+      - setBigData
+      - install_duckdb_wasm
+      - duckdb_wasm_status
+      - clear_duckdb_wasm_cache
   - title: Shiny
     desc: Use myIO widgets in Shiny applications
     contents:

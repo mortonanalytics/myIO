@@ -479,9 +479,10 @@ setBigData <- function(widget, source, rowkey_col = NULL, ...) {
 }
 
 .stop_myio_condition <- function(class, ...) {
+  parts <- vapply(list(...), function(x) paste0(x, collapse = ""), character(1))
   stop(
     structure(
-      list(message = paste0(...), call = NULL),
+      list(message = paste0(parts, collapse = ""), call = NULL),
       class = c(class, "error", "condition")
     )
   )

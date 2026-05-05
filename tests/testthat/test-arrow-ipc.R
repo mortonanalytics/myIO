@@ -44,13 +44,10 @@ test_that("arrow_ipc_encode rejects unsupported types", {
 test_that("arrow_ipc_encode errors with install pointer when arrow is absent", {
   skip_if_not_installed("mockery")
 
-  mockery::stub(
-    myIO:::arrow_ipc_encode,
-    "requireNamespace",
-    function(...) FALSE
-  )
+  fn <- myIO:::arrow_ipc_encode
+  mockery::stub(fn, "requireNamespace", function(...) FALSE)
   expect_error(
-    myIO:::arrow_ipc_encode(mtcars),
+    fn(mtcars),
     regexp = "install\\.packages\\('arrow'\\)"
   )
 })

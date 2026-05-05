@@ -5,29 +5,29 @@ test_that("resolve_engine returns explicit server/wasm/svg unchanged", {
 })
 
 test_that("resolve_engine with 'auto' returns 'server' when Shiny is running", {
-  skip_if_not_installed("shiny")
   skip_if_not_installed("mockery")
 
-  mockery::stub(myIO:::resolve_engine, "shiny::isRunning", function() TRUE)
-  expect_equal(myIO:::resolve_engine("auto"), "server")
+  fn <- myIO:::resolve_engine
+  mockery::stub(fn, ".shiny_is_running", function() TRUE)
+  expect_equal(fn("auto"), "server")
 })
 
 test_that("resolve_engine with 'auto' returns 'wasm' when Shiny not running", {
-  skip_if_not_installed("shiny")
   skip_if_not_installed("mockery")
 
-  mockery::stub(myIO:::resolve_engine, "shiny::isRunning", function() FALSE)
-  expect_equal(myIO:::resolve_engine("auto"), "wasm")
+  fn <- myIO:::resolve_engine
+  mockery::stub(fn, ".shiny_is_running", function() FALSE)
+  expect_equal(fn("auto"), "wasm")
 })
 
 test_that("resolve_engine honors options('myIO.engine') override when input is 'auto'", {
-  skip_if_not_installed("shiny")
   skip_if_not_installed("mockery")
   skip_if_not_installed("withr")
 
   withr::local_options(myIO.engine = "wasm")
-  mockery::stub(myIO:::resolve_engine, "shiny::isRunning", function() TRUE)
-  expect_equal(myIO:::resolve_engine("auto"), "wasm")
+  fn <- myIO:::resolve_engine
+  mockery::stub(fn, ".shiny_is_running", function() TRUE)
+  expect_equal(fn("auto"), "wasm")
 })
 
 test_that("resolve_engine rejects unknown engine names", {
