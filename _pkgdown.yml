@@ -51,7 +51,6 @@ articles:
   - title: Shiny & Interactions
     contents:
       - shiny-integration
-      - shiny-interactions
   - title: Gallery
     contents:
       - gallery
