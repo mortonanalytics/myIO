@@ -44,7 +44,7 @@ test_that("setBigData with a .csv local path emits url mode", {
   on.exit(unlink(tmp), add = TRUE)
   w <- myIO::myIO() |> myIO:::setBigData(tmp, schema = c("x", "y"))
   expect_equal(w$x$bigdata$mode, "url")
-  expect_equal(w$x$bigdata$url, normalizePath(tmp, mustWork = FALSE))
+  expect_equal(w$x$bigdata$url, normalizePath(tmp, winslash = "/", mustWork = FALSE))
 })
 
 test_that("setBigData with unsupported source class raises myIOError_engine_unsupported_source", {
