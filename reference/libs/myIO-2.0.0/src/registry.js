@@ -11,11 +11,21 @@ import { TreemapRenderer } from "./renderers/TreemapRenderer.js";
 import { DonutRenderer } from "./renderers/DonutRenderer.js";
 import { GaugeRenderer } from "./renderers/GaugeRenderer.js";
 import { HeatmapRenderer } from "./renderers/HeatmapRenderer.js";
+import { CalendarHeatmapRenderer } from "./renderers/CalendarHeatmapRenderer.js";
 import { CandlestickRenderer } from "./renderers/CandlestickRenderer.js";
 import { WaterfallRenderer } from "./renderers/WaterfallRenderer.js";
 import { SankeyRenderer } from "./renderers/SankeyRenderer.js";
 import { RangeBarRenderer } from "./renderers/RangeBarRenderer.js";
 import { TextRenderer } from "./renderers/TextRenderer.js";
+import { BracketRenderer } from "./renderers/BracketRenderer.js";
+import { LollipopRenderer } from "./renderers/LollipopRenderer.js";
+import { DumbbellRenderer } from "./renderers/DumbbellRenderer.js";
+import { WaffleRenderer } from "./renderers/WaffleRenderer.js";
+import { BeeswarmRenderer } from "./renderers/BeeswarmRenderer.js";
+import { BumpRenderer } from "./renderers/BumpRenderer.js";
+import { RadarRenderer } from "./renderers/RadarRenderer.js";
+import { FunnelRenderer } from "./renderers/FunnelRenderer.js";
+import { ParallelRenderer } from "./renderers/ParallelRenderer.js";
 
 export function registerRenderer(type, RendererClass) {
   if (rendererRegistry.has(type)) {
@@ -82,6 +92,9 @@ export function registerBuiltInRenderers() {
   if (!rendererRegistry.has(HeatmapRenderer.type)) {
     registerRenderer(HeatmapRenderer.type, new HeatmapRenderer());
   }
+  if (!rendererRegistry.has(CalendarHeatmapRenderer.type)) {
+    registerRenderer(CalendarHeatmapRenderer.type, new CalendarHeatmapRenderer());
+  }
   if (!rendererRegistry.has(CandlestickRenderer.type)) {
     registerRenderer(CandlestickRenderer.type, new CandlestickRenderer());
   }
@@ -94,9 +107,37 @@ export function registerBuiltInRenderers() {
   if (!rendererRegistry.has(RangeBarRenderer.type)) {
     registerRenderer(RangeBarRenderer.type, new RangeBarRenderer());
   }
+  if (!rendererRegistry.has(LollipopRenderer.type)) {
+    registerRenderer(LollipopRenderer.type, new LollipopRenderer());
+  }
+  if (!rendererRegistry.has(DumbbellRenderer.type)) {
+    registerRenderer(DumbbellRenderer.type, new DumbbellRenderer());
+  }
+  if (!rendererRegistry.has(WaffleRenderer.type)) {
+    registerRenderer(WaffleRenderer.type, new WaffleRenderer());
+  }
+  if (!rendererRegistry.has(BeeswarmRenderer.type)) {
+    registerRenderer(BeeswarmRenderer.type, new BeeswarmRenderer());
+  }
+  if (!rendererRegistry.has(BumpRenderer.type)) {
+    registerRenderer(BumpRenderer.type, new BumpRenderer());
+  }
+  if (!rendererRegistry.has(RadarRenderer.type)) {
+    registerRenderer(RadarRenderer.type, new RadarRenderer());
+  }
+  if (!rendererRegistry.has(FunnelRenderer.type)) {
+    registerRenderer(FunnelRenderer.type, new FunnelRenderer());
+  }
+  if (!rendererRegistry.has(ParallelRenderer.type)) {
+    registerRenderer(ParallelRenderer.type, new ParallelRenderer());
+  }
 
   if (!rendererRegistry.has(TextRenderer.type)) {
     registerRenderer(TextRenderer.type, new TextRenderer());
+  }
+
+  if (!rendererRegistry.has(BracketRenderer.type)) {
+    registerRenderer(BracketRenderer.type, new BracketRenderer());
   }
 
   return rendererRegistry;

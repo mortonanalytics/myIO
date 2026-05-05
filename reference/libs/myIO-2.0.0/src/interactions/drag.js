@@ -15,9 +15,10 @@ export function bindPointDrag(chart, layer) {
         .attr("cx", chart.xScale(d[layer.mapping.x_var]))
         .attr("cy", chart.yScale(d[layer.mapping.y_var]));
     })
-    .on("end", function() {
+    .on("end", function(event, d) {
       d3.select(this).classed("active", false).style("cursor", "grab");
       chart.updateRegression(color, layer.label);
+      chart.emit("dragEnd", { point: d, layerLabel: layer.label });
     });
 
   chart.chart

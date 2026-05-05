@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">myIO</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,7 +65,7 @@
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<p>myIO supports 17 chart types via the <code>type</code> argument in
+<p>myIO supports 20 chart types via the <code>type</code> argument in
 <code><a href="../reference/addIoLayer.html">addIoLayer()</a></code>. This vignette shows an example of each.</p>
 <p>All examples use built-in R datasets so you can copy and run them
 directly.</p>
@@ -91,14 +91,14 @@ types.</p>
 <td>Continuous axes</td>
 <td>
 <code>line</code>, <code>point</code>, <code>area</code>,
-<code>candlestick</code>
+<code>candlestick</code>, <code>bracket</code>, <code>qq</code>
 </td>
 </tr>
 <tr class="even">
 <td>Categorical axes</td>
 <td>
 <code>bar</code>, <code>groupedBar</code>, <code>waterfall</code>,
-<code>boxplot</code>, <code>violin</code>
+<code>boxplot</code>, <code>violin</code>, <code>comparison</code>
 </td>
 </tr>
 <tr class="odd">
@@ -112,6 +112,10 @@ types.</p>
 <td><code>heatmap</code></td>
 </tr>
 <tr class="odd">
+<td>Calendar</td>
+<td><code>calendarHeatmap</code></td>
+</tr>
+<tr class="even">
 <td>Standalone</td>
 <td>
 <code>hexbin</code>, <code>treemap</code>, <code>donut</code>,
@@ -302,13 +306,41 @@ Both axes are categorical. Mapping requires <code>x_var</code>,
 <span>  <span class="fu"><a href="../reference/setAxisFormat.html">setAxisFormat</a></span><span class="op">(</span>xLabel <span class="op">=</span> <span class="st">"Quarter"</span>, yLabel <span class="op">=</span> <span class="st">"Segment"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
+<h3 id="calendar-heatmap">Calendar Heatmap<a class="anchor" aria-label="anchor" href="#calendar-heatmap"></a>
+</h3>
+<p>Calendar heatmaps render daily values as a GitHub-contributions-style
+grid: one cell per day, seven rows per week, with month labels across
+the top. The chart is scoped to a single calendar year in v1.2. Mapping
+requires <code>date</code> (any Date or ISO <code>"YYYY-MM-DD"</code>
+string) and <code>value</code> (numeric):</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  day     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2026-01-01"</span><span class="op">)</span> <span class="op">+</span> <span class="fl">0</span><span class="op">:</span><span class="fl">364</span>,</span>
+<span>  commits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Poisson.html" class="external-link">rpois</a></span><span class="op">(</span><span class="fl">365</span>, lambda <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
+<span>    type <span class="op">=</span> <span class="st">"calendarHeatmap"</span>,</span>
+<span>    color <span class="op">=</span> <span class="st">"#4E79A7"</span>,</span>
+<span>    label <span class="op">=</span> <span class="st">"Daily commits"</span>,</span>
+<span>    data <span class="op">=</span> <span class="va">df</span>,</span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>date <span class="op">=</span> <span class="st">"day"</span>, value <span class="op">=</span> <span class="st">"commits"</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<p>Use <code>options$weekStart = "monday"</code> for ISO week ordering.
+Two calendars linked via
+<code>linkCharts(a, b, on = "day", cursor = TRUE)</code> synchronize the
+hover crosshair by date across both charts.</p>
+</div>
+<div class="section level3">
 <h3 id="candlestick-ohlc">Candlestick (OHLC)<a class="anchor" aria-label="anchor" href="#candlestick-ohlc"></a>
 </h3>
 <p>Candlestick charts show open-high-low-close data. Green bars indicate
 close &gt;= open, red bars indicate close &lt; open. Mapping requires
 <code>x_var</code>, <code>open</code>, <code>high</code>,
 <code>low</code>, and <code>close</code>:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  day <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span>,</span>
 <span>  open  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">12</span>, <span class="fl">11</span>, <span class="fl">14</span>, <span class="fl">13</span>, <span class="fl">15</span>, <span class="fl">14</span>, <span class="fl">16</span>, <span class="fl">15</span>, <span class="fl">17</span><span class="op">)</span>,</span>
@@ -336,7 +368,7 @@ close &gt;= open, red bars indicate close &lt; open. Mapping requires
 <p>Waterfall charts show how an initial value is affected by sequential
 positive and negative changes. The <code>cumulative</code> transform is
 auto-applied. Mark summary rows with a <code>total</code> mapping:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  step  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Revenue"</span>, <span class="st">"COGS"</span>, <span class="st">"Gross Profit"</span>, <span class="st">"OpEx"</span>, <span class="st">"Net Income"</span><span class="op">)</span>,</span>
 <span>  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">500</span>, <span class="op">-</span><span class="fl">200</span>, <span class="cn">NA</span>, <span class="op">-</span><span class="fl">150</span>, <span class="cn">NA</span><span class="op">)</span>,</span>
@@ -359,7 +391,7 @@ auto-applied. Mark summary rows with a <code>total</code> mapping:</p>
 <p>Sankey diagrams show flows between nodes. Mapping requires
 <code>source</code>, <code>target</code>, and <code>value</code>. This
 is a standalone type and cannot be mixed with other charts:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  source <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Budget"</span>, <span class="st">"Budget"</span>, <span class="st">"Sales"</span>, <span class="st">"Sales"</span>, <span class="st">"Marketing"</span><span class="op">)</span>,</span>
 <span>  target <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Sales"</span>, <span class="st">"Marketing"</span>, <span class="st">"Revenue"</span>, <span class="st">"Leads"</span>, <span class="st">"Leads"</span><span class="op">)</span>,</span>
@@ -382,7 +414,7 @@ is a standalone type and cannot be mixed with other charts:</p>
 (IQR box), point (whiskers, median), and optional outlier layers.
 Mapping requires <code>x_var</code> (categorical) and <code>y_var</code>
 (numeric):</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
 <span>    type <span class="op">=</span> <span class="st">"boxplot"</span>,</span>
@@ -402,7 +434,7 @@ Mapping requires <code>x_var</code> (categorical) and <code>y_var</code>
 <p>Violin plots show the distribution shape via a mirrored kernel
 density estimate. They expand into area (density), optional box (IQR),
 and optional median point layers:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
 <span>    type <span class="op">=</span> <span class="st">"violin"</span>,</span>
@@ -425,7 +457,7 @@ comparing distributions across groups. They expand into one area
 sub-layer per group value. Mapping requires <code>x_var</code> (numeric
 values), <code>y_var</code> (numeric), and <code>group</code>
 (categorical):</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="va">mtcars</span></span>
 <span><span class="va">df</span><span class="op">$</span><span class="va">cyl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">cyl</span><span class="op">)</span></span>
 <span></span>
@@ -441,6 +473,71 @@ values), <code>y_var</code> (numeric), and <code>group</code>
 <span>  <span class="fu"><a href="../reference/setAxisFormat.html">setAxisFormat</a></span><span class="op">(</span>xLabel <span class="op">=</span> <span class="st">"Horsepower"</span>, yLabel <span class="op">=</span> <span class="st">"Density"</span><span class="op">)</span></span></code></pre></div>
 <p>Options: <code>overlap</code> (0-1, default 0.6),
 <code>bandwidth</code> (KDE bandwidth).</p>
+</div>
+<div class="section level3">
+<h3 id="q-q-plot-composite">Q-Q Plot (Composite)<a class="anchor" aria-label="anchor" href="#q-q-plot-composite"></a>
+</h3>
+<p>Q-Q (quantile-quantile) plots compare sample quantiles against a
+theoretical distribution to assess normality. The composite expands into
+a point layer (Q-Q scatter), a reference line (through Q1/Q3), and an
+optional confidence envelope. Only <code>y_var</code> is required in the
+mapping:</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
+<span>    type <span class="op">=</span> <span class="st">"qq"</span>,</span>
+<span>    color <span class="op">=</span> <span class="st">"#4E79A7"</span>,</span>
+<span>    label <span class="op">=</span> <span class="st">"MPG Normality"</span>,</span>
+<span>    data <span class="op">=</span> <span class="va">mtcars</span>,</span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>y_var <span class="op">=</span> <span class="st">"mpg"</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/setAxisFormat.html">setAxisFormat</a></span><span class="op">(</span>xLabel <span class="op">=</span> <span class="st">"Theoretical Quantiles"</span>, yLabel <span class="op">=</span> <span class="st">"Sample Quantiles"</span><span class="op">)</span></span></code></pre></div>
+<p>Options: <code>envelope</code> (TRUE), <code>conf_level</code>
+(0.95), <code>distribution</code> (“norm”), <code>qfunc</code> (custom
+quantile function). Supports grouped Q-Q via <code>group</code>
+mapping.</p>
+</div>
+<div class="section level3">
+<h3 id="comparison-composite">Comparison (Composite)<a class="anchor" aria-label="anchor" href="#comparison-composite"></a>
+</h3>
+<p>Comparison plots combine boxplots with pairwise significance brackets
+showing p-values from hypothesis tests. The composite expands into
+boxplot sub-layers plus a bracket layer with test results:</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
+<span>    type <span class="op">=</span> <span class="st">"comparison"</span>,</span>
+<span>    color <span class="op">=</span> <span class="st">"#4E79A7"</span>,</span>
+<span>    label <span class="op">=</span> <span class="st">"Species Comparison"</span>,</span>
+<span>    data <span class="op">=</span> <span class="va">iris</span>,</span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"Species"</span>, y_var <span class="op">=</span> <span class="st">"Sepal.Width"</span><span class="op">)</span>,</span>
+<span>    options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"t.test"</span>, p_adjust <span class="op">=</span> <span class="st">"bonferroni"</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/setAxisFormat.html">setAxisFormat</a></span><span class="op">(</span>xLabel <span class="op">=</span> <span class="st">"Species"</span>, yLabel <span class="op">=</span> <span class="st">"Sepal Width (cm)"</span><span class="op">)</span></span></code></pre></div>
+<p>Options: <code>method</code> (“t.test” or “wilcox.test”),
+<code>p_adjust</code> (“none”, “bonferroni”, “holm”, “BH”),
+<code>comparisons</code> (list of specific pairs),
+<code>showOutliers</code> (TRUE).</p>
+</div>
+<div class="section level3">
+<h3 id="bracket-standalone-layer">Bracket (Standalone Layer)<a class="anchor" aria-label="anchor" href="#bracket-standalone-layer"></a>
+</h3>
+<p>Brackets can also be added as a standalone layer on top of any
+grouped chart. Use <code>transform = "pairwise_test"</code> to compute
+significance tests:</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
+<span>    type <span class="op">=</span> <span class="st">"boxplot"</span>, color <span class="op">=</span> <span class="st">"#4E79A7"</span>,</span>
+<span>    label <span class="op">=</span> <span class="st">"Sepal Width"</span>, data <span class="op">=</span> <span class="va">iris</span>,</span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"Species"</span>, y_var <span class="op">=</span> <span class="st">"Sepal.Width"</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
+<span>    type <span class="op">=</span> <span class="st">"bracket"</span>, label <span class="op">=</span> <span class="st">"Tests"</span>,</span>
+<span>    transform <span class="op">=</span> <span class="st">"pairwise_test"</span>, data <span class="op">=</span> <span class="va">iris</span>,</span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"Species"</span>, y_var <span class="op">=</span> <span class="st">"Sepal.Width"</span><span class="op">)</span>,</span>
+<span>    options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"wilcox.test"</span>, p_adjust <span class="op">=</span> <span class="st">"holm"</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
 </div>
@@ -449,7 +546,7 @@ values), <code>y_var</code> (numeric), and <code>group</code>
 </h2>
 <p>You can overlay compatible chart types on a single widget. Here we
 layer points, a connecting line, and a linear model trend line:</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
 <span>    type <span class="op">=</span> <span class="st">"point"</span>,</span>

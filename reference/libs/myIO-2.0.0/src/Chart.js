@@ -1,5 +1,10 @@
 import { getRenderer, getRendererForLayer, listRenderers } from "./registry.js";
 import { bindPointDrag } from "./interactions/drag.js";
+import { bindBrush, removeBrush } from "./interactions/brush.js";
+import { bindAnnotation, removeAnnotationBindings } from "./interactions/annotate.js";
+import { bindLinked, cleanupLinked } from "./interactions/linked.js";
+import { registerLinkedCursor } from "./interactions/linked-cursor.js";
+import { bindSliders, removeSliders } from "./interactions/slider.js";
 import { bindRollover } from "./interactions/rollover.js";
 import { deriveChartRender, applyDerivedScales } from "./derive/chart-render.js";
 import { validateLayers } from "./derive/validate.js";
@@ -12,6 +17,11 @@ import { hideChartTooltip, initializeTooltip, removeHoverOverlay } from "./toolt
 import { addFAB, closePanel, openPanel } from "./interactions/bottom-sheet.js";
 import { linearRegression } from "./utils/math.js";
 import { tagName } from "./utils/responsive.js";
+import { ThemeManager } from "./theme/theme-manager.js";
+import { FacetController } from "./layout/facet-controller.js";
+import { applyARIA } from "./a11y/aria.js";
+import { KeyboardNavigator } from "./a11y/keyboard-nav.js";
+import { DataTableFallback } from "./a11y/data-table.js";
 
 const MIN_CHART_WIDTH = 280;
 const RESIZE_DEBOUNCE_MS = 100;
@@ -61,6 +71,9 @@ export class myIOchart {
       activeYFormat: null,
       tooltipHideTimer: null
     };
+    if (this.config.sparkline) {
+      this.applySparklineOverrides();
+    }
     if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       this.config.transitions.speed = 0;
     }
@@ -166,15 +179,16 @@ export class myIOchart {
   initialize() {
     this.derived.currentLayers = this.config.layers;
     this.syncLegacyAliases();
-    if (this.config.theme) {
-      var el = this.dom.element;
-      Object.keys(this.config.theme).forEach(function(key) {
-        if (this.config.theme[key] != null) {
-          el.style.setProperty("--" + key, this.config.theme[key]);
-        }
-      }, this);
-    }
+    this.themeManager = new ThemeManager(this.dom.element, this.config);
+    this.themeManager.initialize();
     initializeTooltip(this);
+    if (!this.config.sparkline) {
+      this.keyboardNav = new KeyboardNavigator(this);
+      this.keyboardNav.initialize();
+      this.dataTable = new DataTableFallback(this);
+      this.dataTable.initialize();
+      applyARIA(this);
+    }
     this.captureLegacyAliases();
     if (this.derived.currentLayers.length > 0) {
       this.setClipPath(this.derived.currentLayers[0].type);
@@ -182,10 +196,39 @@ export class myIOchart {
     this.renderCurrentLayers({ isInitialRender: true });
   }
 
+  applySparklineOverrides() {
+    this.config.layout.margin = { top: 1, right: 1, bottom: 1, left: 1 };
+    this.config.layout.suppressLegend = true;
+    this.config.layout.suppressAxis = { xAxis: true, yAxis: true };
+
+    if (this.config.interactions.brush) this.config.interactions.brush.enabled = false;
+    if (this.config.interactions.annotation) this.config.interactions.annotation.enabled = false;
+    if (this.config.interactions.linked) this.config.interactions.linked.enabled = false;
+    this.config.interactions.sliders = [];
+    this.config.interactions.dragPoints = false;
+
+    this.config.referenceLines = { x: null, y: null };
+
+    this.dom.element.dataset.sparkline = "true";
+  }
+
   renderCurrentLayers(opts) {
     const options = opts || {};
     const generation = ++this.runtime.renderGen;
     const isCurrent = () => this.runtime && this.runtime.renderGen === generation;
+
+    // Faceted rendering: delegate to FacetController
+    if (this.config.facet && this.config.facet.enabled) {
+      if (!this.facetController) {
+        this.facetController = new FacetController(this);
+      }
+      this.facetController.initialize();
+      return;
+    } else if (this.facetController) {
+      this.facetController.destroy();
+      this.facetController = null;
+    }
+
     try {
       if (this.dom.chartArea) {
         this.dom.chartArea.selectAll("*").interrupt();
@@ -208,6 +251,9 @@ export class myIOchart {
       }
       if (this.derived.currentLayers.length === 0) {
         this.renderEmptyState();
+        if (!this.config.sparkline) {
+          applyARIA(this);
+        }
         return;
       }
       const state = deriveChartRender(this);
@@ -223,8 +269,28 @@ export class myIOchart {
       syncReferenceLines(this, state, options);
       syncLegend(this, state);
       bindRollover(this);
+      removeBrush(this);
+      if (this.config.interactions.brush && this.config.interactions.brush.enabled) {
+        bindBrush(this);
+      }
+      if (this.config.interactions.annotation && this.config.interactions.annotation.enabled) {
+        bindAnnotation(this);
+      }
+      if (this.config.interactions.linked && this.config.interactions.linked.enabled) {
+        bindLinked(this);
+      }
+      if (this.config.interactions.linked && this.config.interactions.linked.cursor === true) {
+        registerLinkedCursor(this);
+      }
+      if (this.config.interactions.sliders && this.config.interactions.sliders.length > 0) {
+        bindSliders(this);
+      }
       this.emit("afterRender", { state });
+      if (!this.config.sparkline) {
+        applyARIA(this);
+      }
     } catch (error) {
+      console.warn("[myIO] Render error:", error.message);
       this.emit("error", { message: error.message, error });
       throw error;
     }
@@ -321,6 +387,15 @@ export class myIOchart {
       if (renderer && typeof renderer.render === "function") {
         renderer.render(that, layer, layers);
         that.captureLegacyAliases();
+
+        // Apply per-layer opacity
+        var opacity = (layer.options && layer.options.opacity != null)
+          ? layer.options.opacity : 1;
+        if (opacity < 1) {
+          var safeName = String(layer.label).replace(/\s+/g, "");
+          that.dom.chartArea.selectAll("[class*='tag-'][class*='-" + safeName + "']")
+            .style("opacity", opacity);
+        }
       }
     });
   }
@@ -395,6 +470,7 @@ export class myIOchart {
   }
 
   resize(width, height) {
+    if (!width || !height || width < 2 || height < 2) return;
     const wasSheetOpen = this.runtime && this.runtime._sheetOpen === true;
     if (wasSheetOpen) {
       closePanel(this, { returnFocus: false });
@@ -419,10 +495,26 @@ export class myIOchart {
     this.emit("destroy", {});
     clearTimeout(this.runtime && this.runtime.resizeTimer);
     clearTimeout(this.runtime && this.runtime.tooltipHideTimer);
+    if (this.facetController) {
+      this.facetController.destroy();
+      this.facetController = null;
+    }
+    if (this.keyboardNav) this.keyboardNav.destroy();
+    if (this.dataTable) this.dataTable.destroy();
+    if (this.themeManager) {
+      this.themeManager.destroy();
+    }
     if (this.runtime && this.runtime._sheetOpen) {
       closePanel(this, { returnFocus: false });
     }
     clearTimeout(this.runtime && this.runtime._sheetCloseTimer);
+    removeBrush(this);
+    removeAnnotationBindings(this);
+    cleanupLinked(this);
+    removeSliders(this);
+    if (this.dom && this.dom.element) {
+      d3.select(this.dom.element).on("keydown.brush", null);
+    }
     if (this.dom && this.dom.chartArea) {
       this.dom.chartArea.selectAll("*").interrupt();
     }
@@ -433,7 +525,7 @@ export class myIOchart {
       this.dom.tooltip.remove();
     }
     if (this.dom && this.dom.element) {
-      d3.select(this.dom.element).selectAll(".buttonDiv, .myIO-fab, .myIO-panel, .myIO-sheet-backdrop").remove();
+      d3.select(this.dom.element).selectAll(".myIO-fab, .myIO-panel, .myIO-sheet-backdrop").remove();
     }
     removeHoverOverlay(this);
     this._listeners = {};

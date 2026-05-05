@@ -13,8 +13,8 @@
 <link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="myIO - Interactive D3.js Visualizations from R">
-<meta name="description" content="Create interactive data visualizations powered by d3.js directly from R. Provides a layered grammar for bindings composition, supporting bar charts, line charts, scatter plots, histograms, treemaps, gauges, hexbin plots, heatmaps, candlestick charts, waterfall charts, sankey diagrams, boxplots, violin plots, and ridgeline plots. Includes transform-driven derived layers, composite chart expansion, tooltips, responsive sizing, and Shiny integration.">
-<meta property="og:description" content="Create interactive data visualizations powered by d3.js directly from R. Provides a layered grammar for bindings composition, supporting bar charts, line charts, scatter plots, histograms, treemaps, gauges, hexbin plots, heatmaps, candlestick charts, waterfall charts, sankey diagrams, boxplots, violin plots, and ridgeline plots. Includes transform-driven derived layers, composite chart expansion, tooltips, responsive sizing, and Shiny integration.">
+<meta name="description" content="Create interactive d3.js visualizations from R with built-in statistical transforms. Computes confidence intervals, regression fits, LOESS smoothing, moving averages, and error bars in R and renders them as composable chart layers via htmlwidgets. Supports 20 chart types including boxplots, violin plots, Q-Q diagnostic plots, and group comparisons with pairwise significance testing. Works in RStudio, Shiny, and R Markdown.">
+<meta property="og:description" content="Create interactive d3.js visualizations from R with built-in statistical transforms. Computes confidence intervals, regression fits, LOESS smoothing, moving averages, and error bars in R and renders them as composable chart layers via htmlwidgets. Supports 20 chart types including boxplots, violin plots, Q-Q diagnostic plots, and group comparisons with pairwise significance testing. Works in RStudio, Shiny, and R Markdown.">
 <meta property="og:image" content="https://mortonanalytics.github.io/myIO/logo.png">
 </head>
 <body>
@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="index.html">myIO</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -94,77 +94,77 @@
 <h2 id="supported-chart-types">Supported Chart Types<a class="anchor" aria-label="anchor" href="#supported-chart-types"></a>
 </h2>
 <table class="table">
-<thead><tr class="header">
+<thead><tr>
 <th>Type</th>
 <th>
 <code>type</code> value</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Scatter plot</td>
 <td><code>"point"</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Line chart</td>
 <td><code>"line"</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Bar chart</td>
 <td><code>"bar"</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Grouped bar chart</td>
 <td><code>"groupedBar"</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Area chart</td>
 <td><code>"area"</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Histogram</td>
 <td><code>"histogram"</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Heatmap</td>
 <td><code>"heatmap"</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Candlestick</td>
 <td><code>"candlestick"</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Waterfall</td>
 <td><code>"waterfall"</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Sankey</td>
 <td><code>"sankey"</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Boxplot</td>
 <td><code>"boxplot"</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Violin</td>
 <td><code>"violin"</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Ridgeline</td>
 <td><code>"ridgeline"</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Donut chart</td>
 <td><code>"donut"</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Gauge chart</td>
 <td><code>"gauge"</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Hexbin plot</td>
 <td><code>"hexbin"</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Treemap</td>
 <td><code>"treemap"</code></td>
 </tr>
@@ -180,39 +180,54 @@
 <col width="43%">
 <col width="56%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Argument</th>
 <th>Description</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>type</code></td>
 <td>Chart type (see table above)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>color</code></td>
 <td>Any CSS color string</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>label</code></td>
 <td>Unique identifier for the layer</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>data</code></td>
 <td>A data frame</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>mapping</code></td>
 <td>List mapping variables, e.g. <code>list(x_var = "wt", y_var = "mpg")</code>
 </td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>transform</code></td>
 <td>Optional derived-data transform, e.g. <code>"identity"</code> or <code>"lm"</code>
 </td>
 </tr>
 </tbody>
 </table>
+</div>
+<div class="section level2">
+<h2 id="interactions">Interactions<a class="anchor" aria-label="anchor" href="#interactions"></a>
+</h2>
+<p>myIO charts are bidirectional — user actions flow back as structured data:</p>
+<ul>
+<li>
+<code><a href="reference/setBrush.html">setBrush()</a></code> — Rectangle select returns selected rows as data</li>
+<li>
+<code><a href="reference/setAnnotation.html">setAnnotation()</a></code> — Click to label data points; export annotations as CSV</li>
+<li>
+<code><a href="reference/setLinked.html">setLinked()</a></code> — Crosstalk linked brushing across multiple charts</li>
+<li>
+<code><a href="reference/setSlider.html">setSlider()</a></code> — Parameter sliders that trigger Shiny recomputation</li>
+</ul>
 </div>
 <div class="section level2">
 <h2 id="customization">Customization<a class="anchor" aria-label="anchor" href="#customization"></a>
@@ -248,7 +263,7 @@
 <li>
 <code><a href="reference/setReferenceLines.html">setReferenceLines()</a></code> — Add reference lines</li>
 </ul>
-<p>See the <a href="https://mortonanalytics.github.io/myIO/articles/getting-started.html">Getting Started</a>, <a href="https://mortonanalytics.github.io/myIO/articles/chart-types.html">Chart Types</a>, and <a href="https://mortonanalytics.github.io/myIO/articles/transforms-and-theming.html">Transforms &amp; Theming</a> vignettes for full examples.</p>
+<p>See the <a href="https://mortonanalytics.github.io/myIO/articles/getting-started.html">Getting Started</a>, <a href="https://mortonanalytics.github.io/myIO/articles/chart-types.html">Chart Types</a>, <a href="https://mortonanalytics.github.io/myIO/articles/shiny-integration.html">Shiny Integration</a>, and <a href="https://mortonanalytics.github.io/myIO/articles/transforms-and-theming.html">Transforms &amp; Theming</a> vignettes for full examples.</p>
 </div>
 </div>
 
@@ -283,7 +298,7 @@
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
 <li>
-<a href="https://github.com/mortonanalytics" class="external-link">Ryan Morton</a> <br><small class="roles"> Author, maintainer </small>   </li>
+<a href="https://github.com/mortonanalytics" class="external-link">Ryan Morton</a> <br><small class="roles"> Author, maintainer, copyright holder </small>   </li>
 </ul>
 </div>
 

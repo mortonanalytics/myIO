@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">myIO</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,7 +67,7 @@
 </h2>
 <p>myIO provides standard <code>htmlwidgets</code> Shiny bindings, so
 charts work like any other output in your Shiny app. This vignette
-covers the basics and common patterns.</p>
+covers the basics, interactive I/O patterns, and common recipes.</p>
 </div>
 <div class="section level2">
 <h2 id="minimal-app">Minimal App<a class="anchor" aria-label="anchor" href="#minimal-app"></a>
@@ -78,8 +78,8 @@ in the server:</p>
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://shiny.posit.co/" class="external-link">shiny</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mortonanalytics.github.io/myIO/">myIO</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="fu">fluidPage</span><span class="op">(</span></span>
-<span>  <span class="fu">titlePanel</span><span class="op">(</span><span class="st">"myIO + Shiny"</span><span class="op">)</span>,</span>
+<span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidPage</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/titlePanel.html" class="external-link">titlePanel</a></span><span class="op">(</span><span class="st">"myIO + Shiny"</span><span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="../reference/myIO-shiny.html">myIOOutput</a></span><span class="op">(</span><span class="st">"chart"</span>, width <span class="op">=</span> <span class="st">"100%"</span>, height <span class="op">=</span> <span class="st">"400px"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -96,7 +96,7 @@ in the server:</p>
 <span>  <span class="op">}</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span></span>
-<span><span class="fu">shinyApp</span><span class="op">(</span><span class="va">ui</span>, <span class="va">server</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/shinyApp.html" class="external-link">shinyApp</a></span><span class="op">(</span><span class="va">ui</span>, <span class="va">server</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="reactive-data">Reactive Data<a class="anchor" aria-label="anchor" href="#reactive-data"></a>
@@ -108,27 +108,27 @@ filter or transform data:</p>
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://shiny.posit.co/" class="external-link">shiny</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mortonanalytics.github.io/myIO/">myIO</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="fu">fluidPage</span><span class="op">(</span></span>
-<span>  <span class="fu">titlePanel</span><span class="op">(</span><span class="st">"Reactive myIO Chart"</span><span class="op">)</span>,</span>
-<span>  <span class="fu">sidebarLayout</span><span class="op">(</span></span>
-<span>    <span class="fu">sidebarPanel</span><span class="op">(</span></span>
-<span>      <span class="fu">selectInput</span><span class="op">(</span><span class="st">"cyl"</span>, <span class="st">"Cylinders:"</span>,</span>
+<span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidPage</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/titlePanel.html" class="external-link">titlePanel</a></span><span class="op">(</span><span class="st">"Reactive myIO Chart"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/sidebarLayout.html" class="external-link">sidebarLayout</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/sidebarLayout.html" class="external-link">sidebarPanel</a></span><span class="op">(</span></span>
+<span>      <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/selectInput.html" class="external-link">selectInput</a></span><span class="op">(</span><span class="st">"cyl"</span>, <span class="st">"Cylinders:"</span>,</span>
 <span>        choices <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"All"</span>, <span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">mtcars</span><span class="op">$</span><span class="va">cyl</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>        selected <span class="op">=</span> <span class="st">"All"</span></span>
 <span>      <span class="op">)</span>,</span>
-<span>      <span class="fu">selectInput</span><span class="op">(</span><span class="st">"chart_type"</span>, <span class="st">"Chart Type:"</span>,</span>
+<span>      <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/selectInput.html" class="external-link">selectInput</a></span><span class="op">(</span><span class="st">"chart_type"</span>, <span class="st">"Chart Type:"</span>,</span>
 <span>        choices <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"point"</span>, <span class="st">"bar"</span>, <span class="st">"line"</span><span class="op">)</span>,</span>
 <span>        selected <span class="op">=</span> <span class="st">"point"</span></span>
 <span>      <span class="op">)</span></span>
 <span>    <span class="op">)</span>,</span>
-<span>    <span class="fu">mainPanel</span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/sidebarLayout.html" class="external-link">mainPanel</a></span><span class="op">(</span></span>
 <span>      <span class="fu"><a href="../reference/myIO-shiny.html">myIOOutput</a></span><span class="op">(</span><span class="st">"chart"</span>, height <span class="op">=</span> <span class="st">"500px"</span><span class="op">)</span></span>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">server</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">filtered_data</span> <span class="op">&lt;-</span> <span class="fu">reactive</span><span class="op">(</span><span class="op">{</span></span>
+<span>  <span class="va">filtered_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/reactive.html" class="external-link">reactive</a></span><span class="op">(</span><span class="op">{</span></span>
 <span>    <span class="kw">if</span> <span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">cyl</span> <span class="op">==</span> <span class="st">"All"</span><span class="op">)</span> <span class="va">mtcars</span> <span class="kw">else</span> <span class="va">mtcars</span><span class="op">[</span><span class="va">mtcars</span><span class="op">$</span><span class="va">cyl</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">input</span><span class="op">$</span><span class="va">cyl</span><span class="op">)</span>, <span class="op">]</span></span>
 <span>  <span class="op">}</span><span class="op">)</span></span>
 <span></span>
@@ -146,22 +146,228 @@ filter or transform data:</p>
 <span>  <span class="op">}</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span></span>
-<span><span class="fu">shinyApp</span><span class="op">(</span><span class="va">ui</span>, <span class="va">server</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/shinyApp.html" class="external-link">shinyApp</a></span><span class="op">(</span><span class="va">ui</span>, <span class="va">server</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="brush-selection">Brush Selection<a class="anchor" aria-label="anchor" href="#brush-selection"></a>
+</h2>
+<p><code><a href="../reference/setBrush.html">setBrush()</a></code> enables rectangle selection on a chart. The
+selected data points are available as a Shiny reactive input:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://shiny.posit.co/" class="external-link">shiny</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mortonanalytics.github.io/myIO/">myIO</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidPage</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/titlePanel.html" class="external-link">titlePanel</a></span><span class="op">(</span><span class="st">"Brush Selection"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidRow</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/column.html" class="external-link">column</a></span><span class="op">(</span><span class="fl">8</span>, <span class="fu"><a href="../reference/myIO-shiny.html">myIOOutput</a></span><span class="op">(</span><span class="st">"chart"</span>, height <span class="op">=</span> <span class="st">"400px"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/column.html" class="external-link">column</a></span><span class="op">(</span><span class="fl">4</span>,</span>
+<span>      <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h4</a></span><span class="op">(</span><span class="st">"Selected Points"</span><span class="op">)</span>,</span>
+<span>      <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/textOutput.html" class="external-link">verbatimTextOutput</a></span><span class="op">(</span><span class="st">"selected"</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">server</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">output</span><span class="op">$</span><span class="va">chart</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/myIO-shiny.html">renderMyIO</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>    <span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>      <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
+<span>        type <span class="op">=</span> <span class="st">"point"</span>,</span>
+<span>        color <span class="op">=</span> <span class="st">"#4E79A7"</span>,</span>
+<span>        label <span class="op">=</span> <span class="st">"scatter"</span>,</span>
+<span>        data <span class="op">=</span> <span class="va">mtcars</span>,</span>
+<span>        mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"wt"</span>, y_var <span class="op">=</span> <span class="st">"mpg"</span><span class="op">)</span></span>
+<span>      <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>      <span class="fu"><a href="../reference/setBrush.html">setBrush</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>      <span class="fu"><a href="../reference/setAxisFormat.html">setAxisFormat</a></span><span class="op">(</span>xLabel <span class="op">=</span> <span class="st">"Weight"</span>, yLabel <span class="op">=</span> <span class="st">"MPG"</span><span class="op">)</span></span>
+<span>  <span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="va">output</span><span class="op">$</span><span class="va">selected</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/renderPrint.html" class="external-link">renderPrint</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>    <span class="va">brushed</span> <span class="op">&lt;-</span> <span class="va">input</span><span class="op">$</span><span class="va">`myIO-chart-brushed`</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">brushed</span><span class="op">)</span><span class="op">)</span> <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="st">"Drag to select points"</span><span class="op">)</span></span>
+<span>    <span class="va">sel</span> <span class="op">&lt;-</span> <span class="fu">jsonlite</span><span class="fu">::</span><span class="fu"><a href="https://jeroen.r-universe.dev/jsonlite/reference/fromJSON.html" class="external-link">fromJSON</a></span><span class="op">(</span><span class="va">brushed</span><span class="op">)</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">sel</span><span class="op">$</span><span class="va">keys</span><span class="op">)</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span> <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="st">"No points selected"</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">sel</span><span class="op">$</span><span class="va">keys</span><span class="op">)</span>, <span class="st">"points selected"</span><span class="op">)</span></span>
+<span>  <span class="op">}</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/shinyApp.html" class="external-link">shinyApp</a></span><span class="op">(</span><span class="va">ui</span>, <span class="va">server</span><span class="op">)</span></span></code></pre></div>
+<p>The brush input key follows the pattern
+<code>myIO-{outputId}-brushed</code>. The payload includes:</p>
+<ul>
+<li>
+<code>data</code> — array of selected row objects</li>
+<li>
+<code>keys</code> — <code>_source_key</code> values for each
+selected point</li>
+<li>
+<code>extent</code> — brush bounds in data coordinates</li>
+</ul>
+<p>Use <code>direction = "x"</code> or <code>direction = "y"</code> for
+single-axis brushing.</p>
+</div>
+<div class="section level2">
+<h2 id="click-to-annotate">Click-to-Annotate<a class="anchor" aria-label="anchor" href="#click-to-annotate"></a>
+</h2>
+<p><code><a href="../reference/setAnnotation.html">setAnnotation()</a></code> enables click-to-label mode. Each
+annotation is stored as structured data and available as a Shiny
+reactive:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://shiny.posit.co/" class="external-link">shiny</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mortonanalytics.github.io/myIO/">myIO</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidPage</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/titlePanel.html" class="external-link">titlePanel</a></span><span class="op">(</span><span class="st">"Data Annotation"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidRow</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/column.html" class="external-link">column</a></span><span class="op">(</span><span class="fl">8</span>, <span class="fu"><a href="../reference/myIO-shiny.html">myIOOutput</a></span><span class="op">(</span><span class="st">"chart"</span>, height <span class="op">=</span> <span class="st">"400px"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/column.html" class="external-link">column</a></span><span class="op">(</span><span class="fl">4</span>,</span>
+<span>      <span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">h4</a></span><span class="op">(</span><span class="st">"Annotations"</span><span class="op">)</span>,</span>
+<span>      <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/renderTable.html" class="external-link">tableOutput</a></span><span class="op">(</span><span class="st">"annotations"</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">server</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">output</span><span class="op">$</span><span class="va">chart</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/myIO-shiny.html">renderMyIO</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>    <span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>      <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
+<span>        type <span class="op">=</span> <span class="st">"point"</span>,</span>
+<span>        color <span class="op">=</span> <span class="st">"#4E79A7"</span>,</span>
+<span>        label <span class="op">=</span> <span class="st">"scatter"</span>,</span>
+<span>        data <span class="op">=</span> <span class="va">mtcars</span>,</span>
+<span>        mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"wt"</span>, y_var <span class="op">=</span> <span class="st">"mpg"</span><span class="op">)</span></span>
+<span>      <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>      <span class="fu"><a href="../reference/setAnnotation.html">setAnnotation</a></span><span class="op">(</span></span>
+<span>        labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"outlier"</span>, <span class="st">"interesting"</span>, <span class="st">"normal"</span><span class="op">)</span>,</span>
+<span>        colors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>outlier <span class="op">=</span> <span class="st">"#E63946"</span>, interesting <span class="op">=</span> <span class="st">"#F4A261"</span>, normal <span class="op">=</span> <span class="st">"#2A9D8F"</span><span class="op">)</span></span>
+<span>      <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>      <span class="fu"><a href="../reference/setAxisFormat.html">setAxisFormat</a></span><span class="op">(</span>xLabel <span class="op">=</span> <span class="st">"Weight"</span>, yLabel <span class="op">=</span> <span class="st">"MPG"</span><span class="op">)</span></span>
+<span>  <span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="va">output</span><span class="op">$</span><span class="va">annotations</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/renderTable.html" class="external-link">renderTable</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>    <span class="va">ann</span> <span class="op">&lt;-</span> <span class="va">input</span><span class="op">$</span><span class="va">`myIO-chart-annotated`</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">ann</span><span class="op">)</span><span class="op">)</span> <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="va">parsed</span> <span class="op">&lt;-</span> <span class="fu">jsonlite</span><span class="fu">::</span><span class="fu"><a href="https://jeroen.r-universe.dev/jsonlite/reference/fromJSON.html" class="external-link">fromJSON</a></span><span class="op">(</span><span class="va">ann</span><span class="op">)</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">parsed</span><span class="op">$</span><span class="va">annotations</span><span class="op">)</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span> <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="va">parsed</span><span class="op">$</span><span class="va">annotations</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"label"</span>, <span class="st">"x"</span>, <span class="st">"y"</span>, <span class="st">"category"</span><span class="op">)</span><span class="op">]</span></span>
+<span>  <span class="op">}</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/shinyApp.html" class="external-link">shinyApp</a></span><span class="op">(</span><span class="va">ui</span>, <span class="va">server</span><span class="op">)</span></span></code></pre></div>
+<p>The annotation input key is <code>myIO-{outputId}-annotated</code>.
+Each annotation includes <code>_source_key</code>, <code>x</code>,
+<code>y</code>, <code>label</code>, <code>category</code> (color), and
+<code>timestamp</code>.</p>
+</div>
+<div class="section level2">
+<h2 id="linked-brushing">Linked Brushing<a class="anchor" aria-label="anchor" href="#linked-brushing"></a>
+</h2>
+<p><code><a href="../reference/setLinked.html">setLinked()</a></code> connects two or more myIO charts via
+Crosstalk. Brushing points in one chart highlights them in the
+other:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://shiny.posit.co/" class="external-link">shiny</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mortonanalytics.github.io/myIO/">myIO</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rstudio.github.io/crosstalk/" class="external-link">crosstalk</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidPage</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/titlePanel.html" class="external-link">titlePanel</a></span><span class="op">(</span><span class="st">"Linked Brushing"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidRow</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/column.html" class="external-link">column</a></span><span class="op">(</span><span class="fl">6</span>, <span class="fu"><a href="../reference/myIO-shiny.html">myIOOutput</a></span><span class="op">(</span><span class="st">"scatter1"</span>, height <span class="op">=</span> <span class="st">"350px"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/column.html" class="external-link">column</a></span><span class="op">(</span><span class="fl">6</span>, <span class="fu"><a href="../reference/myIO-shiny.html">myIOOutput</a></span><span class="op">(</span><span class="st">"scatter2"</span>, height <span class="op">=</span> <span class="st">"350px"</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">server</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">shared</span> <span class="op">&lt;-</span> <span class="fu">crosstalk</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/crosstalk/man/SharedData.html" class="external-link">SharedData</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">mtcars</span>, key <span class="op">=</span> <span class="op">~</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">mtcars</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="va">output</span><span class="op">$</span><span class="va">scatter1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/myIO-shiny.html">renderMyIO</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>    <span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>      <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
+<span>        type <span class="op">=</span> <span class="st">"point"</span>,</span>
+<span>        color <span class="op">=</span> <span class="st">"#4E79A7"</span>,</span>
+<span>        label <span class="op">=</span> <span class="st">"wt vs mpg"</span>,</span>
+<span>        data <span class="op">=</span> <span class="va">shared</span><span class="op">$</span><span class="fu">data</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>        mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"wt"</span>, y_var <span class="op">=</span> <span class="st">"mpg"</span><span class="op">)</span></span>
+<span>      <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>      <span class="fu"><a href="../reference/setBrush.html">setBrush</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>      <span class="fu"><a href="../reference/setLinked.html">setLinked</a></span><span class="op">(</span><span class="va">shared</span>, mode <span class="op">=</span> <span class="st">"source"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>      <span class="fu"><a href="../reference/setAxisFormat.html">setAxisFormat</a></span><span class="op">(</span>xLabel <span class="op">=</span> <span class="st">"Weight"</span>, yLabel <span class="op">=</span> <span class="st">"MPG"</span><span class="op">)</span></span>
+<span>  <span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="va">output</span><span class="op">$</span><span class="va">scatter2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/myIO-shiny.html">renderMyIO</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>    <span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>      <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
+<span>        type <span class="op">=</span> <span class="st">"point"</span>,</span>
+<span>        color <span class="op">=</span> <span class="st">"#E15759"</span>,</span>
+<span>        label <span class="op">=</span> <span class="st">"hp vs mpg"</span>,</span>
+<span>        data <span class="op">=</span> <span class="va">shared</span><span class="op">$</span><span class="fu">data</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>        mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"hp"</span>, y_var <span class="op">=</span> <span class="st">"mpg"</span><span class="op">)</span></span>
+<span>      <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>      <span class="fu"><a href="../reference/setLinked.html">setLinked</a></span><span class="op">(</span><span class="va">shared</span>, mode <span class="op">=</span> <span class="st">"target"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>      <span class="fu"><a href="../reference/setAxisFormat.html">setAxisFormat</a></span><span class="op">(</span>xLabel <span class="op">=</span> <span class="st">"Horsepower"</span>, yLabel <span class="op">=</span> <span class="st">"MPG"</span><span class="op">)</span></span>
+<span>  <span class="op">}</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/shinyApp.html" class="external-link">shinyApp</a></span><span class="op">(</span><span class="va">ui</span>, <span class="va">server</span><span class="op">)</span></span></code></pre></div>
+<p>Both charts share the same <code>SharedData</code> object. The
+<code>mode</code> parameter controls direction: <code>"source"</code>
+emits selections, <code>"target"</code> receives them, and
+<code>"both"</code> (default) does both.</p>
+<p>Set <code>filter = TRUE</code> to hide non-matching points instead of
+dimming them.</p>
+</div>
+<div class="section level2">
+<h2 id="parameter-sliders">Parameter Sliders<a class="anchor" aria-label="anchor" href="#parameter-sliders"></a>
+</h2>
+<p><code><a href="../reference/setSlider.html">setSlider()</a></code> adds a slider below the chart that sends its
+value as a Shiny input. This is useful for adjusting transform
+parameters (confidence level, smoothing span, polynomial degree) without
+building a separate sidebar:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://shiny.posit.co/" class="external-link">shiny</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mortonanalytics.github.io/myIO/">myIO</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidPage</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/titlePanel.html" class="external-link">titlePanel</a></span><span class="op">(</span><span class="st">"Interactive Regression"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="../reference/myIO-shiny.html">myIOOutput</a></span><span class="op">(</span><span class="st">"chart"</span>, height <span class="op">=</span> <span class="st">"450px"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">server</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">input</span>, <span class="va">output</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">output</span><span class="op">$</span><span class="va">chart</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/myIO-shiny.html">renderMyIO</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>    <span class="va">ci</span> <span class="op">&lt;-</span> <span class="va">input</span><span class="op">$</span><span class="va">`myIO-chart-slider-ci_level`</span> <span class="op"><a href="https://rdrr.io/r/base/Control.html" class="external-link">%||%</a></span> <span class="fl">0.95</span></span>
+<span></span>
+<span>    <span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">mtcars</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>      <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
+<span>        type <span class="op">=</span> <span class="st">"regression"</span>,</span>
+<span>        label <span class="op">=</span> <span class="st">"fit"</span>,</span>
+<span>        mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"wt"</span>, y_var <span class="op">=</span> <span class="st">"mpg"</span><span class="op">)</span>,</span>
+<span>        options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"lm"</span>, showCI <span class="op">=</span> <span class="cn">TRUE</span>, level <span class="op">=</span> <span class="va">ci</span><span class="op">)</span></span>
+<span>      <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>      <span class="fu"><a href="../reference/setSlider.html">setSlider</a></span><span class="op">(</span><span class="st">"ci_level"</span>, <span class="st">"Confidence Level"</span>, <span class="fl">0.80</span>, <span class="fl">0.99</span>, <span class="va">ci</span>, <span class="fl">0.01</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>      <span class="fu"><a href="../reference/setAxisFormat.html">setAxisFormat</a></span><span class="op">(</span>xLabel <span class="op">=</span> <span class="st">"Weight"</span>, yLabel <span class="op">=</span> <span class="st">"MPG"</span><span class="op">)</span></span>
+<span>  <span class="op">}</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/shinyApp.html" class="external-link">shinyApp</a></span><span class="op">(</span><span class="va">ui</span>, <span class="va">server</span><span class="op">)</span></span></code></pre></div>
+<p>The slider input key is <code>myIO-{outputId}-slider-{param}</code>.
+Use <code>debounce</code> to control how often the slider fires (default
+200ms).</p>
 </div>
 <div class="section level2">
 <h2 id="multiple-charts">Multiple Charts<a class="anchor" aria-label="anchor" href="#multiple-charts"></a>
 </h2>
 <p>Add multiple <code><a href="../reference/myIO-shiny.html">myIOOutput()</a></code> calls to display several
 charts side by side. Each chart gets its own output ID:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://shiny.posit.co/" class="external-link">shiny</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mortonanalytics.github.io/myIO/">myIO</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="fu">fluidPage</span><span class="op">(</span></span>
-<span>  <span class="fu">titlePanel</span><span class="op">(</span><span class="st">"Multiple Charts"</span><span class="op">)</span>,</span>
-<span>  <span class="fu">fluidRow</span><span class="op">(</span></span>
-<span>    <span class="fu">column</span><span class="op">(</span><span class="fl">6</span>, <span class="fu"><a href="../reference/myIO-shiny.html">myIOOutput</a></span><span class="op">(</span><span class="st">"scatter"</span>, height <span class="op">=</span> <span class="st">"350px"</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>    <span class="fu">column</span><span class="op">(</span><span class="fl">6</span>, <span class="fu"><a href="../reference/myIO-shiny.html">myIOOutput</a></span><span class="op">(</span><span class="st">"bars"</span>, height <span class="op">=</span> <span class="st">"350px"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidPage</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/titlePanel.html" class="external-link">titlePanel</a></span><span class="op">(</span><span class="st">"Multiple Charts"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidRow</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/column.html" class="external-link">column</a></span><span class="op">(</span><span class="fl">6</span>, <span class="fu"><a href="../reference/myIO-shiny.html">myIOOutput</a></span><span class="op">(</span><span class="st">"scatter"</span>, height <span class="op">=</span> <span class="st">"350px"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/column.html" class="external-link">column</a></span><span class="op">(</span><span class="fl">6</span>, <span class="fu"><a href="../reference/myIO-shiny.html">myIOOutput</a></span><span class="op">(</span><span class="st">"bars"</span>, height <span class="op">=</span> <span class="st">"350px"</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -192,20 +398,20 @@ charts side by side. Each chart gets its own output ID:</p>
 <span>  <span class="op">}</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span></span>
-<span><span class="fu">shinyApp</span><span class="op">(</span><span class="va">ui</span>, <span class="va">server</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/shinyApp.html" class="external-link">shinyApp</a></span><span class="op">(</span><span class="va">ui</span>, <span class="va">server</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="theming-in-shiny">Theming in Shiny<a class="anchor" aria-label="anchor" href="#theming-in-shiny"></a>
 </h2>
-<p>Theme tokens from <code><a href="../reference/setTheme.html">setTheme()</a></code> work the same way in Shiny.
-This makes it easy to match your chart to the app’s look and feel:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<p>Theme tokens from <code><a href="../reference/setTheme.html">setTheme()</a></code> work the same way in
+Shiny:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://shiny.posit.co/" class="external-link">shiny</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mortonanalytics.github.io/myIO/">myIO</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="fu">fluidPage</span><span class="op">(</span></span>
+<span><span class="va">ui</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/fluidPage.html" class="external-link">fluidPage</a></span><span class="op">(</span></span>
 <span>  style <span class="op">=</span> <span class="st">"background-color: #1a1a2e; color: #e0e0e0;"</span>,</span>
-<span>  <span class="fu">titlePanel</span><span class="op">(</span><span class="st">"Dark Mode Dashboard"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/shiny/man/titlePanel.html" class="external-link">titlePanel</a></span><span class="op">(</span><span class="st">"Dark Mode Dashboard"</span><span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="../reference/myIO-shiny.html">myIOOutput</a></span><span class="op">(</span><span class="st">"chart"</span>, height <span class="op">=</span> <span class="st">"400px"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -229,7 +435,7 @@ This makes it easy to match your chart to the app’s look and feel:</p>
 <span>  <span class="op">}</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span></span>
-<span><span class="fu">shinyApp</span><span class="op">(</span><span class="va">ui</span>, <span class="va">server</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/shinyApp.html" class="external-link">shinyApp</a></span><span class="op">(</span><span class="va">ui</span>, <span class="va">server</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="sizing">Sizing<a class="anchor" aria-label="anchor" href="#sizing"></a>
@@ -237,7 +443,7 @@ This makes it easy to match your chart to the app’s look and feel:</p>
 <p><code><a href="../reference/myIO-shiny.html">myIOOutput()</a></code> accepts <code>width</code> and
 <code>height</code> as CSS units. Charts are responsive by default and
 will adapt to their container:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Fixed size</span></span>
 <span><span class="fu"><a href="../reference/myIO-shiny.html">myIOOutput</a></span><span class="op">(</span><span class="st">"chart1"</span>, width <span class="op">=</span> <span class="st">"600px"</span>, height <span class="op">=</span> <span class="st">"400px"</span><span class="op">)</span></span>
 <span></span>
@@ -245,16 +451,57 @@ will adapt to their container:</p>
 <span><span class="fu"><a href="../reference/myIO-shiny.html">myIOOutput</a></span><span class="op">(</span><span class="st">"chart2"</span>, width <span class="op">=</span> <span class="st">"100%"</span>, height <span class="op">=</span> <span class="st">"500px"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="live-demo">Live Demo<a class="anchor" aria-label="anchor" href="#live-demo"></a>
+<h2 id="shiny-input-reference">Shiny Input Reference<a class="anchor" aria-label="anchor" href="#shiny-input-reference"></a>
 </h2>
-<p>The full myIO chart gallery is deployed as a Shiny app. Try all 17
-chart types interactively:</p>
-<iframe src="https://www.morton-analytics.com/myio/" width="100%" height="700" style="border: 1px solid #dee2e6; border-radius: 8px;" allowfullscreen>
-</iframe>
-<p style="text-align: center; margin-top: 0.5rem;">
-<a href="https://www.morton-analytics.com/myio/" target="_blank" class="external-link">Open in
-new tab</a>
-</p>
+<p>All myIO Shiny inputs follow the naming pattern
+<code>myIO-{outputId}-{event}</code>:</p>
+<table class="table">
+<colgroup>
+<col width="40%">
+<col width="25%">
+<col width="33%">
+</colgroup>
+<thead><tr class="header">
+<th>Input key</th>
+<th>Event</th>
+<th>Payload</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>myIO-{id}-rollover</code></td>
+<td>Hover on data element</td>
+<td>JSON data point</td>
+</tr>
+<tr class="even">
+<td><code>myIO-{id}-dragEnd</code></td>
+<td>Point drag completed</td>
+<td>JSON <code>{ point, layerLabel }</code>
+</td>
+</tr>
+<tr class="odd">
+<td><code>myIO-{id}-brushed</code></td>
+<td>Brush selection</td>
+<td>JSON <code>{ data, extent, keys }</code>
+</td>
+</tr>
+<tr class="even">
+<td><code>myIO-{id}-annotated</code></td>
+<td>Annotation added/removed</td>
+<td>JSON <code>{ annotations, action }</code>
+</td>
+</tr>
+<tr class="odd">
+<td><code>myIO-{id}-slider-{param}</code></td>
+<td>Slider value changed</td>
+<td>Numeric value</td>
+</tr>
+<tr class="even">
+<td><code>myIO-{id}-error</code></td>
+<td>Render error</td>
+<td>Error message string</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section level2">
 <h2 id="tips">Tips<a class="anchor" aria-label="anchor" href="#tips"></a>
@@ -271,7 +518,22 @@ buttons that work in Shiny without extra configuration.</li>
 <strong>Drag points</strong>: <code><a href="../reference/dragPoints.html">dragPoints()</a></code> enables
 interactive point dragging. In a Shiny context, you can use this for
 exploratory what-if analysis.</li>
+<li>
+<strong>Brush + annotation</strong>: Both can be active
+simultaneously. Clicks on data points open the annotation popover;
+dragging on empty space activates the brush.</li>
+<li>
+<strong>Slider debounce</strong>: For heavy transforms, increase the
+debounce:
+<code>setSlider("span", "Span", 0.1, 1.0, 0.5, debounce = 500)</code>.</li>
 </ul>
+</div>
+<div class="section level2">
+<h2 id="deep-dive">Deep Dive<a class="anchor" aria-label="anchor" href="#deep-dive"></a>
+</h2>
+<p>For a comprehensive walkthrough with the live demo app embedded, see
+the package documentation at
+<code><a href="../articles/shiny-integration.html">vignette("shiny-integration", package = "myIO")</a></code>.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

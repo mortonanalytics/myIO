@@ -10,6 +10,7 @@ API.
 ## Installation
 
 ``` r
+
 # install.packages("devtools")
 devtools::install_github("mortonanalytics/myIO")
 ```
@@ -21,6 +22,7 @@ Build plots by piping layers together with
 [`addIoLayer()`](https://mortonanalytics.github.io/myIO/reference/addIoLayer.md):
 
 ``` r
+
 library(myIO)
 
 myIO() |>
@@ -65,14 +67,28 @@ myIO() |>
 
 ## `addIoLayer()`
 
-| Argument    | Description                                                      |
-|-------------|------------------------------------------------------------------|
-| `type`      | Chart type (see table above)                                     |
-| `color`     | Any CSS color string                                             |
-| `label`     | Unique identifier for the layer                                  |
-| `data`      | A data frame                                                     |
-| `mapping`   | List mapping variables, e.g. `list(x_var = "wt", y_var = "mpg")` |
-| `transform` | Optional derived-data transform, e.g. `"identity"` or `"lm"`     |
+| Argument | Description |
+|----|----|
+| `type` | Chart type (see table above) |
+| `color` | Any CSS color string |
+| `label` | Unique identifier for the layer |
+| `data` | A data frame |
+| `mapping` | List mapping variables, e.g. `list(x_var = "wt", y_var = "mpg")` |
+| `transform` | Optional derived-data transform, e.g. `"identity"` or `"lm"` |
+
+## Interactions
+
+myIO charts are bidirectional — user actions flow back as structured
+data:
+
+- [`setBrush()`](https://mortonanalytics.github.io/myIO/reference/setBrush.md)
+  — Rectangle select returns selected rows as data
+- [`setAnnotation()`](https://mortonanalytics.github.io/myIO/reference/setAnnotation.md)
+  — Click to label data points; export annotations as CSV
+- [`setLinked()`](https://mortonanalytics.github.io/myIO/reference/setLinked.md)
+  — Crosstalk linked brushing across multiple charts
+- [`setSlider()`](https://mortonanalytics.github.io/myIO/reference/setSlider.md)
+  — Parameter sliders that trigger Shiny recomputation
 
 ## Customization
 
@@ -111,6 +127,8 @@ See the [Getting
 Started](https://mortonanalytics.github.io/myIO/articles/getting-started.html),
 [Chart
 Types](https://mortonanalytics.github.io/myIO/articles/chart-types.html),
+[Shiny
+Integration](https://mortonanalytics.github.io/myIO/articles/shiny-integration.html),
 and [Transforms &
 Theming](https://mortonanalytics.github.io/myIO/articles/transforms-and-theming.html)
 vignettes for full examples.
@@ -122,52 +140,88 @@ vignettes for full examples.
 Create widgets and add visualization layers
 
 - [`myIO()`](https://mortonanalytics.github.io/myIO/reference/myIO.md) :
-  myIO
+  Create a myIO Chart Widget
 - [`addIoLayer()`](https://mortonanalytics.github.io/myIO/reference/addIoLayer.md)
-  : addLayer()
+  : Add a Layer to a myIO Chart
 
 ## Axes & Scales
 
 Control axis formatting, limits, and orientation
 
 - [`setAxisFormat()`](https://mortonanalytics.github.io/myIO/reference/setAxisFormat.md)
-  : setAxisFormat()
+  : Set Axis Format
 - [`setAxisLimits()`](https://mortonanalytics.github.io/myIO/reference/setAxisLimits.md)
-  : setAxisLimits()
+  : Set Axis Limits
 - [`defineCategoricalAxis()`](https://mortonanalytics.github.io/myIO/reference/defineCategoricalAxis.md)
-  : defineCategoricalAxis()
+  : Define Categorical Axis
 - [`flipAxis()`](https://mortonanalytics.github.io/myIO/reference/flipAxis.md)
-  : flipAxis()
+  : Flip Chart Axes
 - [`suppressAxis()`](https://mortonanalytics.github.io/myIO/reference/suppressAxis.md)
-  : suppressAxis()
+  : Suppress Axis Display
 
 ## Appearance
 
 Customize colors, margins, themes, and visual elements
 
 - [`setMargin()`](https://mortonanalytics.github.io/myIO/reference/setMargin.md)
-  : setMargin()
+  : Set Chart Margins
 - [`setColorScheme()`](https://mortonanalytics.github.io/myIO/reference/setColorScheme.md)
-  : setColorScheme()
+  : Set Color Scheme
 - [`setTheme()`](https://mortonanalytics.github.io/myIO/reference/setTheme.md)
-  : setTheme()
+  : Set Chart Theme
 - [`setTransitionSpeed()`](https://mortonanalytics.github.io/myIO/reference/setTransitionSpeed.md)
-  : setTransitionSpeed()
+  : Set Transition Speed
 - [`suppressLegend()`](https://mortonanalytics.github.io/myIO/reference/suppressLegend.md)
-  : suppressLegend()
+  : Suppress Legend Display
 
 ## Interactions
 
-Add interactive behaviors like tooltips, drag, and toggles
+Add interactive behaviors like brushing, annotation, and linked views
 
+- [`setBrush()`](https://mortonanalytics.github.io/myIO/reference/setBrush.md)
+  : Enable Brush Selection
+- [`setAnnotation()`](https://mortonanalytics.github.io/myIO/reference/setAnnotation.md)
+  : Enable Click-to-Annotate
+- [`setLinked()`](https://mortonanalytics.github.io/myIO/reference/setLinked.md)
+  : Enable Linked Brushing via Crosstalk
+- [`setLinkedCursor()`](https://mortonanalytics.github.io/myIO/reference/setLinkedCursor.md)
+  : Toggle Linked Cursor Sync on a myIO Widget
+- [`setSlider()`](https://mortonanalytics.github.io/myIO/reference/setSlider.md)
+  : Add a Parameter Slider (Shiny Only)
 - [`dragPoints()`](https://mortonanalytics.github.io/myIO/reference/dragPoints.md)
-  : dragPoints()
+  : Enable Draggable Points
 - [`setReferenceLines()`](https://mortonanalytics.github.io/myIO/reference/setReferenceLines.md)
-  : setReferenceLines()
+  : Set Reference Lines
 - [`setToggle()`](https://mortonanalytics.github.io/myIO/reference/setToggle.md)
-  : setToggle()
+  : Set Toggle Interaction
 - [`setToolTipOptions()`](https://mortonanalytics.github.io/myIO/reference/setToolTipOptions.md)
-  : setToolTipOptions()
+  : Set Tooltip Options
+- [`linkCharts()`](https://mortonanalytics.github.io/myIO/reference/linkCharts.md)
+  : Link Charts for Cross-Selection
+
+## Layout & Composition
+
+Multi-panel composition, opacity, and export configuration
+
+- [`setFacet()`](https://mortonanalytics.github.io/myIO/reference/setFacet.md)
+  : Set Faceting (Small Multiples)
+- [`setLayerOpacity()`](https://mortonanalytics.github.io/myIO/reference/setLayerOpacity.md)
+  : Set Layer Opacity
+- [`setExportOptions()`](https://mortonanalytics.github.io/myIO/reference/setExportOptions.md)
+  : Configure Export Options
+
+## Big-data
+
+Large-dataset virtualization, WebGL rendering, and DuckDB-WASM cache
+
+- [`setBigData()`](https://mortonanalytics.github.io/myIO/reference/setBigData.md)
+  : Attach a big-data source to a myIO widget
+- [`install_duckdb_wasm()`](https://mortonanalytics.github.io/myIO/reference/install_duckdb_wasm.md)
+  : Install the DuckDB-WASM binary for large-dataset virtualization
+- [`duckdb_wasm_status()`](https://mortonanalytics.github.io/myIO/reference/duckdb_wasm_status.md)
+  : DuckDB-WASM cache status
+- [`clear_duckdb_wasm_cache()`](https://mortonanalytics.github.io/myIO/reference/clear_duckdb_wasm_cache.md)
+  : Remove DuckDB-WASM cache entries
 
 ## Shiny
 
@@ -175,11 +229,18 @@ Use myIO widgets in Shiny applications
 
 - [`myIOOutput()`](https://mortonanalytics.github.io/myIO/reference/myIO-shiny.md)
   [`renderMyIO()`](https://mortonanalytics.github.io/myIO/reference/myIO-shiny.md)
-  : Shiny bindings for myIO
+  : Shiny Bindings for myIO
+
+## Diagnostics
+
+Debugging and error reporting
+
+- [`myIO_last_error()`](https://mortonanalytics.github.io/myIO/reference/myIO_last_error.md)
+  : Diagnose myIO Rendering Errors
 
 # Articles
 
-### Articles
+### Getting Started
 
 - [Getting Started with
   myIO](https://mortonanalytics.github.io/myIO/articles/getting-started.md):
@@ -187,6 +248,34 @@ Use myIO widgets in Shiny applications
   Types](https://mortonanalytics.github.io/myIO/articles/chart-types.md):
 - [Transforms &
   Theming](https://mortonanalytics.github.io/myIO/articles/transforms-and-theming.md):
+- [Why
+  myIO](https://mortonanalytics.github.io/myIO/articles/why-myio.md):
+
+### Shiny & Interactions
+
 - [Shiny
   Integration](https://mortonanalytics.github.io/myIO/articles/shiny-integration.md):
+- [Interactive I/O in
+  Shiny](https://mortonanalytics.github.io/myIO/articles/shiny-interactions.md):
+
+### Big-data & Linking
+
+- [Large-data linking with
+  myIO](https://mortonanalytics.github.io/myIO/articles/large-data-linking.md):
+- [Linking myIO with
+  Crosstalk](https://mortonanalytics.github.io/myIO/articles/crosstalk-linking.md):
+- [Sparklines in
+  Tables](https://mortonanalytics.github.io/myIO/articles/sparklines.md):
+
+### Migration
+
+- [Migrating from plotly to
+  myIO](https://mortonanalytics.github.io/myIO/articles/plotly-migration.md):
+
+### Gallery
+
 - [Gallery](https://mortonanalytics.github.io/myIO/articles/gallery.md):
+
+### Help
+
+- [Troubleshooting](https://mortonanalytics.github.io/myIO/articles/troubleshooting.md):

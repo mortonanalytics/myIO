@@ -2,7 +2,7 @@
 
 ## Overview
 
-myIO supports 17 chart types via the `type` argument in
+myIO supports 20 chart types via the `type` argument in
 [`addIoLayer()`](https://mortonanalytics.github.io/myIO/reference/addIoLayer.md).
 This vignette shows an example of each.
 
@@ -15,13 +15,14 @@ Chart types are organized into compatibility groups. You can freely
 combine types within compatible groups (e.g. point + line + area), but
 standalone types like treemap or gauge cannot be mixed with other types.
 
-| Group            | Types                                                 |
-|------------------|-------------------------------------------------------|
-| Continuous axes  | `line`, `point`, `area`, `candlestick`                |
-| Categorical axes | `bar`, `groupedBar`, `waterfall`, `boxplot`, `violin` |
-| Binned axes      | `histogram`, `ridgeline`                              |
-| Matrix axes      | `heatmap`                                             |
-| Standalone       | `hexbin`, `treemap`, `donut`, `gauge`, `sankey`       |
+| Group | Types |
+|----|----|
+| Continuous axes | `line`, `point`, `area`, `candlestick`, `bracket`, `qq` |
+| Categorical axes | `bar`, `groupedBar`, `waterfall`, `boxplot`, `violin`, `comparison` |
+| Binned axes | `histogram`, `ridgeline` |
+| Matrix axes | `heatmap` |
+| Calendar | `calendarHeatmap` |
+| Standalone | `hexbin`, `treemap`, `donut`, `gauge`, `sankey` |
 
 Continuous, categorical, and binned groups can be combined with each
 other. Matrix and standalone groups cannot be mixed with other groups.
@@ -33,6 +34,7 @@ other. Matrix and standalone groups cannot be mixed with other groups.
 ### Line Chart
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "line",
@@ -46,6 +48,7 @@ myIO() |>
 ### Point (Scatter) Chart
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "point",
@@ -59,6 +62,7 @@ myIO() |>
 ### Bar Chart
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "bar",
@@ -75,6 +79,7 @@ myIO() |>
 Area charts require `x_var`, `low_y`, and `high_y` in the mapping:
 
 ``` r
+
 aq <- airquality[complete.cases(airquality), ]
 aq$TempLow <- aq$Temp - 5
 aq$TempHigh <- aq$Temp + 5
@@ -92,6 +97,7 @@ myIO() |>
 ### Grouped Bar Chart
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "groupedBar",
@@ -108,6 +114,7 @@ myIO() |>
 Histograms use a `value` mapping instead of `x_var`/`y_var`:
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "histogram",
@@ -121,6 +128,7 @@ myIO() |>
 ### Donut Chart
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "donut",
@@ -136,6 +144,7 @@ myIO() |>
 Gauges use a `value` mapping:
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "gauge",
@@ -149,6 +158,7 @@ myIO() |>
 ### Hexbin Chart
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "hexbin",
@@ -165,6 +175,7 @@ Treemaps use a different mapping with `level_1` and `level_2` instead of
 `x_var` and `y_var`:
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "treemap",
@@ -184,6 +195,7 @@ Heatmaps display a matrix of values with a continuous color scale. Both
 axes are categorical. Mapping requires `x_var`, `y_var`, and `value`:
 
 ``` r
+
 df <- expand.grid(
   quarter = c("Q1", "Q2", "Q3", "Q4"),
   segment = c("Low", "Mid", "High"),
@@ -203,6 +215,36 @@ myIO() |>
   setAxisFormat(xLabel = "Quarter", yLabel = "Segment")
 ```
 
+### Calendar Heatmap
+
+Calendar heatmaps render daily values as a GitHub-contributions-style
+grid: one cell per day, seven rows per week, with month labels across
+the top. The chart is scoped to a single calendar year in v1.2. Mapping
+requires `date` (any Date or ISO `"YYYY-MM-DD"` string) and `value`
+(numeric):
+
+``` r
+
+set.seed(42)
+df <- data.frame(
+  day     = as.Date("2026-01-01") + 0:364,
+  commits = rpois(365, lambda = 3)
+)
+
+myIO() |>
+  addIoLayer(
+    type = "calendarHeatmap",
+    color = "#4E79A7",
+    label = "Daily commits",
+    data = df,
+    mapping = list(date = "day", value = "commits")
+  )
+```
+
+Use `options$weekStart = "monday"` for ISO week ordering. Two calendars
+linked via `linkCharts(a, b, on = "day", cursor = TRUE)` synchronize the
+hover crosshair by date across both charts.
+
 ### Candlestick (OHLC)
 
 Candlestick charts show open-high-low-close data. Green bars indicate
@@ -210,6 +252,7 @@ close \>= open, red bars indicate close \< open. Mapping requires
 `x_var`, `open`, `high`, `low`, and `close`:
 
 ``` r
+
 df <- data.frame(
   day = 1:10,
   open  = c(10, 12, 11, 14, 13, 15, 14, 16, 15, 17),
@@ -239,6 +282,7 @@ positive and negative changes. The `cumulative` transform is
 auto-applied. Mark summary rows with a `total` mapping:
 
 ``` r
+
 df <- data.frame(
   step  = c("Revenue", "COGS", "Gross Profit", "OpEx", "Net Income"),
   value = c(500, -200, NA, -150, NA),
@@ -263,6 +307,7 @@ Sankey diagrams show flows between nodes. Mapping requires `source`,
 with other charts:
 
 ``` r
+
 df <- data.frame(
   source = c("Budget", "Budget", "Sales", "Sales", "Marketing"),
   target = c("Sales", "Marketing", "Revenue", "Leads", "Leads"),
@@ -286,6 +331,7 @@ box), point (whiskers, median), and optional outlier layers. Mapping
 requires `x_var` (categorical) and `y_var` (numeric):
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "boxplot",
@@ -308,6 +354,7 @@ estimate. They expand into area (density), optional box (IQR), and
 optional median point layers:
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "violin",
@@ -331,6 +378,7 @@ group value. Mapping requires `x_var` (numeric values), `y_var`
 (numeric), and `group` (categorical):
 
 ``` r
+
 df <- mtcars
 df$cyl <- as.character(df$cyl)
 
@@ -348,6 +396,75 @@ myIO() |>
 
 Options: `overlap` (0-1, default 0.6), `bandwidth` (KDE bandwidth).
 
+### Q-Q Plot (Composite)
+
+Q-Q (quantile-quantile) plots compare sample quantiles against a
+theoretical distribution to assess normality. The composite expands into
+a point layer (Q-Q scatter), a reference line (through Q1/Q3), and an
+optional confidence envelope. Only `y_var` is required in the mapping:
+
+``` r
+
+myIO() |>
+  addIoLayer(
+    type = "qq",
+    color = "#4E79A7",
+    label = "MPG Normality",
+    data = mtcars,
+    mapping = list(y_var = "mpg")
+  ) |>
+  setAxisFormat(xLabel = "Theoretical Quantiles", yLabel = "Sample Quantiles")
+```
+
+Options: `envelope` (TRUE), `conf_level` (0.95), `distribution`
+(“norm”), `qfunc` (custom quantile function). Supports grouped Q-Q via
+`group` mapping.
+
+### Comparison (Composite)
+
+Comparison plots combine boxplots with pairwise significance brackets
+showing p-values from hypothesis tests. The composite expands into
+boxplot sub-layers plus a bracket layer with test results:
+
+``` r
+
+myIO() |>
+  addIoLayer(
+    type = "comparison",
+    color = "#4E79A7",
+    label = "Species Comparison",
+    data = iris,
+    mapping = list(x_var = "Species", y_var = "Sepal.Width"),
+    options = list(method = "t.test", p_adjust = "bonferroni")
+  ) |>
+  setAxisFormat(xLabel = "Species", yLabel = "Sepal Width (cm)")
+```
+
+Options: `method` (“t.test” or “wilcox.test”), `p_adjust` (“none”,
+“bonferroni”, “holm”, “BH”), `comparisons` (list of specific pairs),
+`showOutliers` (TRUE).
+
+### Bracket (Standalone Layer)
+
+Brackets can also be added as a standalone layer on top of any grouped
+chart. Use `transform = "pairwise_test"` to compute significance tests:
+
+``` r
+
+myIO() |>
+  addIoLayer(
+    type = "boxplot", color = "#4E79A7",
+    label = "Sepal Width", data = iris,
+    mapping = list(x_var = "Species", y_var = "Sepal.Width")
+  ) |>
+  addIoLayer(
+    type = "bracket", label = "Tests",
+    transform = "pairwise_test", data = iris,
+    mapping = list(x_var = "Species", y_var = "Sepal.Width"),
+    options = list(method = "wilcox.test", p_adjust = "holm")
+  )
+```
+
 ------------------------------------------------------------------------
 
 ## Combining Chart Types
@@ -356,6 +473,7 @@ You can overlay compatible chart types on a single widget. Here we layer
 points, a connecting line, and a linear model trend line:
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "point",

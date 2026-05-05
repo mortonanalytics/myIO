@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">myIO</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,20 +34,173 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.2.0" id="myio-120-development">myIO 1.2.0 (development)<a class="anchor" aria-label="anchor" href="#myio-120-development"></a></h2>
+<div class="section level3">
+<h3 id="crosstalk-expanded-chart-type-coverage-1-2-0">Crosstalk: expanded chart-type coverage<a class="anchor" aria-label="anchor" href="#crosstalk-expanded-chart-type-coverage-1-2-0"></a></h3>
+<ul><li>
+<code><a href="../reference/setLinked.html">setLinked()</a></code> now links <code>waffle</code>, <code>beeswarm</code>, <code>lollipop</code>, and <code>dumbbell</code> layers in addition to the previously supported <code>point</code>, <code>bar</code>, <code>groupedBar</code>, <code>histogram</code>, and <code>hexbin</code>. Selection dims non-matching elements; filter hides them. Aggregate chart types (<code>boxplot</code>, <code>violin</code>, <code>qq</code>, <code>regression</code>, <code>density</code>, <code>ridgeline</code>, <code>survfit</code>, <code>comparison</code>) remain outside crosstalk in v1.2.</li>
+<li>New vignette <code>crosstalk-linking</code> demonstrates linking myIO with <code><a href="https://rdrr.io/pkg/DT/man/datatable.html" class="external-link">DT::datatable()</a></code> and <code><a href="https://glin.github.io/reactable/reference/reactable.html" class="external-link">reactable::reactable()</a></code>, with code listings for plotly and leaflet.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bslib-and-quarto-dashboards-integration-1-2-0">bslib and Quarto Dashboards integration<a class="anchor" aria-label="anchor" href="#bslib-and-quarto-dashboards-integration-1-2-0"></a></h3>
+<ul><li>
+<code><a href="../reference/myIO.html">myIO()</a></code> widgets now declare a sizing policy with <code>browser.fill = TRUE</code> and are tagged as <code>html-fill-item</code> via <code><a href="https://rstudio.github.io/htmltools/reference/bindFillRole.html" class="external-link">htmltools::bindFillRole()</a></code>, so they fill container height inside <code><a href="https://rstudio.github.io/bslib/reference/card.html" class="external-link">bslib::card()</a></code>, Quarto Dashboard <code>{.fill}</code> cards, and flexdashboard layouts. Rendering in plain RMarkdown and Shiny at the default 400px height is unchanged.</li>
+<li>Widget resize is now guarded against zero-dimension containers that can appear briefly during fill-layout transitions.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="calendar-heatmap-1-2-0">Calendar heatmap<a class="anchor" aria-label="anchor" href="#calendar-heatmap-1-2-0"></a></h3>
+<ul><li>New <code>calendarHeatmap</code> chart type — GitHub-contributions-style grid of daily cells over a single calendar year. Usage: <code>addIoLayer(type = "calendarHeatmap", data, mapping = list(date = "day", value = "x"))</code>. Supports Sunday or Monday week starts via <code>options$weekStart</code>, continuous color legend, and linked-cursor sync across two linked calendars. Multi-year data is rejected in v1.2; multi-year layouts are planned for v1.3. New CSS variables: <code>--chart-calendar-cell-gap</code>, <code>--chart-calendar-cell-stroke</code>, <code>--chart-calendar-empty-fill</code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="theme-gallery-1-2-0">Theme gallery<a class="anchor" aria-label="anchor" href="#theme-gallery-1-2-0"></a></h3>
+<ul><li>12 named theme presets: <code>setTheme(preset = "midnight")</code>. Available presets: midnight, ocean, forest, sunset, monochrome, neon, corporate, academic, nature, minimal, retro, warm. Plus light/dark via mode parameter.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="linked-brushing-1-2-0">Linked brushing<a class="anchor" aria-label="anchor" href="#linked-brushing-1-2-0"></a></h3>
+<ul><li>
+<code>linkCharts(chart1, chart2, on = "column")</code> enables cross-chart selection. Brush in one chart highlights matching rows in linked charts. Works in Shiny and static HTML. Aggregation-to-source-row key resolution for summary views.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="linked-cursor-1-2-0">Linked cursor<a class="anchor" aria-label="anchor" href="#linked-cursor-1-2-0"></a></h3>
+<ul><li>
+<code><a href="../reference/linkCharts.html">linkCharts()</a></code> and <code><a href="../reference/setLinked.html">setLinked()</a></code> gain a <code>cursor = TRUE</code> argument that draws a synchronized vertical crosshair on every linked chart when the user hovers any chart in the group. Supports point, bar, line, area, groupedBar, hexbin, and histogram layers (donut and treemap are excluded — no x-axis to sync on). Off by default; enable per-link or retrofit with <code><a href="../reference/setLinkedCursor.html">setLinkedCursor()</a></code> on a pre-linked widget. New <code>--chart-cursor-rule-color</code>/<code>-width</code>/<code>-dasharray</code> CSS variables theme the crosshair.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="group-by-auto-series-1-2-0">Group-by auto-series<a class="anchor" aria-label="anchor" href="#group-by-auto-series-1-2-0"></a></h3>
+<ul><li>Pass a <code><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">dplyr::group_by()</a></code> tibble to <code><a href="../reference/addIoLayer.html">addIoLayer()</a></code> and it auto-creates one layer per group with colors from the Okabe-Ito palette. Soft dplyr dependency.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="survival-curves-kaplan-meier-1-2-0">Survival curves (Kaplan-Meier)<a class="anchor" aria-label="anchor" href="#survival-curves-kaplan-meier-1-2-0"></a></h3>
+<ul><li>
+<code>addIoLayer(type = "survfit", mapping = list(time = "time", status = "status"))</code> computes Kaplan-Meier estimator with Greenwood CI using base R only (no <code>survival</code> package dependency). Composite expands to step-curve line, CI band, and censored-observation markers. Group stratification supported.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="distribution-fitting-overlay-1-2-0">Distribution fitting overlay<a class="anchor" aria-label="anchor" href="#distribution-fitting-overlay-1-2-0"></a></h3>
+<ul><li>
+<code>addIoLayer(type = "histogram_fit", mapping = list(value = "x"), options = list(family = "normal"))</code> fits normal, lognormal, or exponential distributions via MLE. Composite renders histogram + fitted density curve + optional parameter annotation.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="layer-opacity-control-1-2-0">Layer opacity control<a class="anchor" aria-label="anchor" href="#layer-opacity-control-1-2-0"></a></h3>
+<ul><li>
+<code>setLayerOpacity(label, opacity)</code> sets per-layer opacity (0-1). Critical for CI bands overlaying scatter data.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="svg-accessibility-1-2-0">SVG accessibility<a class="anchor" aria-label="anchor" href="#svg-accessibility-1-2-0"></a></h3>
+<ul><li>ARIA roles (<code>graphics-document</code>, <code>graphics-object</code>, <code>graphics-symbol</code>) applied to SVG chart structure for screen reader navigation.</li>
+<li>Keyboard navigation: arrow keys traverse layers and data points, with live region announcements (150ms debounce).</li>
+<li>Hidden data table fallback for screen reader access to raw data (capped at 500 rows).</li>
+<li>Focus ring styling and screen-reader-only utility class.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="new-chart-types-1-2-0">New chart types<a class="anchor" aria-label="anchor" href="#new-chart-types-1-2-0"></a></h3>
+<ul><li>
+<code>lollipop</code> — vertical stem with circle head, supports <code>mean</code> and <code>summary</code> transforms. Compatible with categorical x-axis charts.</li>
+<li>
+<code>dumbbell</code> — connected dots showing a range between <code>low_y</code> and <code>high_y</code>.</li>
+<li>
+<code>waffle</code> — 10x10 grid of colored squares representing proportions. Standalone.</li>
+<li>
+<code>beeswarm</code> — dodge-positioned points to avoid overlap. Inline dodge algorithm.</li>
+<li>
+<code>bump</code> — smooth S-curves showing rank/value changes over time with grouped lines.</li>
+<li>
+<code>radar</code> — spider/radar chart with radial axes and polygon data fill.</li>
+<li>
+<code>funnel</code> — narrowing horizontal bars for conversion pipeline data.</li>
+<li>
+<code>parallel</code> — parallel coordinates for multivariate exploration. All new types support themed colors and standard tooltip formatting.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="small-multiples--faceting-1-2-0">Small multiples / faceting<a class="anchor" aria-label="anchor" href="#small-multiples--faceting-1-2-0"></a></h3>
+<ul><li>
+<code>setFacet(var, ncol, scales)</code> splits charts into a CSS grid of panels, one per unique value of the faceting variable. Supports fixed and free scale modes, auto-layout with configurable minimum panel width, and responsive breakpoints.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="export-enhancements-1-2-0">Export enhancements<a class="anchor" aria-label="anchor" href="#export-enhancements-1-2-0"></a></h3>
+<ul><li>
+<code><a href="../reference/setExportOptions.html">setExportOptions()</a></code> controls which export buttons appear in the toolbar (PNG, SVG, clipboard, CSV). New SVG download button and clipboard copy (SVG + PNG) via the Clipboard API.</li>
+<li>CSS custom properties resolved in exported SVGs for correct dark-mode colors.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="dark-mode--theme-system-1-2-0">Dark mode / theme system<a class="anchor" aria-label="anchor" href="#dark-mode--theme-system-1-2-0"></a></h3>
+<ul><li>
+<code>setTheme(mode = "dark")</code> applies a WCAG AA-verified dark palette across all chart elements. Also supports <code>"light"</code> and <code>"auto"</code> (detects OS preference and Quarto/Bootstrap <code>data-bs-theme</code>).</li>
+<li>Backward compatible: existing <code>setTheme(bg = "#fff")</code> calls still work.</li>
+<li>New <code>overrides</code> parameter for fine-grained CSS custom property control.</li>
+<li>High-contrast and reduced-motion CSS media query support.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="sparkline-mode-1-2-0">Sparkline mode<a class="anchor" aria-label="anchor" href="#sparkline-mode-1-2-0"></a></h3>
+<ul><li>
+<code>myIO(sparkline = TRUE)</code> renders a compact, axes-free chart suitable for embedding in table cells (reactable, DT, gt). Strips legend, axes, reference lines, and all interactions. Default height 20px. Supports line, bar, and area layer types.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.1.0" id="myio-110">myIO 1.1.0<a class="anchor" aria-label="anchor" href="#myio-110"></a></h2>
+<div class="section level3">
+<h3 id="io-interaction-system-1-1-0">I/O interaction system<a class="anchor" aria-label="anchor" href="#io-interaction-system-1-1-0"></a></h3>
+<p>myIO now supports bidirectional data flow — user interactions return structured data, not just visual feedback.</p>
+<ul><li>
+<code><a href="../reference/setBrush.html">setBrush()</a></code>: rectangle brush selection on point, bar, histogram, hexbin, and grouped bar charts. Selected points available as Shiny reactive input or scoped CSV export in static HTML.</li>
+<li>
+<code><a href="../reference/setAnnotation.html">setAnnotation()</a></code>: click any data point to attach a label. Annotations stored as structured data (source key, coordinates, label, category color, timestamp) and exportable as CSV. Supports preset label dropdowns and color category pickers.</li>
+<li>
+<code><a href="../reference/setLinked.html">setLinked()</a></code>: Crosstalk <code>SharedData</code> integration for cross-widget linked brushing. Selection dims non-matching points; optional filter mode hides them. Supports source, target, or bidirectional modes.</li>
+<li>
+<code><a href="../reference/setSlider.html">setSlider()</a></code>: parameter sliders below the chart that trigger Shiny re-rendering with configurable debounce. Renders disabled with tooltip in static HTML.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-1-1-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-1-0"></a></h3>
+<ul><li>
+<code><a href="../reference/dragPoints.html">dragPoints()</a></code> now correctly emits the <code>dragEnd</code> event to Shiny (<code>input$myIO-{id}-dragEnd</code>), which was previously registered but never fired.</li>
+</ul></div>
+</div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.0.0" id="myio-100">myIO 1.0.0<a class="anchor" aria-label="anchor" href="#myio-100"></a></h2>
 <div class="section level3">
-<h3 id="features-1-0-0">Features<a class="anchor" aria-label="anchor" href="#features-1-0-0"></a></h3>
-<ul><li>Layered grammar for composing visualizations with transform-aware <code><a href="../reference/addIoLayer.html">addIoLayer()</a></code>, including <code>transform = "lm"</code> for derived line layers.</li>
-<li>Chart types: bar, grouped bar, line, area, scatter, histogram, hexbin, treemap, gauge, and donut charts.</li>
-<li>Versioned widget spec with per-layer ids, transform metadata, and source-key provenance.</li>
-<li>Interactive tooltips with automatic formatting via <code><a href="../reference/setToolTipOptions.html">setToolTipOptions()</a></code>.</li>
-<li>Responsive sizing that adapts to container dimensions.</li>
-<li>CSV and SVG export buttons.</li>
-<li>Reference lines support via <code><a href="../reference/setReferenceLines.html">setReferenceLines()</a></code>.</li>
-<li>Drag interaction support via <code><a href="../reference/dragPoints.html">dragPoints()</a></code>.</li>
+<h3 id="statistical-transforms-1-0-0">Statistical transforms<a class="anchor" aria-label="anchor" href="#statistical-transforms-1-0-0"></a></h3>
+<ul><li>New composable transform pipeline: <code>type + transform = layer</code>. Transforms compute statistics in R; renderers display them in D3.js.</li>
+<li>Transforms: <code>lm</code>, <code>loess</code>, <code>polynomial</code>, <code>ci</code>, <code>smooth</code>, <code>mean</code>, <code>mean_ci</code>, <code>residuals</code>, <code>summary</code>, <code>pairwise_test</code>, <code>qq</code>.</li>
+<li>Composite chart expansion: complex charts decompose into primitive layers.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="chart-types-1-0-0">Chart types (20)<a class="anchor" aria-label="anchor" href="#chart-types-1-0-0"></a></h3>
+<ul><li>Basic: <code>line</code>, <code>point</code>, <code>bar</code>, <code>area</code>, <code>groupedBar</code>.</li>
+<li>Statistical: <code>histogram</code>, <code>hexbin</code>, <code>regression</code>, <code>qq</code>.</li>
+<li>Distribution: <code>boxplot</code>, <code>violin</code>, <code>ridgeline</code>, <code>comparison</code>.</li>
+<li>Financial: <code>candlestick</code>, <code>waterfall</code>, <code>heatmap</code>.</li>
+<li>Standalone: <code>donut</code>, <code>gauge</code>, <code>treemap</code>, <code>sankey</code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="composites-1-0-0">Composites<a class="anchor" aria-label="anchor" href="#composites-1-0-0"></a></h3>
+<ul><li>
+<code>boxplot</code>: expands into IQR box + whisker caps + median + outliers.</li>
+<li>
+<code>violin</code>: expands into density area + IQR box + median point.</li>
+<li>
+<code>ridgeline</code>: density curves stacked vertically by group.</li>
+<li>
+<code>regression</code>: scatter + trend line + CI band + R-squared annotation.</li>
+<li>
+<code>qq</code>: Q-Q scatter + reference line + confidence envelope.</li>
+<li>
+<code>comparison</code>: boxplots + pairwise significance brackets.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="interactions-1-0-0">Interactions<a class="anchor" aria-label="anchor" href="#interactions-1-0-0"></a></h3>
+<ul><li>Tooltips with automatic formatting via <code><a href="../reference/setToolTipOptions.html">setToolTipOptions()</a></code>.</li>
+<li>Drag interaction via <code><a href="../reference/dragPoints.html">dragPoints()</a></code>.</li>
+<li>CSV, SVG, and PNG export buttons.</li>
+<li>Reference lines via <code><a href="../reference/setReferenceLines.html">setReferenceLines()</a></code>.</li>
+<li>Y-variable toggle via <code><a href="../reference/setToggle.html">setToggle()</a></code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="infrastructure-1-0-0">Infrastructure<a class="anchor" aria-label="anchor" href="#infrastructure-1-0-0"></a></h3>
+<ul><li>Responsive sizing that adapts to container dimensions.</li>
 <li>Shiny integration with <code><a href="../reference/myIO-shiny.html">myIOOutput()</a></code> and <code><a href="../reference/myIO-shiny.html">renderMyIO()</a></code>.</li>
 <li>Pipe-friendly API using native <code>|&gt;</code>.</li>
-<li>Option setters: <code><a href="../reference/setAxisFormat.html">setAxisFormat()</a></code>, <code><a href="../reference/setAxisLimits.html">setAxisLimits()</a></code>, <code><a href="../reference/setMargin.html">setMargin()</a></code>, <code><a href="../reference/setColorScheme.html">setColorScheme()</a></code>, <code><a href="../reference/setTheme.html">setTheme()</a></code>, <code><a href="../reference/setTransitionSpeed.html">setTransitionSpeed()</a></code>, <code><a href="../reference/defineCategoricalAxis.html">defineCategoricalAxis()</a></code>, <code><a href="../reference/setToggle.html">setToggle()</a></code>, <code><a href="../reference/flipAxis.html">flipAxis()</a></code>, <code><a href="../reference/suppressAxis.html">suppressAxis()</a></code>, <code><a href="../reference/suppressLegend.html">suppressLegend()</a></code>.</li>
+<li>Theming via CSS custom properties with <code><a href="../reference/setTheme.html">setTheme()</a></code>.</li>
+<li>Okabe-Ito colorblind-safe default palette.</li>
 </ul></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

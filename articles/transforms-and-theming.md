@@ -8,19 +8,28 @@ specify a transform with the `transform` argument in
 
 ### Available Transforms
 
-| Transform      | Description                                                                               | Used by                          |
-|----------------|-------------------------------------------------------------------------------------------|----------------------------------|
-| `"identity"`   | Default. Passes data through unchanged.                                                   | All types                        |
-| `"lm"`         | Fits a linear model and returns fitted values.                                            | `line`                           |
-| `"cumulative"` | Computes running totals with base/cumulative columns.                                     | `waterfall` (auto-applied)       |
-| `"quantiles"`  | Computes Q1, median, Q3, whisker bounds per group.                                        | `boxplot` (internal)             |
-| `"median"`     | Computes group medians.                                                                   | `boxplot`, `violin` (internal)   |
-| `"outliers"`   | Returns rows beyond 1.5x IQR fences.                                                      | `boxplot` (internal)             |
-| `"density"`    | Kernel density estimation via [`stats::density()`](https://rdrr.io/r/stats/density.html). | `violin`, `ridgeline` (internal) |
+| Transform | Description | Used by |
+|----|----|----|
+| `"identity"` | Default. Passes data through unchanged. | All types |
+| `"lm"` | Fits a linear model and returns fitted values. | `line` |
+| `"loess"` | LOESS non-linear smoothing. Options: `span`, `degree`, `n_grid`. | `line` |
+| `"polynomial"` | Polynomial regression. Options: `degree`, `n_grid`. | `line` |
+| `"ci"` | Confidence or prediction interval band. Options: `method`, `level`, `interval`. | `area` |
+| `"smooth"` | Simple or exponential moving average. Options: `method` (`"sma"`/`"ema"`), `window`, `alpha`. | `line` |
+| `"mean"` | Group mean aggregation. | `point`, `bar` |
+| `"mean_ci"` | Group mean ± confidence interval. Options: `level`, `method` (`"t"`/`"se"`). | `rangeBar` |
+| `"residuals"` | Regression residuals vs. fitted values. Options: `method`. | `point` |
+| `"summary"` | General aggregation. Options: `stat` (`"count"`/`"sum"`/`"sd"`/`"var"`/`"min"`/`"max"`). | `point`, `bar` |
+| `"cumulative"` | Computes running totals with base/cumulative columns. | `waterfall` (auto-applied) |
+| `"quantiles"` | Computes Q1, median, Q3, whisker bounds per group. | `boxplot` (internal) |
+| `"median"` | Computes group medians. | `boxplot`, `violin` (internal) |
+| `"outliers"` | Returns rows beyond 1.5x IQR fences. | `boxplot` (internal) |
+| `"density"` | Kernel density estimation via [`stats::density()`](https://rdrr.io/r/stats/density.html). | `violin`, `ridgeline` (internal) |
 
 Transforms marked “internal” are applied automatically by composite
-chart types. You typically use `"identity"` (default) or `"lm"`
-directly.
+chart types. The first 10 transforms are user-facing — use them directly
+in
+[`addIoLayer()`](https://mortonanalytics.github.io/myIO/reference/addIoLayer.md).
 
 ### Linear Model Trend Line
 
@@ -28,6 +37,7 @@ Add a trend line to a scatter plot by combining a `"point"` layer with a
 `"line"` layer that uses `transform = "lm"`:
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "point",
@@ -59,6 +69,7 @@ and `_cumulative_y` columns that the waterfall renderer uses for
 floating bars:
 
 ``` r
+
 df <- data.frame(
   step  = c("Start", "Sales", "Returns", "Total"),
   value = c(100, 50, -20, NA),
@@ -75,30 +86,113 @@ myIO() |>
   defineCategoricalAxis(xAxis = TRUE)
 ```
 
+### Confidence Interval Band
+
+Overlay a confidence interval on a scatter plot:
+
+``` r
+
+myIO(data = mtcars) |>
+  addIoLayer(type = "point", color = "#4E79A7", label = "Data",
+    mapping = list(x_var = "wt", y_var = "mpg")) |>
+  addIoLayer(type = "line", color = "#E15759", label = "Trend",
+    transform = "lm",
+    mapping = list(x_var = "wt", y_var = "mpg")) |>
+  addIoLayer(type = "area", color = "#E15759", label = "95% CI",
+    transform = "ci",
+    mapping = list(x_var = "wt", y_var = "mpg"),
+    options = list(level = 0.95))
+```
+
+The `ci` transform accepts `method` (`"lm"` or `"loess"`), `level`
+(default 0.95), and `interval` (`"confidence"` or `"prediction"`). The
+mapping only needs `x_var` and `y_var` — `low_y`/`high_y` are
+auto-injected.
+
+### LOESS Smoothing
+
+Non-linear smoothing with adjustable span:
+
+``` r
+
+myIO(data = mtcars) |>
+  addIoLayer(type = "point", color = "#4E79A7", label = "Data",
+    mapping = list(x_var = "wt", y_var = "mpg")) |>
+  addIoLayer(type = "line", color = "#E15759", label = "LOESS",
+    transform = "loess",
+    mapping = list(x_var = "wt", y_var = "mpg"),
+    options = list(span = 0.5))
+```
+
+### Mean ± CI Error Bars
+
+Group means with confidence intervals:
+
+``` r
+
+myIO(data = iris) |>
+  addIoLayer(type = "rangeBar", color = "#4E79A7", label = "Mean ± 95% CI",
+    transform = "mean_ci",
+    mapping = list(x_var = "Species", y_var = "Sepal.Length"),
+    options = list(level = 0.95)) |>
+  defineCategoricalAxis(xAxis = TRUE)
+```
+
+### Regression Composite
+
+One-call scatter + trend + CI + R²:
+
+``` r
+
+myIO(data = mtcars) |>
+  addIoLayer(type = "regression", label = "MPG vs Weight",
+    mapping = list(x_var = "wt", y_var = "mpg"),
+    options = list(method = "lm", showCI = TRUE, showStats = TRUE))
+```
+
+### Moving Average
+
+``` r
+
+df <- data.frame(x = 1:100, y = cumsum(rnorm(100)))
+
+myIO(data = df) |>
+  addIoLayer(type = "line", color = "#CCCCCC", label = "Raw",
+    mapping = list(x_var = "x", y_var = "y")) |>
+  addIoLayer(type = "line", color = "#E15759", label = "SMA-10",
+    transform = "smooth",
+    mapping = list(x_var = "x", y_var = "y"),
+    options = list(method = "sma", window = 10))
+```
+
+Use `method = "ema"` with `alpha` for exponential moving average.
+
 ### Transform + Type Compatibility
 
 Not every transform works with every chart type. The table below shows
 valid combinations:
 
-| Type            | Supported Transforms         |
-|-----------------|------------------------------|
-| `"line"`        | `"identity"`, `"lm"`         |
-| `"point"`       | `"identity"`                 |
-| `"bar"`         | `"identity"`                 |
-| `"area"`        | `"identity"`                 |
-| `"groupedBar"`  | `"identity"`                 |
-| `"histogram"`   | `"identity"`                 |
-| `"hexbin"`      | `"identity"`                 |
-| `"treemap"`     | `"identity"`                 |
-| `"donut"`       | `"identity"`                 |
-| `"gauge"`       | `"identity"`                 |
-| `"heatmap"`     | `"identity"`                 |
-| `"candlestick"` | `"identity"`                 |
-| `"waterfall"`   | `"identity"`, `"cumulative"` |
-| `"sankey"`      | `"identity"`                 |
-| `"boxplot"`     | `"identity"`                 |
-| `"violin"`      | `"identity"`                 |
-| `"ridgeline"`   | `"identity"`                 |
+| Type | Supported Transforms |
+|----|----|
+| `"line"` | `"identity"`, `"lm"`, `"loess"`, `"polynomial"`, `"smooth"` |
+| `"point"` | `"identity"`, `"mean"`, `"summary"`, `"residuals"` |
+| `"bar"` | `"identity"`, `"mean"`, `"summary"` |
+| `"area"` | `"identity"`, `"ci"` |
+| `"rangeBar"` | `"identity"`, `"mean_ci"` |
+| `"groupedBar"` | `"identity"` |
+| `"histogram"` | `"identity"` |
+| `"hexbin"` | `"identity"` |
+| `"treemap"` | `"identity"` |
+| `"donut"` | `"identity"` |
+| `"gauge"` | `"identity"` |
+| `"heatmap"` | `"identity"` |
+| `"candlestick"` | `"identity"` |
+| `"waterfall"` | `"identity"`, `"cumulative"` |
+| `"sankey"` | `"identity"` |
+| `"boxplot"` | `"identity"` |
+| `"violin"` | `"identity"` |
+| `"ridgeline"` | `"identity"` |
+| `"text"` | `"identity"` |
 
 If you pass an incompatible combination,
 [`addIoLayer()`](https://mortonanalytics.github.io/myIO/reference/addIoLayer.md)
@@ -113,6 +207,7 @@ to customize chart appearance with CSS custom properties.
 ### Basic Theming
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "point",
@@ -144,6 +239,7 @@ Pass additional CSS custom properties via `...` (the `chart-` prefix is
 added automatically):
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "bar",
@@ -165,6 +261,7 @@ myIO() |>
 Combine theming with color choices for a dark-mode chart:
 
 ``` r
+
 aq <- airquality
 aq$Month <- paste0("M", aq$Month)
 

@@ -44,6 +44,18 @@ export function buildOrdinalLegendData(chart, layer) {
     keys = layer.data.map(function(d) {
       return d[layer.mapping.x_var];
     });
+  } else if (layer.type === "funnel" && Array.isArray(layer.data)) {
+    keys = layer.data.map(function(d) {
+      return d[layer.mapping.stage];
+    });
+  } else if (layer.type === "radar" && Array.isArray(layer.data)) {
+    keys = layer.mapping.group
+      ? Array.from(new Set(layer.data.map(function(d) { return d[layer.mapping.group]; })))
+      : [layer.label];
+  } else if (layer.type === "parallel" && Array.isArray(layer.data)) {
+    keys = layer.mapping.group
+      ? Array.from(new Set(layer.data.map(function(d) { return d[layer.mapping.group]; })))
+      : [layer.label];
   }
 
   return {

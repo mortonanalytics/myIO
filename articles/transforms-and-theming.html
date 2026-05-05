@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">myIO</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -94,6 +94,58 @@ You specify a transform with the <code>transform</code> argument in
 <td><code>line</code></td>
 </tr>
 <tr class="odd">
+<td><code>"loess"</code></td>
+<td>LOESS non-linear smoothing. Options: <code>span</code>,
+<code>degree</code>, <code>n_grid</code>.</td>
+<td><code>line</code></td>
+</tr>
+<tr class="even">
+<td><code>"polynomial"</code></td>
+<td>Polynomial regression. Options: <code>degree</code>,
+<code>n_grid</code>.</td>
+<td><code>line</code></td>
+</tr>
+<tr class="odd">
+<td><code>"ci"</code></td>
+<td>Confidence or prediction interval band. Options:
+<code>method</code>, <code>level</code>, <code>interval</code>.</td>
+<td><code>area</code></td>
+</tr>
+<tr class="even">
+<td><code>"smooth"</code></td>
+<td>Simple or exponential moving average. Options: <code>method</code>
+(<code>"sma"</code>/<code>"ema"</code>), <code>window</code>,
+<code>alpha</code>.</td>
+<td><code>line</code></td>
+</tr>
+<tr class="odd">
+<td><code>"mean"</code></td>
+<td>Group mean aggregation.</td>
+<td>
+<code>point</code>, <code>bar</code>
+</td>
+</tr>
+<tr class="even">
+<td><code>"mean_ci"</code></td>
+<td>Group mean ± confidence interval. Options: <code>level</code>,
+<code>method</code> (<code>"t"</code>/<code>"se"</code>).</td>
+<td><code>rangeBar</code></td>
+</tr>
+<tr class="odd">
+<td><code>"residuals"</code></td>
+<td>Regression residuals vs. fitted values. Options:
+<code>method</code>.</td>
+<td><code>point</code></td>
+</tr>
+<tr class="even">
+<td><code>"summary"</code></td>
+<td>General aggregation. Options: <code>stat</code>
+(<code>"count"</code>/<code>"sum"</code>/<code>"sd"</code>/<code>"var"</code>/<code>"min"</code>/<code>"max"</code>).</td>
+<td>
+<code>point</code>, <code>bar</code>
+</td>
+</tr>
+<tr class="odd">
 <td><code>"cumulative"</code></td>
 <td>Computes running totals with base/cumulative columns.</td>
 <td>
@@ -126,8 +178,8 @@ You specify a transform with the <code>transform</code> argument in
 </tbody>
 </table>
 <p>Transforms marked “internal” are applied automatically by composite
-chart types. You typically use <code>"identity"</code> (default) or
-<code>"lm"</code> directly.</p>
+chart types. The first 10 transforms are user-facing — use them directly
+in <code><a href="../reference/addIoLayer.html">addIoLayer()</a></code>.</p>
 </div>
 <div class="section level3">
 <h3 id="linear-model-trend-line">Linear Model Trend Line<a class="anchor" aria-label="anchor" href="#linear-model-trend-line"></a>
@@ -181,11 +233,88 @@ waterfall renderer uses for floating bars:</p>
 <span>  <span class="fu"><a href="../reference/defineCategoricalAxis.html">defineCategoricalAxis</a></span><span class="op">(</span>xAxis <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
+<h3 id="confidence-interval-band">Confidence Interval Band<a class="anchor" aria-label="anchor" href="#confidence-interval-band"></a>
+</h3>
+<p>Overlay a confidence interval on a scatter plot:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">mtcars</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"point"</span>, color <span class="op">=</span> <span class="st">"#4E79A7"</span>, label <span class="op">=</span> <span class="st">"Data"</span>,</span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"wt"</span>, y_var <span class="op">=</span> <span class="st">"mpg"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"line"</span>, color <span class="op">=</span> <span class="st">"#E15759"</span>, label <span class="op">=</span> <span class="st">"Trend"</span>,</span>
+<span>    transform <span class="op">=</span> <span class="st">"lm"</span>,</span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"wt"</span>, y_var <span class="op">=</span> <span class="st">"mpg"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"area"</span>, color <span class="op">=</span> <span class="st">"#E15759"</span>, label <span class="op">=</span> <span class="st">"95% CI"</span>,</span>
+<span>    transform <span class="op">=</span> <span class="st">"ci"</span>,</span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"wt"</span>, y_var <span class="op">=</span> <span class="st">"mpg"</span><span class="op">)</span>,</span>
+<span>    options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>level <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>The <code>ci</code> transform accepts <code>method</code>
+(<code>"lm"</code> or <code>"loess"</code>), <code>level</code> (default
+0.95), and <code>interval</code> (<code>"confidence"</code> or
+<code>"prediction"</code>). The mapping only needs <code>x_var</code>
+and <code>y_var</code> — <code>low_y</code>/<code>high_y</code> are
+auto-injected.</p>
+</div>
+<div class="section level3">
+<h3 id="loess-smoothing">LOESS Smoothing<a class="anchor" aria-label="anchor" href="#loess-smoothing"></a>
+</h3>
+<p>Non-linear smoothing with adjustable span:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">mtcars</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"point"</span>, color <span class="op">=</span> <span class="st">"#4E79A7"</span>, label <span class="op">=</span> <span class="st">"Data"</span>,</span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"wt"</span>, y_var <span class="op">=</span> <span class="st">"mpg"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"line"</span>, color <span class="op">=</span> <span class="st">"#E15759"</span>, label <span class="op">=</span> <span class="st">"LOESS"</span>,</span>
+<span>    transform <span class="op">=</span> <span class="st">"loess"</span>,</span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"wt"</span>, y_var <span class="op">=</span> <span class="st">"mpg"</span><span class="op">)</span>,</span>
+<span>    options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>span <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="mean-ci-error-bars">Mean ± CI Error Bars<a class="anchor" aria-label="anchor" href="#mean-ci-error-bars"></a>
+</h3>
+<p>Group means with confidence intervals:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">iris</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"rangeBar"</span>, color <span class="op">=</span> <span class="st">"#4E79A7"</span>, label <span class="op">=</span> <span class="st">"Mean ± 95% CI"</span>,</span>
+<span>    transform <span class="op">=</span> <span class="st">"mean_ci"</span>,</span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"Species"</span>, y_var <span class="op">=</span> <span class="st">"Sepal.Length"</span><span class="op">)</span>,</span>
+<span>    options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>level <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/defineCategoricalAxis.html">defineCategoricalAxis</a></span><span class="op">(</span>xAxis <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="regression-composite">Regression Composite<a class="anchor" aria-label="anchor" href="#regression-composite"></a>
+</h3>
+<p>One-call scatter + trend + CI + R²:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">mtcars</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"regression"</span>, label <span class="op">=</span> <span class="st">"MPG vs Weight"</span>,</span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"wt"</span>, y_var <span class="op">=</span> <span class="st">"mpg"</span><span class="op">)</span>,</span>
+<span>    options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"lm"</span>, showCI <span class="op">=</span> <span class="cn">TRUE</span>, showStats <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="moving-average">Moving Average<a class="anchor" aria-label="anchor" href="#moving-average"></a>
+</h3>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">100</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/cumsum.html" class="external-link">cumsum</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">df</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"line"</span>, color <span class="op">=</span> <span class="st">"#CCCCCC"</span>, label <span class="op">=</span> <span class="st">"Raw"</span>,</span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"x"</span>, y_var <span class="op">=</span> <span class="st">"y"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"line"</span>, color <span class="op">=</span> <span class="st">"#E15759"</span>, label <span class="op">=</span> <span class="st">"SMA-10"</span>,</span>
+<span>    transform <span class="op">=</span> <span class="st">"smooth"</span>,</span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"x"</span>, y_var <span class="op">=</span> <span class="st">"y"</span><span class="op">)</span>,</span>
+<span>    options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"sma"</span>, window <span class="op">=</span> <span class="fl">10</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>Use <code>method = "ema"</code> with <code>alpha</code> for
+exponential moving average.</p>
+</div>
+<div class="section level3">
 <h3 id="transform-type-compatibility">Transform + Type Compatibility<a class="anchor" aria-label="anchor" href="#transform-type-compatibility"></a>
 </h3>
 <p>Not every transform works with every chart type. The table below
 shows valid combinations:</p>
 <table class="table">
+<colgroup>
+<col width="22%">
+<col width="77%">
+</colgroup>
 <thead><tr class="header">
 <th>Type</th>
 <th>Supported Transforms</th>
@@ -194,73 +323,92 @@ shows valid combinations:</p>
 <tr class="odd">
 <td><code>"line"</code></td>
 <td>
-<code>"identity"</code>, <code>"lm"</code>
+<code>"identity"</code>, <code>"lm"</code>, <code>"loess"</code>,
+<code>"polynomial"</code>, <code>"smooth"</code>
 </td>
 </tr>
 <tr class="even">
 <td><code>"point"</code></td>
-<td><code>"identity"</code></td>
+<td>
+<code>"identity"</code>, <code>"mean"</code>,
+<code>"summary"</code>, <code>"residuals"</code>
+</td>
 </tr>
 <tr class="odd">
 <td><code>"bar"</code></td>
-<td><code>"identity"</code></td>
+<td>
+<code>"identity"</code>, <code>"mean"</code>,
+<code>"summary"</code>
+</td>
 </tr>
 <tr class="even">
 <td><code>"area"</code></td>
-<td><code>"identity"</code></td>
+<td>
+<code>"identity"</code>, <code>"ci"</code>
+</td>
 </tr>
 <tr class="odd">
+<td><code>"rangeBar"</code></td>
+<td>
+<code>"identity"</code>, <code>"mean_ci"</code>
+</td>
+</tr>
+<tr class="even">
 <td><code>"groupedBar"</code></td>
 <td><code>"identity"</code></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>"histogram"</code></td>
 <td><code>"identity"</code></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>"hexbin"</code></td>
 <td><code>"identity"</code></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>"treemap"</code></td>
 <td><code>"identity"</code></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>"donut"</code></td>
 <td><code>"identity"</code></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>"gauge"</code></td>
 <td><code>"identity"</code></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>"heatmap"</code></td>
 <td><code>"identity"</code></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>"candlestick"</code></td>
 <td><code>"identity"</code></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>"waterfall"</code></td>
 <td>
 <code>"identity"</code>, <code>"cumulative"</code>
 </td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>"sankey"</code></td>
 <td><code>"identity"</code></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>"boxplot"</code></td>
 <td><code>"identity"</code></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>"violin"</code></td>
 <td><code>"identity"</code></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>"ridgeline"</code></td>
+<td><code>"identity"</code></td>
+</tr>
+<tr class="odd">
+<td><code>"text"</code></td>
 <td><code>"identity"</code></td>
 </tr>
 </tbody>
@@ -277,7 +425,7 @@ custom properties.</p>
 <div class="section level3">
 <h3 id="basic-theming">Basic Theming<a class="anchor" aria-label="anchor" href="#basic-theming"></a>
 </h3>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
 <span>    type <span class="op">=</span> <span class="st">"point"</span>,</span>
@@ -331,7 +479,7 @@ custom properties.</p>
 </h3>
 <p>Pass additional CSS custom properties via <code>...</code> (the
 <code>chart-</code> prefix is added automatically):</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
 <span>    type <span class="op">=</span> <span class="st">"bar"</span>,</span>
@@ -351,7 +499,7 @@ custom properties.</p>
 <h3 id="dark-mode-example">Dark Mode Example<a class="anchor" aria-label="anchor" href="#dark-mode-example"></a>
 </h3>
 <p>Combine theming with color choices for a dark-mode chart:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">aq</span> <span class="op">&lt;-</span> <span class="va">airquality</span></span>
 <span><span class="va">aq</span><span class="op">$</span><span class="va">Month</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"M"</span>, <span class="va">aq</span><span class="op">$</span><span class="va">Month</span><span class="op">)</span></span>
 <span></span>

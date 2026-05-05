@@ -4,7 +4,7 @@ export class RangeBarRenderer {
   static type = "rangeBar";
   static traits = { hasAxes: true, referenceLines: false, legendType: "layer", binning: false, rolloverStyle: "element", scaleCapabilities: { invertX: false } };
   static scaleHints = { xScaleType: "linear", yScaleType: "linear", yExtentFields: ["low_y", "high_y"], domainMerge: "union" };
-  static dataContract = { x_var: { required: true, numeric: true }, low_y: { required: true, numeric: true }, high_y: { required: true, numeric: true } };
+  static dataContract = { x_var: { required: true }, low_y: { required: true, numeric: true }, high_y: { required: true, numeric: true } };
 
   render(chart, layer) {
     var transitionSpeed = chart.options.transition.speed;
@@ -25,7 +25,7 @@ export class RangeBarRenderer {
       .append("rect")
       .attr("class", tagName("rangeBar", chart.element.id, layer.label))
       .attr("clip-path", "url(#" + chart.element.id + "clip)")
-      .attr("x", function(d) { return chart.xScale(+d[xVar]) - barWidth / 2; })
+      .attr("x", function(d) { return chart.xScale(d[xVar]) - barWidth / 2; })
       .attr("y", function(d) { return chart.yScale(Math.max(+d[lowVar], +d[highVar])); })
       .attr("width", barWidth)
       .attr("height", function(d) { return Math.abs(chart.yScale(+d[lowVar]) - chart.yScale(+d[highVar])); })
@@ -41,7 +41,7 @@ export class RangeBarRenderer {
       .transition()
       .ease(d3.easeQuad)
       .duration(transitionSpeed)
-      .attr("x", function(d) { return chart.xScale(+d[xVar]) - barWidth / 2; })
+      .attr("x", function(d) { return chart.xScale(d[xVar]) - barWidth / 2; })
       .attr("y", function(d) { return chart.yScale(Math.max(+d[lowVar], +d[highVar])); })
       .attr("width", barWidth)
       .attr("height", function(d) { return Math.abs(chart.yScale(+d[lowVar]) - chart.yScale(+d[highVar])); })

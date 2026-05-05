@@ -5,8 +5,8 @@ export function getChartHeight(chart) {
 }
 
 export function initializeScaffold(chart) {
-  d3.select(chart.element).selectAll(".myIO-svg, .buttonDiv, .toolTip, .myIO-fab, .myIO-panel, .myIO-sheet-backdrop").remove();
-  d3.select(chart.element).style("position", "relative");
+  d3.select(chart.element).selectAll(".myIO-svg, .toolTip, .myIO-fab, .myIO-panel, .myIO-sheet-backdrop").remove();
+  d3.select(chart.element).classed("myIO-container", true).style("position", "relative");
 
   chart.svg = d3.select(chart.element)
     .append("svg")
@@ -17,6 +17,13 @@ export function initializeScaffold(chart) {
     .attr("viewBox", "0 0 " + chart.totalWidth + " " + chart.height)
     .attr("role", "img")
     .attr("aria-label", buildAriaLabel(chart));
+
+  // Background rect that respects theme CSS variable
+  chart.svg.append("rect")
+    .attr("class", "myIO-bg")
+    .attr("width", chart.totalWidth)
+    .attr("height", chart.height)
+    .attr("fill", "var(--chart-bg, #ffffff)");
 
   applyPlotTransform(chart);
 

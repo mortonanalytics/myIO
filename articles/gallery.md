@@ -10,6 +10,7 @@ self-contained and uses built-in R datasets.
 Overlay raw data with a linear model fit:
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "point",
@@ -35,6 +36,7 @@ myIO() |>
 Track temperature across months using grouped data:
 
 ``` r
+
 aq <- airquality
 aq$Month <- paste0("M", aq$Month)
 
@@ -55,6 +57,7 @@ myIO() |>
 Aggregate data across categories with custom formatting:
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "bar",
@@ -76,6 +79,7 @@ myIO() |>
 Visualize a range using low and high y values:
 
 ``` r
+
 aq <- airquality[airquality$Month == 7 & complete.cases(airquality), ]
 aq$TempLow <- aq$Temp - 8
 aq$TempHigh <- aq$Temp + 8
@@ -104,6 +108,7 @@ myIO() |>
 Combine theming with custom colors for a dark aesthetic:
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "point",
@@ -135,6 +140,7 @@ myIO() |>
 Summarize proportions with a donut:
 
 ``` r
+
 donut_data <- aggregate(mpg ~ cyl, data = mtcars, FUN = mean)
 
 myIO() |>
@@ -152,6 +158,7 @@ myIO() |>
 Visualize point density in large datasets:
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "hexbin",
@@ -169,6 +176,7 @@ myIO() |>
 Show a distribution with a mean reference line:
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "histogram",
@@ -185,6 +193,7 @@ myIO() |>
 Enable drag interactions for exploratory analysis:
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "point",
@@ -203,6 +212,7 @@ myIO() |>
 Explore hierarchical data:
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "treemap",
@@ -217,6 +227,7 @@ myIO() |>
 Visualize a matrix of values with continuous color:
 
 ``` r
+
 df <- expand.grid(
   quarter = c("Q1", "Q2", "Q3", "Q4"),
   segment = c("Enterprise", "Mid-Market", "SMB"),
@@ -241,6 +252,7 @@ myIO() |>
 Show open-high-low-close financial data:
 
 ``` r
+
 df <- data.frame(
   day   = 1:8,
   open  = c(44, 45, 43, 46, 45, 47, 46, 48),
@@ -269,6 +281,7 @@ myIO() |>
 Show how values accumulate through sequential steps:
 
 ``` r
+
 df <- data.frame(
   step     = c("Revenue", "COGS", "Gross Profit", "OpEx", "Tax", "Net Income"),
   value    = c(500, -200, NA, -120, -30, NA),
@@ -292,6 +305,7 @@ myIO() |>
 Visualize flows between nodes:
 
 ``` r
+
 df <- data.frame(
   source = c("Organic", "Organic", "Paid", "Paid", "Referral"),
   target = c("Landing", "Blog", "Landing", "Promo", "Landing"),
@@ -313,6 +327,7 @@ myIO() |>
 Compare distributions across groups:
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "boxplot",
@@ -330,6 +345,7 @@ myIO() |>
 Show distribution shape alongside summary statistics:
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "violin",
@@ -348,6 +364,7 @@ myIO() |>
 Compare distributions across groups with overlapping density curves:
 
 ``` r
+
 df <- mtcars
 df$cyl <- as.character(df$cyl)
 
@@ -361,5 +378,45 @@ myIO() |>
     options = list(overlap = 0.5)
   ) |>
   setAxisFormat(xLabel = "Horsepower", yLabel = "Density") |>
+  setMargin(top = 20, bottom = 70, left = 60, right = 10)
+```
+
+## Q-Q Diagnostic Plot
+
+Assess normality with a quantile-quantile plot. Points on the reference
+line indicate the data follows the theoretical distribution:
+
+``` r
+
+myIO() |>
+  addIoLayer(
+    type = "qq",
+    color = "#0072B2",
+    label = "MPG Normality",
+    data = mtcars,
+    mapping = list(y_var = "mpg"),
+    options = list(envelope = TRUE, conf_level = 0.95)
+  ) |>
+  setAxisFormat(xLabel = "Theoretical Quantiles", yLabel = "Sample Quantiles") |>
+  setMargin(top = 20, bottom = 70, left = 60, right = 10)
+```
+
+## Group Comparison with Significance
+
+Compare groups with boxplots and pairwise significance brackets:
+
+``` r
+
+myIO() |>
+  addIoLayer(
+    type = "comparison",
+    color = "#4E79A7",
+    label = "Sepal Width",
+    data = iris,
+    mapping = list(x_var = "Species", y_var = "Sepal.Width"),
+    options = list(method = "t.test", p_adjust = "bonferroni",
+                   showOutliers = TRUE)
+  ) |>
+  setAxisFormat(xLabel = "Species", yLabel = "Sepal Width (cm)") |>
   setMargin(top = 20, bottom = 70, left = 60, right = 10)
 ```

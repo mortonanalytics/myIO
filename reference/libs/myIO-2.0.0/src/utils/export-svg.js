@@ -1,10 +1,19 @@
+import { resolveCSSVariables } from "./resolve-css-vars.js";
+
 export function getSVGString(svgNode) {
-  svgNode.setAttribute("xlink", "http://www.w3.org/1999/xlink");
-  var cssStyleText = getCSSStyles(svgNode);
-  appendCSS(cssStyleText, svgNode);
+  var svgClone = svgNode.cloneNode(true);
+  var container = svgNode.parentNode || document.body;
+
+  svgClone.setAttribute("xlink", "http://www.w3.org/1999/xlink");
+  if (container && typeof getComputedStyle === "function") {
+    resolveCSSVariables(svgClone, container);
+  }
+
+  var cssStyleText = getCSSStyles(svgClone);
+  appendCSS(cssStyleText, svgClone);
 
   var serializer = new XMLSerializer();
-  var svgString = serializer.serializeToString(svgNode);
+  var svgString = serializer.serializeToString(svgClone);
   svgString = svgString.replace(/(\w+)?:?xlink=/g, "xmlns:xlink=");
   svgString = svgString.replace(/NS\d+:href/g, "xlink:href");
 
@@ -112,4 +121,17 @@ export function svgString2Image(svgString, width, height, format, callback) {
   };
 
   image.src = imgsrc;
+}
+
+export function downloadSVG(svgNode, filename) {
+  var svgString = getSVGString(svgNode);
+  var blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = filename || "chart.svg";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }

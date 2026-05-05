@@ -17,6 +17,7 @@ The core workflow is simple:
 ## Installation
 
 ``` r
+
 # install.packages("devtools")
 devtools::install_github("mortonanalytics/myIO")
 ```
@@ -26,6 +27,7 @@ devtools::install_github("mortonanalytics/myIO")
 Create a scatter plot of `mtcars` data:
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "point",
@@ -42,6 +44,7 @@ You can stack layers on a single chart. Here we add points and a linear
 model trend line using the `lm` transform:
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "point",
@@ -70,6 +73,7 @@ Option functions let you control axes, margins, legends, theming, and
 more. They all follow the same pipe-friendly pattern:
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "bar",
@@ -91,6 +95,7 @@ When your data has a grouping variable, pass it in the `mapping` to
 automatically create one layer per group:
 
 ``` r
+
 aq <- airquality
 aq$Month <- paste0("M", aq$Month)
 
@@ -109,6 +114,7 @@ myIO() |>
 Apply visual themes to change colors, fonts, and backgrounds:
 
 ``` r
+
 myIO() |>
   addIoLayer(
     type = "point",
@@ -138,6 +144,7 @@ for the UI -
 for the server
 
 ``` r
+
 library(shiny)
 
 ui <- fluidPage(
@@ -162,36 +169,47 @@ shinyApp(ui, server)
 
 ## Chart Types
 
-myIO supports 17 chart types. See the [Chart
+myIO supports 20 chart types. See the [Chart
 Types](https://mortonanalytics.github.io/myIO/articles/chart-types.md)
 vignette for examples of each.
 
-| Category    | Types                                        |
-|-------------|----------------------------------------------|
-| Basic       | `line`, `point`, `bar`, `area`, `groupedBar` |
-| Statistical | `histogram`, `hexbin`                        |
-| Standalone  | `donut`, `gauge`, `treemap`, `sankey`        |
-| Financial   | `candlestick`, `waterfall`, `heatmap`        |
-| Composite   | `boxplot`, `violin`, `ridgeline`             |
+| Category     | Types                                          |
+|--------------|------------------------------------------------|
+| Basic        | `line`, `point`, `bar`, `area`, `groupedBar`   |
+| Statistical  | `histogram`, `hexbin`, `regression`, `qq`      |
+| Standalone   | `donut`, `gauge`, `treemap`, `sankey`          |
+| Financial    | `candlestick`, `waterfall`, `heatmap`          |
+| Distribution | `boxplot`, `violin`, `ridgeline`, `comparison` |
 
 Composite types automatically expand into multiple sub-layers using the
 appropriate transforms (density, quantiles, etc.).
 
 ## Available Option Functions
 
-| Function                                                                                               | Purpose                                         |
-|--------------------------------------------------------------------------------------------------------|-------------------------------------------------|
-| [`setAxisFormat()`](https://mortonanalytics.github.io/myIO/reference/setAxisFormat.md)                 | Set d3.js axis and tooltip formats, axis labels |
-| [`setAxisLimits()`](https://mortonanalytics.github.io/myIO/reference/setAxisLimits.md)                 | Set min/max for x and y axes                    |
-| [`setMargin()`](https://mortonanalytics.github.io/myIO/reference/setMargin.md)                         | Set chart margins (top, bottom, left, right)    |
-| [`setColorScheme()`](https://mortonanalytics.github.io/myIO/reference/setColorScheme.md)               | Set color palette and category labels           |
-| [`setTheme()`](https://mortonanalytics.github.io/myIO/reference/setTheme.md)                           | Set theme tokens (colors, font, background)     |
-| [`setTransitionSpeed()`](https://mortonanalytics.github.io/myIO/reference/setTransitionSpeed.md)       | Set animation speed (0 to disable)              |
-| [`setReferenceLines()`](https://mortonanalytics.github.io/myIO/reference/setReferenceLines.md)         | Add x and y reference lines                     |
-| [`setToggle()`](https://mortonanalytics.github.io/myIO/reference/setToggle.md)                         | Add a toggle button to switch y variable        |
-| [`setToolTipOptions()`](https://mortonanalytics.github.io/myIO/reference/setToolTipOptions.md)         | Configure tooltip behavior                      |
-| [`defineCategoricalAxis()`](https://mortonanalytics.github.io/myIO/reference/defineCategoricalAxis.md) | Treat axes as categorical                       |
-| [`flipAxis()`](https://mortonanalytics.github.io/myIO/reference/flipAxis.md)                           | Swap x and y axes                               |
-| [`dragPoints()`](https://mortonanalytics.github.io/myIO/reference/dragPoints.md)                       | Make points draggable                           |
-| [`suppressAxis()`](https://mortonanalytics.github.io/myIO/reference/suppressAxis.md)                   | Hide x and/or y axes                            |
-| [`suppressLegend()`](https://mortonanalytics.github.io/myIO/reference/suppressLegend.md)               | Hide the legend                                 |
+### Interactions
+
+| Function | Purpose |
+|----|----|
+| [`setBrush()`](https://mortonanalytics.github.io/myIO/reference/setBrush.md) | Rectangle selection; returns selected rows as data |
+| [`setAnnotation()`](https://mortonanalytics.github.io/myIO/reference/setAnnotation.md) | Click-to-label data points; export annotations as CSV |
+| [`setLinked()`](https://mortonanalytics.github.io/myIO/reference/setLinked.md) | Crosstalk linked brushing across charts |
+| [`setSlider()`](https://mortonanalytics.github.io/myIO/reference/setSlider.md) | Parameter sliders that trigger Shiny recomputation |
+| [`dragPoints()`](https://mortonanalytics.github.io/myIO/reference/dragPoints.md) | Make points draggable (with live regression refit) |
+
+### Layout & Appearance
+
+| Function | Purpose |
+|----|----|
+| [`setAxisFormat()`](https://mortonanalytics.github.io/myIO/reference/setAxisFormat.md) | Set d3.js axis and tooltip formats, axis labels |
+| [`setAxisLimits()`](https://mortonanalytics.github.io/myIO/reference/setAxisLimits.md) | Set min/max for x and y axes |
+| [`setMargin()`](https://mortonanalytics.github.io/myIO/reference/setMargin.md) | Set chart margins (top, bottom, left, right) |
+| [`setColorScheme()`](https://mortonanalytics.github.io/myIO/reference/setColorScheme.md) | Set color palette and category labels |
+| [`setTheme()`](https://mortonanalytics.github.io/myIO/reference/setTheme.md) | Set theme tokens (colors, font, background) |
+| [`setTransitionSpeed()`](https://mortonanalytics.github.io/myIO/reference/setTransitionSpeed.md) | Set animation speed (0 to disable) |
+| [`setReferenceLines()`](https://mortonanalytics.github.io/myIO/reference/setReferenceLines.md) | Add x and y reference lines |
+| [`setToggle()`](https://mortonanalytics.github.io/myIO/reference/setToggle.md) | Add a toggle button to switch y variable |
+| [`setToolTipOptions()`](https://mortonanalytics.github.io/myIO/reference/setToolTipOptions.md) | Configure tooltip behavior |
+| [`defineCategoricalAxis()`](https://mortonanalytics.github.io/myIO/reference/defineCategoricalAxis.md) | Treat axes as categorical |
+| [`flipAxis()`](https://mortonanalytics.github.io/myIO/reference/flipAxis.md) | Swap x and y axes |
+| [`suppressAxis()`](https://mortonanalytics.github.io/myIO/reference/suppressAxis.md) | Hide x and/or y axes |
+| [`suppressLegend()`](https://mortonanalytics.github.io/myIO/reference/suppressLegend.md) | Hide the legend |
