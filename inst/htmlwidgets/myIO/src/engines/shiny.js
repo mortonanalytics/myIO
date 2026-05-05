@@ -65,7 +65,7 @@ export class ShinyEngineAdapter {
    * layer, the "sql" field carries debug context only; the coordinator passes
    * templateId + bindings, which R validates and composes into SQL.
    */
-  async *query({
+  query({
     sql,
     params = [],
     queryId,
@@ -149,28 +149,31 @@ export class ShinyEngineAdapter {
       );
     }
 
-    try {
-      while (true) {
-        if (errorFlag) throw errorFlag;
-        if (queue.length) {
-          yield queue.shift();
-          continue;
-        }
-        if (doneFlag) return;
-        // Await next push.
-        const next = await new Promise((res) => resolvers.push(res));
-        if (next.done) {
+    const pending = this.pending;
+    return (async function* () {
+      try {
+        while (true) {
           if (errorFlag) throw errorFlag;
-          return;
+          if (queue.length) {
+            yield queue.shift();
+            continue;
+          }
+          if (doneFlag) return;
+          // Await next push.
+          const next = await new Promise((res) => resolvers.push(res));
+          if (next.done) {
+            if (errorFlag) throw errorFlag;
+            return;
+          }
+          yield next.value;
         }
-        yield next.value;
+      } finally {
+        if (signal && abortListener) {
+          signal.removeEventListener("abort", abortListener);
+        }
+        pending.delete(queryId);
       }
-    } finally {
-      if (signal && abortListener) {
-        signal.removeEventListener("abort", abortListener);
-      }
-      this.pending.delete(queryId);
-    }
+    })();
   }
 
   async cancel(queryId) {

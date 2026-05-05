@@ -18,15 +18,20 @@ export class WebGLScatter {
    * @param {{ domain:()=>[number,number], range:()=>[number,number] }} opts.yScale  d3 scale
    * @param {Array<string>=} opts.palette  color palette (hex strings), default viridis-like
    */
-  constructor({ el, width, height, xScale, yScale, palette }) {
+  constructor({ el, width, height, xScale, yScale, palette, captureHoverEvents = false }) {
     this.el = el;
     this.width = width;
     this.height = height;
     this.xScale = xScale;
     this.yScale = yScale;
+    this.captureHoverEvents = captureHoverEvents !== false;
     this.palette = palette || ["#440154", "#414487", "#2a788e", "#22a884", "#7ad151", "#fde725"];
     this._scatterplot = null;
     this._destroyed = false;
+  }
+
+  _scaleCopy(scale) {
+    return scale && typeof scale.copy === "function" ? scale.copy() : scale;
   }
 
   async _ensure() {
@@ -40,7 +45,7 @@ export class WebGLScatter {
     canvas.style.position = "absolute";
     canvas.style.top = "0";
     canvas.style.left = "0";
-    canvas.style.pointerEvents = "auto";
+    canvas.style.pointerEvents = this.captureHoverEvents ? "auto" : "none";
     this.el.appendChild(canvas);
     this._scatterplot = createScatterplot({
       canvas,
@@ -49,7 +54,9 @@ export class WebGLScatter {
       pointSize: 3,
       backgroundColor: [1, 1, 1, 0],
       colorBy: "category",
-      pointColor: this.palette
+      pointColor: this.palette,
+      xScale: this._scaleCopy(this.xScale),
+      yScale: this._scaleCopy(this.yScale)
     });
     this._applyScales();
     return this._scatterplot;
@@ -57,12 +64,21 @@ export class WebGLScatter {
 
   _applyScales() {
     if (!this._scatterplot || !this.xScale || !this.yScale) return;
-    // regl-scatterplot accepts [min, max] ranges in DATA space; we pass the
-    // full domain so pan/zoom is relative to the data extent.
-    const xDom = this.xScale.domain();
-    const yDom = this.yScale.domain();
-    this._scatterplot.setXScale([xDom[0], xDom[1]]);
-    this._scatterplot.setYScale([yDom[0], yDom[1]]);
+    // Pass scale copies because regl-scatterplot mutates ranges to canvas space.
+    if (typeof this._scatterplot.setXScale === "function") {
+      this._scatterplot.setXScale(this._scaleCopy(this.xScale));
+    }
+    if (typeof this._scatterplot.setYScale === "function") {
+      this._scatterplot.setYScale(this._scaleCopy(this.yScale));
+    }
+    if (typeof this._scatterplot.set === "function" &&
+        (typeof this._scatterplot.setXScale !== "function" ||
+          typeof this._scatterplot.setYScale !== "function")) {
+      this._scatterplot.set({
+        xScale: this._scaleCopy(this.xScale),
+        yScale: this._scaleCopy(this.yScale)
+      });
+    }
   }
 
   /**
@@ -76,14 +92,19 @@ export class WebGLScatter {
       sp.clear();
       return;
     }
-    // regl-scatterplot expects points as [x, y, category, value] tuples.
-    const pts = new Float32Array(rows.length * 4);
+    // regl-scatterplot accepts column-oriented arrays keyed by x/y/category/value.
+    const pts = {
+      x: new Float32Array(rows.length),
+      y: new Float32Array(rows.length),
+      category: new Float32Array(rows.length),
+      value: new Float32Array(rows.length)
+    };
     for (let i = 0; i < rows.length; i++) {
       const r = rows[i];
-      pts[i * 4 + 0] = r.x;
-      pts[i * 4 + 1] = r.y;
-      pts[i * 4 + 2] = r.category == null ? 0 : r.category;
-      pts[i * 4 + 3] = r.value == null ? 1 : r.value;
+      pts.x[i] = r.x;
+      pts.y[i] = r.y;
+      pts.category[i] = r.category == null ? 0 : r.category;
+      pts.value[i] = r.value == null ? 1 : r.value;
     }
     await sp.draw(pts);
   }

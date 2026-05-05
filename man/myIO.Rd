@@ -10,7 +10,9 @@ myIO(
   height = "400px",
   elementId = NULL,
   sparkline = FALSE,
-  engine = "auto"
+  engine = "auto",
+  webgl_threshold = 50000L,
+  unify_data_path = FALSE
 )
 }
 \arguments{
@@ -31,6 +33,15 @@ Only "line", "bar", and "area" layer types are supported. Default FALSE.}
 \code{\link{setBigData}()}. With no big-data attachment, charts render
 identically to the small-data SVG path regardless of this argument. See
 \code{vignette("large-data-linking")}.}
+
+\item{webgl_threshold}{Positive integer row-count threshold for the big-data
+WebGL render path. Use \code{Inf} to disable WebGL. With
+\code{unify_data_path = TRUE}, disabled WebGL uses the SVG coordinator
+path; otherwise the existing inline SVG path is preserved. Default 50000.}
+
+\item{unify_data_path}{Logical. If TRUE, coordinator results also replace SVG
+layer data below \code{webgl_threshold}. Default FALSE preserves the inline
+small-data SVG render path.}
 }
 \value{
 An htmlwidget object of class \code{myIO}.

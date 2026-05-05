@@ -1,0 +1,123 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    html, body { margin: 0; width: 100%; height: 100%; }
+    #chart {
+      position: relative;
+      width: 800px;
+      height: 600px;
+    }
+    svg {
+      position: relative;
+      z-index: 1;
+      width: 800px;
+      height: 600px;
+    }
+  </style>
+</head>
+<body>
+  <div id="chart">
+    <svg id="svg" width="800" height="600"></svg>
+  </div>
+  <script type="module">
+    import {
+      createCoordinatorResultHandler
+    } from "../../../inst/htmlwidgets/myIO/src/coordinator/webgl-bridge.js";
+
+    function makeChart() {
+      const element = document.getElementById("chart");
+      const svg = document.getElementById("svg");
+      const listeners = {};
+      svg.addEventListener("pointerdown", (evt) => {
+        window.__lastPointerTarget = evt.target.tagName.toLowerCase();
+      });
+      return {
+        dom: { element, svg: { node: () => svg } },
+        element,
+        margin: { top: 30, right: 20, bottom: 40, left: 50 },
+        width: 800,
+        height: 600,
+        xScale: { domain: () => [0, 1], range: () => [0, 730] },
+        yScale: { domain: () => [0, 1], range: () => [530, 0] },
+        config: { layers: [{ data: [] }] },
+        on(event, handler) {
+          listeners[event] = listeners[event] || [];
+          listeners[event].push(handler);
+        },
+        emit(event, payload) {
+          (listeners[event] || []).forEach((handler) => handler(payload));
+        },
+        renderCurrentLayers() {
+          window.__svgFastPathRows = this.config.layers[0].data.length;
+        }
+      };
+    }
+
+    function createRenderer({ el, width, height }) {
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      canvas.style.position = "absolute";
+      canvas.style.left = "0";
+      canvas.style.top = "0";
+      canvas.style.width = width + "px";
+      canvas.style.height = height + "px";
+      canvas.style.pointerEvents = "none";
+      el.appendChild(canvas);
+      const gl = canvas.getContext("webgl2", { preserveDrawingBuffer: true }) ||
+        canvas.getContext("webgl", { preserveDrawingBuffer: true });
+      return {
+        update(rows) {
+          window.__pointCount = rows.length;
+          if (gl) {
+            gl.viewport(0, 0, canvas.width, canvas.height);
+            gl.clearColor(1, 0, 0, 1);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            gl.finish();
+          }
+        },
+        resize() {},
+        destroy() {
+          canvas.remove();
+        }
+      };
+    }
+
+    const chart = makeChart();
+    window.__bridge = createCoordinatorResultHandler({
+      chart,
+      coordinator: { onChartResult() {} },
+      chartId: "c1",
+      markSpec: { kind: "scatter" },
+      rowCount: 1000000,
+      threshold: 50000,
+      createRenderer
+    });
+    window.__bridge.onResult({
+      batches: [{ rows: [{ x: 0.1, y: 0.2 }, { x: 0.3, y: 0.4 }] }]
+    });
+
+    window.__runInf = () => {
+      document.querySelectorAll("canvas, .myIO-webgl-overlay").forEach((node) => node.remove());
+      const svgChart = makeChart();
+      const handler = createCoordinatorResultHandler({
+        chart: svgChart,
+        coordinator: { onChartResult() {} },
+        chartId: "c2",
+        markSpec: { kind: "scatter" },
+        rowCount: 1000000,
+        threshold: "Inf",
+        unifyDataPath: true,
+        createRenderer
+      });
+      handler.onResult({ batches: [{ rows: [{ x: 1, y: 2 }] }] });
+    };
+
+    requestAnimationFrame(() => {
+      window.__myioTestReady = true;
+    });
+  </script>
+</body>
+</html>

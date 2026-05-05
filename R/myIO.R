@@ -32,6 +32,13 @@ sizingPolicy_myIO <- function() {
 #'   \code{\link{setBigData}()}. With no big-data attachment, charts render
 #'   identically to the small-data SVG path regardless of this argument. See
 #'   \code{vignette("large-data-linking")}.
+#' @param webgl_threshold Positive integer row-count threshold for the big-data
+#'   WebGL render path. Use \code{Inf} to disable WebGL. With
+#'   \code{unify_data_path = TRUE}, disabled WebGL uses the SVG coordinator
+#'   path; otherwise the existing inline SVG path is preserved. Default 50000.
+#' @param unify_data_path Logical. If TRUE, coordinator results also replace SVG
+#'   layer data below \code{webgl_threshold}. Default FALSE preserves the inline
+#'   small-data SVG render path.
 #'
 #' @return An htmlwidget object of class \code{myIO}.
 #' @examples
@@ -40,7 +47,8 @@ sizingPolicy_myIO <- function() {
 #'
 #' @export
 myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL,
-                 sparkline = FALSE, engine = "auto") {
+                 sparkline = FALSE, engine = "auto", webgl_threshold = 50000L,
+                 unify_data_path = FALSE) {
   validateCssDimension <- function(value, arg) {
     if (is.null(value) || (is.numeric(value) && length(value) == 1 && !is.na(value)) ||
         (is.character(value) && length(value) == 1 && !is.na(value))) {
@@ -50,6 +58,11 @@ myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL
   }
 
   engine <- match.arg(engine, c("auto", "server", "wasm", "svg"))
+  webgl_threshold <- validate_webgl_threshold(webgl_threshold)
+  if (!is.logical(unify_data_path) || length(unify_data_path) != 1L ||
+      is.na(unify_data_path)) {
+    stop("myIO(): `unify_data_path` must be TRUE or FALSE.", call. = FALSE)
+  }
 
   validateCssDimension(width, "width")
   validateCssDimension(height, "height")
@@ -90,6 +103,8 @@ myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL
       engine = engine,
       coordinator_enabled = FALSE,
       crosstalk_threshold = getOption("myIO.crosstalk_threshold", 100000L),
+      webgl_threshold = webgl_threshold,
+      unify_data_path = isTRUE(unify_data_path),
       duckdb_wasm = list(cache_url = NULL, worker_url = NULL)
     ),
     bigdata = list(
@@ -103,7 +118,8 @@ myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL
     ),
     coordinator = list(
       chart_id  = new_chart_id(),
-      mark_spec = NULL
+      mark_spec = NULL,
+      query_template = ""
     )
   )
 
@@ -121,6 +137,21 @@ myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL
     elementId = elementId,
     sizingPolicy = sizingPolicy_myIO()
   )
+}
+
+validate_webgl_threshold <- function(webgl_threshold) {
+  if (!is.numeric(webgl_threshold) || length(webgl_threshold) != 1L ||
+      is.na(webgl_threshold) || webgl_threshold <= 0) {
+    stop("myIO(): `webgl_threshold` must be a positive number or Inf.", call. = FALSE)
+  }
+  if (is.infinite(webgl_threshold)) {
+    return(Inf)
+  }
+  if (abs(webgl_threshold - round(webgl_threshold)) > sqrt(.Machine$double.eps) ||
+      webgl_threshold > .Machine$integer.max) {
+    stop("myIO(): `webgl_threshold` must be a positive integer or Inf.", call. = FALSE)
+  }
+  as.integer(webgl_threshold)
 }
 
 #' Shiny Bindings for myIO

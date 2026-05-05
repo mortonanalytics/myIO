@@ -74,11 +74,15 @@ export class WebGLArea {
       this._regl.clear({ color: [0, 0, 0, 0] });
       return;
     }
-    const base = this.baseline != null ? this.baseline : this.yScale.domain()[0];
     // Emit pairs: (x, y), (x, base), per data point. Two vertices per point,
     // consumed as triangle strip.
     const flat = new Float32Array(points.length * 4);
     for (let i = 0; i < points.length; i++) {
+      const base = points[i].baseline != null
+        ? points[i].baseline
+        : this.baseline != null
+          ? this.baseline
+          : this.yScale.domain()[0];
       flat[i * 4] = points[i].x;
       flat[i * 4 + 1] = points[i].y;
       flat[i * 4 + 2] = points[i].x;
@@ -104,8 +108,13 @@ export class WebGLArea {
     if (!xCol || !yCol) return;
     const len = table.numRows || xCol.length;
     const pts = new Array(len);
+    const baseCol = table.getChild("baseline");
     for (let i = 0; i < len; i++) {
-      pts[i] = { x: Number(xCol.get(i)), y: Number(yCol.get(i)) };
+      pts[i] = {
+        x: Number(xCol.get(i)),
+        y: Number(yCol.get(i)),
+        baseline: baseCol ? Number(baseCol.get(i)) : undefined
+      };
     }
     return this.update(pts);
   }

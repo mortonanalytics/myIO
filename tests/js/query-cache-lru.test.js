@@ -57,10 +57,11 @@ describe("QueryCache", () => {
     expect(c.get("k1")).toBe("result");
   });
 
-  it("rejectInflight clears in-flight without caching", () => {
+  it("rejectInflight clears in-flight without caching", async () => {
     const c = new QueryCache();
-    c.inflightOrStore("k1", () => Promise.reject(new Error("x")));
+    const rejected = c.inflightOrStore("k1", () => Promise.reject(new Error("x")));
     c.rejectInflight("k1");
+    await expect(rejected).rejects.toThrow("x");
     expect(c.get("k1")).toBeUndefined();
     // Should allow a fresh attempt after reject.
     let called = 0;

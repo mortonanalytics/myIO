@@ -21,18 +21,28 @@ test_that("setBigData with arrow::Table emits inline_ipc", {
   expect_true(nchar(w$x$bigdata$ipc_b64) > 100)
 })
 
-test_that("setBigData with a .parquet URL emits url mode", {
-  w <- myIO::myIO() |> myIO:::setBigData("https://example.com/data.parquet")
+test_that("setBigData with a .parquet URL emits url mode when schema is explicit", {
+  w <- myIO::myIO() |>
+    myIO:::setBigData("https://example.com/data.parquet", schema = c("x", "y"), row_count = 100)
   expect_equal(w$x$bigdata$mode, "url")
   expect_equal(w$x$bigdata$url, "https://example.com/data.parquet")
+  expect_equal(vapply(w$x$bigdata$schema, `[[`, character(1), "name"), c("x", "y"))
+  expect_equal(w$x$bigdata$row_count, 100L)
   expect_null(w$x$bigdata$ipc_b64)
+})
+
+test_that("setBigData with URL or file source requires explicit schema", {
+  expect_error(
+    myIO::myIO() |> myIO:::setBigData("https://example.com/data.parquet"),
+    "schema"
+  )
 })
 
 test_that("setBigData with a .csv local path emits url mode", {
   tmp <- tempfile(fileext = ".csv")
   file.create(tmp)
   on.exit(unlink(tmp), add = TRUE)
-  w <- myIO::myIO() |> myIO:::setBigData(tmp)
+  w <- myIO::myIO() |> myIO:::setBigData(tmp, schema = c("x", "y"))
   expect_equal(w$x$bigdata$mode, "url")
   expect_equal(w$x$bigdata$url, normalizePath(tmp, mustWork = FALSE))
 })

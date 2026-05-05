@@ -17,7 +17,8 @@ record-batch reader, a single file path or URL ending in `.parquet`,
 for Crosstalk-compatible linked selections.}
 
 \item{...}{Additional source-specific options. For DBI sources, pass
-`table = "name"` so myIO can query the table schema.}
+`table = "name"` so myIO can query the table schema. For file path or URL
+sources, pass `schema = c("col1", "col2", ...)` or a schema field list.}
 }
 \value{
 A modified myIO htmlwidget object.
@@ -40,7 +41,7 @@ myIO(data = mtcars) |>
   setBigData(mtcars)
 
 myIO() |>
-  setBigData("data/large.parquet", rowkey_col = "id")
+  setBigData("data/large.parquet", schema = c("id", "x", "y"), rowkey_col = "id")
 
 con <- DBI::dbConnect(duckdb::duckdb())
 myIO() |>

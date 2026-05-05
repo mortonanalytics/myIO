@@ -4,6 +4,10 @@ HTMLWidgets.widget({
   factory: function(el, width, height) {
     return {
       renderValue: function(x) {
+        if (this._myIO_bridgeCleanup) {
+          try { this._myIO_bridgeCleanup(); } catch (e) { /* ignore */ }
+          this._myIO_bridgeCleanup = null;
+        }
         // Prior-render coordinator cleanup (if we previously registered).
         if (this._myIO_chartId && window.myIO && window.myIO.getCoordinator) {
           var prev = window.myIO.getCoordinator();
@@ -16,6 +20,10 @@ HTMLWidgets.widget({
           this._myIO_xadapter = null;
         }
         if (x.config && x.config.layers) {
+          var coord = null;
+          var registerCoordinatorChart = false;
+          var coordinatorMarkSpec = null;
+          var coordinatorQueryTemplate = "";
           if (this.myIOchart) {
             // Destroy and recreate to handle layer count/type changes cleanly
             this.myIOchart.destroy();
@@ -42,7 +50,7 @@ HTMLWidgets.widget({
             }
             // Boot the page-level coordinator (idempotent).
             if (window.myIO && typeof window.myIO.bootCoordinator === "function") {
-              var coord = window.myIO.bootCoordinator(x.config);
+              coord = window.myIO.bootCoordinator(x.config);
               // On re-render, unregister the previous chart id before
               // registering the new one (multi-widget lifecycle).
               if (this._myIO_chartId) {
@@ -60,18 +68,16 @@ HTMLWidgets.widget({
                   rowkeyCol:  x.bigdata.rowkey_col
                 });
                 // Fire-and-forget async: adapter creation + init may touch WASM.
-                coord.ensureAdapterFor(x.bigdata.source_id, x.config.engine, x.config)
-                  .catch(function(err) {
-                    console.error("myIO: engine adapter init failed", err);
-                  });
+                if (x.config.engine !== "svg") {
+                  coord.ensureAdapterFor(x.bigdata.source_id, x.config.engine, x.config)
+                    .catch(function(err) {
+                      console.error("myIO: engine adapter init failed", err);
+                    });
+                }
                 if (this._myIO_chartId) {
-                  coord.register({
-                    chartId:       this._myIO_chartId,
-                    queryTemplate: "", // chart-type-specific templates wire in later phases
-                    markSpec:      (x.coordinator && x.coordinator.mark_spec) || { kind: "scatter" },
-                    sourceHandle:  { sourceId: x.bigdata.source_id },
-                    predicateFn:   function() { return null; }
-                  });
+                  registerCoordinatorChart = true;
+                  coordinatorMarkSpec = (x.coordinator && x.coordinator.mark_spec) || null;
+                  coordinatorQueryTemplate = (x.coordinator && x.coordinator.query_template) || "";
                 }
               }
               // T4.3: CrosstalkAdapter instantiation.
@@ -132,6 +138,42 @@ HTMLWidgets.widget({
               this.myIOchart.on("annotated", function(e) {
                 Shiny.onInputChange("myIO-" + id + "-annotated", JSON.stringify(e));
               });
+            }
+          }
+          if (coord && registerCoordinatorChart && this._myIO_chartId && this.myIOchart) {
+            var resultHandler = null;
+            if (coordinatorQueryTemplate && x.config && x.config.engine !== "svg" &&
+                window.myIO &&
+                typeof window.myIO.createCoordinatorResultHandler === "function") {
+              resultHandler = window.myIO.createCoordinatorResultHandler({
+                chart:       this.myIOchart,
+                coordinator: coord,
+                chartId:     this._myIO_chartId,
+                markSpec:    coordinatorMarkSpec,
+                rowCount:    x.bigdata && x.bigdata.row_count,
+                threshold:   x.config && x.config.webgl_threshold,
+                unifyDataPath: x.config && x.config.unify_data_path === true,
+                layerIndex:  0
+              });
+              if (resultHandler && resultHandler.destroy) {
+                this._myIO_bridgeCleanup = resultHandler.destroy;
+              }
+            }
+            coord.register({
+              chartId:       this._myIO_chartId,
+              queryTemplate: coordinatorQueryTemplate,
+              markSpec:      coordinatorMarkSpec,
+              sourceHandle:  { sourceId: x.bigdata.source_id, engine: x.config && x.config.engine },
+              predicateFn:   function() { return null; },
+              onResult:      resultHandler ? resultHandler.onResult : null
+            });
+            if (resultHandler && window.myIO) {
+              window.myIO._debugBridgeState = window.myIO._debugBridgeState || {};
+              window.myIO._debugBridgeState[this._myIO_chartId] = resultHandler;
+              window.myIO._debugBridge = function(chartId) {
+                return window.myIO._debugBridgeState &&
+                  window.myIO._debugBridgeState[chartId];
+              };
             }
           }
         }

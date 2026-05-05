@@ -13,17 +13,31 @@ export class Coordinator {
     this.selectionStore = new Map();
     /** @type {Map<string, object>} sourceId -> engine adapter */
     this.adapters = new Map();
+    /** @type {Map<string, Promise<object>>} sourceId -> in-flight adapter init */
+    this._adapterInits = new Map();
+    /** @type {Map<string, AbortController>} chartId -> in-flight query abort controller */
+    this._inflightControllers = new Map();
     /** @type {Map<string, {preview:any, final:any}>} chartId -> debouncers */
     this._debouncers = new Map();
   }
 
   /** Ensure an engine adapter exists for `sourceId`. Lazy per Multi-widget lifecycle contract. */
-  async ensureAdapterFor(sourceId, engineName, config) {
-    if (this.adapters.has(sourceId)) return this.adapters.get(sourceId);
+  ensureAdapterFor(sourceId, engineName, config) {
+    if (this.adapters.has(sourceId)) return Promise.resolve(this.adapters.get(sourceId));
+    if (this._adapterInits.has(sourceId)) return this._adapterInits.get(sourceId);
     const adapter = createEngine(engineName, config);
-    await adapter.init({ sourceRegistry: this.sourceRegistry });
-    this.adapters.set(sourceId, adapter);
-    return adapter;
+    const promise = adapter.init({ sourceRegistry: this.sourceRegistry })
+      .then(() => {
+        this.adapters.set(sourceId, adapter);
+        this._adapterInits.delete(sourceId);
+        return adapter;
+      })
+      .catch((err) => {
+        this._adapterInits.delete(sourceId);
+        throw err;
+      });
+    this._adapterInits.set(sourceId, promise);
+    return promise;
   }
 
   /** Register a source entry - wraps SourceRegistry.register and returns void. */
@@ -45,12 +59,21 @@ export class Coordinator {
     if (!this.selectionStore.has(sourceHandle.sourceId)) {
       this.selectionStore.set(sourceHandle.sourceId, new Map());
     }
+    if (queryTemplate && String(queryTemplate).trim() && onResult) {
+      setTimeout(() => this._dispatch(chartId, { preview: false }), 0);
+    }
   }
 
   unregister(chartId) {
     const reg = this.charts.get(chartId);
     if (!reg) return;
     this.charts.delete(chartId);
+
+    const inflight = this._inflightControllers.get(chartId);
+    if (inflight) {
+      inflight.abort();
+      this._inflightControllers.delete(chartId);
+    }
 
     const sourceId = reg.sourceHandle.sourceId;
     const selMap = this.selectionStore.get(sourceId);
@@ -71,6 +94,7 @@ export class Coordinator {
         adapter.close().catch(() => {});
         this.adapters.delete(sourceId);
       }
+      this._adapterInits.delete(sourceId);
       this.selectionStore.delete(sourceId);
     }
   }
@@ -154,6 +178,7 @@ export class Coordinator {
   async _dispatch(chartId, { preview = false } = {}) {
     const reg = this.charts.get(chartId);
     if (!reg) return;
+    if (!reg.onResult || !reg.queryTemplate || !String(reg.queryTemplate).trim()) return;
 
     const sourceId = reg.sourceHandle.sourceId;
     const predicate = this._composeOthersPredicate(chartId, sourceId);
@@ -174,18 +199,35 @@ export class Coordinator {
     }
 
     let adapter = this.adapters.get(sourceId);
-    if (!adapter && engineName) {
-      adapter = await this.ensureAdapterFor(sourceId, engineName, this.config);
-    }
-    if (!adapter) return;
+    try {
+      if (!adapter && engineName) {
+        adapter = await this.ensureAdapterFor(sourceId, engineName, this.config);
+      }
+      if (!this.charts.has(chartId)) return;
+      if (!adapter) return;
 
-    if (typeof adapter.applyPredicateCache === "function") {
-      await adapter.applyPredicateCache(predicateHash, predicate);
+      if (typeof adapter.applyPredicateCache === "function") {
+        await adapter.applyPredicateCache(predicateHash, predicate);
+      }
+    } catch (err) {
+      if (!this.charts.has(chartId)) return;
+      console.error("[myIO coordinator]", chartId, err?.code, err?.message || err);
+      this._deliverToRenderer(chartId, {
+        batches: [],
+        trailer: { error: err?.message || String(err), code: err?.code || "engine_error" }
+      });
+      return;
     }
 
     const queryId = "q_" + Math.random().toString(36).slice(2, 10);
+    let abortCtrl = null;
+    if (!this.cache.inflight.has(cacheKey)) {
+      const previous = this._inflightControllers.get(chartId);
+      if (previous) previous.abort();
+      abortCtrl = new AbortController();
+      this._inflightControllers.set(chartId, abortCtrl);
+    }
     const promise = this.cache.inflightOrStore(cacheKey, () => {
-      const abortCtrl = new AbortController();
       return (async () => {
         const batches = [];
         let trailer = null;
@@ -193,6 +235,8 @@ export class Coordinator {
           sql: sqlForCoords,
           params: [],
           queryId,
+          sourceId,
+          limit: preview ? 1000 : 100000,
           signal: abortCtrl.signal
         })) {
           if (item.__trailer) {
@@ -207,11 +251,29 @@ export class Coordinator {
 
     try {
       const result = await promise;
+      const currentCtrl = this._inflightControllers.get(chartId);
+      if (abortCtrl && currentCtrl === abortCtrl) {
+        this._inflightControllers.delete(chartId);
+      }
+      if (abortCtrl && abortCtrl.signal.aborted) {
+        this.cache.rejectInflight(cacheKey);
+        return;
+      }
       this.cache.resolveInflight(cacheKey, result);
+      if (!this.charts.has(chartId)) return;
       this._deliverToRenderer(chartId, result);
     } catch (err) {
       this.cache.rejectInflight(cacheKey);
+      const currentCtrl = this._inflightControllers.get(chartId);
+      if (abortCtrl && currentCtrl === abortCtrl) {
+        this._inflightControllers.delete(chartId);
+      }
+      if (abortCtrl && abortCtrl.signal.aborted) return;
       console.error("[myIO coordinator]", chartId, err?.code, err?.message || err);
+      this._deliverToRenderer(chartId, {
+        batches: [],
+        trailer: { error: err?.message || String(err), code: err?.code || "query_error" }
+      });
     }
   }
 
@@ -276,6 +338,11 @@ export class Coordinator {
       await adapter.close().catch(() => {});
     }
     this.adapters.clear();
+    for (const ctrl of this._inflightControllers.values()) {
+      ctrl.abort();
+    }
+    this._adapterInits.clear();
+    this._inflightControllers.clear();
     this.charts.clear();
     this.selectionStore.clear();
     this.sourceRegistry.clear();

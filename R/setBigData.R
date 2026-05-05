@@ -10,7 +10,8 @@
 #' @param rowkey_col Optional name of the column that uniquely identifies rows
 #'   for Crosstalk-compatible linked selections.
 #' @param ... Additional source-specific options. For DBI sources, pass
-#'   `table = "name"` so myIO can query the table schema.
+#'   `table = "name"` so myIO can query the table schema. For file path or URL
+#'   sources, pass `schema = c("col1", "col2", ...)` or a schema field list.
 #'
 #' @details
 #' This function writes the `x.bigdata.*` payload fields described in
@@ -29,7 +30,7 @@
 #'   setBigData(mtcars)
 #'
 #' myIO() |>
-#'   setBigData("data/large.parquet", rowkey_col = "id")
+#'   setBigData("data/large.parquet", schema = c("id", "x", "y"), rowkey_col = "id")
 #'
 #' con <- DBI::dbConnect(duckdb::duckdb())
 #' myIO() |>
@@ -46,6 +47,14 @@ setBigData <- function(widget, source, rowkey_col = NULL, ...) {
   if (is.null(widget$x)) widget$x <- list()
   if (is.null(widget$x$bigdata)) widget$x$bigdata <- list()
   if (is.null(widget$x$config)) widget$x$config <- list()
+  if (is.null(widget$x$coordinator)) widget$x$coordinator <- list()
+
+  if (isTRUE(widget$x$config$facet$enabled)) {
+    stop(
+      "setBigData(): faceted big-data charts are not supported in the WebGL bridge v1.",
+      call. = FALSE
+    )
+  }
 
   widget$x$bigdata$mode <- payload$mode
   widget$x$bigdata$source_id <- payload$source_id
@@ -59,6 +68,14 @@ setBigData <- function(widget, source, rowkey_col = NULL, ...) {
     widget$x$bigdata$dbi_handle_internal <- payload$dbi_handle
   }
 
+  coordinator_payload <- .build_bigdata_coordinator_payload(
+    widget$x$config$layers %||% list(),
+    payload$source_id,
+    payload$schema
+  )
+  widget$x$coordinator$mark_spec <- coordinator_payload$mark_spec
+  widget$x$coordinator$query_template <- coordinator_payload$query_template
+
   widget$x$config$coordinator_enabled <- TRUE
   if (is.null(widget$x$config$engine) ||
       identical(widget$x$config$engine, "auto")) {
@@ -66,6 +83,107 @@ setBigData <- function(widget, source, rowkey_col = NULL, ...) {
   }
 
   widget
+}
+
+.build_bigdata_coordinator_payload <- function(layers, source_id, schema = NULL) {
+  if (!is.list(layers)) layers <- list()
+
+  eligible <- vapply(layers, function(layer) {
+    is.list(layer) && layer$type %in% c("point", "line", "area")
+  }, logical(1))
+
+  if (length(layers) > 0L && any(eligible) && sum(eligible) > 1L) {
+    stop(
+      "setBigData(): WebGL big-data v1 supports one point, line, or area layer. ",
+      "Multi-layer WebGL charts are not supported yet.",
+      call. = FALSE
+    )
+  }
+
+  if (!any(eligible)) {
+    return(list(mark_spec = NULL, query_template = ""))
+  }
+
+  layer <- layers[[which(eligible)[[1L]]]]
+  mark_spec <- .build_bigdata_mark_spec(layer)
+  .validate_mark_spec_channels(mark_spec, schema)
+  query_template <- .build_bigdata_query_template(mark_spec, source_id)
+  list(mark_spec = mark_spec, query_template = query_template)
+}
+
+.build_bigdata_mark_spec <- function(layer) {
+  mapping <- layer$mapping %||% list()
+  kind <- switch(layer$type,
+    point = "scatter",
+    line = "line",
+    area = "area"
+  )
+
+  channels <- switch(kind,
+    scatter = list(
+      x = mapping$x_var,
+      y = mapping$y_var,
+      color = mapping$color %||% mapping$group %||% NULL
+    ),
+    line = list(
+      x = mapping$x_var,
+      y = mapping$y_var
+    ),
+    area = list(
+      x = mapping$x_var,
+      y = mapping$high_y,
+      baseline = mapping$low_y
+    )
+  )
+
+  channels <- channels[!vapply(channels, is.null, logical(1))]
+  list(
+    kind = kind,
+    channels = channels,
+    decimation = switch(kind,
+      scatter = "none",
+      line = "lttb",
+      area = "lttb"
+    ),
+    layer_id = layer$id %||% NULL,
+    layer_label = layer$label %||% NULL
+  )
+}
+
+.build_bigdata_query_template <- function(mark_spec, source_id) {
+  channels <- mark_spec$channels %||% list()
+  select_parts <- c(
+    sprintf("%s AS x", .myio_quote_ident(channels$x)),
+    sprintf("%s AS y", .myio_quote_ident(channels$y))
+  )
+
+  if (!is.null(channels$color)) {
+    select_parts <- c(select_parts, sprintf("%s AS color", .myio_quote_ident(channels$color)))
+  }
+  if (!is.null(channels$baseline)) {
+    select_parts <- c(select_parts, sprintf("%s AS baseline", .myio_quote_ident(channels$baseline)))
+  }
+
+  sprintf(
+    "SELECT %s FROM %s WHERE {{where}} LIMIT {{limit}}",
+    paste(select_parts, collapse = ", "),
+    .myio_quote_ident(source_id)
+  )
+}
+
+.validate_mark_spec_channels <- function(mark_spec, schema) {
+  if (is.null(schema) || is.null(mark_spec)) return(invisible(TRUE))
+  schema_names <- vapply(schema, `[[`, character(1), "name")
+  channels <- unname(unlist(mark_spec$channels %||% list(), use.names = FALSE))
+  missing <- setdiff(channels, schema_names)
+  if (length(missing)) {
+    stop(
+      "setBigData(): mapped column(s) not present in source schema: ",
+      paste(missing, collapse = ", "),
+      call. = FALSE
+    )
+  }
+  invisible(TRUE)
 }
 
 #' Build a big-data payload without mutating a widget
@@ -123,10 +241,15 @@ setBigData <- function(widget, source, rowkey_col = NULL, ...) {
     schema <- arrow_ipc_schema(source)
     row_count <- .arrow_num_rows(source)
   } else if (.is_bigdata_url_source(source)) {
-    if (is.null(rowkey_col)) rowkey_col <- "__myio_rowkey__"
-
     mode <- "url"
     url <- .normalize_bigdata_url(source)
+    schema <- .normalize_bigdata_schema_arg(dots$schema)
+    if (!is.null(rowkey_col)) {
+      .validate_rowkey_in_schema(rowkey_col, schema)
+    }
+    if (!is.null(dots$row_count)) {
+      row_count <- .normalize_bigdata_row_count(dots$row_count)
+    }
   } else if (inherits(source, "DBIConnection")) {
     if (!requireNamespace("DBI", quietly = TRUE)) {
       stop(
@@ -219,6 +342,72 @@ setBigData <- function(widget, source, rowkey_col = NULL, ...) {
   } else {
     normalizePath(source, winslash = "/", mustWork = FALSE)
   }
+}
+
+.normalize_bigdata_schema_arg <- function(schema) {
+  if (is.null(schema)) {
+    stop(
+      "setBigData(): file path and URL sources require an explicit `schema =` ",
+      "argument in WebGL bridge v1.",
+      call. = FALSE
+    )
+  }
+
+  if (is.character(schema)) {
+    schema <- schema[!is.na(schema) & nzchar(schema)]
+    if (!length(schema)) {
+      stop("setBigData(): `schema` must contain at least one column name.", call. = FALSE)
+    }
+    return(lapply(unname(schema), function(name) list(name = name, type = "unknown")))
+  }
+
+  if (is.data.frame(schema)) {
+    if (!("name" %in% names(schema))) {
+      stop("setBigData(): `schema` data frames must include a `name` column.", call. = FALSE)
+    }
+    return(lapply(seq_len(nrow(schema)), function(i) {
+      list(
+        name = as.character(schema$name[[i]]),
+        type = if ("type" %in% names(schema)) as.character(schema$type[[i]]) else "unknown"
+      )
+    }))
+  }
+
+  if (is.list(schema)) {
+    fields <- lapply(schema, function(field) {
+      if (is.character(field) && length(field) == 1L) {
+        return(list(name = unname(field), type = "unknown"))
+      }
+      if (is.list(field) && !is.null(field$name)) {
+        return(list(
+          name = as.character(field$name),
+          type = as.character(field$type %||% "unknown")
+        ))
+      }
+      NULL
+    })
+    if (any(vapply(fields, is.null, logical(1)))) {
+      stop(
+        "setBigData(): `schema` list entries must be column names or ",
+        "fields with `name` and optional `type`.",
+        call. = FALSE
+      )
+    }
+    return(fields)
+  }
+
+  stop(
+    "setBigData(): `schema` must be a character vector, data frame, or field list.",
+    call. = FALSE
+  )
+}
+
+.normalize_bigdata_row_count <- function(row_count) {
+  if (!is.numeric(row_count) || length(row_count) != 1L ||
+      is.na(row_count) || row_count < 0) {
+    stop("setBigData(): `row_count` must be a single non-negative number.", call. = FALSE)
+  }
+  as.integer(row_count)
 }
 
 .check_inline_ipc_size <- function(ipc_b64) {
