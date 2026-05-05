@@ -48,12 +48,25 @@ articles:
       - getting-started
       - chart-types
       - transforms-and-theming
+      - why-myio
   - title: Shiny & Interactions
     contents:
       - shiny-integration
+      - articles/shiny-interactions
+  - title: Big-data & Linking
+    contents:
+      - large-data-linking
+      - crosstalk-linking
+      - sparklines
+  - title: Migration
+    contents:
+      - plotly-migration
   - title: Gallery
     contents:
       - gallery
+  - title: Help
+    contents:
+      - articles/troubleshooting
 
 reference:
   - title: Core
