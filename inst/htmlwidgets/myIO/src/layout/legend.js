@@ -50,9 +50,14 @@ function renderInlineLegend(chart, legendData) {
     return;
   }
 
+  // Reserve vertical space for one or two rows. Second-row items render at row * 16
+  // below the baseline, so the baseline must clear that or labels clip below the SVG.
+  var rowCount = items.length > 5 ? 2 : 1;
+  var legendBaselineY = Math.max(34, chart.height - 8 - (rowCount - 1) * 16);
+
   var g = chart.svg.append("g")
     .attr("class", "myIO-inline-legend")
-    .attr("transform", "translate(" + chart.margin.left + "," + Math.max(34, chart.height - 24) + ")");
+    .attr("transform", "translate(" + chart.margin.left + "," + legendBaselineY + ")");
 
   var cursors = [0, 0];
   items.forEach(function(item, index) {

@@ -108,8 +108,8 @@ test_that("grouped layers with NULL color use Okabe-Ito palette", {
   df <- data.frame(x = 1:4, y = 1:4, g = c("A", "A", "B", "B"))
   w <- myIO::addIoLayer(myIO::myIO(), type = "point", label = "pts", data = df, mapping = list(x_var = "x", y_var = "y", group = "g"))
   colors <- vapply(w$x$config$layers, function(l) l$color, character(1))
-  expect_equal(colors[1], "#4269D0")
-  expect_equal(colors[2], "#EF603B")
+  expect_equal(colors[1], "#E69F00")
+  expect_equal(colors[2], "#56B4E9")
 })
 
 test_that("grouped layers with insufficient colors recycle", {

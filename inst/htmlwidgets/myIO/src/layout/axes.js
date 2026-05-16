@@ -20,8 +20,14 @@ export function renderAxes(chart, options) {
   var m = chart.margin;
   var chartHeight = getChartHeight(chart);
   var transitionSpeed = chart.options.transition.speed;
+  // "yearMon" expects x as R numeric dates (days since 1970-01-01), e.g.
+  // as.numeric(as.Date("2024-01-01")). Values outside [0, 1e6] are treated as
+  // already-converted milliseconds-since-epoch (JS convention) so callers passing
+  // raw POSIX millis don't get a date 86,400x in the future.
   var xFormat = chart.options.xAxisFormat === "yearMon" ? function(x) {
-    var date = new Date(+x * 86400000);
+    var n = +x;
+    var ms = Number.isFinite(n) && n > 0 && n < 1e6 ? n * 86400000 : n;
+    var date = new Date(ms);
     return Number.isFinite(date.getTime()) ? d3.utcFormat("%b %d")(date) : x;
   } : d3.format(chart.options.xAxisFormat);
   var yFormat = d3.format(chart.options.yAxisFormat);

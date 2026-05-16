@@ -86,6 +86,12 @@ function renderErrorBars(chart, layer) {
   var lowVar = layer.mapping.low_y;
   var highVar = layer.mapping.high_y;
   var meanVar = layer.mapping.y_var;
+  if (!meanVar) {
+    if (typeof console !== "undefined" && console.warn) {
+      console.warn("myIO RangeBarRenderer: style='errorbar' requires a y_var mapping for the mean point. Skipping render for layer '" + (layer.label || "(unnamed)") + "'.");
+    }
+    return;
+  }
   var color = layer.color || "#4269D0";
   var capWidth = layer.options && layer.options.capWidth ? layer.options.capWidth : 18;
   var radius = layer.options && layer.options.pointRadius ? layer.options.pointRadius : 4;

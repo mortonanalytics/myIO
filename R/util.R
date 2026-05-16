@@ -20,8 +20,8 @@ build_tree <- function(df, layerLabel, level_1, level_2) {
 }
 
 OKABE_ITO_PALETTE <- c(
-  "#4269D0", "#EF603B", "#6CC5B0", "#3CA951",
-  "#FFB000", "#9A607F", "#A463F2", "#97BBF5"
+  "#E69F00", "#56B4E9", "#009E73", "#F0E442",
+  "#0072B2", "#D55E00", "#CC79A7", "#999999"
 )
 
 ALLOWED_TYPES <- c(

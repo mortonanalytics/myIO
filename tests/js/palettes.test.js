@@ -12,11 +12,11 @@ describe("OKABE_ITO palette", function() {
     });
   });
 
-  test("first color is the refreshed categorical blue", function() {
-    expect(OKABE_ITO[0]).toBe("#4269D0");
+  test("first color is the Okabe-Ito orange", function() {
+    expect(OKABE_ITO[0]).toBe("#E69F00");
   });
 
-  test("contains expected warm accent", function() {
-    expect(OKABE_ITO).toContain("#FFB000");
+  test("contains the Okabe-Ito sky blue", function() {
+    expect(OKABE_ITO).toContain("#56B4E9");
   });
 });

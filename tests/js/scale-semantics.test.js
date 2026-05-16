@@ -113,6 +113,37 @@ describe("scale semantics", function() {
     expect(chart.derived.yScale("North")).not.toBeUndefined();
   });
 
+  test("flipAxis with categoricalScale.xAxis=true moves band to y axis", function() {
+    // Regression: fallback-overrides previously fired after the flip swap and
+    // re-clamped the band back to x, silently cancelling the flip for layers
+    // without explicit scaleHints (e.g., the gallery's horizontal bar demo).
+    var layer = {
+      type: "bar",
+      label: "regions",
+      mapping: { x_var: "region", y_var: "sales" },
+      data: [
+        { region: "North", sales: 320 },
+        { region: "South", sales: 475 }
+      ]
+      // intentionally no scaleHints so the fallback path is exercised
+    };
+    var chart = makeChart({
+      config: {
+        scales: {
+          xlim: { min: null, max: null },
+          ylim: { min: null, max: null },
+          categoricalScale: { xAxis: true, yAxis: false },
+          flipAxis: true,
+          colorScheme: { colors: ["#E69F00"], domain: ["none"], enabled: false }
+        }
+      }
+    });
+    var semantics = resolveScaleSemantics(chart, [layer]);
+
+    expect(semantics.xScaleType).toBe("linear");
+    expect(semantics.yScaleType).toBe("band");
+  });
+
   test("mismatched scale types across layers throw a validation error", function() {
     var heatmapLayer = {
       type: "heatmap",

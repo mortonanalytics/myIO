@@ -39378,7 +39378,9 @@ void main() {
     var chartHeight = getChartHeight(chart);
     var transitionSpeed = chart.options.transition.speed;
     var xFormat = chart.options.xAxisFormat === "yearMon" ? function(x) {
-      var date = new Date(+x * 864e5);
+      var n = +x;
+      var ms = Number.isFinite(n) && n > 0 && n < 1e6 ? n * 864e5 : n;
+      var date = new Date(ms);
       return Number.isFinite(date.getTime()) ? d3.utcFormat("%b %d")(date) : x;
     } : d3.format(chart.options.xAxisFormat);
     var yFormat = d3.format(chart.options.yAxisFormat);
@@ -41003,7 +41005,9 @@ void main() {
     if (items.length < 2) {
       return;
     }
-    var g = chart.svg.append("g").attr("class", "myIO-inline-legend").attr("transform", "translate(" + chart.margin.left + "," + Math.max(34, chart.height - 24) + ")");
+    var rowCount = items.length > 5 ? 2 : 1;
+    var legendBaselineY = Math.max(34, chart.height - 8 - (rowCount - 1) * 16);
+    var g = chart.svg.append("g").attr("class", "myIO-inline-legend").attr("transform", "translate(" + chart.margin.left + "," + legendBaselineY + ")");
     var cursors = [0, 0];
     items.forEach(function(item, index) {
       var label = String(item.label || item.key || "");
@@ -41863,6 +41867,12 @@ void main() {
     var lowVar = layer.mapping.low_y;
     var highVar = layer.mapping.high_y;
     var meanVar = layer.mapping.y_var;
+    if (!meanVar) {
+      if (typeof console !== "undefined" && console.warn) {
+        console.warn("myIO RangeBarRenderer: style='errorbar' requires a y_var mapping for the mean point. Skipping render for layer '" + (layer.label || "(unnamed)") + "'.");
+      }
+      return;
+    }
     var color = layer.color || "#4269D0";
     var capWidth = layer.options && layer.options.capWidth ? layer.options.capWidth : 18;
     var radius = layer.options && layer.options.pointRadius ? layer.options.pointRadius : 4;
@@ -44153,11 +44163,13 @@ void main() {
       var yType = hints ? hints.yScaleType : fallbackY;
       var resolvedX = flipAxis ? yType : xType;
       var resolvedY = flipAxis ? xType : yType;
-      if (fallbackX === "band") {
-        resolvedX = "band";
-      }
-      if (fallbackY === "band") {
-        resolvedY = "band";
+      if (!flipAxis) {
+        if (fallbackX === "band") {
+          resolvedX = "band";
+        }
+        if (fallbackY === "band") {
+          resolvedY = "band";
+        }
       }
       xTypes.add(resolvedX);
       yTypes.add(resolvedY);
