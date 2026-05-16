@@ -88,6 +88,7 @@ reference:
       - setMargin
       - setColorScheme
       - setTheme
+      - setTitle
       - setTransitionSpeed
       - suppressLegend
   - title: Interactions
