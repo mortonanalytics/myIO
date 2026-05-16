@@ -74,6 +74,45 @@ describe("scale semantics", function() {
     expect(domain[1]).toBeGreaterThanOrEqual(40);
   });
 
+  test("flipped categorical bar resolves visual x as linear and y as band", function() {
+    var layer = {
+      type: "bar",
+      label: "sales",
+      mapping: { x_var: "region", y_var: "sales" },
+      data: [
+        { region: "North", sales: 320 },
+        { region: "South", sales: 475 }
+      ],
+      scaleHints: {
+        xScaleType: "band",
+        yScaleType: "linear",
+        yExtentFields: ["y_var"],
+        domainMerge: "union"
+      }
+    };
+    var chart = makeChart({
+      config: {
+        scales: {
+          xlim: { min: null, max: null },
+          ylim: { min: null, max: null },
+          categoricalScale: { xAxis: false, yAxis: true },
+          flipAxis: true,
+          colorScheme: { colors: ["#4269D0"], domain: ["none"], enabled: false }
+        }
+      }
+    });
+    var semantics = resolveScaleSemantics(chart, [layer]);
+
+    expect(semantics.xScaleType).toBe("linear");
+    expect(semantics.yScaleType).toBe("band");
+
+    processScales(chart, [layer], semantics);
+    expect(typeof chart.derived.xScale.bandwidth).toBe("undefined");
+    expect(typeof chart.derived.yScale.bandwidth).toBe("function");
+    expect(Number.isFinite(chart.derived.xScale(0))).toBe(true);
+    expect(chart.derived.yScale("North")).not.toBeUndefined();
+  });
+
   test("mismatched scale types across layers throw a validation error", function() {
     var heatmapLayer = {
       type: "heatmap",

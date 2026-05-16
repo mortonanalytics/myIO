@@ -1,5 +1,21 @@
 # myIO 1.2.0 (development)
 
+## Gallery and chart context
+
+* `myIO(title = ...)` and `setTitle()` add a backward-compatible chart title
+  surface rendered inside the SVG. Existing charts that omit a title are
+  unchanged.
+* Axis titles from `setAxisFormat(xLabel = ..., yLabel = ...)` now render in
+  the chart SVG, and multi-series charts get a compact visible legend while
+  preserving the existing action-sheet legend.
+* The default categorical palette has been refreshed to a modern eight-color
+  set. This is an additive visual update; existing explicit colors and
+  `setColorScheme()` calls continue to win.
+* The gallery now carries chart titles across examples, repairs horizontal
+  bars, mean-CI, heatmap margins, gauge thresholds, treemap labels, date-based
+  finance examples, and shows themes across a small grid of representative
+  charts.
+
 ## Crosstalk: expanded chart-type coverage
 
 * `setLinked()` now links `waffle`, `beeswarm`, `lollipop`, and `dumbbell`

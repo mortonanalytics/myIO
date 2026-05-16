@@ -27,7 +27,7 @@ test_that("myIO has default config structure", {
   expect_equal(cfg$webgl_threshold, 50000L)
   expect_false(cfg$unify_data_path)
   expect_equal(length(cfg$layers), 0)
-  expect_equal(cfg$scales$colorScheme$colors[[1]], "#E69F00")
+  expect_equal(cfg$scales$colorScheme$colors[[1]], "#4269D0")
 })
 
 test_that("myIO validates webgl_threshold", {

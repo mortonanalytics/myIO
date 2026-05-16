@@ -49,10 +49,17 @@ export function resolveScaleSemantics(chart, layers) {
     var hints = getScaleHintsForLayer(layer);
     var fallbackX = resolveFallbackScaleType(chart, "x");
     var fallbackY = resolveFallbackScaleType(chart, "y");
-    var xType = fallbackX === "band" ? "band" : (hints ? hints.xScaleType : fallbackX);
-    var yType = fallbackY === "band" ? "band" : (hints ? hints.yScaleType : fallbackY);
+    var xType = hints ? hints.xScaleType : fallbackX;
+    var yType = hints ? hints.yScaleType : fallbackY;
     var resolvedX = flipAxis ? yType : xType;
     var resolvedY = flipAxis ? xType : yType;
+
+    if (fallbackX === "band") {
+      resolvedX = "band";
+    }
+    if (fallbackY === "band") {
+      resolvedY = "band";
+    }
 
     xTypes.add(resolvedX);
     yTypes.add(resolvedY);

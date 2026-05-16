@@ -84,8 +84,8 @@ test_that("grouped layers use the default Okabe-Ito palette", {
   )
 
   colors <- vapply(widget$x$config$layers, function(layer) layer$color, character(1))
-  expect_equal(colors[[1]], "#E69F00")
-  expect_equal(colors[[2]], "#56B4E9")
+  expect_equal(colors[[1]], "#4269D0")
+  expect_equal(colors[[2]], "#EF603B")
 })
 
 test_that("grouped layers with overlapping group values keep unique labels", {

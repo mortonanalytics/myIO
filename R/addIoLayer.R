@@ -66,6 +66,14 @@ addIoLayer <- function(myIO,
     transform <- "cumulative"
   }
 
+  if (is.null(color) && !("group" %in% names(mapping)) && type != "gauge") {
+    color <- if (type %in% c("donut", "treemap", "sankey", "waffle", "funnel", "radar", "parallel")) {
+      OKABE_ITO_PALETTE
+    } else {
+      OKABE_ITO_PALETTE[[1]]
+    }
+  }
+
   # Auto-inject mapping for transforms that produce output columns (Decision #11)
   mapping <- inject_transform_mapping(transform, mapping)
 

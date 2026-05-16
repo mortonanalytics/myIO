@@ -57,11 +57,11 @@ export class TreemapRenderer {
     newCell.append("text")
       .attr("class", "inner-text")
       .selectAll("tspan")
-      .data(function(d) { return d.data[layer.mapping.x_var][0].split(/(?=[A-Z][^A-Z])/g).concat(format(d.value)); })
+      .data(function(d) { return treemapLabelLines(d, layer, format); })
       .enter().append("tspan")
       .attr("x", 3)
       .attr("y", function(d, i, nodes) { return (i === nodes.length - 1) * 3 + 16 + (i - 0.5) * 9; })
-      .attr("fill-opacity", function(d, i) { return this.parentNode.parentNode.getBBox().width > 40 ? 1 : 0; })
+      .attr("fill-opacity", function() { return hasReadableCellWidth(this.parentNode.parentNode) ? 1 : 0; })
       .attr("fill", "black")
       .text(function(d) { return d; });
 
@@ -73,11 +73,11 @@ export class TreemapRenderer {
     cell.selectAll("text").remove();
     cell.append("text")
       .selectAll("tspan")
-      .data(function(d) { return d.data[layer.mapping.x_var][0].split(/(?=[A-Z][^A-Z])/g).concat(format(d.value)); })
+      .data(function(d) { return treemapLabelLines(d, layer, format); })
       .enter().append("tspan")
       .attr("x", 3)
       .attr("y", function(d, i, nodes) { return (i === nodes.length - 1) * 3 + 16 + (i - 0.5) * 9; })
-      .attr("fill-opacity", function(d, i) { return this.parentNode.parentNode.getBBox().width > 40 ? 1 : 0; })
+      .attr("fill-opacity", function() { return hasReadableCellWidth(this.parentNode.parentNode) ? 1 : 0; })
       .attr("fill", "black")
       .text(function(d) { return d; });
 
@@ -92,4 +92,18 @@ export class TreemapRenderer {
   remove(chart) {
     chart.dom.chartArea.selectAll(".root").transition().duration(500).style("opacity", 0).remove();
   }
+}
+
+function treemapLabelLines(d, layer, format) {
+  var rawLabel = String(d.data[layer.mapping.x_var] || d.data[layer.mapping.level_2] || d.data.name || "");
+  var width = Math.max(0, d.x1 - d.x0);
+  var label = width < 70 && rawLabel.length > 10 ? rawLabel.substring(0, 9) + "..." : rawLabel;
+  return label.split(/\s+/).concat(format(d.value));
+}
+
+function hasReadableCellWidth(node) {
+  if (!node || typeof node.getBBox !== "function") {
+    return true;
+  }
+  return node.getBBox().width > 40;
 }

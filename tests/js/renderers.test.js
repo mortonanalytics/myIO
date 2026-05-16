@@ -288,6 +288,91 @@ describe("Renderer formatTooltip methods", function() {
     expect(document.querySelectorAll("line." + "tag-waterfall-connector-chart-wf").length).toBe(2);
   });
 
+  test("RangeBarRenderer.render supports mean CI errorbar style", function() {
+    var renderer = getRenderer("rangeBar");
+    document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
+    var el = document.getElementById("chart");
+    var chart = {
+      element: el,
+      chart: d3.select(el).select(".myIO-chart-area"),
+      options: { transition: { speed: 0 } },
+      xScale: d3.scaleBand().domain(["A"]).range([0, 100]),
+      yScale: d3.scaleLinear().domain([0, 10]).range([100, 0])
+    };
+    var layer = {
+      label: "mean",
+      color: "#4269D0",
+      options: { style: "errorbar" },
+      mapping: { x_var: "group", y_var: "mean", low_y: "low", high_y: "high" },
+      data: [{ group: "A", mean: 5, low: 3, high: 7 }]
+    };
+
+    renderer.render(chart, layer);
+
+    expect(document.querySelectorAll("g." + "tag-rangeBar-error-chart-mean").length).toBe(1);
+    expect(document.querySelectorAll(".mean-ci-whisker").length).toBe(1);
+    expect(document.querySelectorAll(".mean-ci-point").length).toBe(1);
+  });
+
+  test("GaugeRenderer.render creates threshold bands and labels", function() {
+    var renderer = getRenderer("gauge");
+    document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
+    var el = document.getElementById("chart");
+    var chart = {
+      element: el,
+      chart: d3.select(el).select(".myIO-chart-area"),
+      options: { transition: { speed: 0 } },
+      width: 240,
+      height: 180
+    };
+    var layer = {
+      label: "Completion",
+      mapping: { value: "value" },
+      options: { metric: "Activation" },
+      data: [{ value: 0.65 }]
+    };
+
+    renderer.render(chart, layer);
+
+    expect(document.querySelectorAll(".myIO-gauge-threshold").length).toBe(3);
+    expect(document.querySelector(".gauge-label").textContent).toBe("Activation");
+    expect(document.querySelector(".gauge-min-label").textContent).toBe("0%");
+    expect(document.querySelector(".gauge-max-label").textContent).toBe("100%");
+  });
+
+  test("TreemapRenderer.render uses full labels instead of first letters", function() {
+    var renderer = getRenderer("treemap");
+    document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
+    var el = document.getElementById("chart");
+    var chart = {
+      element: el,
+      chart: d3.select(el).select(".myIO-chart-area"),
+      margin: { top: 30, bottom: 30, left: 30, right: 30 },
+      width: 360,
+      height: 260,
+      config: { scales: { colorScheme: { enabled: false } } },
+      options: { colorScheme: null },
+      runtime: {}
+    };
+    var layer = {
+      label: "Headcount",
+      color: ["#4269D0", "#EF603B"],
+      mapping: { level_1: "department", level_2: "team", x_var: "team", y_var: "headcount" },
+      data: {
+        name: "Headcount",
+        children: [
+          { name: "Engineering", children: [{ name: "Frontend", department: "Engineering", team: "Frontend", headcount: 25 }] }
+        ]
+      }
+    };
+
+    renderer.render(chart, layer);
+
+    expect(Array.from(document.querySelectorAll(".inner-text tspan")).map(function(node) {
+      return node.textContent;
+    })).toContain("Frontend");
+  });
+
   test("SankeyRenderer.render creates node and link elements", function() {
     var renderer = getRenderer("sankey");
     document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";

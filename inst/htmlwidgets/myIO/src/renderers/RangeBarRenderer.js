@@ -7,6 +7,11 @@ export class RangeBarRenderer {
   static dataContract = { x_var: { required: true }, low_y: { required: true, numeric: true }, high_y: { required: true, numeric: true } };
 
   render(chart, layer) {
+    if (layer.options && layer.options.style === "errorbar") {
+      renderErrorBars(chart, layer);
+      return;
+    }
+
     var transitionSpeed = chart.options.transition.speed;
     var xVar = layer.mapping.x_var;
     var lowVar = layer.mapping.low_y;
@@ -71,5 +76,82 @@ export class RangeBarRenderer {
 
   remove(chart, layer) {
     chart.dom.chartArea.selectAll("." + tagName("rangeBar", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll("." + tagName("rangeBar-error", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
   }
+}
+
+function renderErrorBars(chart, layer) {
+  var transitionSpeed = chart.options.transition.speed;
+  var xVar = layer.mapping.x_var;
+  var lowVar = layer.mapping.low_y;
+  var highVar = layer.mapping.high_y;
+  var meanVar = layer.mapping.y_var;
+  var color = layer.color || "#4269D0";
+  var capWidth = layer.options && layer.options.capWidth ? layer.options.capWidth : 18;
+  var radius = layer.options && layer.options.pointRadius ? layer.options.pointRadius : 4;
+
+  var groups = chart.chart
+    .selectAll("." + tagName("rangeBar-error", chart.element.id, layer.label))
+    .data(layer.data);
+
+  groups.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
+
+  var enter = groups.enter()
+    .append("g")
+    .attr("class", tagName("rangeBar-error", chart.element.id, layer.label))
+    .attr("clip-path", "url(#" + chart.element.id + "clip)")
+    .style("opacity", 0);
+
+  enter.append("line").attr("class", "mean-ci-whisker");
+  enter.append("line").attr("class", "mean-ci-cap mean-ci-cap-low");
+  enter.append("line").attr("class", "mean-ci-cap mean-ci-cap-high");
+  enter.append("circle").attr("class", "mean-ci-point");
+
+  groups.merge(enter)
+    .transition()
+    .ease(d3.easeQuad)
+    .duration(transitionSpeed)
+    .style("opacity", 1)
+    .each(function(d) {
+      var group = d3.select(this);
+      var x = chart.xScale(d[xVar]);
+      if (chart.xScale.bandwidth) {
+        x += chart.xScale.bandwidth() / 2;
+      }
+      var lowY = chart.yScale(+d[lowVar]);
+      var highY = chart.yScale(+d[highVar]);
+      var meanY = chart.yScale(+d[meanVar]);
+
+      group.select(".mean-ci-whisker")
+        .attr("x1", x)
+        .attr("x2", x)
+        .attr("y1", lowY)
+        .attr("y2", highY)
+        .attr("stroke", color)
+        .attr("stroke-width", 2);
+
+      group.select(".mean-ci-cap-low")
+        .attr("x1", x - capWidth / 2)
+        .attr("x2", x + capWidth / 2)
+        .attr("y1", lowY)
+        .attr("y2", lowY)
+        .attr("stroke", color)
+        .attr("stroke-width", 2);
+
+      group.select(".mean-ci-cap-high")
+        .attr("x1", x - capWidth / 2)
+        .attr("x2", x + capWidth / 2)
+        .attr("y1", highY)
+        .attr("y2", highY)
+        .attr("stroke", color)
+        .attr("stroke-width", 2);
+
+      group.select(".mean-ci-point")
+        .attr("cx", x)
+        .attr("cy", meanY)
+        .attr("r", radius)
+        .attr("fill", color)
+        .attr("stroke", "var(--chart-bg, #ffffff)")
+        .attr("stroke-width", 1.5);
+    });
 }

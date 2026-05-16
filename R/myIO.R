@@ -24,6 +24,7 @@ sizingPolicy_myIO <- function() {
 #' @param width a string of either pixel width or a percentage width
 #' @param height a string of pixel height
 #' @param elementId a unique id for the htmlwidget object
+#' @param title Optional chart title rendered inside the widget SVG.
 #' @param sparkline Logical. If TRUE, renders a compact sparkline suitable for
 #'   embedding in table cells. Strips axes, legend, and interactions.
 #'   Only "line", "bar", and "area" layer types are supported. Default FALSE.
@@ -47,6 +48,7 @@ sizingPolicy_myIO <- function() {
 #'
 #' @export
 myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL,
+                 title = NULL,
                  sparkline = FALSE, engine = "auto", webgl_threshold = 50000L,
                  unify_data_path = FALSE) {
   validateCssDimension <- function(value, arg) {
@@ -66,11 +68,15 @@ myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL
 
   validateCssDimension(width, "width")
   validateCssDimension(height, "height")
+  if (!is.null(title) && (!is.character(title) || length(title) != 1L || is.na(title))) {
+    stop("myIO(): `title` must be NULL or a single character string.", call. = FALSE)
+  }
 
   x <- list(
     data = data,
     config = list(
       specVersion = 2L,
+      title = title,
       sparkline = if (isTRUE(sparkline)) TRUE else NULL,
       layers = list(),
       layout = list(
