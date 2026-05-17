@@ -27,12 +27,8 @@ export class WaterfallRenderer {
       .attr("clip-path", "url(#" + chart.element.id + "clip)")
       .attr("x", function(d) { return chart.xScale(d[xVar]) + barOffset; })
       .attr("width", barWidth)
-      .attr("y", function(d) {
-        return chart.yScale(Math.max(+d._base_y, +d._cumulative_y));
-      })
-      .attr("height", function(d) {
-        return Math.abs(chart.yScale(+d._base_y) - chart.yScale(+d._cumulative_y));
-      })
+      .attr("y", function(d) { return chart.yScale(+d._base_y); })
+      .attr("height", 0)
       .attr("fill", function(d, i) {
         if (hasColorArray) {
           return layer.color[i % layer.color.length];
@@ -41,14 +37,12 @@ export class WaterfallRenderer {
           return "#888";
         }
         return +d._cumulative_y >= +d._base_y ? "#4CAF50" : "#F44336";
-      })
-      .style("opacity", 0);
+      });
 
     bars.merge(newBars)
       .transition()
       .ease(d3.easeQuad)
       .duration(transitionSpeed)
-      .style("opacity", 1)
       .attr("x", function(d) { return chart.xScale(d[xVar]) + barOffset; })
       .attr("width", barWidth)
       .attr("y", function(d) {

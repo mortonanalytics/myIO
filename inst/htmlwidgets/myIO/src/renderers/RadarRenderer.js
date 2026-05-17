@@ -72,40 +72,83 @@ export class RadarRenderer {
       .join("g")
       .attr("class", "radar-polygon-layer");
 
-    axisLayer.selectAll(".radar-axis")
-      .data(axisOrder)
-      .join(function(enter) {
-        var group = enter.append("g").attr("class", "radar-axis");
-        group.append("line").attr("class", "radar-axis-line");
-        group.append("text").attr("class", "radar-axis-label");
-        return group;
-      })
-      .each(function(axisName, index) {
-        var angle = 2 * Math.PI * index / axisCount;
-        var lineX = centerX + maxRadius * Math.sin(angle);
-        var lineY = centerY - maxRadius * Math.cos(angle);
-        var labelX = centerX + (maxRadius + labelOffset) * Math.sin(angle);
-        var labelY = centerY - (maxRadius + labelOffset) * Math.cos(angle);
-        var textAnchor = "middle";
-        if (Math.sin(angle) > 0.25) {
-          textAnchor = "start";
-        } else if (Math.sin(angle) < -0.25) {
-          textAnchor = "end";
-        }
+    var transitionSpeed = (chart.options && chart.options.transition && typeof chart.options.transition.speed === "number")
+      ? chart.options.transition.speed
+      : 0;
 
-        d3.select(this).select(".radar-axis-line")
-          .attr("x1", centerX)
-          .attr("y1", centerY)
-          .attr("x2", lineX)
-          .attr("y2", lineY);
+    function axisGeometry(index) {
+      var angle = 2 * Math.PI * index / axisCount;
+      var sinA = Math.sin(angle);
+      var cosA = Math.cos(angle);
+      var textAnchor = "middle";
+      if (sinA > 0.25) {
+        textAnchor = "start";
+      } else if (sinA < -0.25) {
+        textAnchor = "end";
+      }
+      return {
+        lineX: centerX + maxRadius * sinA,
+        lineY: centerY - maxRadius * cosA,
+        labelX: centerX + (maxRadius + labelOffset) * sinA,
+        labelY: centerY - (maxRadius + labelOffset) * cosA,
+        textAnchor: textAnchor
+      };
+    }
 
-        d3.select(this).select(".radar-axis-label")
-          .attr("x", labelX)
-          .attr("y", labelY)
-          .attr("dy", "0.35em")
-          .attr("text-anchor", textAnchor)
-          .text(axisName);
-      });
+    var axisSelection = axisLayer.selectAll(".radar-axis")
+      .data(axisOrder, function(d) { return d; });
+
+    axisSelection.exit()
+      .transition().duration(transitionSpeed)
+      .style("opacity", 0)
+      .remove();
+
+    var axisEnter = axisSelection.enter()
+      .append("g")
+      .attr("class", "radar-axis")
+      .style("opacity", 0);
+
+    axisEnter.append("line")
+      .attr("class", "radar-axis-line")
+      .attr("stroke", "var(--chart-grid, #cbd5e1)")
+      .attr("stroke-width", 1)
+      .attr("x1", centerX)
+      .attr("y1", centerY)
+      .attr("x2", centerX)
+      .attr("y2", centerY);
+
+    axisEnter.append("text")
+      .attr("class", "radar-axis-label")
+      .attr("fill", "var(--chart-fg, #1f2937)")
+      .attr("x", centerX)
+      .attr("y", centerY)
+      .attr("dy", "0.35em")
+      .attr("text-anchor", "middle");
+
+    var axisMerged = axisEnter.merge(axisSelection);
+
+    axisMerged.transition().duration(transitionSpeed).style("opacity", 1);
+
+    axisMerged.each(function(axisName, index) {
+      var geom = axisGeometry(index);
+      var group = d3.select(this);
+
+      group.select(".radar-axis-line")
+        .attr("stroke", "var(--chart-grid, #cbd5e1)")
+        .attr("stroke-width", 1)
+        .transition().duration(transitionSpeed)
+        .attr("x1", centerX)
+        .attr("y1", centerY)
+        .attr("x2", geom.lineX)
+        .attr("y2", geom.lineY);
+
+      group.select(".radar-axis-label")
+        .text(axisName)
+        .transition().duration(transitionSpeed)
+        .attr("x", geom.labelX)
+        .attr("y", geom.labelY)
+        .attr("text-anchor", geom.textAnchor);
+    });
 
     groupMap.forEach(function(rows, key) {
       var rowByAxis = new Map();
@@ -145,15 +188,57 @@ export class RadarRenderer {
       .y(function(d) { return d.y; })
       .curve(d3.curveLinearClosed);
 
-    polygonLayer.selectAll(".radar-polygon")
-      .data(groups)
-      .join("path")
+    function centerPolygonPath(points) {
+      return lineGenerator(points.map(function(p) {
+        return { x: centerX, y: centerY };
+      }));
+    }
+
+    var polygons = polygonLayer.selectAll(".radar-polygon")
+      .data(groups, function(d) { return d.key; });
+
+    polygons.exit()
+      .transition().duration(transitionSpeed)
+      .style("opacity", 0)
+      .remove();
+
+    var polygonEnter = polygons.enter()
+      .append("path")
       .attr("class", "radar-polygon")
-      .attr("d", function(d) { return lineGenerator(d.points); })
+      .attr("d", function(d) { return centerPolygonPath(d.points); })
+      .attr("fill", function(d) { return d.color; })
+      .attr("fill-opacity", 0)
+      .attr("stroke", function(d) { return d.color; })
+      .attr("stroke-width", 2)
+      .attr("stroke-opacity", 0);
+
+    polygonEnter.merge(polygons)
+      .transition().duration(transitionSpeed)
+      .attrTween("d", function(d) {
+        var self = this;
+        var previous = self._radarPoints || d.points.map(function() {
+          return { x: centerX, y: centerY };
+        });
+        var target = d.points;
+        var interp = previous.map(function(prev, i) {
+          var next = target[i] || prev;
+          return {
+            x: d3.interpolateNumber(prev.x, next.x),
+            y: d3.interpolateNumber(prev.y, next.y)
+          };
+        });
+        return function(t) {
+          var pts = interp.map(function(p) {
+            return { x: p.x(t), y: p.y(t) };
+          });
+          self._radarPoints = target;
+          return lineGenerator(pts);
+        };
+      })
       .attr("fill", function(d) { return d.color; })
       .attr("fill-opacity", 0.2)
       .attr("stroke", function(d) { return d.color; })
-      .attr("stroke-width", 2);
+      .attr("stroke-opacity", 1);
   }
 
   getHoverSelector(chart, layer) {

@@ -65,35 +65,69 @@ export class FunnelRenderer {
     }));
     chart.colorDiscrete = chart.derived.colorDiscrete;
 
+    var transitionSpeed = (chart.options && chart.options.transition && typeof chart.options.transition.speed === "number")
+      ? chart.options.transition.speed
+      : 0;
+
+    function pathFor(points) {
+      return "M" + points[0][0] + "," + points[0][1] +
+        "L" + points[1][0] + "," + points[1][1] +
+        "L" + points[2][0] + "," + points[2][1] +
+        "L" + points[3][0] + "," + points[3][1] + "Z";
+    }
+
+    function collapsedPoints(s) {
+      var midX = (s.points[0][0] + s.points[1][0]) / 2;
+      var midY = (s.points[0][1] + s.points[3][1]) / 2;
+      return [[midX, midY], [midX, midY], [midX, midY], [midX, midY]];
+    }
+
     root = chart.dom.chartArea.selectAll(".tag-funnel-" + layer.id)
       .data([null])
       .join("g")
       .attr("class", "tag-funnel-" + layer.id);
 
     stageGroups = root.selectAll(".funnel-stage-group")
-      .data(stages)
-      .join(function(enter) {
-        var group = enter.append("g").attr("class", "funnel-stage-group");
-        group.append("path").attr("class", "funnel-stage");
-        group.append("text").attr("class", "funnel-label");
-        return group;
-      });
+      .data(stages, function(d) { return d.stage; });
 
-    stageGroups.select(".funnel-stage")
-      .attr("d", function(d) {
-        return "M" + d.points[0][0] + "," + d.points[0][1] +
-          "L" + d.points[1][0] + "," + d.points[1][1] +
-          "L" + d.points[2][0] + "," + d.points[2][1] +
-          "L" + d.points[3][0] + "," + d.points[3][1] + "Z";
-      })
+    stageGroups.exit()
+      .transition().duration(transitionSpeed)
+      .style("opacity", 0)
+      .remove();
+
+    var stageEnter = stageGroups.enter().append("g")
+      .attr("class", "funnel-stage-group")
+      .style("opacity", 0);
+
+    stageEnter.append("path")
+      .attr("class", "funnel-stage")
+      .attr("d", function(d) { return pathFor(collapsedPoints(d)); })
       .attr("fill", function(d) { return d.color; });
 
-    stageGroups.select(".funnel-label")
+    stageEnter.append("text")
+      .attr("class", "funnel-label")
       .attr("x", function(d) { return d.labelX; })
       .attr("y", function(d) { return d.labelY; })
       .attr("dy", "0.35em")
       .attr("text-anchor", "middle")
       .text(function(d) { return d.stage; });
+
+    var stagesMerged = stageEnter.merge(stageGroups);
+
+    stagesMerged
+      .transition().duration(transitionSpeed)
+      .style("opacity", 1);
+
+    stagesMerged.select(".funnel-stage")
+      .transition().duration(transitionSpeed)
+      .attr("d", function(d) { return pathFor(d.points); })
+      .attr("fill", function(d) { return d.color; });
+
+    stagesMerged.select(".funnel-label")
+      .text(function(d) { return d.stage; })
+      .transition().duration(transitionSpeed)
+      .attr("x", function(d) { return d.labelX; })
+      .attr("y", function(d) { return d.labelY; });
   }
 
   getHoverSelector(chart, layer) {

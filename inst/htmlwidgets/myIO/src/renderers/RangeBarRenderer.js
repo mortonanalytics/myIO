@@ -26,37 +26,41 @@ export class RangeBarRenderer {
 
     bars.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
 
+    function midpointY(d) {
+      return chart.yScale((+d[lowVar] + +d[highVar]) / 2);
+    }
+    function topY(d) {
+      return chart.yScale(Math.max(+d[lowVar], +d[highVar]));
+    }
+    function rangeHeight(d) {
+      return Math.abs(chart.yScale(+d[lowVar]) - chart.yScale(+d[highVar]));
+    }
+    function rangeFill(d) {
+      if (typeof chart.colorDiscrete === "function" && d[layer.mapping.group]) {
+        return chart.colorDiscrete(d[layer.mapping.group]);
+      }
+      return layer.color || "#6b7280";
+    }
+
     var newBars = bars.enter()
       .append("rect")
       .attr("class", tagName("rangeBar", chart.element.id, layer.label))
       .attr("clip-path", "url(#" + chart.element.id + "clip)")
       .attr("x", function(d) { return chart.xScale(d[xVar]) - barWidth / 2; })
-      .attr("y", function(d) { return chart.yScale(Math.max(+d[lowVar], +d[highVar])); })
+      .attr("y", midpointY)
       .attr("width", barWidth)
-      .attr("height", function(d) { return Math.abs(chart.yScale(+d[lowVar]) - chart.yScale(+d[highVar])); })
-      .attr("fill", function(d) {
-        if (typeof chart.colorDiscrete === "function" && d[layer.mapping.group]) {
-          return chart.colorDiscrete(d[layer.mapping.group]);
-        }
-        return layer.color || "#6b7280";
-      })
-      .style("opacity", 0);
+      .attr("height", 0)
+      .attr("fill", rangeFill);
 
     bars.merge(newBars)
       .transition()
       .ease(d3.easeQuad)
       .duration(transitionSpeed)
       .attr("x", function(d) { return chart.xScale(d[xVar]) - barWidth / 2; })
-      .attr("y", function(d) { return chart.yScale(Math.max(+d[lowVar], +d[highVar])); })
+      .attr("y", topY)
       .attr("width", barWidth)
-      .attr("height", function(d) { return Math.abs(chart.yScale(+d[lowVar]) - chart.yScale(+d[highVar])); })
-      .attr("fill", function(d) {
-        if (typeof chart.colorDiscrete === "function" && d[layer.mapping.group]) {
-          return chart.colorDiscrete(d[layer.mapping.group]);
-        }
-        return layer.color || "#6b7280";
-      })
-      .style("opacity", 1);
+      .attr("height", rangeHeight)
+      .attr("fill", rangeFill);
   }
 
   getHoverSelector(chart, layer) {
@@ -96,6 +100,17 @@ function renderErrorBars(chart, layer) {
   var capWidth = layer.options && layer.options.capWidth ? layer.options.capWidth : 18;
   var radius = layer.options && layer.options.pointRadius ? layer.options.pointRadius : 4;
 
+  function centerX(d) {
+    var x = chart.xScale(d[xVar]);
+    if (chart.xScale.bandwidth) {
+      x += chart.xScale.bandwidth() / 2;
+    }
+    return x;
+  }
+  function lowY(d) { return chart.yScale(+d[lowVar]); }
+  function highY(d) { return chart.yScale(+d[highVar]); }
+  function meanY(d) { return chart.yScale(+d[meanVar]); }
+
   var groups = chart.chart
     .selectAll("." + tagName("rangeBar-error", chart.element.id, layer.label))
     .data(layer.data);
@@ -108,56 +123,54 @@ function renderErrorBars(chart, layer) {
     .attr("clip-path", "url(#" + chart.element.id + "clip)")
     .style("opacity", 0);
 
-  enter.append("line").attr("class", "mean-ci-whisker");
-  enter.append("line").attr("class", "mean-ci-cap mean-ci-cap-low");
-  enter.append("line").attr("class", "mean-ci-cap mean-ci-cap-high");
-  enter.append("circle").attr("class", "mean-ci-point");
+  enter.append("line").attr("class", "mean-ci-whisker")
+    .attr("x1", centerX).attr("x2", centerX)
+    .attr("y1", meanY).attr("y2", meanY)
+    .attr("stroke", color).attr("stroke-width", 2);
+  enter.append("line").attr("class", "mean-ci-cap mean-ci-cap-low")
+    .attr("x1", centerX).attr("x2", centerX)
+    .attr("y1", meanY).attr("y2", meanY)
+    .attr("stroke", color).attr("stroke-width", 2);
+  enter.append("line").attr("class", "mean-ci-cap mean-ci-cap-high")
+    .attr("x1", centerX).attr("x2", centerX)
+    .attr("y1", meanY).attr("y2", meanY)
+    .attr("stroke", color).attr("stroke-width", 2);
+  enter.append("circle").attr("class", "mean-ci-point")
+    .attr("cx", centerX).attr("cy", meanY)
+    .attr("r", 0)
+    .attr("fill", color)
+    .attr("stroke", "var(--chart-bg, #ffffff)")
+    .attr("stroke-width", 1.5);
 
-  groups.merge(enter)
-    .transition()
-    .ease(d3.easeQuad)
-    .duration(transitionSpeed)
-    .style("opacity", 1)
-    .each(function(d) {
-      var group = d3.select(this);
-      var x = chart.xScale(d[xVar]);
-      if (chart.xScale.bandwidth) {
-        x += chart.xScale.bandwidth() / 2;
-      }
-      var lowY = chart.yScale(+d[lowVar]);
-      var highY = chart.yScale(+d[highVar]);
-      var meanY = chart.yScale(+d[meanVar]);
+  var merged = groups.merge(enter);
 
-      group.select(".mean-ci-whisker")
-        .attr("x1", x)
-        .attr("x2", x)
-        .attr("y1", lowY)
-        .attr("y2", highY)
-        .attr("stroke", color)
-        .attr("stroke-width", 2);
+  merged
+    .transition().ease(d3.easeQuad).duration(transitionSpeed)
+    .style("opacity", 1);
 
-      group.select(".mean-ci-cap-low")
-        .attr("x1", x - capWidth / 2)
-        .attr("x2", x + capWidth / 2)
-        .attr("y1", lowY)
-        .attr("y2", lowY)
-        .attr("stroke", color)
-        .attr("stroke-width", 2);
+  merged.select(".mean-ci-whisker")
+    .transition().ease(d3.easeQuad).duration(transitionSpeed)
+    .attr("x1", centerX).attr("x2", centerX)
+    .attr("y1", lowY).attr("y2", highY)
+    .attr("stroke", color);
 
-      group.select(".mean-ci-cap-high")
-        .attr("x1", x - capWidth / 2)
-        .attr("x2", x + capWidth / 2)
-        .attr("y1", highY)
-        .attr("y2", highY)
-        .attr("stroke", color)
-        .attr("stroke-width", 2);
+  merged.select(".mean-ci-cap-low")
+    .transition().ease(d3.easeQuad).duration(transitionSpeed)
+    .attr("x1", function(d) { return centerX(d) - capWidth / 2; })
+    .attr("x2", function(d) { return centerX(d) + capWidth / 2; })
+    .attr("y1", lowY).attr("y2", lowY)
+    .attr("stroke", color);
 
-      group.select(".mean-ci-point")
-        .attr("cx", x)
-        .attr("cy", meanY)
-        .attr("r", radius)
-        .attr("fill", color)
-        .attr("stroke", "var(--chart-bg, #ffffff)")
-        .attr("stroke-width", 1.5);
-    });
+  merged.select(".mean-ci-cap-high")
+    .transition().ease(d3.easeQuad).duration(transitionSpeed)
+    .attr("x1", function(d) { return centerX(d) - capWidth / 2; })
+    .attr("x2", function(d) { return centerX(d) + capWidth / 2; })
+    .attr("y1", highY).attr("y2", highY)
+    .attr("stroke", color);
+
+  merged.select(".mean-ci-point")
+    .transition().ease(d3.easeQuad).duration(transitionSpeed)
+    .attr("cx", centerX).attr("cy", meanY)
+    .attr("r", radius)
+    .attr("fill", color);
 }

@@ -31,55 +31,75 @@ export class GaugeRenderer {
           { min: 0.85, max: 1, color: "#EF603B" }
         ];
 
+    function bandArcFor(d) {
+      return bandArc({
+        startAngle: tau * -0.5 + tau * Math.max(0, Math.min(1, +d.min || 0)),
+        endAngle: tau * -0.5 + tau * Math.max(0, Math.min(1, +d.max || 0))
+      });
+    }
+
     var bands = chart.chart.selectAll(".myIO-gauge-threshold").data(thresholds);
-    bands.exit().remove();
-    bands.enter().append("path")
+
+    bands.exit()
+      .transition().duration(transitionSpeed)
+      .style("opacity", 0)
+      .remove();
+
+    var bandsEnter = bands.enter().append("path")
       .attr("class", "myIO-gauge-threshold")
-      .merge(bands)
+      .attr("fill", function(d) { return d.color; })
+      .attr("opacity", 0)
+      .attr("d", bandArcFor);
+
+    bandsEnter.merge(bands)
+      .transition().duration(transitionSpeed).ease(d3.easeQuad)
       .attr("fill", function(d) { return d.color; })
       .attr("opacity", 0.24)
-      .attr("d", function(d) {
-        return bandArc({
-          startAngle: tau * -0.5 + tau * Math.max(0, Math.min(1, +d.min || 0)),
-          endAngle: tau * -0.5 + tau * Math.max(0, Math.min(1, +d.max || 0))
-        });
-      });
+      .attr("d", bandArcFor);
 
     var pathBackground = chart.chart.selectAll(".myIO-gauge-background").data(pie([1]));
-    pathBackground.exit().remove();
+
+    pathBackground.exit()
+      .transition().duration(transitionSpeed)
+      .style("opacity", 0)
+      .remove();
+
     var newPathBackground = pathBackground.enter().append("path")
       .attr("class", "myIO-gauge-background")
       .attr("fill", "rgba(107, 114, 128, 0.22)")
-      .transition().duration(transitionSpeed).ease(d3.easeBack)
       .attr("d", arc)
-      .each(function() { this._current = 0; });
+      .each(function(d) { this._current = d; });
 
-    pathBackground.transition().duration(transitionSpeed).ease(d3.easeBack)
-      .duration(transitionSpeed)
+    newPathBackground.merge(pathBackground)
+      .transition().duration(transitionSpeed).ease(d3.easeBack)
       .attr("fill", "rgba(107, 114, 128, 0.22)")
       .attrTween("d", function(a) {
         this._current = this._current || a;
         var i = d3.interpolate(this._current, a);
-        this._current = i(0);
+        this._current = i(1);
         return function(t) { return arc(i(t)); };
       });
 
     var path = chart.chart.selectAll(".myIO-gauge-value").data(pie(data));
-    path.exit().remove();
+
+    path.exit()
+      .transition().duration(transitionSpeed)
+      .style("opacity", 0)
+      .remove();
+
     var newPath = path.enter().append("path")
       .attr("class", "myIO-gauge-value")
       .attr("fill", function(d, i) { return [layer.color || colorForValue(value, thresholds), "transparent"][i]; })
-      .transition().duration(transitionSpeed).ease(d3.easeBack)
       .attr("d", arc)
-      .each(function() { this._current = 0; });
+      .each(function(d) { this._current = d; });
 
-    path.merge(newPath).transition().duration(transitionSpeed).ease(d3.easeBack)
-      .duration(transitionSpeed)
+    newPath.merge(path)
+      .transition().duration(transitionSpeed).ease(d3.easeBack)
       .attr("fill", function(d, i) { return [layer.color || colorForValue(value, thresholds), "transparent"][i]; })
       .attrTween("d", function(a) {
         this._current = this._current || a;
         var i = d3.interpolate(this._current, a);
-        this._current = i(0);
+        this._current = i(1);
         return function(t) { return arc(i(t)); };
       });
 
