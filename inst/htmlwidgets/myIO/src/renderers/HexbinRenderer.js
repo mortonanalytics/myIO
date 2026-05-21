@@ -27,7 +27,7 @@ export class HexbinRenderer {
       .selectAll("." + tagName("hexbin", chart.element.id, layer.label))
       .data(binnedData);
 
-    bins.exit().transition().duration(transitionSpeed).remove();
+    bins.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
 
     var newbins = bins.enter()
       .append("path")

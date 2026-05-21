@@ -100,7 +100,7 @@ composite_regression <- function(data, mapping, label, color, options) {
           label = paste0(group_label, " (stats)"),
           data = annotation_data, mapping = list(),
           transform = "identity", color = NULL,
-          options = list(position = "top-right"),
+          options = list(position = "top-left"),
           scaleHints = list(
             xScaleType = "linear", yScaleType = "linear",
             xExtentFields = list(), yExtentFields = list(),

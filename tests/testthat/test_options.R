@@ -4,6 +4,21 @@ test_that("setAxisFormat sets axis formats", {
   expect_equal(widget$x$config$axes$yAxisFormat, ".1f")
 })
 
+test_that("myIO title serializes without changing omitted default", {
+  expect_null(myIO::myIO()$x$config$title)
+  widget <- myIO::myIO(title = "Quarterly Signups")
+  expect_equal(widget$x$config$title, "Quarterly Signups")
+})
+
+test_that("setTitle updates and clears chart title", {
+  widget <- myIO::myIO() |>
+    myIO::setTitle("Activation Funnel")
+  expect_equal(widget$x$config$title, "Activation Funnel")
+
+  widget <- myIO::setTitle(widget, NULL)
+  expect_null(widget$x$config$title)
+})
+
 test_that("layout and scale helpers update config", {
   widget <- myIO::myIO() |>
     myIO::defineCategoricalAxis(xAxis = TRUE, yAxis = TRUE) |>

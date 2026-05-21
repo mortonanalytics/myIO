@@ -31,8 +31,10 @@ export class TextRenderer {
     var isTop = position.indexOf("top") !== -1;
     var isRight = position.indexOf("right") !== -1;
 
-    var x = isRight ? chart.width - 10 : 10;
-    var y = isTop ? 20 : chart.height - 10;
+    var plotWidth = chart.width - (chart.margin.left + chart.margin.right);
+    var plotHeight = chart.height - (chart.margin.top + chart.margin.bottom);
+    var x = isRight ? plotWidth - 58 : 10;
+    var y = isTop ? 20 : plotHeight - 10;
     var anchor = isRight ? "end" : "start";
 
     var g = chart.chart.append("g")

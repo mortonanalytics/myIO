@@ -12,11 +12,11 @@ describe("OKABE_ITO palette", function() {
     });
   });
 
-  test("first color is the canonical Okabe-Ito orange", function() {
+  test("first color is the Okabe-Ito orange", function() {
     expect(OKABE_ITO[0]).toBe("#E69F00");
   });
 
-  test("contains expected sky blue", function() {
+  test("contains the Okabe-Ito sky blue", function() {
     expect(OKABE_ITO).toContain("#56B4E9");
   });
 });

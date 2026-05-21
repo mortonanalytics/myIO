@@ -11,6 +11,8 @@ export class WaterfallRenderer {
     var xVar = layer.mapping.x_var;
     var deltaVar = layer.mapping.y_var;
     var bandwidth = chart.xScale.bandwidth ? chart.xScale.bandwidth() : 0;
+    var barWidth = bandwidth * 0.82;
+    var barOffset = (bandwidth - barWidth) / 2;
     var hasColorArray = Array.isArray(layer.color);
 
     var bars = chart.chart
@@ -23,14 +25,10 @@ export class WaterfallRenderer {
       .append("rect")
       .attr("class", tagName("waterfall", chart.element.id, layer.label))
       .attr("clip-path", "url(#" + chart.element.id + "clip)")
-      .attr("x", function(d) { return chart.xScale(d[xVar]); })
-      .attr("width", bandwidth)
-      .attr("y", function(d) {
-        return chart.yScale(Math.max(+d._base_y, +d._cumulative_y));
-      })
-      .attr("height", function(d) {
-        return Math.abs(chart.yScale(+d._base_y) - chart.yScale(+d._cumulative_y));
-      })
+      .attr("x", function(d) { return chart.xScale(d[xVar]) + barOffset; })
+      .attr("width", barWidth)
+      .attr("y", function(d) { return chart.yScale(+d._base_y); })
+      .attr("height", 0)
       .attr("fill", function(d, i) {
         if (hasColorArray) {
           return layer.color[i % layer.color.length];
@@ -39,16 +37,14 @@ export class WaterfallRenderer {
           return "#888";
         }
         return +d._cumulative_y >= +d._base_y ? "#4CAF50" : "#F44336";
-      })
-      .style("opacity", 0);
+      });
 
     bars.merge(newBars)
       .transition()
       .ease(d3.easeQuad)
       .duration(transitionSpeed)
-      .style("opacity", 1)
-      .attr("x", function(d) { return chart.xScale(d[xVar]); })
-      .attr("width", bandwidth)
+      .attr("x", function(d) { return chart.xScale(d[xVar]) + barOffset; })
+      .attr("width", barWidth)
       .attr("y", function(d) {
         return chart.yScale(Math.max(+d._base_y, +d._cumulative_y));
       })
@@ -76,11 +72,11 @@ export class WaterfallRenderer {
       .append("line")
       .attr("class", tagName("waterfall-connector", chart.element.id, layer.label))
       .attr("clip-path", "url(#" + chart.element.id + "clip)")
-      .style("stroke", "#666")
+      .style("stroke", "#374151")
       .style("stroke-width", 1.5)
       .style("stroke-dasharray", "4 2")
-      .attr("x1", function(d, i) { return chart.xScale(layer.data[i][xVar]) + bandwidth; })
-      .attr("x2", function(d, i) { return chart.xScale(layer.data[i + 1][xVar]); })
+      .attr("x1", function(d, i) { return chart.xScale(layer.data[i][xVar]) + barOffset + barWidth; })
+      .attr("x2", function(d, i) { return chart.xScale(layer.data[i + 1][xVar]) + barOffset; })
       .attr("y1", function(d) { return chart.yScale(+d._cumulative_y); })
       .attr("y2", function(d) { return chart.yScale(+d._cumulative_y); })
       .style("opacity", 0);
@@ -90,8 +86,8 @@ export class WaterfallRenderer {
       .ease(d3.easeQuad)
       .duration(transitionSpeed)
       .style("opacity", 1)
-      .attr("x1", function(d, i) { return chart.xScale(layer.data[i][xVar]) + bandwidth; })
-      .attr("x2", function(d, i) { return chart.xScale(layer.data[i + 1][xVar]); })
+      .attr("x1", function(d, i) { return chart.xScale(layer.data[i][xVar]) + barOffset + barWidth; })
+      .attr("x2", function(d, i) { return chart.xScale(layer.data[i + 1][xVar]) + barOffset; })
       .attr("y1", function(d) { return chart.yScale(+d._cumulative_y); })
       .attr("y2", function(d) { return chart.yScale(+d._cumulative_y); });
   }

@@ -40,6 +40,10 @@ export class BumpRenderer {
       .y(function(d) { return yScale(d[yVar]); })
       .curve(d3.curveBumpX);
 
+    var transitionSpeed = (chart.options && chart.options.transition && typeof chart.options.transition.speed === "number")
+      ? chart.options.transition.speed
+      : 0;
+
     var groupIndex = 0;
     groups.forEach(function(data, name) {
       var color = colorScale(name);
@@ -47,26 +51,46 @@ export class BumpRenderer {
         return String(a[xVar]).localeCompare(String(b[xVar]));
       });
 
-      group.selectAll(".bump-line-" + groupIndex)
-        .data([sorted])
-        .join("path")
+      var lines = group.selectAll(".bump-line-" + groupIndex)
+        .data([sorted]);
+      var linesEnter = lines.enter().append("path")
         .attr("class", "bump-line bump-line-" + groupIndex)
-        .attr("d", line)
         .attr("fill", "none")
         .attr("stroke", color)
         .attr("stroke-width", 2.5)
-        .attr("stroke-opacity", 0.8);
+        .attr("stroke-opacity", 0)
+        .attr("d", line);
+      linesEnter.merge(lines)
+        .transition().duration(transitionSpeed)
+        .attr("stroke", color)
+        .attr("stroke-opacity", 0.8)
+        .attr("d", line);
 
-      group.selectAll(".bump-dot-" + groupIndex)
-        .data(sorted)
-        .join("circle")
+      var dots = group.selectAll(".bump-dot-" + groupIndex)
+        .data(sorted, function(d) { return d._source_key || d[xVar]; });
+
+      dots.exit()
+        .transition().duration(transitionSpeed)
+        .style("opacity", 0)
+        .remove();
+
+      var dotsEnter = dots.enter().append("circle")
         .attr("class", "bump-dot bump-dot-" + groupIndex)
         .attr("cx", function(d) { return xScale(d[xVar]); })
         .attr("cy", function(d) { return yScale(d[yVar]); })
         .attr("r", dotRadius)
         .attr("fill", color)
         .attr("stroke", "#fff")
-        .attr("stroke-width", 1.5);
+        .attr("stroke-width", 1.5)
+        .style("opacity", 0);
+
+      dotsEnter.merge(dots)
+        .transition().duration(transitionSpeed)
+        .style("opacity", 1)
+        .attr("cx", function(d) { return xScale(d[xVar]); })
+        .attr("cy", function(d) { return yScale(d[yVar]); })
+        .attr("r", dotRadius)
+        .attr("fill", color);
 
       groupIndex++;
     });
