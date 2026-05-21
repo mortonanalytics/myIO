@@ -64,16 +64,36 @@ export class WaffleRenderer {
       .attr("class", "tag-waffle-" + layer.id)
       .attr("transform", "translate(" + offsetX + "," + offsetY + ")");
 
-    group.selectAll(".waffle-cell")
-      .data(cells)
-      .join("rect")
+    var transitionSpeed = (chart.options && chart.options.transition && typeof chart.options.transition.speed === "number")
+      ? chart.options.transition.speed
+      : 0;
+
+    var cellSelection = group.selectAll(".waffle-cell")
+      .data(cells, function(d) { return d.row + "_" + d.col; });
+
+    cellSelection.exit()
+      .transition().duration(transitionSpeed)
+      .style("opacity", 0)
+      .remove();
+
+    var cellEnter = cellSelection.enter().append("rect")
       .attr("class", "waffle-cell")
       .attr("x", function(d) { return d.col * (cellSize + cellGap); })
       .attr("y", function(d) { return d.row * (cellSize + cellGap); })
       .attr("width", cellSize)
       .attr("height", cellSize)
       .attr("rx", cellRadius)
-      .attr("fill", function(d) { return d.color; });
+      .attr("fill", function(d) { return d.color; })
+      .style("opacity", 0);
+
+    cellEnter.merge(cellSelection)
+      .transition().duration(transitionSpeed)
+      .attr("x", function(d) { return d.col * (cellSize + cellGap); })
+      .attr("y", function(d) { return d.row * (cellSize + cellGap); })
+      .attr("width", cellSize)
+      .attr("height", cellSize)
+      .attr("fill", function(d) { return d.color; })
+      .style("opacity", 1);
   }
 
   getHoverSelector(chart, layer) {

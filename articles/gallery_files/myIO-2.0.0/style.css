@@ -82,6 +82,9 @@
 .x-label,
 .y-label,
 .legend-label,
+.myIO-chart-title,
+.myIO-axis-title,
+.myIO-inline-legend-label,
 .toolTip,
 .button,
 .myIO-empty-state {
@@ -91,9 +94,26 @@
 .inner-text,
 .x-label,
 .y-label,
-.legend-label {
+.legend-label,
+.myIO-axis-title,
+.myIO-inline-legend-label {
   font-size: 13px;
   fill: var(--chart-text-color);
+}
+
+.myIO-chart-title {
+  fill: var(--chart-sheet-accent);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.myIO-inline-legend {
+  pointer-events: none;
+}
+
+.myIO-inline-legend-label {
+  font-size: 12px;
+  dominant-baseline: middle;
 }
 
 .dot {

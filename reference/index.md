@@ -34,6 +34,8 @@ Customize colors, margins, themes, and visual elements
   : Set Color Scheme
 - [`setTheme()`](https://mortonanalytics.github.io/myIO/reference/setTheme.md)
   : Set Chart Theme
+- [`setTitle()`](https://mortonanalytics.github.io/myIO/reference/setTitle.md)
+  : Set Chart Title
 - [`setTransitionSpeed()`](https://mortonanalytics.github.io/myIO/reference/setTransitionSpeed.md)
   : Set Transition Speed
 - [`suppressLegend()`](https://mortonanalytics.github.io/myIO/reference/suppressLegend.md)

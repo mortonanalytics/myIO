@@ -24,7 +24,7 @@ export class LollipopRenderer {
     var xScale = chart.derived.xScale;
     var yScale = chart.derived.yScale;
     var flipAxis = chart.config.scales.flipAxis;
-    var speed = chart.config.transitions.speed;
+    var speed = chart.options.transition.speed;
     var group = chart.dom.chartArea.selectAll(".tag-lollipop-" + layer.id)
       .data([null]).join("g").attr("class", "tag-lollipop-" + layer.id);
 
@@ -33,68 +33,93 @@ export class LollipopRenderer {
     var xVar = layer.mapping.x_var;
     var yVar = layer.mapping.y_var;
     var bandOffset = xScale.bandwidth ? xScale.bandwidth() / 2 : 0;
-    var baseline = typeof yScale(0) === "number" ? yScale(0) : yScale.range()[0];
+    var yBaseline = typeof yScale(0) === "number" ? yScale(0) : yScale.range()[0];
+    var xBaseline = typeof xScale(0) === "number" ? xScale(0) : xScale.range()[0];
+
+    function stemPos(d) {
+      if (flipAxis) {
+        var stemY = yScale(d[xVar]);
+        if (yScale.bandwidth) {
+          stemY += bandOffset;
+        }
+        return {
+          x1: xBaseline,
+          x2: xScale(d[yVar]),
+          y1: stemY,
+          y2: stemY
+        };
+      }
+      var stemX = xScale(d[xVar]) + bandOffset;
+      return {
+        x1: stemX,
+        x2: stemX,
+        y1: yBaseline,
+        y2: yScale(d[yVar])
+      };
+    }
+
+    function headPos(d) {
+      var p = stemPos(d);
+      return { cx: p.x2, cy: p.y2 };
+    }
+
     var stems = group.selectAll(".lollipop-stem")
       .data(layer.data, function(d) { return d._source_key; });
 
     stems.exit()
-      .transition()
-      .duration(speed)
+      .transition().duration(speed)
       .style("opacity", 0)
+      .attr("x2", flipAxis ? xBaseline : function(d) { return xScale(d[xVar]) + bandOffset; })
+      .attr("y2", flipAxis ? function(d) { var y = yScale(d[xVar]); return yScale.bandwidth ? y + bandOffset : y; } : yBaseline)
       .remove();
 
-    if (flipAxis) {
-      stems.join("line")
-        .attr("class", "lollipop-stem")
-        .transition()
-        .duration(speed)
-        .attr("x1", 0)
-        .attr("x2", function(d) { return xScale(d[xVar]); })
-        .attr("y1", function(d) { return yScale(d[yVar]) + bandOffset; })
-        .attr("y2", function(d) { return yScale(d[yVar]) + bandOffset; })
-        .attr("stroke", layer.color)
-        .attr("stroke-width", stemWidth);
-    } else {
-      stems.join("line")
-        .attr("class", "lollipop-stem")
-        .transition()
-        .duration(speed)
-        .attr("x1", function(d) { return xScale(d[xVar]) + bandOffset; })
-        .attr("x2", function(d) { return xScale(d[xVar]) + bandOffset; })
-        .attr("y1", baseline)
-        .attr("y2", function(d) { return yScale(d[yVar]); })
-        .attr("stroke", layer.color)
-        .attr("stroke-width", stemWidth);
-    }
+    var stemEnter = stems.enter()
+      .append("line")
+      .attr("class", "lollipop-stem")
+      .attr("x1", function(d) { return stemPos(d).x1; })
+      .attr("x2", function(d) { return flipAxis ? stemPos(d).x1 : stemPos(d).x2; })
+      .attr("y1", function(d) { return stemPos(d).y1; })
+      .attr("y2", function(d) { return flipAxis ? stemPos(d).y1 : stemPos(d).y1; })
+      .attr("stroke", layer.color)
+      .attr("stroke-width", stemWidth)
+      .style("opacity", 0);
+
+    stemEnter.merge(stems)
+      .transition().duration(speed)
+      .style("opacity", 1)
+      .attr("x1", function(d) { return stemPos(d).x1; })
+      .attr("x2", function(d) { return stemPos(d).x2; })
+      .attr("y1", function(d) { return stemPos(d).y1; })
+      .attr("y2", function(d) { return stemPos(d).y2; })
+      .attr("stroke", layer.color)
+      .attr("stroke-width", stemWidth);
 
     var heads = group.selectAll(".lollipop-head")
       .data(layer.data, function(d) { return d._source_key; });
 
     heads.exit()
-      .transition()
-      .duration(speed)
+      .transition().duration(speed)
       .style("opacity", 0)
+      .attr("cx", function(d) { return stemPos(d).x1; })
+      .attr("cy", function(d) { return stemPos(d).y1; })
       .remove();
 
-    if (flipAxis) {
-      heads.join("circle")
-        .attr("class", "lollipop-head")
-        .transition()
-        .duration(speed)
-        .attr("cx", function(d) { return xScale(d[xVar]); })
-        .attr("cy", function(d) { return yScale(d[yVar]) + bandOffset; })
-        .attr("r", headRadius)
-        .attr("fill", layer.color);
-    } else {
-      heads.join("circle")
-        .attr("class", "lollipop-head")
-        .transition()
-        .duration(speed)
-        .attr("cx", function(d) { return xScale(d[xVar]) + bandOffset; })
-        .attr("cy", function(d) { return yScale(d[yVar]); })
-        .attr("r", headRadius)
-        .attr("fill", layer.color);
-    }
+    var headEnter = heads.enter()
+      .append("circle")
+      .attr("class", "lollipop-head")
+      .attr("cx", function(d) { return stemPos(d).x1; })
+      .attr("cy", function(d) { return stemPos(d).y1; })
+      .attr("r", headRadius)
+      .attr("fill", layer.color)
+      .style("opacity", 0);
+
+    headEnter.merge(heads)
+      .transition().duration(speed)
+      .style("opacity", 1)
+      .attr("cx", function(d) { return headPos(d).cx; })
+      .attr("cy", function(d) { return headPos(d).cy; })
+      .attr("r", headRadius)
+      .attr("fill", layer.color);
   }
 
   getHoverSelector(chart, layer) {

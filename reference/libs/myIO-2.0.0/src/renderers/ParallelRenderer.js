@@ -83,24 +83,46 @@ export class ParallelRenderer {
       .x(function(point) { return point[0]; })
       .y(function(point) { return point[1]; });
 
-    root.selectAll(".parallel-line")
-      .data(layer.data)
-      .join("path")
-      .attr("class", "parallel-line")
-      .attr("d", function(row) {
-        var points = dimensions.map(function(dimension) {
-          var value = +row[dimension];
-          if (!Number.isFinite(value)) {
-            return [xScale(dimension), null];
-          }
-          return [xScale(dimension), yScales[dimension](value)];
-        });
-        return lineGenerator(points);
-      })
-      .attr("stroke", function(row) {
-        var colorKey = groupVar ? row[groupVar] : layer.label;
-        return colorScale(colorKey);
+    var transitionSpeed = (chart.options && chart.options.transition && typeof chart.options.transition.speed === "number")
+      ? chart.options.transition.speed
+      : 0;
+
+    function rowPath(row) {
+      var points = dimensions.map(function(dimension) {
+        var value = +row[dimension];
+        if (!Number.isFinite(value)) {
+          return [xScale(dimension), null];
+        }
+        return [xScale(dimension), yScales[dimension](value)];
       });
+      return lineGenerator(points);
+    }
+
+    function rowStroke(row) {
+      var colorKey = groupVar ? row[groupVar] : layer.label;
+      return colorScale(colorKey);
+    }
+
+    var lineSelection = root.selectAll(".parallel-line")
+      .data(layer.data, function(d, i) { return d._source_key != null ? d._source_key : i; });
+
+    lineSelection.exit()
+      .transition().duration(transitionSpeed)
+      .attr("stroke-opacity", 0)
+      .remove();
+
+    var lineEnter = lineSelection.enter().append("path")
+      .attr("class", "parallel-line")
+      .attr("fill", "none")
+      .attr("d", rowPath)
+      .attr("stroke", rowStroke)
+      .attr("stroke-opacity", 0);
+
+    lineEnter.merge(lineSelection)
+      .transition().duration(transitionSpeed)
+      .attr("d", rowPath)
+      .attr("stroke", rowStroke)
+      .attr("stroke-opacity", 0.6);
   }
 
   getHoverSelector(chart, layer) {

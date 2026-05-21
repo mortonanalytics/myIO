@@ -116,7 +116,16 @@ export class CalendarHeatmapRenderer {
     };
     chart.xScale = xScale;
 
-    var root = chart.chart.append("g").attr("class", "myIO-calendar-root");
+    var transitionSpeed = (chart.options && chart.options.transition && typeof chart.options.transition.speed === "number")
+      ? chart.options.transition.speed
+      : 0;
+
+    // Stable single root keyed by [null] join so repeat renders don't accumulate
+    // orphan <g> elements.
+    var root = chart.chart.selectAll(".myIO-calendar-root")
+      .data([null])
+      .join("g")
+      .attr("class", "myIO-calendar-root");
 
     if (showDow) {
       var dowLabels = weekStart === 0
@@ -125,16 +134,17 @@ export class CalendarHeatmapRenderer {
       var dowData = dowLabels
         .map(function(t, i) { return { t: t, i: i }; })
         .filter(function(d) { return d.t; });
-      root.selectAll("text.myIO-calendar-dow")
-        .data(dowData)
-        .enter()
-        .append("text")
+      var dowSelection = root.selectAll("text.myIO-calendar-dow")
+        .data(dowData, function(d) { return d.i; });
+      dowSelection.exit().remove();
+      dowSelection.enter().append("text")
         .attr("class", "myIO-calendar-dow")
         .attr("x", 0)
-        .attr("y", function(d) {
-          return topPad + d.i * (cellSize + gap) + cellSize * 0.75;
-        })
+        .merge(dowSelection)
+        .attr("y", function(d) { return topPad + d.i * (cellSize + gap) + cellSize * 0.75; })
         .text(function(d) { return d.t; });
+    } else {
+      root.selectAll("text.myIO-calendar-dow").remove();
     }
 
     var monthFmt = d3.utcFormat("%b");
@@ -142,33 +152,34 @@ export class CalendarHeatmapRenderer {
       var first = new Date(Date.UTC(year, m, 1));
       return { m: m, text: monthFmt(first), col: weekCol(first) };
     });
-    root.selectAll("text.myIO-calendar-month")
-      .data(monthLabels)
-      .enter()
-      .append("text")
+    var monthSelection = root.selectAll("text.myIO-calendar-month")
+      .data(monthLabels, function(d) { return d.m; });
+    monthSelection.exit().remove();
+    monthSelection.enter().append("text")
       .attr("class", "myIO-calendar-month")
-      .attr("x", function(d) {
-        return leftPad + d.col * (cellSize + gap);
-      })
       .attr("y", topPad - 4)
+      .merge(monthSelection)
+      .attr("x", function(d) { return leftPad + d.col * (cellSize + gap); })
       .text(function(d) { return d.text; });
 
     var toIso = function(d) { return d.date.toISOString().slice(0, 10); };
 
-    root.selectAll("rect.myIO-calendar-cell")
-      .data(datums)
-      .enter()
+    var cellSelection = root.selectAll("rect.myIO-calendar-cell")
+      .data(datums, function(d) { return toIso(d); });
+
+    cellSelection.exit()
+      .transition().duration(transitionSpeed)
+      .style("opacity", 0)
+      .remove();
+
+    var cellEnter = cellSelection.enter()
       .append("rect")
       .attr("class", "myIO-calendar-cell")
       .attr("data-date", toIso)
       .attr("data-row", function(d) { return String(weekdayIdx(d.date)); })
       .attr("data-col", function(d) { return String(weekCol(d.date)); })
-      .attr("x", function(d) {
-        return leftPad + weekCol(d.date) * (cellSize + gap);
-      })
-      .attr("y", function(d) {
-        return topPad + weekdayIdx(d.date) * (cellSize + gap);
-      })
+      .attr("x", function(d) { return leftPad + weekCol(d.date) * (cellSize + gap); })
+      .attr("y", function(d) { return topPad + weekdayIdx(d.date) * (cellSize + gap); })
       .attr("width", cellSize)
       .attr("height", cellSize)
       .attr("fill", function(d) {
@@ -177,14 +188,28 @@ export class CalendarHeatmapRenderer {
         }
         return scale(d.value);
       })
+      .style("opacity", 0);
+
+    cellEnter.merge(cellSelection)
       .each(function(d) {
         d.label = layer.label;
         d.color = (d.value == null || isNaN(d.value) || d.value === 0)
           ? "var(--chart-calendar-empty-fill, #ebedf0)"
           : scale(d.value);
-        // Mirror original keys so rollover's data[mapping.date] path works.
         d[dateKey] = toIso({ date: d.date });
         d[valueKey] = d.value;
+      })
+      .transition().duration(transitionSpeed)
+      .style("opacity", 1)
+      .attr("x", function(d) { return leftPad + weekCol(d.date) * (cellSize + gap); })
+      .attr("y", function(d) { return topPad + weekdayIdx(d.date) * (cellSize + gap); })
+      .attr("width", cellSize)
+      .attr("height", cellSize)
+      .attr("fill", function(d) {
+        if (d.value == null || isNaN(d.value) || d.value === 0) {
+          return "var(--chart-calendar-empty-fill, #ebedf0)";
+        }
+        return scale(d.value);
       });
   }
 

@@ -97,21 +97,34 @@ export class SankeyRenderer {
       .attr("height", function(d) { return Math.max(1, d.y1 - d.y0); })
       .attr("fill", function(d) { return chart.colorDiscrete(d.name); });
 
-    // Node labels
+    // Node labels — data-joined so updates animate and no flash from clear-redraw
     var labelClass = tagName("sankey-label", chart.element.id, layer.label);
-    chart.chart.selectAll("." + labelClass).remove();
-    graph.nodes.forEach(function(d) {
-      var isLeft = d.x0 < width / 2;
-      chart.chart.append("text")
-        .attr("class", labelClass)
-        .attr("x", isLeft ? d.x1 + 6 : d.x0 - 6)
-        .attr("y", (d.y0 + d.y1) / 2)
-        .attr("dy", "0.35em")
-        .attr("text-anchor", isLeft ? "start" : "end")
-        .style("font-size", "12px")
-        .style("fill", "var(--chart-text-color, #333)")
-        .text(d.name);
-    });
+    var labelSelection = chart.chart.selectAll("." + labelClass)
+      .data(graph.nodes, function(d) { return d.name; });
+
+    labelSelection.exit()
+      .transition().duration(chart.options.transition.speed)
+      .style("opacity", 0)
+      .remove();
+
+    var labelEnter = labelSelection.enter().append("text")
+      .attr("class", labelClass)
+      .attr("x", function(d) { return d.x0 < width / 2 ? d.x1 + 6 : d.x0 - 6; })
+      .attr("y", function(d) { return (d.y0 + d.y1) / 2; })
+      .attr("dy", "0.35em")
+      .attr("text-anchor", function(d) { return d.x0 < width / 2 ? "start" : "end"; })
+      .style("font-size", "12px")
+      .style("fill", "var(--chart-text-color, #333)")
+      .style("opacity", 0)
+      .text(function(d) { return d.name; });
+
+    labelEnter.merge(labelSelection)
+      .text(function(d) { return d.name; })
+      .transition().duration(chart.options.transition.speed)
+      .style("opacity", 1)
+      .attr("x", function(d) { return d.x0 < width / 2 ? d.x1 + 6 : d.x0 - 6; })
+      .attr("y", function(d) { return (d.y0 + d.y1) / 2; })
+      .attr("text-anchor", function(d) { return d.x0 < width / 2 ? "start" : "end"; });
   }
 
   formatTooltip(chart, d, layer) {

@@ -32,7 +32,7 @@ export class PointRenderer {
       .selectAll("." + tagName("point", chart.element.id, layer.label))
       .data(layer.data);
 
-    points.exit().transition().remove();
+    points.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
 
     points
       .transition()
@@ -101,7 +101,7 @@ function renderCrosshairsX(chart, layer) {
     .selectAll("." + tagName("crosshairX", chart.element.id, layer.label))
     .data(layer.data);
 
-  crosshairsX.exit().transition().remove();
+  crosshairsX.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
 
   crosshairsX.transition()
     .duration(transitionSpeed)
@@ -141,7 +141,7 @@ function renderMedianLine(chart, layer) {
     .selectAll("." + tagName("medianLine", chart.element.id, layer.label))
     .data(layer.data);
 
-  lines.exit().transition().remove();
+  lines.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
 
   lines.transition()
     .duration(transitionSpeed)
@@ -181,7 +181,7 @@ function renderWhiskerCaps(chart, layer) {
     .selectAll("." + tagName("whiskerCap", chart.element.id, layer.label))
     .data(layer.data);
 
-  caps.exit().transition().remove();
+  caps.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
 
   caps.transition()
     .duration(transitionSpeed)
@@ -223,7 +223,7 @@ function renderWhiskerLine(chart, layer) {
     .selectAll("." + tagName("crosshairY", chart.element.id, layer.label))
     .data(layer.data);
 
-  lines.exit().transition().remove();
+  lines.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
 
   lines.transition()
     .ease(d3.easeQuad)
@@ -259,7 +259,7 @@ function renderCrosshairsY(chart, layer) {
     .selectAll("." + tagName("crosshairY", chart.element.id, layer.label))
     .data(layer.data);
 
-  crosshairsY.exit().transition().remove();
+  crosshairsY.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
 
   crosshairsY.transition()
     .ease(d3.easeQuad)

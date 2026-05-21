@@ -25,6 +25,8 @@ export function initializeScaffold(chart) {
     .attr("height", chart.height)
     .attr("fill", "var(--chart-bg, #ffffff)");
 
+  renderChartTitle(chart);
+
   applyPlotTransform(chart);
 
   chart.chart = chart.plot
@@ -60,6 +62,35 @@ export function updateScaffoldLayout(chart) {
       .attr("width", chart.width - (chart.margin.left + chart.margin.right))
       .attr("height", getChartHeight(chart) - (chart.margin.top + chart.margin.bottom));
   }
+
+  renderChartTitle(chart);
+}
+
+export function renderChartTitle(chart) {
+  if (!chart || !chart.svg) {
+    return;
+  }
+
+  var title = chart.config && chart.config.title;
+  var titleData = title ? [title] : [];
+  chart.svg.selectAll(".myIO-chart-title")
+    .data(titleData)
+    .join(
+      function(enter) {
+        return enter.append("text")
+          .attr("class", "myIO-chart-title")
+          .attr("x", chart.margin.left)
+          .attr("y", 19)
+          .text(function(d) { return d; });
+      },
+      function(update) {
+        return update
+          .attr("x", chart.margin.left)
+          .attr("y", 19)
+          .text(function(d) { return d; });
+      },
+      function(exit) { return exit.remove(); }
+    );
 }
 
 function applyPlotTransform(chart) {

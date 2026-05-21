@@ -30,54 +30,71 @@ export class BracketRenderer {
     var transitionSpeed = chart.options.transition.speed;
     var color = layer.color || "var(--text-color, #333)";
 
-    chart.chart.selectAll("." + className).remove();
-
-    var g = chart.chart.append("g")
-      .attr("class", className)
+    // Stable root + data join on brackets so updates animate and exit fades.
+    var g = chart.chart.selectAll("g." + className + "-root")
+      .data([null])
+      .join("g")
+      .attr("class", className + "-root")
       .attr("clip-path", "url(#" + chart.element.id + "clip)");
 
-    layer.data.forEach(function(d) {
-      var sx1 = chart.xScale(+d.x1);
-      var sx2 = chart.xScale(+d.x2);
-      var sy  = chart.yScale(+d.y);
+    var bracketKey = function(d, i) { return d.label != null ? String(d.label) + "_" + i : String(i); };
 
-      var bracket = g.append("g").style("opacity", 0);
+    var bracketSelection = g.selectAll("g." + className)
+      .data(layer.data, bracketKey);
 
-      // Horizontal line
-      bracket.append("line")
-        .attr("x1", sx1).attr("y1", sy)
-        .attr("x2", sx2).attr("y2", sy)
-        .attr("stroke", color)
-        .attr("stroke-width", 1.5);
+    bracketSelection.exit()
+      .transition().duration(transitionSpeed)
+      .style("opacity", 0)
+      .remove();
 
-      // Left tick
-      bracket.append("line")
-        .attr("x1", sx1).attr("y1", sy)
-        .attr("x2", sx1).attr("y2", sy + tickHeight)
-        .attr("stroke", color)
-        .attr("stroke-width", 1.5);
+    var bracketEnter = bracketSelection.enter().append("g")
+      .attr("class", className)
+      .style("opacity", 0);
 
-      // Right tick
-      bracket.append("line")
-        .attr("x1", sx2).attr("y1", sy)
-        .attr("x2", sx2).attr("y2", sy + tickHeight)
-        .attr("stroke", color)
-        .attr("stroke-width", 1.5);
+    bracketEnter.append("line").attr("class", "bracket-bar")
+      .attr("stroke", color).attr("stroke-width", 1.5);
+    bracketEnter.append("line").attr("class", "bracket-tick-left")
+      .attr("stroke", color).attr("stroke-width", 1.5);
+    bracketEnter.append("line").attr("class", "bracket-tick-right")
+      .attr("stroke", color).attr("stroke-width", 1.5);
+    bracketEnter.append("text").attr("class", "bracket-label")
+      .attr("text-anchor", "middle")
+      .style("font-size", "11px")
+      .style("font-family", "var(--font-family, sans-serif)")
+      .style("fill", color);
 
-      // P-value label
-      bracket.append("text")
-        .attr("x", (sx1 + sx2) / 2)
-        .attr("y", sy - labelOffset)
-        .attr("text-anchor", "middle")
-        .style("font-size", "11px")
-        .style("font-family", "var(--font-family, sans-serif)")
-        .style("fill", color)
-        .text(d.label);
+    var merged = bracketEnter.merge(bracketSelection);
 
-      bracket.transition()
-        .duration(transitionSpeed)
-        .style("opacity", 1);
-    });
+    merged
+      .transition().duration(transitionSpeed)
+      .style("opacity", 1);
+
+    merged.select(".bracket-bar")
+      .transition().duration(transitionSpeed)
+      .attr("x1", function(d) { return chart.xScale(+d.x1); })
+      .attr("y1", function(d) { return chart.yScale(+d.y); })
+      .attr("x2", function(d) { return chart.xScale(+d.x2); })
+      .attr("y2", function(d) { return chart.yScale(+d.y); });
+
+    merged.select(".bracket-tick-left")
+      .transition().duration(transitionSpeed)
+      .attr("x1", function(d) { return chart.xScale(+d.x1); })
+      .attr("y1", function(d) { return chart.yScale(+d.y); })
+      .attr("x2", function(d) { return chart.xScale(+d.x1); })
+      .attr("y2", function(d) { return chart.yScale(+d.y) + tickHeight; });
+
+    merged.select(".bracket-tick-right")
+      .transition().duration(transitionSpeed)
+      .attr("x1", function(d) { return chart.xScale(+d.x2); })
+      .attr("y1", function(d) { return chart.yScale(+d.y); })
+      .attr("x2", function(d) { return chart.xScale(+d.x2); })
+      .attr("y2", function(d) { return chart.yScale(+d.y) + tickHeight; });
+
+    merged.select(".bracket-label")
+      .text(function(d) { return d.label; })
+      .transition().duration(transitionSpeed)
+      .attr("x", function(d) { return (chart.xScale(+d.x1) + chart.xScale(+d.x2)) / 2; })
+      .attr("y", function(d) { return chart.yScale(+d.y) - labelOffset; });
   }
 
   formatTooltip() { return null; }

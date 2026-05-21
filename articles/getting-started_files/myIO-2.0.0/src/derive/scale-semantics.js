@@ -49,10 +49,23 @@ export function resolveScaleSemantics(chart, layers) {
     var hints = getScaleHintsForLayer(layer);
     var fallbackX = resolveFallbackScaleType(chart, "x");
     var fallbackY = resolveFallbackScaleType(chart, "y");
-    var xType = fallbackX === "band" ? "band" : (hints ? hints.xScaleType : fallbackX);
-    var yType = fallbackY === "band" ? "band" : (hints ? hints.yScaleType : fallbackY);
+    var xType = hints ? hints.xScaleType : fallbackX;
+    var yType = hints ? hints.yScaleType : fallbackY;
     var resolvedX = flipAxis ? yType : xType;
     var resolvedY = flipAxis ? xType : yType;
+
+    // Fallback overrides only apply when flipAxis is false. When the chart
+    // is flipped, the swap above already moves the band onto the correct
+    // visual axis; re-applying the chart's categoricalScale would clamp it
+    // back and silently cancel the flip.
+    if (!flipAxis) {
+      if (fallbackX === "band") {
+        resolvedX = "band";
+      }
+      if (fallbackY === "band") {
+        resolvedY = "band";
+      }
+    }
 
     xTypes.add(resolvedX);
     yTypes.add(resolvedY);

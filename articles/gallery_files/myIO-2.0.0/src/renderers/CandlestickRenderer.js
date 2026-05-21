@@ -23,6 +23,12 @@ export class CandlestickRenderer {
     var width = Math.max(6, Math.min(40, chartWidth / Math.max(layer.data.length * 2.5, 1)));
     var self = this;
 
+    function candleX(d) { return chart.xScale(d[xVar]); }
+    function candleFill(d) { return +d[closeVar] >= +d[openVar] ? "#4CAF50" : "#F44336"; }
+    function bodyTop(d) { return chart.yScale(Math.max(+d[openVar], +d[closeVar])); }
+    function bodyHeight(d) { return Math.max(Math.abs(chart.yScale(+d[openVar]) - chart.yScale(+d[closeVar])), 1); }
+    function midOC(d) { return chart.yScale((+d[openVar] + +d[closeVar]) / 2); }
+
     var candle = chart.chart
       .selectAll("." + tagName("candlestick", chart.element.id, layer.label))
       .data(layer.data);
@@ -30,48 +36,49 @@ export class CandlestickRenderer {
     candle.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
 
     var enter = candle.enter().append("g")
-      .attr("class", tagName("candlestick", chart.element.id, layer.label));
+      .attr("class", tagName("candlestick", chart.element.id, layer.label))
+      .style("opacity", 0);
 
     enter.append("line")
       .attr("class", "wick")
       .attr("stroke", "#666")
-      .attr("stroke-width", 1.5);
+      .attr("stroke-width", 1.5)
+      .attr("x1", candleX)
+      .attr("x2", candleX)
+      .attr("y1", midOC)
+      .attr("y2", midOC);
 
     enter.append("rect")
       .attr("class", "body")
-      .attr("stroke-width", 0.5);
+      .attr("stroke-width", 0.5)
+      .attr("x", function(d) { return candleX(d) - width / 2; })
+      .attr("y", midOC)
+      .attr("width", width)
+      .attr("height", 0)
+      .attr("fill", candleFill)
+      .attr("stroke", candleFill);
 
-    candle.merge(enter)
-      .transition()
-      .ease(d3.easeQuad)
-      .duration(transitionSpeed)
-      .style("opacity", 1)
-      .each(function(d) {
-        var group = d3.select(this);
-        var x = chart.xScale(d[xVar]);
-        var open = +d[openVar];
-        var high = +d[highVar];
-        var low = +d[lowVar];
-        var close = +d[closeVar];
-        var up = close >= open;
-        var fill = up ? "#4CAF50" : "#F44336";
-        var bodyY = chart.yScale(Math.max(open, close));
-        var bodyHeight = Math.abs(chart.yScale(open) - chart.yScale(close));
+    var merged = candle.merge(enter);
 
-        group.select("line.wick")
-          .attr("x1", x)
-          .attr("x2", x)
-          .attr("y1", chart.yScale(low))
-          .attr("y2", chart.yScale(high));
+    merged
+      .transition().ease(d3.easeQuad).duration(transitionSpeed)
+      .style("opacity", 1);
 
-        group.select("rect.body")
-          .attr("x", x - width / 2)
-          .attr("y", bodyY)
-          .attr("width", width)
-          .attr("height", Math.max(bodyHeight, 1))
-          .attr("fill", fill)
-          .attr("stroke", fill);
-      });
+    merged.select("line.wick")
+      .transition().ease(d3.easeQuad).duration(transitionSpeed)
+      .attr("x1", candleX)
+      .attr("x2", candleX)
+      .attr("y1", function(d) { return chart.yScale(+d[lowVar]); })
+      .attr("y2", function(d) { return chart.yScale(+d[highVar]); });
+
+    merged.select("rect.body")
+      .transition().ease(d3.easeQuad).duration(transitionSpeed)
+      .attr("x", function(d) { return candleX(d) - width / 2; })
+      .attr("y", bodyTop)
+      .attr("width", width)
+      .attr("height", bodyHeight)
+      .attr("fill", candleFill)
+      .attr("stroke", candleFill);
   }
 
   getHoverSelector(chart, layer) {

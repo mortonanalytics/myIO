@@ -71,10 +71,28 @@ export class BeeswarmRenderer {
     var group = chart.dom.chartArea.selectAll(".tag-beeswarm-" + layer.id)
       .data([null]).join("g").attr("class", "tag-beeswarm-" + layer.id);
 
-    group.selectAll(".beeswarm-point")
-      .data(data, function(d) { return d._source_key; })
-      .join("circle")
+    var transitionSpeed = (chart.options && chart.options.transition && typeof chart.options.transition.speed === "number")
+      ? chart.options.transition.speed
+      : 0;
+
+    var points = group.selectAll(".beeswarm-point")
+      .data(data, function(d) { return d._source_key; });
+
+    points.exit()
+      .transition().duration(transitionSpeed)
+      .attr("fill-opacity", 0)
+      .remove();
+
+    var pointsEnter = points.enter().append("circle")
       .attr("class", "beeswarm-point")
+      .attr("cx", function(d) { return d._beeswarm_cx; })
+      .attr("cy", function(d) { return d._beeswarm_cy; })
+      .attr("r", radius)
+      .attr("fill", layer.color)
+      .attr("fill-opacity", 0);
+
+    pointsEnter.merge(points)
+      .transition().duration(transitionSpeed)
       .attr("cx", function(d) { return d._beeswarm_cx; })
       .attr("cy", function(d) { return d._beeswarm_cy; })
       .attr("r", radius)

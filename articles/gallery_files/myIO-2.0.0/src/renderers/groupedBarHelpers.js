@@ -4,32 +4,30 @@ export function transitionGrouped(chart, data, colors, bandwidth) {
   var transitionSpeed = chart.options.transition.speed;
   updateYAxis(chart, chart.yScale);
 
-  const barsNew = d3.select(chart.element).selectAll(".tag-grouped-bar-g").selectAll("rect").data(function(d) { return d; });
+  var bars = d3.select(chart.element).selectAll(".tag-grouped-bar-g").selectAll("rect").data(function(d) { return d; });
 
-  barsNew.exit().transition().ease(d3.easeQuadIn).duration(transitionSpeed).attr("height", 0).attr("y", 0).remove();
+  bars.exit()
+    .transition().ease(d3.easeQuadIn).duration(transitionSpeed)
+    .attr("y", chart.yScale(0))
+    .attr("height", 0)
+    .style("opacity", 0)
+    .remove();
 
-  barsNew.enter()
+  var barsEnter = bars.enter()
     .append("rect")
     .attr("clip-path", "url(#" + chart.element.id + "clip)")
     .attr("x", function(d) { return chart.xScale(+d.data[0]) + bandwidth * d.idx; })
     .attr("y", chart.yScale(0))
     .attr("height", 0)
-    .attr("width", bandwidth)
-    .transition()
-    .ease(d3.easeQuadOut)
-    .duration(transitionSpeed)
-    .delay(function(d) { return d.idx * 20; })
-    .attr("y", function(d) { return chart.yScale(d[1] - d[0]); })
-    .attr("height", function(d) { return chart.yScale(0) - chart.yScale(d[1] - d[0]); });
+    .attr("width", bandwidth);
 
-  barsNew.merge(barsNew)
+  barsEnter.merge(bars)
     .transition()
     .ease(d3.easeQuad)
     .duration(transitionSpeed)
     .delay(function(d) { return d.idx * 20; })
     .attr("x", function(d) { return chart.xScale(+d.data[0]) + bandwidth * d.idx; })
     .attr("width", bandwidth)
-    .transition()
     .attr("y", function(d) { return chart.yScale(d[1] - d[0]); })
     .attr("height", function(d) { return chart.yScale(0) - chart.yScale(d[1] - d[0]); });
 }
@@ -41,37 +39,32 @@ export function transitionStacked(chart, data, colors, bandwidth) {
   yScale.domain([0, yMax * 1.1]);
   updateYAxis(chart, yScale);
 
-  const barsNew = d3.select(chart.element).selectAll(".tag-grouped-bar-g").selectAll("rect").data(function(d) { return d; });
+  var bars = d3.select(chart.element).selectAll(".tag-grouped-bar-g").selectAll("rect").data(function(d) { return d; });
 
-  barsNew.exit().transition().ease(d3.easeQuadIn).duration(transitionSpeed).attr("height", 0).attr("y", 0).remove();
+  bars.exit()
+    .transition().ease(d3.easeQuadIn).duration(transitionSpeed)
+    .attr("y", yScale(0))
+    .attr("height", 0)
+    .style("opacity", 0)
+    .remove();
 
-  barsNew.enter()
+  var barsEnter = bars.enter()
     .append("rect")
     .attr("clip-path", "url(#" + chart.element.id + "clip)")
     .attr("x", function(d) { return chart.xScale(+d.data[0]); })
-    .attr("y", function(d) { return yScale(d[1]); })
+    .attr("y", yScale(0))
     .attr("height", 0)
-    .attr("width", bandwidth * data.length)
-    .transition()
-    .ease(d3.easeQuadOut)
-    .duration(transitionSpeed)
-    .delay(function(d) { return d.idx * 20; })
-    .attr("y", function(d) { return yScale(d[1]); })
-    .attr("height", function(d) { return yScale(d[0]) - yScale(d[1]); })
-    .transition()
-    .attr("x", function(d) { return chart.xScale(+d.data[0]); })
     .attr("width", bandwidth * data.length);
 
-  barsNew.merge(barsNew)
+  barsEnter.merge(bars)
     .transition()
     .ease(d3.easeQuad)
     .duration(transitionSpeed)
     .delay(function(d) { return d.idx * 20; })
-    .attr("y", function(d) { return yScale(d[1]); })
-    .attr("height", function(d) { return yScale(d[0]) - yScale(d[1]); })
-    .transition()
     .attr("x", function(d) { return chart.xScale(+d.data[0]); })
-    .attr("width", bandwidth * data.length);
+    .attr("width", bandwidth * data.length)
+    .attr("y", function(d) { return yScale(d[1]); })
+    .attr("height", function(d) { return yScale(d[0]) - yScale(d[1]); });
 }
 
 export function getGroupedDataObject(lys, chart) {

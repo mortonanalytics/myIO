@@ -12,7 +12,7 @@ import { transitionGrouped, transitionStacked, getGroupedDataObject } from "./re
 import { syncAxes } from "./layout/axes.js";
 import { syncLegend, syncOrdinalLegendData } from "./layout/legend.js";
 import { syncReferenceLines } from "./layout/reference-lines.js";
-import { getChartHeight, initializeScaffold, updateScaffoldLayout } from "./layout/scaffold.js";
+import { getChartHeight, initializeScaffold, renderChartTitle, updateScaffoldLayout } from "./layout/scaffold.js";
 import { hideChartTooltip, initializeTooltip, removeHoverOverlay } from "./tooltip.js";
 import { addFAB, closePanel, openPanel } from "./interactions/bottom-sheet.js";
 import { linearRegression } from "./utils/math.js";
@@ -243,6 +243,7 @@ export class myIOchart {
         });
       }
       this.emit("beforeRender", { options });
+      renderChartTitle(this);
       this.derived.currentLayers = validateLayers(this);
       this.syncLegacyAliases();
       this.clearEmptyState();
