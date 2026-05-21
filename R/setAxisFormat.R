@@ -3,11 +3,16 @@
 #' Sets axis for x axis, y axis, and/or tool tip
 #'
 #' @param myIO an htmlwidget object created by the myIO() function
-#' @param xAxis a string indicating a d3.js format
-#' @param yAxis a string indicating a d3.js format
-#' @param toolTip a string indicating a d3.js format
-#' @param xLabel a string label for axis
-#' @param yLabel a string label for axis
+#' @param xAxis Optional string indicating a d3.js format for the x axis.
+#'   When \code{NULL}, leaves the existing setting unchanged.
+#' @param yAxis Optional string indicating a d3.js format for the y axis.
+#'   When \code{NULL}, leaves the existing setting unchanged.
+#' @param toolTip Optional string indicating a d3.js format for tooltips.
+#'   When \code{NULL}, leaves the existing setting unchanged.
+#' @param xLabel Optional string label for the x axis. When \code{NULL},
+#'   leaves the existing setting unchanged.
+#' @param yLabel Optional string label for the y axis. When \code{NULL},
+#'   leaves the existing setting unchanged.
 #'
 #' @return A modified \code{myIO} htmlwidget object with updated axis format
 #'   configuration. with options set for the tooltip formats
@@ -19,15 +24,28 @@
 #' # Set axis labels
 #' myIO() |> setAxisFormat(xLabel = "Weight (lbs)", yLabel = "MPG")
 #'
+#' # Label-only calls preserve previously configured formats
+#' myIO() |> setAxisFormat(yAxis = ".1%") |> setAxisFormat(yLabel = "Rate")
+#'
 #' @export
-setAxisFormat <- function(myIO, xAxis = "s", yAxis = "s", toolTip = "s", xLabel = NULL, yLabel = NULL){
+setAxisFormat <- function(myIO, xAxis = NULL, yAxis = NULL, toolTip = NULL, xLabel = NULL, yLabel = NULL){
   assert_myIO(myIO)
 
-  myIO$x$config$axes$xAxisFormat <- xAxis
-  myIO$x$config$axes$yAxisFormat <- yAxis
-  myIO$x$config$axes$toolTipFormat <- toolTip
-  myIO$x$config$axes$xAxisLabel <- xLabel
-  myIO$x$config$axes$yAxisLabel <- yLabel
+  if (!is.null(xAxis)) {
+    myIO$x$config$axes$xAxisFormat <- xAxis
+  }
+  if (!is.null(yAxis)) {
+    myIO$x$config$axes$yAxisFormat <- yAxis
+  }
+  if (!is.null(toolTip)) {
+    myIO$x$config$axes$toolTipFormat <- toolTip
+  }
+  if (!is.null(xLabel)) {
+    myIO$x$config$axes$xAxisLabel <- xLabel
+  }
+  if (!is.null(yLabel)) {
+    myIO$x$config$axes$yAxisLabel <- yLabel
+  }
 
   return(myIO)
 }

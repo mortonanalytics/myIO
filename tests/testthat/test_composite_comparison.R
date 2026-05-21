@@ -16,6 +16,8 @@ test_that("comparison expands to boxplot layers + bracket", {
   bracket_layers <- Filter(function(l) l$type == "bracket", layers)
   expect_equal(length(bracket_layers), 1)
   expect_equal(bracket_layers[[1]]$`_compositeRole`, "significance")
+  expect_true(all(c("x1", "x2", "y") %in% names(bracket_layers[[1]]$mapping)))
+  expect_equal(w$x$config$axes$xTickLabels, list(`1` = "A", `2` = "B"))
 })
 
 test_that("comparison includes outliers when enabled", {
