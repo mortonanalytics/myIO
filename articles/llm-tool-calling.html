@@ -62,181 +62,332 @@
 
     
     
-<p>myIO ships a generated schema that agents can use to produce
-contract-correct chart specs. The schema is generated from the R and
-JavaScript contracts and is available to both R helpers and a standalone
-MCP server.</p>
 <div class="section level2">
-<h2 id="r-helpers">R helpers<a class="anchor" aria-label="anchor" href="#r-helpers"></a>
+<h2 id="the-problem-this-solves">The problem this solves<a class="anchor" aria-label="anchor" href="#the-problem-this-solves"></a>
 </h2>
-<p>List chart types:</p>
+<p>Ask an AI assistant to “make a box plot of Sepal.Width by Species
+with myIO” and it will confidently write something. Often it is subtly
+wrong: a chart type that doesn’t exist (<code>scatterplot</code> instead
+of <code>point</code>), a mapping key it invented
+(<code>value_var</code> instead of <code>y_var</code>), or a function
+argument with the wrong name (<code>setAxisFormat(axis_x = ...)</code>).
+The code looks plausible and fails at runtime — or worse, runs and
+renders nothing.</p>
+<p>myIO ships the pieces that let an AI <strong>check its work before it
+commits</strong>: a machine-readable description of every chart it can
+draw, and a validator that flags structural mistakes and suggests the
+fix. The result is that an assistant can generate a myIO chart, discover
+it got a name wrong, correct it, and only then hand you working
+code.</p>
+</div>
+<div class="section level2">
+<h2 id="new-to-tool-calling">New to “tool calling”?<a class="anchor" aria-label="anchor" href="#new-to-tool-calling"></a>
+</h2>
+<p>A short orientation; skip to <a href="#what-you-can-rely-on">What you
+can rely on</a> if this is familiar.</p>
+<p>Modern LLMs can be given <strong>tools</strong> — functions you
+describe to the model that it may call mid-conversation. Instead of
+answering in one shot, the model can call a tool, read the result, and
+revise. <strong>Tool calling</strong> is that loop. <strong>MCP</strong>
+(the Model Context Protocol) is a standard way to expose such tools to
+assistants like Claude Desktop, Claude Code, or Cursor, so you configure
+them once and any MCP-aware client can use them.</p>
+<p>myIO exposes six tools. The two that do the work are
+<code>validate_spec</code> (is this chart description valid?) and
+<code>validate_call</code> (is this function call valid?); the other
+four let the model discover what’s available. They’re usable two ways:
+as plain <strong>R functions</strong> (shown throughout this article, so
+every example below is real output) and as an <strong>MCP
+server</strong> (covered at the end) for assistants.</p>
+</div>
+<div class="section level2">
+<h2 id="a-first-example">A first example<a class="anchor" aria-label="anchor" href="#a-first-example"></a>
+</h2>
+<p>List the chart types myIO knows about — this is the model’s menu:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="../reference/myio_list_chart_types.html">myio_list_chart_types</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "line"    "point"   "bar"     "hexbin"  "treemap" "gauge"</span></span></code></pre></div>
-<p>Validate a chart spec:</p>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/myio_list_chart_types.html">myio_list_chart_types</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt;  [1] "line"            "point"           "bar"             "hexbin"         </span></span>
+<span><span class="co">#&gt;  [5] "treemap"         "gauge"           "donut"           "area"           </span></span>
+<span><span class="co">#&gt;  [9] "groupedBar"      "histogram"       "heatmap"         "candlestick"    </span></span>
+<span><span class="co">#&gt; [13] "waterfall"       "sankey"          "boxplot"         "violin"         </span></span>
+<span><span class="co">#&gt; [17] "ridgeline"       "rangeBar"        "text"            "regression"     </span></span>
+<span><span class="co">#&gt; [21] "bracket"         "comparison"      "qq"              "lollipop"       </span></span>
+<span><span class="co">#&gt; [25] "dumbbell"        "waffle"          "beeswarm"        "bump"           </span></span>
+<span><span class="co">#&gt; [29] "radar"           "funnel"          "parallel"        "survfit"        </span></span>
+<span><span class="co">#&gt; [33] "histogram_fit"   "calendarHeatmap" "quantile_dots"   "fan"</span></span></code></pre></div>
+<p>Now suppose the assistant proposes a box plot but guesses the mapping
+keys:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">spec</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">attempt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  type <span class="op">=</span> <span class="st">"boxplot"</span>,</span>
 <span>  mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>column_var <span class="op">=</span> <span class="st">"Species"</span>, value_var <span class="op">=</span> <span class="st">"Sepal.Width"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/myio_validate_spec.html">myio_validate_spec</a></span><span class="op">(</span><span class="va">spec</span><span class="op">)</span></span>
-<span><span class="co">#&gt; $valid</span></span>
-<span><span class="co">#&gt; [1] FALSE</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $errors</span></span>
-<span><span class="co">#&gt; $errors[[1]]</span></span>
-<span><span class="co">#&gt; $errors[[1]]$code</span></span>
-<span><span class="co">#&gt; [1] "MISSING_MAPPING"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $errors[[1]]$field</span></span>
-<span><span class="co">#&gt; [1] "x_var"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $errors[[1]]$message</span></span>
-<span><span class="co">#&gt; [1] "Missing required mapping 'x_var' for chart type 'boxplot'."</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $errors[[2]]</span></span>
-<span><span class="co">#&gt; $errors[[2]]$code</span></span>
-<span><span class="co">#&gt; [1] "MISSING_MAPPING"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $errors[[2]]$field</span></span>
-<span><span class="co">#&gt; [1] "y_var"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $errors[[2]]$message</span></span>
-<span><span class="co">#&gt; [1] "Missing required mapping 'y_var' for chart type 'boxplot'."</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $errors[[3]]</span></span>
-<span><span class="co">#&gt; $errors[[3]]$code</span></span>
-<span><span class="co">#&gt; [1] "UNKNOWN_MAPPING_KEY"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $errors[[3]]$field</span></span>
-<span><span class="co">#&gt; [1] "column_var"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $errors[[3]]$message</span></span>
-<span><span class="co">#&gt; [1] "Unknown mapping key 'column_var' for chart type 'boxplot'."</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $errors[[3]]$suggestion</span></span>
-<span><span class="co">#&gt; [1] "x_var"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $errors[[4]]</span></span>
-<span><span class="co">#&gt; $errors[[4]]$code</span></span>
-<span><span class="co">#&gt; [1] "UNKNOWN_MAPPING_KEY"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $errors[[4]]$field</span></span>
-<span><span class="co">#&gt; [1] "value_var"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $errors[[4]]$message</span></span>
-<span><span class="co">#&gt; [1] "Unknown mapping key 'value_var' for chart type 'boxplot'."</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $errors[[4]]$suggestion</span></span>
-<span><span class="co">#&gt; [1] "y_var"</span></span></code></pre></div>
-<p>Pass a column type map to catch data-contract issues:</p>
+<span><span class="fu">as_json</span><span class="op">(</span><span class="fu"><a href="../reference/myio_validate_spec.html">myio_validate_spec</a></span><span class="op">(</span><span class="va">attempt</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; {</span></span>
+<span><span class="co">#&gt;   "valid": false,</span></span>
+<span><span class="co">#&gt;   "errors": [</span></span>
+<span><span class="co">#&gt;     {</span></span>
+<span><span class="co">#&gt;       "code": "MISSING_MAPPING",</span></span>
+<span><span class="co">#&gt;       "field": "x_var",</span></span>
+<span><span class="co">#&gt;       "message": "Missing required mapping 'x_var' for chart type 'boxplot'."</span></span>
+<span><span class="co">#&gt;     },</span></span>
+<span><span class="co">#&gt;     {</span></span>
+<span><span class="co">#&gt;       "code": "MISSING_MAPPING",</span></span>
+<span><span class="co">#&gt;       "field": "y_var",</span></span>
+<span><span class="co">#&gt;       "message": "Missing required mapping 'y_var' for chart type 'boxplot'."</span></span>
+<span><span class="co">#&gt;     },</span></span>
+<span><span class="co">#&gt;     {</span></span>
+<span><span class="co">#&gt;       "code": "UNKNOWN_MAPPING_KEY",</span></span>
+<span><span class="co">#&gt;       "field": "column_var",</span></span>
+<span><span class="co">#&gt;       "message": "Unknown mapping key 'column_var' for chart type 'boxplot'.",</span></span>
+<span><span class="co">#&gt;       "suggestion": "x_var"</span></span>
+<span><span class="co">#&gt;     },</span></span>
+<span><span class="co">#&gt;     {</span></span>
+<span><span class="co">#&gt;       "code": "UNKNOWN_MAPPING_KEY",</span></span>
+<span><span class="co">#&gt;       "field": "value_var",</span></span>
+<span><span class="co">#&gt;       "message": "Unknown mapping key 'value_var' for chart type 'boxplot'.",</span></span>
+<span><span class="co">#&gt;       "suggestion": "y_var"</span></span>
+<span><span class="co">#&gt;     }</span></span>
+<span><span class="co">#&gt;   ]</span></span>
+<span><span class="co">#&gt; }</span></span></code></pre></div>
+<p><code>valid</code> is <code>false</code>. The errors say
+<code>boxplot</code> actually needs <code>x_var</code> and
+<code>y_var</code>, and — crucially — each unknown key carries a
+<code>suggestion</code>. Applying them (<code>column_var</code> →
+<code>x_var</code>, <code>value_var</code> → <code>y_var</code>) gives a
+spec that passes:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/myio_validate_spec.html">myio_validate_spec</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">fixed</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  type <span class="op">=</span> <span class="st">"boxplot"</span>,</span>
+<span>  mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"Species"</span>, y_var <span class="op">=</span> <span class="st">"Sepal.Width"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu">as_json</span><span class="op">(</span><span class="fu"><a href="../reference/myio_validate_spec.html">myio_validate_spec</a></span><span class="op">(</span><span class="va">fixed</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; {</span></span>
+<span><span class="co">#&gt;   "valid": true,</span></span>
+<span><span class="co">#&gt;   "errors": []</span></span>
+<span><span class="co">#&gt; }</span></span></code></pre></div>
+<p>That is the whole idea: the model doesn’t have to know myIO’s API by
+heart, and it doesn’t have to guess. It checks, and the validator tells
+it what to do.</p>
+</div>
+<div class="section level2">
+<h2 id="what-you-can-rely-on">What you can rely on<a class="anchor" aria-label="anchor" href="#what-you-can-rely-on"></a>
+</h2>
+<p>For anyone evaluating this as a real solution, the properties that
+matter:</p>
+<ul>
+<li>
+<p><strong>Complete and current by construction.</strong> The schema
+is <em>generated from the engine’s own contracts</em> — the same
+definitions the renderer uses — so it can’t drift out of sync with what
+myIO actually draws, and it covers the full surface, not a hand-picked
+subset:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="../reference/myio_list_chart_types.html">myio_list_chart_types</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>   <span class="co"># chart types</span></span>
+<span><span class="co">#&gt; [1] 36</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="../reference/myio_list_functions.html">myio_list_functions</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>     <span class="co"># exported function signatures</span></span>
+<span><span class="co">#&gt; [1] 41</span></span></code></pre></div>
+</li>
+<li><p><strong>Stable, machine-readable errors.</strong> Every result is
+<code>{ valid, errors }</code>, and each error has a fixed
+<code>code</code> your code can branch on — never prose to parse:
+<code>UNKNOWN_TYPE</code>, <code>MISSING_MAPPING</code>,
+<code>UNKNOWN_MAPPING_KEY</code>, <code>INVALID_TRANSFORM</code>,
+<code>MISSING_COLUMN</code>, <code>NON_NUMERIC_COLUMN</code>,
+<code>UNKNOWN_FUNCTION</code>, <code>UNKNOWN_ARGUMENT</code>.</p></li>
+<li><p><strong>Identical across languages.</strong> The R functions here
+and the MCP server share one generated schema and are held to the same
+conformance test corpus, so an agent gets the same answer whichever
+surface it calls.</p></li>
+</ul>
+<p>Each chart type carries its own contract — required mappings, numeric
+fields, valid transforms — which the model can fetch on demand:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">as_json</span><span class="op">(</span><span class="fu"><a href="../reference/myio_chart_schema.html">myio_chart_schema</a></span><span class="op">(</span><span class="st">"boxplot"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; {</span></span>
+<span><span class="co">#&gt;   "kind": "composite",</span></span>
+<span><span class="co">#&gt;   "renderer_type": false,</span></span>
+<span><span class="co">#&gt;   "required_mappings": [</span></span>
+<span><span class="co">#&gt;     "x_var",</span></span>
+<span><span class="co">#&gt;     "y_var"</span></span>
+<span><span class="co">#&gt;   ],</span></span>
+<span><span class="co">#&gt;   "numeric_fields": "y_var",</span></span>
+<span><span class="co">#&gt;   "valid_transforms": "identity",</span></span>
+<span><span class="co">#&gt;   "group": "axes-categorical",</span></span>
+<span><span class="co">#&gt;   "data_contract": null,</span></span>
+<span><span class="co">#&gt;   "scale_hints": null</span></span>
+<span><span class="co">#&gt; }</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="checking-specs-against-real-data">Checking specs against real data<a class="anchor" aria-label="anchor" href="#checking-specs-against-real-data"></a>
+</h2>
+<p>By default validation is structural. Pass a column type map and it
+also checks the spec against your actual data: mapped columns must
+exist, and numeric fields must map to numeric columns.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">as_json</span><span class="op">(</span><span class="fu"><a href="../reference/myio_validate_spec.html">myio_validate_spec</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"point"</span>, mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"wt"</span>, y_var <span class="op">=</span> <span class="st">"mpg"</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  columns <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>wt <span class="op">=</span> <span class="st">"numeric"</span>, mpg <span class="op">=</span> <span class="st">"character"</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt; $valid</span></span>
-<span><span class="co">#&gt; [1] FALSE</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $errors</span></span>
-<span><span class="co">#&gt; $errors[[1]]</span></span>
-<span><span class="co">#&gt; $errors[[1]]$code</span></span>
-<span><span class="co">#&gt; [1] "NON_NUMERIC_COLUMN"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $errors[[1]]$field</span></span>
-<span><span class="co">#&gt; [1] "y_var"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $errors[[1]]$message</span></span>
-<span><span class="co">#&gt; [1] "Mapped column 'mpg' for 'y_var' must be numeric."</span></span></code></pre></div>
-<p>Validate function-call argument names:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/myio_validate_call.html">myio_validate_call</a></span><span class="op">(</span><span class="st">"setAxisFormat"</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>axis_x <span class="op">=</span> <span class="st">".0f"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; $valid</span></span>
-<span><span class="co">#&gt; [1] FALSE</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $errors</span></span>
-<span><span class="co">#&gt; $errors[[1]]</span></span>
-<span><span class="co">#&gt; $errors[[1]]$code</span></span>
-<span><span class="co">#&gt; [1] "UNKNOWN_ARGUMENT"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $errors[[1]]$field</span></span>
-<span><span class="co">#&gt; [1] "axis_x"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $errors[[1]]$message</span></span>
-<span><span class="co">#&gt; [1] "Unknown argument 'axis_x' for function 'setAxisFormat'."</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $errors[[1]]$suggestion</span></span>
-<span><span class="co">#&gt; [1] "xAxis"</span></span>
-<span><span class="fu"><a href="../reference/myio_function_signature.html">myio_function_signature</a></span><span class="op">(</span><span class="st">"setAxisFormat"</span><span class="op">)</span></span>
+<span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; {</span></span>
+<span><span class="co">#&gt;   "valid": false,</span></span>
+<span><span class="co">#&gt;   "errors": [</span></span>
+<span><span class="co">#&gt;     {</span></span>
+<span><span class="co">#&gt;       "code": "NON_NUMERIC_COLUMN",</span></span>
+<span><span class="co">#&gt;       "field": "y_var",</span></span>
+<span><span class="co">#&gt;       "message": "Mapped column 'mpg' for 'y_var' must be numeric."</span></span>
+<span><span class="co">#&gt;     }</span></span>
+<span><span class="co">#&gt;   ]</span></span>
+<span><span class="co">#&gt; }</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="checking-function-calls">Checking function calls<a class="anchor" aria-label="anchor" href="#checking-function-calls"></a>
+</h2>
+<p>The same applies to the <code>set*()</code> styling functions — wrong
+argument names are a common LLM mistake. <code>validate_call</code>
+checks the name and arguments against the real signature and suggests
+corrections:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">as_json</span><span class="op">(</span><span class="fu"><a href="../reference/myio_validate_call.html">myio_validate_call</a></span><span class="op">(</span><span class="st">"setAxisFormat"</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>axis_x <span class="op">=</span> <span class="st">".0f"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; {</span></span>
+<span><span class="co">#&gt;   "valid": false,</span></span>
+<span><span class="co">#&gt;   "errors": [</span></span>
+<span><span class="co">#&gt;     {</span></span>
+<span><span class="co">#&gt;       "code": "UNKNOWN_ARGUMENT",</span></span>
+<span><span class="co">#&gt;       "field": "axis_x",</span></span>
+<span><span class="co">#&gt;       "message": "Unknown argument 'axis_x' for function 'setAxisFormat'.",</span></span>
+<span><span class="co">#&gt;       "suggestion": "xAxis"</span></span>
+<span><span class="co">#&gt;     }</span></span>
+<span><span class="co">#&gt;   ]</span></span>
+<span><span class="co">#&gt; }</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/myio_function_signature.html">myio_function_signature</a></span><span class="op">(</span><span class="st">"setAxisFormat"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "myIO"    "xAxis"   "yAxis"   "toolTip" "xLabel"  "yLabel"</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="mcp-server">MCP server<a class="anchor" aria-label="anchor" href="#mcp-server"></a>
+<h2 id="the-six-tools">The six tools<a class="anchor" aria-label="anchor" href="#the-six-tools"></a>
 </h2>
-<p>The MCP package is intentionally separate from the R package so CRAN
-does not need Node dependencies.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="bu">cd</span> mcp</span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="ex">npm</span> install</span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="ex">node</span> server.mjs</span></code></pre></div>
-<p>Claude Desktop / Claude Code style configuration:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="dt">"mcpServers"</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>    <span class="dt">"myio"</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>      <span class="dt">"command"</span><span class="fu">:</span> <span class="st">"node"</span><span class="fu">,</span></span>
-<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>      <span class="dt">"args"</span><span class="fu">:</span> <span class="ot">[</span><span class="st">"/absolute/path/to/myIO/mcp/server.mjs"</span><span class="ot">]</span></span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>  <span class="fu">}</span></span>
-<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
-<p>Cursor uses the same command and args in its MCP configuration.</p>
-<p>The server exposes six tools:</p>
-<ul>
-<li><code>list_chart_types</code></li>
-<li><code>get_chart_schema</code></li>
-<li><code>validate_spec</code></li>
-<li><code>list_functions</code></li>
-<li><code>get_function_signature</code></li>
-<li><code>validate_call</code></li>
-</ul>
+<table class="table">
+<colgroup>
+<col width="22%">
+<col width="44%">
+<col width="33%">
+</colgroup>
+<thead><tr class="header">
+<th>Tool</th>
+<th>R function</th>
+<th>Purpose</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>list_chart_types</code></td>
+<td><code><a href="../reference/myio_list_chart_types.html">myio_list_chart_types()</a></code></td>
+<td>Every chart type in the schema</td>
+</tr>
+<tr class="even">
+<td><code>get_chart_schema</code></td>
+<td><code>myio_chart_schema(type)</code></td>
+<td>One type’s contract (or all)</td>
+</tr>
+<tr class="odd">
+<td><code>validate_spec</code></td>
+<td><code>myio_validate_spec(spec, columns)</code></td>
+<td>Validate a chart spec, with optional data-contract checks</td>
+</tr>
+<tr class="even">
+<td><code>list_functions</code></td>
+<td><code><a href="../reference/myio_list_functions.html">myio_list_functions()</a></code></td>
+<td>Every exported function name</td>
+</tr>
+<tr class="odd">
+<td><code>get_function_signature</code></td>
+<td><code>myio_function_signature(fn)</code></td>
+<td>A function’s argument names</td>
+</tr>
+<tr class="even">
+<td><code>validate_call</code></td>
+<td><code>myio_validate_call(fn, args)</code></td>
+<td>Validate a function name + arguments</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section level2">
-<h2 id="ollama-loop">Ollama loop<a class="anchor" aria-label="anchor" href="#ollama-loop"></a>
+<h2 id="the-repair-loop">The repair loop<a class="anchor" aria-label="anchor" href="#the-repair-loop"></a>
 </h2>
-<p>For local tool-calling loops, expose the same six tools with JSON
-inputs. A minimal repair flow is:</p>
+<p>Putting it together — the pattern an agent follows whether it calls
+the R functions or the MCP tools:</p>
 <ol style="list-style-type: decimal">
-<li>Ask the model for a chart spec.</li>
+<li>Propose a chart spec.</li>
 <li>Call <code>validate_spec</code>.</li>
-<li>If <code>valid</code> is <code>FALSE</code>, feed the error codes
-and suggestions back to the model.</li>
-<li>Repeat until the tool returns <code>valid = TRUE</code>.</li>
-<li>Validate any proposed R call with <code>validate_call</code>.</li>
+<li>If <code>valid</code> is <code>false</code>, apply the
+<code>suggestion</code> for each error and go to 2.</li>
+<li>Once valid, validate any accompanying <code>set*()</code> call with
+<code>validate_call</code>.</li>
 </ol>
-<p>Example repair:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  <span class="dt">"type"</span><span class="fu">:</span> <span class="st">"boxplot"</span><span class="fu">,</span></span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="dt">"mapping"</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>    <span class="dt">"column_var"</span><span class="fu">:</span> <span class="st">"Species"</span><span class="fu">,</span></span>
-<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>    <span class="dt">"value_var"</span><span class="fu">:</span> <span class="st">"Sepal.Width"</span></span>
-<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>  <span class="fu">}</span></span>
-<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
-<p><code>validate_spec</code> returns <code>MISSING_MAPPING</code> for
-<code>x_var</code> and <code>y_var</code>, plus
-<code>UNKNOWN_MAPPING_KEY</code> suggestions for the hallucinated keys.
-The repaired spec is:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  <span class="dt">"type"</span><span class="fu">:</span> <span class="st">"boxplot"</span><span class="fu">,</span></span>
-<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>  <span class="dt">"mapping"</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>    <span class="dt">"x_var"</span><span class="fu">:</span> <span class="st">"Species"</span><span class="fu">,</span></span>
-<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>    <span class="dt">"y_var"</span><span class="fu">:</span> <span class="st">"Sepal.Width"</span></span>
-<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>  <span class="fu">}</span></span>
-<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
-<p>Validation guarantees contract correctness: known chart type, allowed
-transform, expected mapping keys, optional data-column compatibility,
-and known function arguments. It does not guarantee the semantic or
-aesthetic quality of the selected chart.</p>
+<p>This loop, run against the actual validator, converges the broken
+attempt above to a working spec without any hard-coded knowledge of
+myIO’s API:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">spec</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"boxplot"</span>,</span>
+<span>             mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>column_var <span class="op">=</span> <span class="st">"Species"</span>, value_var <span class="op">=</span> <span class="st">"Sepal.Width"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">res</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/myio_validate_spec.html">myio_validate_spec</a></span><span class="op">(</span><span class="va">spec</span><span class="op">)</span></span>
+<span></span>
+<span><span class="kw">while</span> <span class="op">(</span><span class="op">!</span><span class="va">res</span><span class="op">$</span><span class="va">valid</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="kw">for</span> <span class="op">(</span><span class="va">err</span> <span class="kw">in</span> <span class="va">res</span><span class="op">$</span><span class="va">errors</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="va">err</span><span class="op">$</span><span class="va">code</span>, <span class="st">"UNKNOWN_MAPPING_KEY"</span><span class="op">)</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">err</span><span class="op">$</span><span class="va">suggestion</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>      <span class="va">spec</span><span class="op">$</span><span class="va">mapping</span><span class="op">[[</span><span class="va">err</span><span class="op">$</span><span class="va">suggestion</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">spec</span><span class="op">$</span><span class="va">mapping</span><span class="op">[[</span><span class="va">err</span><span class="op">$</span><span class="va">field</span><span class="op">]</span><span class="op">]</span></span>
+<span>      <span class="va">spec</span><span class="op">$</span><span class="va">mapping</span><span class="op">[[</span><span class="va">err</span><span class="op">$</span><span class="va">field</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NULL</span></span>
+<span>    <span class="op">}</span></span>
+<span>  <span class="op">}</span></span>
+<span>  <span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/myio_validate_spec.html">myio_validate_spec</a></span><span class="op">(</span><span class="va">spec</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="fu">as_json</span><span class="op">(</span><span class="va">spec</span><span class="op">)</span></span>
+<span><span class="co">#&gt; {</span></span>
+<span><span class="co">#&gt;   "type": "boxplot",</span></span>
+<span><span class="co">#&gt;   "mapping": {</span></span>
+<span><span class="co">#&gt;     "x_var": "Species",</span></span>
+<span><span class="co">#&gt;     "y_var": "Sepal.Width"</span></span>
+<span><span class="co">#&gt;   }</span></span>
+<span><span class="co">#&gt; }</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="wiring-it-into-an-assistant-mcp">Wiring it into an assistant (MCP)<a class="anchor" aria-label="anchor" href="#wiring-it-into-an-assistant-mcp"></a>
+</h2>
+<p>To give the six tools to an MCP-aware assistant (Claude Desktop,
+Claude Code, Cursor), run the bundled Node server. It is deliberately
+separate from the R package so installing myIO never pulls in Node
+dependencies.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="bu">cd</span> mcp</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="ex">npm</span> install</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="ex">node</span> server.mjs</span></code></pre></div>
+<p>Add it to the client’s MCP configuration (the shape is the same
+across Claude Desktop, Claude Code, and Cursor):</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>  <span class="dt">"mcpServers"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>    <span class="dt">"myio"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>      <span class="dt">"command"</span><span class="fu">:</span> <span class="st">"node"</span><span class="fu">,</span></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>      <span class="dt">"args"</span><span class="fu">:</span> <span class="ot">[</span><span class="st">"/absolute/path/to/myIO/mcp/server.mjs"</span><span class="ot">]</span></span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>For a local, fully open-source loop you can drive the same tools from
+an Ollama model’s tool-calling API; the steps are identical to the
+repair loop above. Because the server reads the same generated schema,
+its results match the R functions in this article exactly.</p>
+</div>
+<div class="section level2">
+<h2 id="what-validation-guarantees-and-what-it-does-not">What validation guarantees — and what it does not<a class="anchor" aria-label="anchor" href="#what-validation-guarantees-and-what-it-does-not"></a>
+</h2>
+<p><code>validate_spec</code> and <code>validate_call</code> guarantee
+<strong>contract correctness</strong>: a known chart type, an allowed
+transform, the expected mapping keys, optional data-column
+compatibility, and known function arguments. They do
+<strong>not</strong> guarantee the chosen chart is the <em>right</em>
+chart for the question — asking for a box plot when a histogram was
+wanted produces a perfectly valid spec. Semantic and aesthetic judgement
+stays with the model; these tools close the structural-error class,
+which is the part an LLM most reliably gets wrong. ```</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
