@@ -16,59 +16,55 @@ each one.
 
 ![](logo.png) myIO
 
-- [ Home](#tab-4980-1)
+- [ Home](#tab-6929-1)
 - [ Basic Charts ](#)
-  - [Bar](#tab-8838-1)
-  - [Grouped Bar](#tab-8838-2)
-  - [Horizontal Bar](#tab-8838-3)
-  - [Line](#tab-8838-4)
-  - [Area](#tab-8838-5)
+  - [Bar](#tab-8489-1)
+  - [Grouped Bar](#tab-8489-2)
+  - [Horizontal Bar](#tab-8489-3)
+  - [Line](#tab-8489-4)
+  - [Area](#tab-8489-5)
 - [ Statistical ](#)
-  - [Scatter + Trend](#tab-2524-1)
-  - [Regression + CI](#tab-2524-2)
-  - [LOESS Smoothing](#tab-2524-3)
-  - [Mean ± CI](#tab-2524-4)
-  - [Moving Average](#tab-2524-5)
-  - [Residuals](#tab-2524-6)
-  - [Histogram](#tab-2524-7)
-  - [Hexbin Density](#tab-2524-8)
-  - [Q-Q Plot](#tab-2524-9)
+  - [Scatter + Trend](#tab-9352-1)
+  - [Regression + CI](#tab-9352-2)
+  - [LOESS Smoothing](#tab-9352-3)
+  - [Mean ± CI](#tab-9352-4)
+  - [Moving Average](#tab-9352-5)
+  - [Residuals](#tab-9352-6)
+  - [Histogram](#tab-9352-7)
+  - [Hexbin Density](#tab-9352-8)
+  - [Q-Q Plot](#tab-9352-9)
 - [ Specialized ](#)
-  - [Donut](#tab-6437-1)
-  - [Gauge](#tab-6437-2)
-  - [Treemap](#tab-6437-3)
-- [ Financial ](#)
-  - [Candlestick](#tab-7476-1)
-  - [Waterfall](#tab-7476-2)
+  - [Donut](#tab-4802-1)
+  - [Gauge](#tab-4802-2)
+  - [Treemap](#tab-4802-3)
+- [ Financial](#tab-6929-5)
 - [ Distribution ](#)
-  - [Boxplot](#tab-9786-1)
-  - [Violin](#tab-9786-2)
-  - [Ridgeline](#tab-9786-3)
-  - [Comparison](#tab-9786-4)
-- [ Relational ](#)
-  - [Heatmap](#tab-8985-1)
-  - [Sankey](#tab-8985-2)
+  - [Boxplot](#tab-9727-1)
+  - [Violin](#tab-9727-2)
+  - [Ridgeline](#tab-9727-3)
+  - [Comparison](#tab-9727-4)
+- [ Relational](#tab-6929-7)
 - [ Interactions ](#)
-  - [Brush Selection](#tab-9947-1)
-  - [Click-to-Annotate](#tab-9947-2)
-  - [Linked Brushing](#tab-9947-3)
-  - [Parameter Slider](#tab-9947-4)
+  - [Brush Selection](#tab-1298-1)
+  - [Click-to-Annotate](#tab-1298-2)
+  - [Linked Brushing](#tab-1298-3)
+  - [Parameter Slider](#tab-1298-4)
 - [ New Charts ](#)
-  - [Lollipop](#tab-9907-1)
-  - [Dumbbell](#tab-9907-2)
-  - [Waffle](#tab-9907-3)
-  - [Beeswarm](#tab-9907-4)
-  - [Bump](#tab-9907-5)
-  - [Radar](#tab-9907-6)
-  - [Funnel](#tab-9907-7)
-  - [Calendar Heatmap](#tab-9907-8)
+  - [Lollipop](#tab-3353-1)
+  - [Dumbbell](#tab-3353-2)
+  - [Waffle](#tab-3353-3)
+  - [Beeswarm](#tab-3353-4)
+  - [Bump](#tab-3353-5)
+  - [Radar](#tab-3353-6)
+  - [Funnel](#tab-3353-7)
+  - [Calendar Heatmap](#tab-3353-8)
 - [ Advanced ](#)
-  - [Survival Curve](#tab-8595-1)
-  - [Distribution Fit](#tab-8595-2)
-  - [Sparklines](#tab-8595-3)
-  - [Small Multiples](#tab-8595-4)
-- [ Theme Demo](#tab-4980-11)
-- [ Export Demo](#tab-4980-12)
+  - [Survival Curve](#tab-7714-1)
+  - [Distribution Fit](#tab-7714-2)
+  - [Sparklines](#tab-7714-3)
+  - [Small Multiples](#tab-7714-4)
+- [ Theme Demo](#tab-6929-11)
+- [ Export Demo](#tab-6929-12)
 
 ![](logo.png)
 
@@ -104,9 +100,9 @@ Use the tabs above to explore each chart type.
 [ Documentation](https://mortonanalytics.github.io/myIO/) [ Source
 Code](https://github.com/mortonanalytics/myIO)
 
-Noise
+Temperature jitter (F)
 
-Months
+Airquality months
 
 5
 
@@ -118,7 +114,7 @@ Months
 
 9
 
-Noise
+Temperature jitter (F)
 
 Method
 
@@ -154,6 +150,9 @@ Noise
 
 Value
 
+- [Candlestick](#tab-8554-1)
+- [Waterfall](#tab-8554-2)
+
 Test Method
 
 t-test Wilcoxon
@@ -161,6 +160,9 @@ t-test Wilcoxon
 P-value Adjustment
 
 None Bonferroni Holm BH
+
+- [Heatmap](#tab-5546-1)
+- [Sankey](#tab-5546-2)
 
 #### Selected Points
 

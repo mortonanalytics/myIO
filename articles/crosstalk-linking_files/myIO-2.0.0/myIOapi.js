@@ -39382,8 +39382,8 @@ void main() {
       var ms = Number.isFinite(n) && n > 0 && n < 1e6 ? n * 864e5 : n;
       var date = new Date(ms);
       return Number.isFinite(date.getTime()) ? d3.utcFormat("%b %d")(date) : x;
-    } : d3.format(chart.options.xAxisFormat);
-    var yFormat = d3.format(chart.options.yAxisFormat);
+    } : chart.options.xAxisFormat ? d3.format(chart.options.xAxisFormat) : null;
+    var yFormat = chart.options.yAxisFormat ? d3.format(chart.options.yAxisFormat) : null;
     var xAxis = chart.plot.selectAll(".x-axis").data([null]).join("g").attr("class", "x-axis");
     var yAxis = chart.plot.selectAll(".y-axis").data([null]).join("g").attr("class", "y-axis");
     var xAxisSelection = options && options.isInitialRender ? xAxis : xAxis.transition().ease(d3.easeQuad).duration(transitionSpeed);
@@ -39395,7 +39395,21 @@ void main() {
           xAxisSelection.attr("transform", "translate(0," + (chartHeight - (m.top + m.bottom)) + ")").call(d3.axisBottom(chart.xScale)).selectAll("text").attr("dx", "-.25em").attr("text-anchor", chart.width < 550 ? "end" : "center").attr("transform", chart.width < 550 ? "rotate(-65)" : "rotate(-0)");
           break;
         case false:
-          var xAxisGenerator = d3.axisBottom(chart.xScale).ticks(chart.width < 550 ? 5 : 10).tickFormat(xFormat).tickSize(-(chartHeight - (m.top + m.bottom)));
+          var xAxisGenerator = d3.axisBottom(chart.xScale).tickSize(-(chartHeight - (m.top + m.bottom)));
+          var xTickLabels = normalizeTickLabels(chart.options.xTickLabels);
+          if (xTickLabels) {
+            xAxisGenerator.tickValues(Object.keys(xTickLabels).map(function(value) {
+              return +value;
+            })).tickFormat(function(value) {
+              var label = xTickLabels[String(value)];
+              return label == null ? value : label;
+            });
+          } else {
+            xAxisGenerator.ticks(chart.width < 550 ? 5 : 10);
+            if (xFormat) {
+              xAxisGenerator.tickFormat(xFormat);
+            }
+          }
           xAxisSelection.attr("transform", "translate(0," + (chartHeight - (m.top + m.bottom)) + ")").call(xAxisGenerator).selectAll("text").attr("dy", "1.25em").attr("text-anchor", chart.width < 550 ? "end" : "center").attr("transform", chart.width < 550 ? "rotate(-65)" : "rotate(-0)");
       }
     }
@@ -39404,10 +39418,10 @@ void main() {
     renderAxisTitles(chart);
   }
   function updateYAxis(chart, yScale, yAxisSelection, options) {
-    var yFormat = d3.format(chart.options.yAxisFormat);
+    var yFormat = chart.options.yAxisFormat ? d3.format(chart.options.yAxisFormat) : null;
     var chartHeight = getChartHeight(chart);
     var transitionSpeed = chart.options.transition.speed;
-    var currentFormatY = chart.newScaleY ? chart.newScaleY : yFormat;
+    var currentFormatY = chart.newScaleY ? d3.format(chart.newScaleY) : yFormat;
     var yAxis = yAxisSelection || chart.plot.selectAll(".y-axis");
     var axisCall = options && options.isInitialRender ? yAxis : yAxis.transition().ease(d3.easeQuad).duration(transitionSpeed);
     if (chart.options.suppressAxis && chart.options.suppressAxis.yAxis === true) {
@@ -39416,10 +39430,35 @@ void main() {
     }
     var yAxisGenerator = d3.axisLeft(yScale).tickSize(-(chart.width - (chart.margin.right + chart.margin.left)));
     if (typeof yScale.ticks === "function") {
-      yAxisGenerator.ticks(chartHeight < 450 ? 5 : 10).tickFormat(currentFormatY);
+      yAxisGenerator.ticks(chartHeight < 450 ? 5 : 10);
+      if (currentFormatY) {
+        yAxisGenerator.tickFormat(currentFormatY);
+      }
     }
     axisCall.call(yAxisGenerator).selectAll("text").attr("dx", "-.25em");
     applyAxisStyles(chart.plot.selectAll(".y-axis"), "y");
+  }
+  function normalizeTickLabels(labels) {
+    if (!labels) {
+      return null;
+    }
+    if (Array.isArray(labels)) {
+      return labels.length > 0 ? labels.reduce(function(acc, entry) {
+        if (entry && entry.position != null) {
+          acc[normalizeTickKey(entry.position)] = entry.label;
+        }
+        return acc;
+      }, {}) : null;
+    }
+    var normalized = {};
+    Object.keys(labels).forEach(function(key) {
+      normalized[normalizeTickKey(key)] = labels[key];
+    });
+    return Object.keys(normalized).length > 0 ? normalized : null;
+  }
+  function normalizeTickKey(value) {
+    var numeric = +value;
+    return Number.isFinite(numeric) ? String(numeric) : String(value);
   }
   function renderAxisTitles(chart) {
     if (!chart || !chart.plot) {
@@ -43913,8 +43952,8 @@ void main() {
     var exclusions = ["text", "yearMon"];
     var xFormat = exclusions.indexOf(chart.options.xAxisFormat) > -1 ? function(x) {
       return x;
-    } : d3.format(chart.options.xAxisFormat ? chart.options.xAxisFormat : "d");
-    var yFormat = d3.format(chart.options.yAxisFormat ? chart.options.yAxisFormat : "d");
+    } : d3.format(chart.options.xAxisFormat || "");
+    var yFormat = d3.format(chart.options.yAxisFormat || "");
     var currentFormatY = chart.newScaleY ? d3.format(chart.newScaleY) : yFormat;
     removeHoverOverlay(chart);
     lys.forEach(function(layer) {
@@ -45025,6 +45064,7 @@ void main() {
         xAxisFormat: panelConfig.axes.xAxisFormat,
         yAxisFormat: panelConfig.axes.yAxisFormat,
         toolTipFormat: panelConfig.axes.toolTipFormat,
+        xTickLabels: panelConfig.axes.xTickLabels,
         xAxisLabel: panelConfig.axes.xAxisLabel,
         yAxisLabel: panelConfig.axes.yAxisLabel,
         dragPoints: false,
@@ -45711,6 +45751,7 @@ void main() {
         xAxisFormat: this.config.axes.xAxisFormat,
         yAxisFormat: this.config.axes.yAxisFormat,
         toolTipFormat: this.config.axes.toolTipFormat,
+        xTickLabels: this.config.axes.xTickLabels,
         xAxisLabel: this.config.axes.xAxisLabel,
         yAxisLabel: this.config.axes.yAxisLabel,
         dragPoints: this.config.interactions.dragPoints,

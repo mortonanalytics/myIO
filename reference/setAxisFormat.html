@@ -42,9 +42,9 @@
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">setAxisFormat</span><span class="op">(</span></span>
 <span>  <span class="va">myIO</span>,</span>
-<span>  xAxis <span class="op">=</span> <span class="st">"s"</span>,</span>
-<span>  yAxis <span class="op">=</span> <span class="st">"s"</span>,</span>
-<span>  toolTip <span class="op">=</span> <span class="st">"s"</span>,</span>
+<span>  xAxis <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  yAxis <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  toolTip <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  xLabel <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  yLabel <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -59,23 +59,28 @@
 
 
 <dt id="arg-xaxis">xAxis<a class="anchor" aria-label="anchor" href="#arg-xaxis"></a></dt>
-<dd><p>a string indicating a d3.js format</p></dd>
+<dd><p>Optional string indicating a d3.js format for the x axis.
+When <code>NULL</code>, leaves the existing setting unchanged.</p></dd>
 
 
 <dt id="arg-yaxis">yAxis<a class="anchor" aria-label="anchor" href="#arg-yaxis"></a></dt>
-<dd><p>a string indicating a d3.js format</p></dd>
+<dd><p>Optional string indicating a d3.js format for the y axis.
+When <code>NULL</code>, leaves the existing setting unchanged.</p></dd>
 
 
 <dt id="arg-tooltip">toolTip<a class="anchor" aria-label="anchor" href="#arg-tooltip"></a></dt>
-<dd><p>a string indicating a d3.js format</p></dd>
+<dd><p>Optional string indicating a d3.js format for tooltips.
+When <code>NULL</code>, leaves the existing setting unchanged.</p></dd>
 
 
 <dt id="arg-xlabel">xLabel<a class="anchor" aria-label="anchor" href="#arg-xlabel"></a></dt>
-<dd><p>a string label for axis</p></dd>
+<dd><p>Optional string label for the x axis. When <code>NULL</code>,
+leaves the existing setting unchanged.</p></dd>
 
 
 <dt id="arg-ylabel">yLabel<a class="anchor" aria-label="anchor" href="#arg-ylabel"></a></dt>
-<dd><p>a string label for axis</p></dd>
+<dd><p>Optional string label for the y axis. When <code>NULL</code>,
+leaves the existing setting unchanged.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -89,11 +94,15 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Set axis formats using d3.js format strings</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu">setAxisFormat</span><span class="op">(</span>xAxis <span class="op">=</span> <span class="st">".0f"</span>, yAxis <span class="op">=</span> <span class="st">".1f"</span><span class="op">)</span></span></span>
 <div class="myIO html-widget html-fill-item" id="htmlwidget-5b1b2f4ad92281566982" style="width:100%;height:400px;"></div>
-<script type="application/json" data-for="htmlwidget-5b1b2f4ad92281566982">{"x":{"data":null,"config":{"specVersion":2,"title":null,"sparkline":null,"layers":[],"layout":{"margin":{"top":30,"bottom":60,"left":50,"right":5},"suppressLegend":false,"suppressAxis":{"xAxis":false,"yAxis":false}},"scales":{"xlim":{"min":null,"max":null},"ylim":{"min":null,"max":null},"categoricalScale":{"xAxis":false,"yAxis":false},"flipAxis":false,"colorScheme":{"colors":["#E69F00","#56B4E9","#009E73","#F0E442","#0072B2","#D55E00","#CC79A7","#999999"],"domain":"none","enabled":false}},"axes":{"xAxisFormat":".0f","yAxisFormat":".1f","toolTipFormat":"s"},"interactions":{"dragPoints":false,"toggleY":{"variable":null,"format":null},"toolTipOptions":{"suppressY":false}},"theme":[],"transitions":{"speed":1000},"referenceLines":{"x":null,"y":null},"engine":"auto","coordinator_enabled":false,"crosstalk_threshold":100000,"webgl_threshold":50000,"unify_data_path":false,"duckdb_wasm":{"cache_url":null,"worker_url":null}},"bigdata":{"mode":"none","source_id":null,"ipc_b64":null,"url":null,"schema":null,"row_count":null,"rowkey_col":null},"coordinator":{"chart_id":"45a1b2ad4018eef1","mark_spec":null,"query_template":""}},"evals":[],"jsHooks":[]}</script><span class="r-in"><span></span></span>
+<script type="application/json" data-for="htmlwidget-5b1b2f4ad92281566982">{"x":{"data":null,"config":{"specVersion":2,"title":null,"sparkline":null,"layers":[],"layout":{"margin":{"top":30,"bottom":60,"left":50,"right":5},"suppressLegend":false,"suppressAxis":{"xAxis":false,"yAxis":false}},"scales":{"xlim":{"min":null,"max":null},"ylim":{"min":null,"max":null},"categoricalScale":{"xAxis":false,"yAxis":false},"flipAxis":false,"colorScheme":{"colors":["#E69F00","#56B4E9","#009E73","#F0E442","#0072B2","#D55E00","#CC79A7","#999999"],"domain":"none","enabled":false}},"axes":{"xAxisFormat":".0f","yAxisFormat":".1f","xAxisLabel":null,"yAxisLabel":null,"toolTipFormat":"","xTickLabels":null},"interactions":{"dragPoints":false,"toggleY":{"variable":null,"format":null},"toolTipOptions":{"suppressY":false}},"theme":[],"transitions":{"speed":1000},"referenceLines":{"x":null,"y":null},"engine":"auto","coordinator_enabled":false,"crosstalk_threshold":100000,"webgl_threshold":50000,"unify_data_path":false,"duckdb_wasm":{"cache_url":null,"worker_url":null}},"bigdata":{"mode":"none","source_id":null,"ipc_b64":null,"url":null,"schema":null,"row_count":null,"rowkey_col":null},"coordinator":{"chart_id":"45a1b2ad4018eef1","mark_spec":null,"query_template":""}},"evals":[],"jsHooks":[]}</script><span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Set axis labels</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu">setAxisFormat</span><span class="op">(</span>xLabel <span class="op">=</span> <span class="st">"Weight (lbs)"</span>, yLabel <span class="op">=</span> <span class="st">"MPG"</span><span class="op">)</span></span></span>
 <div class="myIO html-widget html-fill-item" id="htmlwidget-25c3e940e6859592f801" style="width:100%;height:400px;"></div>
-<script type="application/json" data-for="htmlwidget-25c3e940e6859592f801">{"x":{"data":null,"config":{"specVersion":2,"title":null,"sparkline":null,"layers":[],"layout":{"margin":{"top":30,"bottom":60,"left":50,"right":5},"suppressLegend":false,"suppressAxis":{"xAxis":false,"yAxis":false}},"scales":{"xlim":{"min":null,"max":null},"ylim":{"min":null,"max":null},"categoricalScale":{"xAxis":false,"yAxis":false},"flipAxis":false,"colorScheme":{"colors":["#E69F00","#56B4E9","#009E73","#F0E442","#0072B2","#D55E00","#CC79A7","#999999"],"domain":"none","enabled":false}},"axes":{"xAxisFormat":"s","yAxisFormat":"s","xAxisLabel":"Weight (lbs)","yAxisLabel":"MPG","toolTipFormat":"s"},"interactions":{"dragPoints":false,"toggleY":{"variable":null,"format":null},"toolTipOptions":{"suppressY":false}},"theme":[],"transitions":{"speed":1000},"referenceLines":{"x":null,"y":null},"engine":"auto","coordinator_enabled":false,"crosstalk_threshold":100000,"webgl_threshold":50000,"unify_data_path":false,"duckdb_wasm":{"cache_url":null,"worker_url":null}},"bigdata":{"mode":"none","source_id":null,"ipc_b64":null,"url":null,"schema":null,"row_count":null,"rowkey_col":null},"coordinator":{"chart_id":"a407a0df6b525b1b","mark_spec":null,"query_template":""}},"evals":[],"jsHooks":[]}</script><span class="r-in"><span></span></span>
+<script type="application/json" data-for="htmlwidget-25c3e940e6859592f801">{"x":{"data":null,"config":{"specVersion":2,"title":null,"sparkline":null,"layers":[],"layout":{"margin":{"top":30,"bottom":60,"left":50,"right":5},"suppressLegend":false,"suppressAxis":{"xAxis":false,"yAxis":false}},"scales":{"xlim":{"min":null,"max":null},"ylim":{"min":null,"max":null},"categoricalScale":{"xAxis":false,"yAxis":false},"flipAxis":false,"colorScheme":{"colors":["#E69F00","#56B4E9","#009E73","#F0E442","#0072B2","#D55E00","#CC79A7","#999999"],"domain":"none","enabled":false}},"axes":{"xAxisFormat":"","yAxisFormat":"","xAxisLabel":"Weight (lbs)","yAxisLabel":"MPG","toolTipFormat":"","xTickLabels":null},"interactions":{"dragPoints":false,"toggleY":{"variable":null,"format":null},"toolTipOptions":{"suppressY":false}},"theme":[],"transitions":{"speed":1000},"referenceLines":{"x":null,"y":null},"engine":"auto","coordinator_enabled":false,"crosstalk_threshold":100000,"webgl_threshold":50000,"unify_data_path":false,"duckdb_wasm":{"cache_url":null,"worker_url":null}},"bigdata":{"mode":"none","source_id":null,"ipc_b64":null,"url":null,"schema":null,"row_count":null,"rowkey_col":null},"coordinator":{"chart_id":"a407a0df6b525b1b","mark_spec":null,"query_template":""}},"evals":[],"jsHooks":[]}</script><span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Label-only calls preserve previously configured formats</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu">setAxisFormat</span><span class="op">(</span>yAxis <span class="op">=</span> <span class="st">".2f"</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu">setAxisFormat</span><span class="op">(</span>yLabel <span class="op">=</span> <span class="st">"Rate"</span><span class="op">)</span></span></span>
+<div class="myIO html-widget html-fill-item" id="htmlwidget-3f27c09be0c60bb52829" style="width:100%;height:400px;"></div>
+<script type="application/json" data-for="htmlwidget-3f27c09be0c60bb52829">{"x":{"data":null,"config":{"specVersion":2,"title":null,"sparkline":null,"layers":[],"layout":{"margin":{"top":30,"bottom":60,"left":50,"right":5},"suppressLegend":false,"suppressAxis":{"xAxis":false,"yAxis":false}},"scales":{"xlim":{"min":null,"max":null},"ylim":{"min":null,"max":null},"categoricalScale":{"xAxis":false,"yAxis":false},"flipAxis":false,"colorScheme":{"colors":["#E69F00","#56B4E9","#009E73","#F0E442","#0072B2","#D55E00","#CC79A7","#999999"],"domain":"none","enabled":false}},"axes":{"xAxisFormat":"","yAxisFormat":".2f","xAxisLabel":null,"yAxisLabel":"Rate","toolTipFormat":"","xTickLabels":null},"interactions":{"dragPoints":false,"toggleY":{"variable":null,"format":null},"toolTipOptions":{"suppressY":false}},"theme":[],"transitions":{"speed":1000},"referenceLines":{"x":null,"y":null},"engine":"auto","coordinator_enabled":false,"crosstalk_threshold":100000,"webgl_threshold":50000,"unify_data_path":false,"duckdb_wasm":{"cache_url":null,"worker_url":null}},"bigdata":{"mode":"none","source_id":null,"ipc_b64":null,"url":null,"schema":null,"row_count":null,"rowkey_col":null},"coordinator":{"chart_id":"2f4ad92281566982","mark_spec":null,"query_template":""}},"evals":[],"jsHooks":[]}</script><span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

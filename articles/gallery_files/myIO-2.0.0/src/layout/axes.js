@@ -29,8 +29,8 @@ export function renderAxes(chart, options) {
     var ms = Number.isFinite(n) && n > 0 && n < 1e6 ? n * 86400000 : n;
     var date = new Date(ms);
     return Number.isFinite(date.getTime()) ? d3.utcFormat("%b %d")(date) : x;
-  } : d3.format(chart.options.xAxisFormat);
-  var yFormat = d3.format(chart.options.yAxisFormat);
+  } : chart.options.xAxisFormat ? d3.format(chart.options.xAxisFormat) : null;
+  var yFormat = chart.options.yAxisFormat ? d3.format(chart.options.yAxisFormat) : null;
   var xAxis = chart.plot.selectAll(".x-axis")
     .data([null])
     .join("g")
@@ -56,9 +56,21 @@ export function renderAxes(chart, options) {
       break;
     case false:
       var xAxisGenerator = d3.axisBottom(chart.xScale)
-        .ticks(chart.width < 550 ? 5 : 10)
-        .tickFormat(xFormat)
         .tickSize(-(chartHeight - (m.top + m.bottom)));
+      var xTickLabels = normalizeTickLabels(chart.options.xTickLabels);
+      if (xTickLabels) {
+        xAxisGenerator
+          .tickValues(Object.keys(xTickLabels).map(function(value) { return +value; }))
+          .tickFormat(function(value) {
+            var label = xTickLabels[String(value)];
+            return label == null ? value : label;
+          });
+      } else {
+        xAxisGenerator.ticks(chart.width < 550 ? 5 : 10);
+        if (xFormat) {
+          xAxisGenerator.tickFormat(xFormat);
+        }
+      }
       xAxisSelection
         .attr("transform", "translate(0," + (chartHeight - (m.top + m.bottom)) + ")")
         .call(xAxisGenerator)
@@ -75,10 +87,10 @@ export function renderAxes(chart, options) {
 }
 
 export function updateYAxis(chart, yScale, yAxisSelection, options) {
-  var yFormat = d3.format(chart.options.yAxisFormat);
+  var yFormat = chart.options.yAxisFormat ? d3.format(chart.options.yAxisFormat) : null;
   var chartHeight = getChartHeight(chart);
   var transitionSpeed = chart.options.transition.speed;
-  var currentFormatY = chart.newScaleY ? chart.newScaleY : yFormat;
+  var currentFormatY = chart.newScaleY ? d3.format(chart.newScaleY) : yFormat;
   var yAxis = yAxisSelection || chart.plot.selectAll(".y-axis");
   var axisCall = options && options.isInitialRender ? yAxis : yAxis.transition().ease(d3.easeQuad).duration(transitionSpeed);
 
@@ -89,9 +101,10 @@ export function updateYAxis(chart, yScale, yAxisSelection, options) {
 
   var yAxisGenerator = d3.axisLeft(yScale).tickSize(-(chart.width - (chart.margin.right + chart.margin.left)));
   if (typeof yScale.ticks === "function") {
-    yAxisGenerator
-      .ticks(chartHeight < 450 ? 5 : 10)
-      .tickFormat(currentFormatY);
+    yAxisGenerator.ticks(chartHeight < 450 ? 5 : 10);
+    if (currentFormatY) {
+      yAxisGenerator.tickFormat(currentFormatY);
+    }
   }
 
   axisCall
@@ -100,6 +113,30 @@ export function updateYAxis(chart, yScale, yAxisSelection, options) {
     .attr("dx", "-.25em");
 
   applyAxisStyles(chart.plot.selectAll(".y-axis"), "y");
+}
+
+function normalizeTickLabels(labels) {
+  if (!labels) {
+    return null;
+  }
+  if (Array.isArray(labels)) {
+    return labels.length > 0 ? labels.reduce(function(acc, entry) {
+      if (entry && entry.position != null) {
+        acc[normalizeTickKey(entry.position)] = entry.label;
+      }
+      return acc;
+    }, {}) : null;
+  }
+  var normalized = {};
+  Object.keys(labels).forEach(function(key) {
+    normalized[normalizeTickKey(key)] = labels[key];
+  });
+  return Object.keys(normalized).length > 0 ? normalized : null;
+}
+
+function normalizeTickKey(value) {
+  var numeric = +value;
+  return Number.isFinite(numeric) ? String(numeric) : String(value);
 }
 
 function renderAxisTitles(chart) {

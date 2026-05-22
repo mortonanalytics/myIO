@@ -11,8 +11,8 @@ export function bindRollover(chart, layers) {
   var exclusions = ["text", "yearMon"];
   var xFormat = exclusions.indexOf(chart.options.xAxisFormat) > -1
     ? function(x) { return x; }
-    : d3.format(chart.options.xAxisFormat ? chart.options.xAxisFormat : "d");
-  var yFormat = d3.format(chart.options.yAxisFormat ? chart.options.yAxisFormat : "d");
+    : d3.format(chart.options.xAxisFormat || "");
+  var yFormat = d3.format(chart.options.yAxisFormat || "");
   var currentFormatY = chart.newScaleY ? d3.format(chart.newScaleY) : yFormat;
 
   removeHoverOverlay(chart);
