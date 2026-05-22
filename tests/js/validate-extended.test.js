@@ -164,7 +164,7 @@ describe("validateSpecContract extended", function() {
   });
 
   test("returns error for wrong specVersion", function() {
-    var errors = validateSpecContract({ specVersion: 2, layers: [] }, []);
+    var errors = validateSpecContract({ specVersion: 3, layers: [] }, []);
     expect(errors.length).toBe(1);
   });
 
@@ -179,6 +179,14 @@ describe("validateSpecContract extended", function() {
   test("returns empty for valid spec", function() {
     var errors = validateSpecContract(
       { specVersion: 1, layers: [{ id: "l1", type: "line", label: "s" }] },
+      ["id", "type", "label"]
+    );
+    expect(errors).toEqual([]);
+  });
+
+  test("accepts current R widget specVersion", function() {
+    var errors = validateSpecContract(
+      { specVersion: 2, layers: [{ id: "l1", type: "line", label: "s" }] },
       ["id", "type", "label"]
     );
     expect(errors).toEqual([]);

@@ -44675,11 +44675,23 @@ void main() {
     donut: "standalone-donut",
     gauge: "standalone-gauge",
     text: "axes-continuous",
+    regression: "axes-continuous",
     bracket: "axes-continuous",
+    comparison: "axes-categorical",
+    qq: "axes-continuous",
+    lollipop: "axes-categorical",
+    dumbbell: "axes-categorical",
+    waffle: "standalone-waffle",
+    beeswarm: "axes-continuous",
+    bump: "axes-continuous",
+    survfit: "axes-continuous",
+    histogram_fit: "axes-binned",
     quantile_dots: "axes-categorical",
     radar: "standalone-radar",
     funnel: "standalone-funnel",
-    parallel: "standalone-parallel"
+    parallel: "standalone-parallel",
+    calendarHeatmap: "standalone-calendar",
+    fan: "axes-continuous"
   };
   var CROSS_GROUP_ALLOWED = /* @__PURE__ */ new Set([
     "axes-continuous:axes-categorical",

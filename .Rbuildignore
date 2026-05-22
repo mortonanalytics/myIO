@@ -30,6 +30,8 @@
 ^AGENTS\.md$
 ^screenshots-review$
 ^scripts$
+^tools$
+^mcp$
 ^inst/test_rmarkdown
 ^inst/appTester$
 ^CRAN-SUBMISSION$

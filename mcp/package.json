@@ -1,0 +1,17 @@
+{
+  "name": "@mortonanalytics/myio-mcp",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "MCP tools for validating myIO chart specs and function calls.",
+  "bin": {
+    "myio-mcp": "./server.mjs"
+  },
+  "scripts": {
+    "test": "node --test test/conformance.test.mjs",
+    "smoke": "node test/server-smoke.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^3.25.0"
+  }
+}
