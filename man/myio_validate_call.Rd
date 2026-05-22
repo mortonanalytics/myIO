@@ -18,3 +18,6 @@ A list with \code{valid} and \code{errors}. Errors use stable
 \description{
 Validate a myIO Function Call
 }
+\examples{
+myio_validate_call("setAxisFormat", list(axis_x = ".0f"))
+}

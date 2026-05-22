@@ -78,6 +78,8 @@ myio_allowed_mapping_keys <- function(type_schema) {
 #' Returns chart type names from the generated myIO schema.
 #'
 #' @return A character vector of chart type names.
+#' @examples
+#' head(myio_list_chart_types())
 #' @export
 myio_list_chart_types <- function() {
   names(myio_load_schema()$types)
@@ -87,6 +89,8 @@ myio_list_chart_types <- function() {
 #'
 #' @param type Optional chart type. When \code{NULL}, returns every type schema.
 #' @return A list containing one chart schema or all chart schemas.
+#' @examples
+#' myio_chart_schema("boxplot")
 #' @export
 myio_chart_schema <- function(type = NULL) {
   types <- myio_load_schema()$types
@@ -104,6 +108,11 @@ myio_chart_schema <- function(type = NULL) {
 #'   \code{spec$columns} and enables missing-column and numeric-column checks.
 #' @return A list with \code{valid} and \code{errors}. Errors use stable
 #'   machine-readable \code{code} values.
+#' @examples
+#' myio_validate_spec(list(
+#'   type = "boxplot",
+#'   mapping = list(column_var = "Species", value_var = "Sepal.Width")
+#' ))
 #' @export
 myio_validate_spec <- function(spec, columns = NULL) {
   schema <- myio_load_schema()
@@ -183,6 +192,8 @@ myio_validate_spec <- function(spec, columns = NULL) {
 #' List myIO Functions for LLM Tool Calling
 #'
 #' @return A character vector of exported myIO function names.
+#' @examples
+#' head(myio_list_functions())
 #' @export
 myio_list_functions <- function() {
   names(myio_load_schema()$function_signatures)
@@ -193,6 +204,8 @@ myio_list_functions <- function() {
 #' @param fn Optional exported function name. When \code{NULL}, returns all
 #'   signatures.
 #' @return A character vector of argument names or a named list of signatures.
+#' @examples
+#' myio_function_signature("setAxisFormat")
 #' @export
 myio_function_signature <- function(fn = NULL) {
   signatures <- myio_load_schema()$function_signatures
@@ -206,6 +219,8 @@ myio_function_signature <- function(fn = NULL) {
 #' @param args Named list of proposed arguments.
 #' @return A list with \code{valid} and \code{errors}. Errors use stable
 #'   machine-readable \code{code} values.
+#' @examples
+#' myio_validate_call("setAxisFormat", list(axis_x = ".0f"))
 #' @export
 myio_validate_call <- function(fn, args = list()) {
   schema <- myio_load_schema()

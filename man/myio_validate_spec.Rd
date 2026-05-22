@@ -20,3 +20,9 @@ A list with \code{valid} and \code{errors}. Errors use stable
 \description{
 Validates a proposed chart specification against the generated myIO schema.
 }
+\examples{
+myio_validate_spec(list(
+  type = "boxplot",
+  mapping = list(column_var = "Species", value_var = "Sepal.Width")
+))
+}

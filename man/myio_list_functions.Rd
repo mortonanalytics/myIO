@@ -12,3 +12,6 @@ A character vector of exported myIO function names.
 \description{
 List myIO Functions for LLM Tool Calling
 }
+\examples{
+head(myio_list_functions())
+}

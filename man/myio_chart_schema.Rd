@@ -15,3 +15,6 @@ A list containing one chart schema or all chart schemas.
 \description{
 Get myIO Chart Schema for LLM Tool Calling
 }
+\examples{
+myio_chart_schema("boxplot")
+}

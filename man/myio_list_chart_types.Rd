@@ -12,3 +12,6 @@ A character vector of chart type names.
 \description{
 Returns chart type names from the generated myIO schema.
 }
+\examples{
+head(myio_list_chart_types())
+}

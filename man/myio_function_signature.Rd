@@ -16,3 +16,6 @@ A character vector of argument names or a named list of signatures.
 \description{
 Get a myIO Function Signature for LLM Tool Calling
 }
+\examples{
+myio_function_signature("setAxisFormat")
+}
