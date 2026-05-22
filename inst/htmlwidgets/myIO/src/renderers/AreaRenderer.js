@@ -11,6 +11,8 @@ export class AreaRenderer {
     var key = layer.label;
     var transitionSpeed = chart.options.transition.speed;
     var isVertical = layer.options && layer.options.orientation === "vertical";
+    var fillOpacity = layer.options && typeof layer.options.areaOpacity === "number" ? layer.options.areaOpacity : 0.4;
+    var boundaryStroke = !!(layer.options && layer.options.boundaryStroke === true);
 
     var valueArea;
     if (isVertical) {
@@ -38,6 +40,9 @@ export class AreaRenderer {
       .style("fill", function(d) {
         return resolveColor(chart, d[0][layer.mapping.group], layer.color);
       })
+      .style("stroke", boundaryStroke ? layer.color : "none")
+      .style("stroke-width", boundaryStroke ? "1px" : "0")
+      .style("stroke-opacity", boundaryStroke ? 0.85 : 0)
       .style("opacity", 0)
       .attr("class", tagName("area", chart.element.id, key));
 
@@ -47,7 +52,10 @@ export class AreaRenderer {
       .ease(d3.easeQuad)
       .duration(transitionSpeed)
       .attr("d", valueArea)
-      .style("opacity", 0.4);
+      .style("stroke", boundaryStroke ? layer.color : "none")
+      .style("stroke-width", boundaryStroke ? "1px" : "0")
+      .style("stroke-opacity", boundaryStroke ? 0.85 : 0)
+      .style("opacity", fillOpacity);
   }
 
   formatTooltip(chart, d, layer) {

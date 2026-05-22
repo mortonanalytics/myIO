@@ -20,10 +20,23 @@ const COMPAT_GROUP = {
   donut: "standalone-donut",
   gauge: "standalone-gauge",
   text: "axes-continuous",
+  regression: "axes-continuous",
   bracket: "axes-continuous",
+  comparison: "axes-categorical",
+  qq: "axes-continuous",
+  lollipop: "axes-categorical",
+  dumbbell: "axes-categorical",
+  waffle: "standalone-waffle",
+  beeswarm: "axes-continuous",
+  bump: "axes-continuous",
+  survfit: "axes-continuous",
+  histogram_fit: "axes-binned",
+  quantile_dots: "axes-categorical",
   radar: "standalone-radar",
   funnel: "standalone-funnel",
-  parallel: "standalone-parallel"
+  parallel: "standalone-parallel",
+  calendarHeatmap: "standalone-calendar",
+  fan: "axes-continuous"
 };
 
 const CROSS_GROUP_ALLOWED = new Set([
@@ -116,8 +129,8 @@ export function validateAgainstContract(layer, contract) {
 
 export function validateSpecContract(config, requiredFields) {
   const errors = [];
-  if (!config || config.specVersion !== 1) {
-    errors.push("Chart config must include specVersion 1.");
+  if (!config || ![1, 2].includes(config.specVersion)) {
+    errors.push("Chart config must include specVersion 1 or 2.");
   }
   (config.layers || []).forEach(function(layer) {
     requiredFields.forEach(function(field) {

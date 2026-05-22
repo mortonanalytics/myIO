@@ -1,0 +1,119 @@
+---
+title: "LLM Tool Calling"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{LLM Tool Calling}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(myIO)
+```
+
+myIO ships a generated schema that agents can use to produce contract-correct chart specs. The schema is generated from the R and JavaScript contracts and is available to both R helpers and a standalone MCP server.
+
+## R helpers
+
+List chart types:
+
+```{r}
+head(myio_list_chart_types())
+```
+
+Validate a chart spec:
+
+```{r}
+spec <- list(
+  type = "boxplot",
+  mapping = list(column_var = "Species", value_var = "Sepal.Width")
+)
+myio_validate_spec(spec)
+```
+
+Pass a column type map to catch data-contract issues:
+
+```{r}
+myio_validate_spec(
+  list(type = "point", mapping = list(x_var = "wt", y_var = "mpg")),
+  columns = list(wt = "numeric", mpg = "character")
+)
+```
+
+Validate function-call argument names:
+
+```{r}
+myio_validate_call("setAxisFormat", list(axis_x = ".0f"))
+myio_function_signature("setAxisFormat")
+```
+
+## MCP server
+
+The MCP package is intentionally separate from the R package so CRAN does not need Node dependencies.
+
+```{sh, eval=FALSE}
+cd mcp
+npm install
+node server.mjs
+```
+
+Claude Desktop / Claude Code style configuration:
+
+```json
+{
+  "mcpServers": {
+    "myio": {
+      "command": "node",
+      "args": ["/absolute/path/to/myIO/mcp/server.mjs"]
+    }
+  }
+}
+```
+
+Cursor uses the same command and args in its MCP configuration.
+
+The server exposes six tools:
+
+- `list_chart_types`
+- `get_chart_schema`
+- `validate_spec`
+- `list_functions`
+- `get_function_signature`
+- `validate_call`
+
+## Ollama loop
+
+For local tool-calling loops, expose the same six tools with JSON inputs. A minimal repair flow is:
+
+1. Ask the model for a chart spec.
+2. Call `validate_spec`.
+3. If `valid` is `FALSE`, feed the error codes and suggestions back to the model.
+4. Repeat until the tool returns `valid = TRUE`.
+5. Validate any proposed R call with `validate_call`.
+
+Example repair:
+
+```json
+{
+  "type": "boxplot",
+  "mapping": {
+    "column_var": "Species",
+    "value_var": "Sepal.Width"
+  }
+}
+```
+
+`validate_spec` returns `MISSING_MAPPING` for `x_var` and `y_var`, plus `UNKNOWN_MAPPING_KEY` suggestions for the hallucinated keys. The repaired spec is:
+
+```json
+{
+  "type": "boxplot",
+  "mapping": {
+    "x_var": "Species",
+    "y_var": "Sepal.Width"
+  }
+}
+```
+
+Validation guarantees contract correctness: known chart type, allowed transform, expected mapping keys, optional data-column compatibility, and known function arguments. It does not guarantee the semantic or aesthetic quality of the selected chart.

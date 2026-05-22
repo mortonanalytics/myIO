@@ -34,7 +34,7 @@ ALLOWED_TYPES <- c(
   "waffle", "beeswarm", "bump",
   "radar", "funnel", "parallel",
   "survfit", "histogram_fit",
-  "calendarHeatmap"
+  "calendarHeatmap", "quantile_dots", "fan"
 )
 
 COMPATIBILITY_GROUPS <- list(
@@ -71,7 +71,9 @@ COMPATIBILITY_GROUPS <- list(
   parallel = "standalone-parallel",
   survfit = "axes-continuous",
   histogram_fit = "axes-binned",
-  calendarHeatmap = "standalone-calendar"
+  calendarHeatmap = "standalone-calendar",
+  quantile_dots = "axes-categorical",
+  fan = "axes-continuous"
 )
 
 GROUP_MATRIX <- list(
@@ -122,7 +124,9 @@ VALID_COMBINATIONS <- list(
   parallel = c("identity"),
   survfit = c("identity"),
   histogram_fit = c("identity"),
-  calendarHeatmap = c("identity")
+  calendarHeatmap = c("identity"),
+  quantile_dots = c("identity", "quantile_dots"),
+  fan = c("identity")
 )
 
 composite_registry <- function() {
@@ -134,7 +138,8 @@ composite_registry <- function() {
     comparison = composite_comparison,
     qq = composite_qq,
     survfit = composite_survfit,
-    histogram_fit = composite_histogram_fit
+    histogram_fit = composite_histogram_fit,
+    fan = composite_fan
   )
 }
 

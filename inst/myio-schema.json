@@ -1,0 +1,1340 @@
+{
+  "schema_version": 1,
+  "generated_from": {
+    "renderers": "inst/htmlwidgets/myIO/src/renderers",
+    "r_contracts": "tools/dump-r-contracts.R"
+  },
+  "error_codes": [
+    "UNKNOWN_TYPE",
+    "MISSING_MAPPING",
+    "UNKNOWN_MAPPING_KEY",
+    "INVALID_TRANSFORM",
+    "MISSING_COLUMN",
+    "NON_NUMERIC_COLUMN",
+    "UNKNOWN_FUNCTION",
+    "UNKNOWN_ARGUMENT"
+  ],
+  "types": {
+    "line": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": [
+        "x_var",
+        "y_var"
+      ],
+      "numeric_fields": [
+        "x_var",
+        "y_var"
+      ],
+      "valid_transforms": [
+        "identity",
+        "lm",
+        "loess",
+        "polynomial",
+        "smooth"
+      ],
+      "group": "axes-continuous",
+      "data_contract": {
+        "x_var": {
+          "required": true,
+          "numeric": true,
+          "sorted": true
+        },
+        "y_var": {
+          "required": true,
+          "numeric": true
+        }
+      },
+      "scale_hints": {
+        "xScaleType": "linear",
+        "yScaleType": "linear",
+        "yExtentFields": [
+          "y_var"
+        ],
+        "domainMerge": "union"
+      }
+    },
+    "point": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": [
+        "x_var",
+        "y_var"
+      ],
+      "numeric_fields": [
+        "x_var",
+        "y_var"
+      ],
+      "valid_transforms": [
+        "identity",
+        "mean",
+        "summary",
+        "residuals"
+      ],
+      "group": "axes-continuous",
+      "data_contract": {
+        "x_var": {
+          "required": true,
+          "numeric": true
+        },
+        "y_var": {
+          "required": true,
+          "numeric": true
+        }
+      },
+      "scale_hints": {
+        "xScaleType": "linear",
+        "yScaleType": "linear",
+        "yExtentFields": [
+          "y_var"
+        ],
+        "domainMerge": "union"
+      }
+    },
+    "bar": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": [
+        "x_var",
+        "y_var"
+      ],
+      "numeric_fields": "y_var",
+      "valid_transforms": [
+        "identity",
+        "mean",
+        "summary"
+      ],
+      "group": "axes-categorical",
+      "data_contract": {
+        "x_var": {
+          "required": true
+        },
+        "y_var": {
+          "required": true,
+          "numeric": true
+        }
+      },
+      "scale_hints": {
+        "xScaleType": "band",
+        "yScaleType": "linear",
+        "yExtentFields": [
+          "y_var"
+        ],
+        "domainMerge": "union"
+      }
+    },
+    "hexbin": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": [
+        "x_var",
+        "y_var",
+        "radius"
+      ],
+      "numeric_fields": [
+        "x_var",
+        "y_var",
+        "radius"
+      ],
+      "valid_transforms": "identity",
+      "group": "axes-hex",
+      "data_contract": {
+        "x_var": {
+          "required": true,
+          "numeric": true
+        },
+        "y_var": {
+          "required": true,
+          "numeric": true
+        },
+        "radius": {
+          "required": true,
+          "numeric": true,
+          "positive": true
+        }
+      },
+      "scale_hints": {
+        "xScaleType": "linear",
+        "yScaleType": "linear",
+        "yExtentFields": [
+          "y_var"
+        ],
+        "domainMerge": "union"
+      }
+    },
+    "treemap": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": [
+        "level_1",
+        "level_2"
+      ],
+      "numeric_fields": [],
+      "valid_transforms": "identity",
+      "group": "standalone-treemap",
+      "data_contract": {
+        "level_1": {
+          "required": true
+        },
+        "level_2": {
+          "required": true
+        },
+        "y_var": {
+          "required": false,
+          "numeric": true
+        }
+      },
+      "scale_hints": null
+    },
+    "gauge": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": "value",
+      "numeric_fields": "value",
+      "valid_transforms": "identity",
+      "group": "standalone-gauge",
+      "data_contract": {
+        "value": {
+          "required": true,
+          "numeric": true
+        }
+      },
+      "scale_hints": null
+    },
+    "donut": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": [
+        "x_var",
+        "y_var"
+      ],
+      "numeric_fields": "y_var",
+      "valid_transforms": "identity",
+      "group": "standalone-donut",
+      "data_contract": {
+        "x_var": {
+          "required": true
+        },
+        "y_var": {
+          "required": true,
+          "numeric": true
+        }
+      },
+      "scale_hints": null
+    },
+    "area": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": [
+        "x_var",
+        "low_y",
+        "high_y"
+      ],
+      "numeric_fields": [
+        "x_var",
+        "low_y",
+        "high_y"
+      ],
+      "valid_transforms": [
+        "identity",
+        "ci"
+      ],
+      "group": "axes-continuous",
+      "data_contract": {
+        "x_var": {
+          "required": true,
+          "numeric": true
+        }
+      },
+      "scale_hints": {
+        "xScaleType": "linear",
+        "yScaleType": "linear",
+        "yExtentFields": [
+          "low_y",
+          "high_y"
+        ],
+        "domainMerge": "union"
+      }
+    },
+    "groupedBar": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": [
+        "x_var",
+        "y_var"
+      ],
+      "numeric_fields": "y_var",
+      "valid_transforms": "identity",
+      "group": "axes-categorical",
+      "data_contract": {
+        "x_var": {
+          "required": true
+        },
+        "y_var": {
+          "required": true,
+          "numeric": true
+        },
+        "group": {
+          "required": true
+        }
+      },
+      "scale_hints": {
+        "xScaleType": "band",
+        "yScaleType": "linear",
+        "yExtentFields": [
+          "y_var"
+        ],
+        "domainMerge": "union"
+      }
+    },
+    "histogram": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": "value",
+      "numeric_fields": "value",
+      "valid_transforms": "identity",
+      "group": "axes-binned",
+      "data_contract": {
+        "value": {
+          "required": true,
+          "numeric": true
+        }
+      },
+      "scale_hints": {
+        "xScaleType": "linear",
+        "yScaleType": "linear",
+        "yExtentFields": [
+          "value"
+        ],
+        "domainMerge": "union"
+      }
+    },
+    "heatmap": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": [
+        "x_var",
+        "y_var",
+        "value"
+      ],
+      "numeric_fields": "value",
+      "valid_transforms": "identity",
+      "group": "axes-matrix",
+      "data_contract": {
+        "x_var": {
+          "required": true
+        },
+        "y_var": {
+          "required": true
+        },
+        "value": {
+          "required": true,
+          "numeric": true
+        }
+      },
+      "scale_hints": {
+        "xScaleType": "band",
+        "yScaleType": "band",
+        "yExtentFields": [
+          "value"
+        ],
+        "domainMerge": "union"
+      }
+    },
+    "candlestick": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": [
+        "x_var",
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "numeric_fields": [
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "valid_transforms": "identity",
+      "group": "axes-continuous",
+      "data_contract": {
+        "x_var": {
+          "required": true,
+          "numeric": true
+        },
+        "open": {
+          "required": true,
+          "numeric": true
+        },
+        "high": {
+          "required": true,
+          "numeric": true
+        },
+        "low": {
+          "required": true,
+          "numeric": true
+        },
+        "close": {
+          "required": true,
+          "numeric": true
+        }
+      },
+      "scale_hints": {
+        "xScaleType": "linear",
+        "yScaleType": "linear",
+        "yExtentFields": [
+          "open",
+          "high",
+          "low",
+          "close"
+        ],
+        "domainMerge": "union"
+      }
+    },
+    "waterfall": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": [
+        "x_var",
+        "y_var"
+      ],
+      "numeric_fields": "y_var",
+      "valid_transforms": [
+        "identity",
+        "cumulative"
+      ],
+      "group": "axes-categorical",
+      "data_contract": {
+        "x_var": {
+          "required": true
+        },
+        "y_var": {
+          "required": true,
+          "numeric": true
+        }
+      },
+      "scale_hints": {
+        "xScaleType": "band",
+        "yScaleType": "linear",
+        "yExtentFields": [
+          "_base_y",
+          "_cumulative_y"
+        ],
+        "domainMerge": "union"
+      }
+    },
+    "sankey": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": [
+        "source",
+        "target",
+        "value"
+      ],
+      "numeric_fields": "value",
+      "valid_transforms": "identity",
+      "group": "standalone-flow",
+      "data_contract": {
+        "source": {
+          "required": true
+        },
+        "target": {
+          "required": true
+        },
+        "value": {
+          "required": true,
+          "numeric": true
+        }
+      },
+      "scale_hints": null
+    },
+    "boxplot": {
+      "kind": "composite",
+      "renderer_type": false,
+      "required_mappings": [
+        "x_var",
+        "y_var"
+      ],
+      "numeric_fields": "y_var",
+      "valid_transforms": "identity",
+      "group": "axes-categorical",
+      "data_contract": null,
+      "scale_hints": null
+    },
+    "violin": {
+      "kind": "composite",
+      "renderer_type": false,
+      "required_mappings": [
+        "x_var",
+        "y_var"
+      ],
+      "numeric_fields": "y_var",
+      "valid_transforms": "identity",
+      "group": "axes-categorical",
+      "data_contract": null,
+      "scale_hints": null
+    },
+    "ridgeline": {
+      "kind": "composite",
+      "renderer_type": false,
+      "required_mappings": [
+        "x_var",
+        "y_var",
+        "group"
+      ],
+      "numeric_fields": "x_var",
+      "valid_transforms": "identity",
+      "group": "axes-binned",
+      "data_contract": null,
+      "scale_hints": null
+    },
+    "rangeBar": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": [
+        "x_var",
+        "low_y",
+        "high_y"
+      ],
+      "numeric_fields": [
+        "low_y",
+        "high_y"
+      ],
+      "valid_transforms": [
+        "identity",
+        "mean_ci"
+      ],
+      "group": "axes-continuous",
+      "data_contract": {
+        "x_var": {
+          "required": true
+        },
+        "low_y": {
+          "required": true,
+          "numeric": true
+        },
+        "high_y": {
+          "required": true,
+          "numeric": true
+        }
+      },
+      "scale_hints": {
+        "xScaleType": "linear",
+        "yScaleType": "linear",
+        "yExtentFields": [
+          "low_y",
+          "high_y"
+        ],
+        "domainMerge": "union"
+      }
+    },
+    "text": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": [
+        "x_var",
+        "y_var"
+      ],
+      "numeric_fields": "y_var",
+      "valid_transforms": "identity",
+      "group": "axes-continuous",
+      "data_contract": {},
+      "scale_hints": {
+        "xScaleType": "linear",
+        "yScaleType": "linear",
+        "xExtentFields": [],
+        "yExtentFields": [],
+        "domainMerge": "union"
+      }
+    },
+    "regression": {
+      "kind": "composite",
+      "renderer_type": false,
+      "required_mappings": [
+        "x_var",
+        "y_var"
+      ],
+      "numeric_fields": "y_var",
+      "valid_transforms": [
+        "identity"
+      ],
+      "group": "axes-continuous",
+      "data_contract": null,
+      "scale_hints": null
+    },
+    "bracket": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": [
+        "x_var",
+        "y_var"
+      ],
+      "numeric_fields": "y_var",
+      "valid_transforms": [
+        "identity",
+        "pairwise_test"
+      ],
+      "group": "axes-continuous",
+      "data_contract": {
+        "x1": {
+          "required": true,
+          "numeric": true
+        },
+        "x2": {
+          "required": true,
+          "numeric": true
+        },
+        "y": {
+          "required": true,
+          "numeric": true
+        }
+      },
+      "scale_hints": {
+        "xScaleType": "linear",
+        "yScaleType": "linear",
+        "xExtentFields": [],
+        "yExtentFields": [
+          "y"
+        ],
+        "domainMerge": "union"
+      }
+    },
+    "comparison": {
+      "kind": "composite",
+      "renderer_type": false,
+      "required_mappings": [
+        "x_var",
+        "y_var"
+      ],
+      "numeric_fields": "y_var",
+      "valid_transforms": [
+        "identity"
+      ],
+      "group": "axes-categorical",
+      "data_contract": null,
+      "scale_hints": null
+    },
+    "qq": {
+      "kind": "composite",
+      "renderer_type": false,
+      "required_mappings": "y_var",
+      "numeric_fields": "y_var",
+      "valid_transforms": [
+        "identity"
+      ],
+      "group": "axes-continuous",
+      "data_contract": null,
+      "scale_hints": null
+    },
+    "lollipop": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": [
+        "x_var",
+        "y_var"
+      ],
+      "numeric_fields": "y_var",
+      "valid_transforms": [
+        "identity",
+        "mean",
+        "summary"
+      ],
+      "group": "axes-categorical",
+      "data_contract": {
+        "x_var": {
+          "required": true,
+          "numeric": false
+        },
+        "y_var": {
+          "required": true,
+          "numeric": true
+        }
+      },
+      "scale_hints": {
+        "xScaleType": "band",
+        "yScaleType": "linear",
+        "xExtentFields": [],
+        "yExtentFields": [
+          "y_var"
+        ],
+        "domainMerge": "union"
+      }
+    },
+    "dumbbell": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": [
+        "x_var",
+        "low_y",
+        "high_y"
+      ],
+      "numeric_fields": [
+        "low_y",
+        "high_y"
+      ],
+      "valid_transforms": "identity",
+      "group": "axes-categorical",
+      "data_contract": {
+        "x_var": {
+          "required": true,
+          "numeric": false
+        },
+        "low_y": {
+          "required": true,
+          "numeric": true
+        },
+        "high_y": {
+          "required": true,
+          "numeric": true
+        }
+      },
+      "scale_hints": {
+        "xScaleType": "band",
+        "yScaleType": "linear",
+        "xExtentFields": [],
+        "yExtentFields": [
+          "low_y",
+          "high_y"
+        ],
+        "domainMerge": "union"
+      }
+    },
+    "waffle": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": [
+        "category",
+        "value"
+      ],
+      "numeric_fields": "value",
+      "valid_transforms": "identity",
+      "group": "standalone-waffle",
+      "data_contract": {
+        "category": {
+          "required": true
+        },
+        "value": {
+          "required": true,
+          "numeric": true
+        }
+      },
+      "scale_hints": null
+    },
+    "beeswarm": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": [
+        "x_var",
+        "y_var"
+      ],
+      "numeric_fields": "y_var",
+      "valid_transforms": "identity",
+      "group": "axes-continuous",
+      "data_contract": {
+        "x_var": {
+          "required": true,
+          "numeric": true
+        },
+        "y_var": {
+          "required": true
+        }
+      },
+      "scale_hints": {
+        "xScaleType": "linear",
+        "yScaleType": "linear",
+        "xExtentFields": [
+          "x_var"
+        ],
+        "yExtentFields": [
+          "y_var"
+        ],
+        "domainMerge": "union"
+      }
+    },
+    "bump": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": [
+        "x_var",
+        "y_var",
+        "group"
+      ],
+      "numeric_fields": "y_var",
+      "valid_transforms": "identity",
+      "group": "axes-continuous",
+      "data_contract": {
+        "x_var": {
+          "required": true
+        },
+        "y_var": {
+          "required": true,
+          "numeric": true
+        },
+        "group": {
+          "required": true
+        }
+      },
+      "scale_hints": {
+        "xScaleType": "point",
+        "yScaleType": "linear",
+        "xExtentFields": [],
+        "yExtentFields": [
+          "y_var"
+        ],
+        "domainMerge": "union"
+      }
+    },
+    "radar": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": [
+        "axis",
+        "value"
+      ],
+      "numeric_fields": "value",
+      "valid_transforms": "identity",
+      "group": "standalone-radar",
+      "data_contract": {
+        "axis": {
+          "required": true
+        },
+        "value": {
+          "required": true,
+          "numeric": true
+        }
+      },
+      "scale_hints": null
+    },
+    "funnel": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": [
+        "stage",
+        "value"
+      ],
+      "numeric_fields": "value",
+      "valid_transforms": "identity",
+      "group": "standalone-funnel",
+      "data_contract": {
+        "stage": {
+          "required": true
+        },
+        "value": {
+          "required": true,
+          "numeric": true
+        }
+      },
+      "scale_hints": null
+    },
+    "parallel": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": "dimensions",
+      "numeric_fields": [],
+      "valid_transforms": "identity",
+      "group": "standalone-parallel",
+      "data_contract": {
+        "dimensions": {
+          "required": true
+        }
+      },
+      "scale_hints": null
+    },
+    "survfit": {
+      "kind": "composite",
+      "renderer_type": false,
+      "required_mappings": [
+        "time",
+        "status"
+      ],
+      "numeric_fields": [
+        "time",
+        "status"
+      ],
+      "valid_transforms": "identity",
+      "group": "axes-continuous",
+      "data_contract": null,
+      "scale_hints": null
+    },
+    "histogram_fit": {
+      "kind": "composite",
+      "renderer_type": false,
+      "required_mappings": "value",
+      "numeric_fields": "value",
+      "valid_transforms": "identity",
+      "group": "axes-binned",
+      "data_contract": null,
+      "scale_hints": null
+    },
+    "calendarHeatmap": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": [
+        "date",
+        "value"
+      ],
+      "numeric_fields": "value",
+      "valid_transforms": "identity",
+      "group": "standalone-calendar",
+      "data_contract": {
+        "date": {
+          "required": true
+        },
+        "value": {
+          "required": true,
+          "numeric": true
+        }
+      },
+      "scale_hints": null
+    },
+    "quantile_dots": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": [
+        "x_var",
+        "y_var"
+      ],
+      "numeric_fields": "y_var",
+      "valid_transforms": [
+        "identity",
+        "quantile_dots"
+      ],
+      "group": "axes-categorical",
+      "data_contract": {
+        "x_var": {
+          "required": true
+        },
+        "y_var": {
+          "required": true,
+          "numeric": true
+        },
+        "quantile_rank": {
+          "required": true,
+          "numeric": true
+        }
+      },
+      "scale_hints": {
+        "xScaleType": "band",
+        "yScaleType": "linear",
+        "xExtentFields": [
+          "x_var"
+        ],
+        "yExtentFields": [
+          "y_var"
+        ],
+        "domainMerge": "union"
+      }
+    },
+    "fan": {
+      "kind": "composite",
+      "renderer_type": false,
+      "required_mappings": [
+        "x_var",
+        "y_var"
+      ],
+      "numeric_fields": "y_var",
+      "valid_transforms": "identity",
+      "group": "axes-continuous",
+      "data_contract": null,
+      "scale_hints": null
+    }
+  },
+  "renderer_types": [
+    "area",
+    "bar",
+    "beeswarm",
+    "bracket",
+    "bump",
+    "calendarHeatmap",
+    "candlestick",
+    "donut",
+    "dumbbell",
+    "funnel",
+    "gauge",
+    "groupedBar",
+    "heatmap",
+    "hexbin",
+    "histogram",
+    "line",
+    "lollipop",
+    "parallel",
+    "point",
+    "quantile_dots",
+    "radar",
+    "rangeBar",
+    "sankey",
+    "text",
+    "treemap",
+    "waffle",
+    "waterfall"
+  ],
+  "composites": [
+    "boxplot",
+    "violin",
+    "ridgeline",
+    "regression",
+    "comparison",
+    "qq",
+    "survfit",
+    "histogram_fit",
+    "fan"
+  ],
+  "transforms": [
+    "identity",
+    "lm",
+    "cumulative",
+    "quantiles",
+    "median",
+    "outliers",
+    "density",
+    "mean",
+    "summary",
+    "loess",
+    "polynomial",
+    "smooth",
+    "residuals",
+    "ci",
+    "mean_ci",
+    "pairwise_test",
+    "qq",
+    "survfit",
+    "fit_distribution",
+    "quantile_dots"
+  ],
+  "compatibility_groups": {
+    "line": "axes-continuous",
+    "point": "axes-continuous",
+    "area": "axes-continuous",
+    "bar": "axes-categorical",
+    "groupedBar": "axes-categorical",
+    "histogram": "axes-binned",
+    "heatmap": "axes-matrix",
+    "candlestick": "axes-continuous",
+    "waterfall": "axes-categorical",
+    "sankey": "standalone-flow",
+    "boxplot": "axes-categorical",
+    "violin": "axes-categorical",
+    "ridgeline": "axes-binned",
+    "rangeBar": "axes-continuous",
+    "hexbin": "axes-hex",
+    "treemap": "standalone-treemap",
+    "donut": "standalone-donut",
+    "gauge": "standalone-gauge",
+    "text": "axes-continuous",
+    "regression": "axes-continuous",
+    "bracket": "axes-continuous",
+    "comparison": "axes-categorical",
+    "qq": "axes-continuous",
+    "lollipop": "axes-categorical",
+    "dumbbell": "axes-categorical",
+    "waffle": "standalone-waffle",
+    "beeswarm": "axes-continuous",
+    "bump": "axes-continuous",
+    "radar": "standalone-radar",
+    "funnel": "standalone-funnel",
+    "parallel": "standalone-parallel",
+    "survfit": "axes-continuous",
+    "histogram_fit": "axes-binned",
+    "calendarHeatmap": "standalone-calendar",
+    "quantile_dots": "axes-categorical",
+    "fan": "axes-continuous"
+  },
+  "transform_input_contracts": {
+    "ci": {
+      "required_map": [
+        "x_var",
+        "y_var"
+      ],
+      "skip_column_check": [
+        "low_y",
+        "high_y"
+      ],
+      "auto_mapping": {
+        "low_y": "low_y",
+        "high_y": "high_y"
+      }
+    },
+    "mean_ci": {
+      "required_map": [
+        "x_var",
+        "y_var"
+      ],
+      "skip_column_check": [
+        "low_y",
+        "high_y"
+      ],
+      "auto_mapping": {
+        "low_y": "low_y",
+        "high_y": "high_y"
+      }
+    },
+    "pairwise_test": {
+      "required_map": [
+        "x_var",
+        "y_var"
+      ],
+      "skip_column_check": [
+        "x1",
+        "x2",
+        "y",
+        "group1",
+        "group2",
+        "p_value",
+        "label",
+        "method",
+        "statistic"
+      ],
+      "auto_mapping": {
+        "x1": "x1",
+        "x2": "x2",
+        "y": "y",
+        "label": "label",
+        "p_value": "p_value"
+      }
+    },
+    "survfit": {
+      "required_map": [
+        "time",
+        "status"
+      ],
+      "skip_column_check": [
+        "x_var",
+        "y_var",
+        "low_y",
+        "high_y"
+      ],
+      "auto_mapping": {
+        "x_var": "time",
+        "y_var": "surv",
+        "low_y": "ci_lower",
+        "high_y": "ci_upper"
+      }
+    },
+    "quantile_dots": {
+      "required_map": [
+        "x_var",
+        "y_var"
+      ],
+      "skip_column_check": [
+        "quantile_rank",
+        "threshold_relationship"
+      ],
+      "auto_mapping": {
+        "quantile_rank": "quantile_rank",
+        "threshold_relationship": "threshold_relationship"
+      }
+    }
+  },
+  "function_signatures": {
+    "addIoLayer": [
+      "myIO",
+      "type",
+      "color",
+      "label",
+      "data",
+      "mapping",
+      "transform",
+      "options"
+    ],
+    "clear_duckdb_wasm_cache": "version",
+    "defineCategoricalAxis": [
+      "myIO",
+      "xAxis",
+      "yAxis"
+    ],
+    "dragPoints": [
+      "myIO",
+      "dragPoints"
+    ],
+    "duckdb_wasm_status": [],
+    "flipAxis": [
+      "myIO",
+      "flipAxis"
+    ],
+    "install_duckdb_wasm": [
+      "version",
+      "from",
+      "force",
+      "quiet"
+    ],
+    "linkCharts": [
+      "...",
+      "on",
+      "group",
+      "cursor",
+      "cursorAxis"
+    ],
+    "myIO": [
+      "data",
+      "width",
+      "height",
+      "elementId",
+      "title",
+      "sparkline",
+      "engine",
+      "webgl_threshold",
+      "unify_data_path"
+    ],
+    "myio_chart_schema": "type",
+    "myio_function_signature": "fn",
+    "myIO_last_error": "outputId",
+    "myio_list_chart_types": [],
+    "myio_list_functions": [],
+    "myio_validate_call": [
+      "fn",
+      "args"
+    ],
+    "myio_validate_spec": [
+      "spec",
+      "columns"
+    ],
+    "myIOOutput": [
+      "outputId",
+      "width",
+      "height"
+    ],
+    "print.myIO_duckdb_wasm_status": [
+      "x",
+      "..."
+    ],
+    "renderMyIO": [
+      "expr",
+      "env",
+      "quoted"
+    ],
+    "setAnnotation": [
+      "myIO",
+      "labels",
+      "colors",
+      "mode"
+    ],
+    "setAxisFormat": [
+      "myIO",
+      "xAxis",
+      "yAxis",
+      "toolTip",
+      "xLabel",
+      "yLabel"
+    ],
+    "setAxisLimits": [
+      "myIO",
+      "xlim",
+      "ylim"
+    ],
+    "setBigData": [
+      "widget",
+      "source",
+      "rowkey_col",
+      "..."
+    ],
+    "setBrush": [
+      "myIO",
+      "direction",
+      "on_select"
+    ],
+    "setColorScheme": [
+      "myIO",
+      "colorScheme",
+      "setCategories"
+    ],
+    "setExportOptions": [
+      "myIO",
+      "png",
+      "svg",
+      "pdf",
+      "clipboard",
+      "csv",
+      "title"
+    ],
+    "setFacet": [
+      "myIO",
+      "var",
+      "ncol",
+      "min_width",
+      "scales",
+      "label_position"
+    ],
+    "setLayerOpacity": [
+      "myIO",
+      "label",
+      "opacity"
+    ],
+    "setLinked": [
+      "myIO",
+      "shared_data",
+      "mode",
+      "filter",
+      "key",
+      "group",
+      "cursor",
+      "cursorAxis"
+    ],
+    "setLinkedCursor": [
+      "myIO",
+      "enabled",
+      "axis"
+    ],
+    "setMargin": [
+      "myIO",
+      "top",
+      "bottom",
+      "left",
+      "right"
+    ],
+    "setReferenceLines": [
+      "myIO",
+      "xRef",
+      "yRef"
+    ],
+    "setSlider": [
+      "myIO",
+      "param",
+      "label",
+      "min",
+      "max",
+      "value",
+      "step",
+      "debounce"
+    ],
+    "setTheme": [
+      "myIO",
+      "text_color",
+      "grid_color",
+      "bg",
+      "font",
+      "mode",
+      "preset",
+      "overrides",
+      "..."
+    ],
+    "setTitle": [
+      "myIO",
+      "title"
+    ],
+    "setToggle": [
+      "myIO",
+      "variable",
+      "format"
+    ],
+    "setToolTipOptions": [
+      "myIO",
+      "suppressY"
+    ],
+    "setTransitionSpeed": [
+      "myIO",
+      "speed"
+    ],
+    "stop_duckdb_wasm_missing": [],
+    "suppressAxis": [
+      "myIO",
+      "xAxis",
+      "yAxis"
+    ],
+    "suppressLegend": [
+      "myIO",
+      "suppressLegend"
+    ]
+  }
+}

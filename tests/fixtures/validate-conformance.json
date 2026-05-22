@@ -1,0 +1,111 @@
+[
+  {
+    "name": "valid point spec with numeric columns",
+    "tool": "validate_spec",
+    "input": {
+      "type": "point",
+      "mapping": { "x_var": "wt", "y_var": "mpg" },
+      "transform": "identity",
+      "columns": { "wt": "numeric", "mpg": "numeric" }
+    },
+    "valid": true,
+    "error_codes": [],
+    "suggestion_targets": []
+  },
+  {
+    "name": "boxplot hallucinated mapping keys",
+    "tool": "validate_spec",
+    "input": {
+      "type": "boxplot",
+      "mapping": { "column_var": "Species", "value_var": "Sepal.Width" }
+    },
+    "valid": false,
+    "error_codes": [
+      "MISSING_MAPPING",
+      "MISSING_MAPPING",
+      "UNKNOWN_MAPPING_KEY",
+      "UNKNOWN_MAPPING_KEY"
+    ],
+    "suggestion_targets": ["x_var", "y_var"]
+  },
+  {
+    "name": "bar rejects regression transform",
+    "tool": "validate_spec",
+    "input": {
+      "type": "bar",
+      "mapping": { "x_var": "cyl", "y_var": "mpg" },
+      "transform": "lm"
+    },
+    "valid": false,
+    "error_codes": ["INVALID_TRANSFORM"],
+    "suggestion_targets": ["identity"]
+  },
+  {
+    "name": "unknown scatterplot type",
+    "tool": "validate_spec",
+    "input": {
+      "type": "scatterplot",
+      "mapping": { "x_var": "wt", "y_var": "mpg" }
+    },
+    "valid": false,
+    "error_codes": ["UNKNOWN_TYPE"],
+    "suggestion_targets": []
+  },
+  {
+    "name": "missing mapped column",
+    "tool": "validate_spec",
+    "input": {
+      "type": "point",
+      "mapping": { "x_var": "wt", "y_var": "missing_mpg" },
+      "columns": { "wt": "numeric", "mpg": "numeric" }
+    },
+    "valid": false,
+    "error_codes": ["MISSING_COLUMN"],
+    "suggestion_targets": ["mpg"]
+  },
+  {
+    "name": "non numeric mapped y column",
+    "tool": "validate_spec",
+    "input": {
+      "type": "point",
+      "mapping": { "x_var": "wt", "y_var": "mpg" },
+      "columns": { "wt": "numeric", "mpg": "character" }
+    },
+    "valid": false,
+    "error_codes": ["NON_NUMERIC_COLUMN"],
+    "suggestion_targets": []
+  },
+  {
+    "name": "valid setAxisFormat call",
+    "tool": "validate_call",
+    "input": {
+      "fn": "setAxisFormat",
+      "args": { "myIO": "widget", "xAxis": ".0f", "toolTip": ".1f" }
+    },
+    "valid": true,
+    "error_codes": [],
+    "suggestion_targets": []
+  },
+  {
+    "name": "wrong setAxisFormat argument",
+    "tool": "validate_call",
+    "input": {
+      "fn": "setAxisFormat",
+      "args": { "axis_x": ".0f" }
+    },
+    "valid": false,
+    "error_codes": ["UNKNOWN_ARGUMENT"],
+    "suggestion_targets": ["xAxis"]
+  },
+  {
+    "name": "unknown function name",
+    "tool": "validate_call",
+    "input": {
+      "fn": "setAxis",
+      "args": { "xAxis": ".0f" }
+    },
+    "valid": false,
+    "error_codes": ["UNKNOWN_FUNCTION"],
+    "suggestion_targets": ["setAxisFormat"]
+  }
+]
