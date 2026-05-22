@@ -588,7 +588,8 @@
   opacity: 0.5;
 }
 
-.sr-only {
+.sr-only,
+.myIO-sr-only {
   position: absolute;
   width: 1px;
   height: 1px;

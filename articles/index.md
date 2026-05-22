@@ -32,6 +32,11 @@
 - [Migrating from plotly to
   myIO](https://mortonanalytics.github.io/myIO/articles/plotly-migration.md):
 
+### LLM & Agents
+
+- [LLM Tool
+  Calling](https://mortonanalytics.github.io/myIO/articles/llm-tool-calling.md):
+
 ### Gallery
 
 - [Gallery](https://mortonanalytics.github.io/myIO/articles/gallery.md):

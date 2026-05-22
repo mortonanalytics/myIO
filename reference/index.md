@@ -98,6 +98,23 @@ Use myIO widgets in Shiny applications
   [`renderMyIO()`](https://mortonanalytics.github.io/myIO/reference/myIO-shiny.md)
   : Shiny Bindings for myIO
 
+## LLM Tool Calling
+
+Machine-readable schema and validators for agent-built chart specs
+
+- [`myio_list_chart_types()`](https://mortonanalytics.github.io/myIO/reference/myio_list_chart_types.md)
+  : List myIO Chart Types for LLM Tool Calling
+- [`myio_chart_schema()`](https://mortonanalytics.github.io/myIO/reference/myio_chart_schema.md)
+  : Get myIO Chart Schema for LLM Tool Calling
+- [`myio_validate_spec()`](https://mortonanalytics.github.io/myIO/reference/myio_validate_spec.md)
+  : Validate a myIO Chart Specification
+- [`myio_list_functions()`](https://mortonanalytics.github.io/myIO/reference/myio_list_functions.md)
+  : List myIO Functions for LLM Tool Calling
+- [`myio_function_signature()`](https://mortonanalytics.github.io/myIO/reference/myio_function_signature.md)
+  : Get a myIO Function Signature for LLM Tool Calling
+- [`myio_validate_call()`](https://mortonanalytics.github.io/myIO/reference/myio_validate_call.md)
+  : Validate a myIO Function Call
+
 ## Diagnostics
 
 Debugging and error reporting

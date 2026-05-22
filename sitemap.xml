@@ -10,6 +10,7 @@
 <url><loc>https://mortonanalytics.github.io/myIO/articles/getting-started.html</loc></url>
 <url><loc>https://mortonanalytics.github.io/myIO/articles/index.html</loc></url>
 <url><loc>https://mortonanalytics.github.io/myIO/articles/large-data-linking.html</loc></url>
+<url><loc>https://mortonanalytics.github.io/myIO/articles/llm-tool-calling.html</loc></url>
 <url><loc>https://mortonanalytics.github.io/myIO/articles/plotly-migration.html</loc></url>
 <url><loc>https://mortonanalytics.github.io/myIO/articles/shiny-integration.html</loc></url>
 <url><loc>https://mortonanalytics.github.io/myIO/articles/shiny-interactions.html</loc></url>
@@ -24,6 +25,7 @@
 <url><loc>https://mortonanalytics.github.io/myIO/reference/clear_duckdb_wasm_cache.html</loc></url>
 <url><loc>https://mortonanalytics.github.io/myIO/reference/composite_boxplot.html</loc></url>
 <url><loc>https://mortonanalytics.github.io/myIO/reference/composite_comparison.html</loc></url>
+<url><loc>https://mortonanalytics.github.io/myIO/reference/composite_fan.html</loc></url>
 <url><loc>https://mortonanalytics.github.io/myIO/reference/composite_histogram_fit.html</loc></url>
 <url><loc>https://mortonanalytics.github.io/myIO/reference/composite_qq.html</loc></url>
 <url><loc>https://mortonanalytics.github.io/myIO/reference/composite_regression.html</loc></url>
@@ -43,6 +45,12 @@
 <url><loc>https://mortonanalytics.github.io/myIO/reference/myIO-shiny.html</loc></url>
 <url><loc>https://mortonanalytics.github.io/myIO/reference/myIO.html</loc></url>
 <url><loc>https://mortonanalytics.github.io/myIO/reference/myIO_last_error.html</loc></url>
+<url><loc>https://mortonanalytics.github.io/myIO/reference/myio_chart_schema.html</loc></url>
+<url><loc>https://mortonanalytics.github.io/myIO/reference/myio_function_signature.html</loc></url>
+<url><loc>https://mortonanalytics.github.io/myIO/reference/myio_list_chart_types.html</loc></url>
+<url><loc>https://mortonanalytics.github.io/myIO/reference/myio_list_functions.html</loc></url>
+<url><loc>https://mortonanalytics.github.io/myIO/reference/myio_validate_call.html</loc></url>
+<url><loc>https://mortonanalytics.github.io/myIO/reference/myio_validate_spec.html</loc></url>
 <url><loc>https://mortonanalytics.github.io/myIO/reference/setAnnotation.html</loc></url>
 <url><loc>https://mortonanalytics.github.io/myIO/reference/setAxisFormat.html</loc></url>
 <url><loc>https://mortonanalytics.github.io/myIO/reference/setAxisLimits.html</loc></url>
@@ -79,6 +87,7 @@
 <url><loc>https://mortonanalytics.github.io/myIO/reference/transform_pairwise_test.html</loc></url>
 <url><loc>https://mortonanalytics.github.io/myIO/reference/transform_polynomial.html</loc></url>
 <url><loc>https://mortonanalytics.github.io/myIO/reference/transform_qq.html</loc></url>
+<url><loc>https://mortonanalytics.github.io/myIO/reference/transform_quantile_dots.html</loc></url>
 <url><loc>https://mortonanalytics.github.io/myIO/reference/transform_quantiles.html</loc></url>
 <url><loc>https://mortonanalytics.github.io/myIO/reference/transform_registry.html</loc></url>
 <url><loc>https://mortonanalytics.github.io/myIO/reference/transform_residuals.html</loc></url>

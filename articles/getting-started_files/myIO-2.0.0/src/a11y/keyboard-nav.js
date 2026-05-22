@@ -1,3 +1,5 @@
+import { generateLayerLabel, generatePointLabel } from "./descriptions.js";
+
 function sanitizeLabel(label) {
   return String(label).replace(/[^a-zA-Z0-9_-]/g, "");
 }
@@ -118,10 +120,11 @@ export class KeyboardNavigator {
     this.layerIndex = Math.max(0, Math.min(maxIndex, this.layerIndex + delta));
     this.pointIndex = 0;
     this.state = "POINT";
-    this.focusCurrent();
+    this.focusCurrent({ includeLayerLabel: true });
   }
 
-  focusCurrent() {
+  focusCurrent(options) {
+    var opts = options || {};
     var layers = this.getNavigableLayers();
     var layer = layers[this.layerIndex];
 
@@ -150,14 +153,8 @@ export class KeyboardNavigator {
       target.classed("myIO-kb-focus", true);
     }
 
-    var mapping = layer.mapping || {};
-    var text = "";
-
-    if (mapping.x_var && mapping.y_var && d) {
-      text = String(d[mapping.x_var]) + ": " + String(d[mapping.y_var]);
-    } else {
-      text = "Point " + (this.pointIndex + 1) + " of " + layer.data.length;
-    }
+    var pointText = generatePointLabel(d, layer);
+    var text = opts.includeLayerLabel ? generateLayerLabel(layer) + ": " + pointText : pointText;
 
     this.announce(text);
   }

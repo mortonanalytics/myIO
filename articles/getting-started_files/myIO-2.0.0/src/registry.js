@@ -22,6 +22,7 @@ import { LollipopRenderer } from "./renderers/LollipopRenderer.js";
 import { DumbbellRenderer } from "./renderers/DumbbellRenderer.js";
 import { WaffleRenderer } from "./renderers/WaffleRenderer.js";
 import { BeeswarmRenderer } from "./renderers/BeeswarmRenderer.js";
+import { QuantileDotsRenderer } from "./renderers/QuantileDotsRenderer.js";
 import { BumpRenderer } from "./renderers/BumpRenderer.js";
 import { RadarRenderer } from "./renderers/RadarRenderer.js";
 import { FunnelRenderer } from "./renderers/FunnelRenderer.js";
@@ -118,6 +119,9 @@ export function registerBuiltInRenderers() {
   }
   if (!rendererRegistry.has(BeeswarmRenderer.type)) {
     registerRenderer(BeeswarmRenderer.type, new BeeswarmRenderer());
+  }
+  if (!rendererRegistry.has(QuantileDotsRenderer.type)) {
+    registerRenderer(QuantileDotsRenderer.type, new QuantileDotsRenderer());
   }
   if (!rendererRegistry.has(BumpRenderer.type)) {
     registerRenderer(BumpRenderer.type, new BumpRenderer());

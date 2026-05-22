@@ -92,7 +92,9 @@ function buildLayerLegendData(chart) {
       var key = layer._composite || layer.label;
       return {
         key: key,
-        label: layer.label,
+        label: layer.type === "quantile_dots" && layer.options && layer.options.source
+          ? layer.label + " (" + layer.options.source + ")"
+          : layer.label,
         color: layer.color || "#6b7280",
         visible: visibleKeys.indexOf(key) > -1 && hiddenKeys.indexOf(key) === -1,
         kind: layer.type
