@@ -81,17 +81,22 @@ addIoLayer <- function(myIO,
 
   if (is_composite(type)) {
     sub_layers <- expandComposite(type, data, mapping, label, color, options)
+    tick_labels <- derive_positional_x_tick_labels(type, sub_layers)
+    if (!is.null(tick_labels)) {
+      myIO$x$config$axes$xTickLabels <- tick_labels
+    }
     for (i in seq_along(sub_layers)) {
       sl <- sub_layers[[i]]
+      sl_mapping <- inject_transform_mapping(sl$transform, sl$mapping)
       transform_fn <- get_transform(sl$transform)
-      transformed <- transform_fn(sl$data, sl$mapping, options)
+      transformed <- transform_fn(sl$data, sl_mapping, options)
       layer_options <- if (!is.null(sl$options)) modifyList(options, sl$options) else options
       myIO$x$config$layers <- c(
         myIO$x$config$layers,
         list(build_layer(
           layer_type = sl$type, layer_label = sl$label,
           layer_data = as_layer_rows(transformed$data),
-          layer_mapping = sl$mapping, layer_color = sl$color,
+          layer_mapping = sl_mapping, layer_color = sl$color,
           layer_transform_meta = transformed$meta,
           options = layer_options, transform = sl$transform,
           layer_id = layer_id, order = i,
@@ -172,6 +177,49 @@ build_layer <- function(layer_type, layer_label, layer_data, layer_mapping, laye
     layer$scaleHints <- scale_hints
   }
   layer
+}
+
+derive_positional_x_tick_labels <- function(type, sub_layers) {
+  if (!(type %in% c("boxplot", "violin", "comparison"))) {
+    return(NULL)
+  }
+
+  positions <- character()
+  labels <- character()
+  for (sl in sub_layers) {
+    if (is.null(sl$data) || is.null(sl$mapping$x_var) || is.null(sl$mapping$group)) {
+      next
+    }
+    x_col <- sl$mapping$x_var
+    group_col <- sl$mapping$group
+    if (!(x_col %in% names(sl$data)) || !(group_col %in% names(sl$data))) {
+      next
+    }
+    x_values <- sl$data[[x_col]]
+    group_values <- sl$data[[group_col]]
+    numeric_x <- suppressWarnings(as.numeric(x_values))
+    keep <- !is.na(numeric_x) & abs(numeric_x - round(numeric_x)) < 1e-9 & !is.na(group_values)
+    if (!any(keep)) {
+      next
+    }
+    positions <- c(positions, as.character(numeric_x[keep]))
+    labels <- c(labels, as.character(group_values[keep]))
+  }
+
+  if (length(positions) == 0L) {
+    return(NULL)
+  }
+
+  first_seen <- !duplicated(positions)
+  positions <- positions[first_seen]
+  labels <- labels[first_seen]
+  numeric_positions <- suppressWarnings(as.numeric(positions))
+  if (all(!is.na(numeric_positions))) {
+    order_idx <- order(numeric_positions)
+    positions <- positions[order_idx]
+    labels <- labels[order_idx]
+  }
+  stats::setNames(as.list(labels), positions)
 }
 
 validate_layer_inputs <- function(type, transform, mapping, label, data, existing_layers) {

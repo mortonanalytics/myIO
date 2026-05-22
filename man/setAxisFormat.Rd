@@ -6,9 +6,9 @@
 \usage{
 setAxisFormat(
   myIO,
-  xAxis = "s",
-  yAxis = "s",
-  toolTip = "s",
+  xAxis = NULL,
+  yAxis = NULL,
+  toolTip = NULL,
   xLabel = NULL,
   yLabel = NULL
 )
@@ -16,15 +16,20 @@ setAxisFormat(
 \arguments{
 \item{myIO}{an htmlwidget object created by the myIO() function}
 
-\item{xAxis}{a string indicating a d3.js format}
+\item{xAxis}{Optional string indicating a d3.js format for the x axis.
+When \code{NULL}, leaves the existing setting unchanged.}
 
-\item{yAxis}{a string indicating a d3.js format}
+\item{yAxis}{Optional string indicating a d3.js format for the y axis.
+When \code{NULL}, leaves the existing setting unchanged.}
 
-\item{toolTip}{a string indicating a d3.js format}
+\item{toolTip}{Optional string indicating a d3.js format for tooltips.
+When \code{NULL}, leaves the existing setting unchanged.}
 
-\item{xLabel}{a string label for axis}
+\item{xLabel}{Optional string label for the x axis. When \code{NULL},
+leaves the existing setting unchanged.}
 
-\item{yLabel}{a string label for axis}
+\item{yLabel}{Optional string label for the y axis. When \code{NULL},
+leaves the existing setting unchanged.}
 }
 \value{
 A modified \code{myIO} htmlwidget object with updated axis format
@@ -39,5 +44,8 @@ myIO() |> setAxisFormat(xAxis = ".0f", yAxis = ".1f")
 
 # Set axis labels
 myIO() |> setAxisFormat(xLabel = "Weight (lbs)", yLabel = "MPG")
+
+# Label-only calls preserve previously configured formats
+myIO() |> setAxisFormat(yAxis = ".2f") |> setAxisFormat(yLabel = "Rate")
 
 }

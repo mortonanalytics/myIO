@@ -23,6 +23,7 @@ test_that("violin expands to density, box, and median layers", {
   expect_true(any(vapply(layers, function(layer) layer$`_compositeRole` == "density_area", logical(1))))
   expect_true(any(vapply(layers, function(layer) layer$`_compositeRole` == "iqr_box", logical(1))))
   expect_true(any(vapply(layers, function(layer) layer$`_compositeRole` == "median", logical(1))))
+  expect_equal(w$x$config$axes$xTickLabels, list(`1` = "A", `2` = "B"))
 })
 
 test_that("violin can include jittered raw points", {

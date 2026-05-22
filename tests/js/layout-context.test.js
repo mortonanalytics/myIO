@@ -69,6 +69,37 @@ describe("chart context layout", function() {
     expect(chart.element.querySelectorAll(".y-axis .tick").length).toBeGreaterThan(0);
   });
 
+  test("empty axis format uses d3 default linear ticks", function() {
+    var chart = baseChart();
+    chart.options.categoricalScale = { xAxis: false, yAxis: false };
+    chart.options.xAxisFormat = "";
+    chart.options.yAxisFormat = "";
+    chart.xScale = d3.scaleLinear().domain([0, 1]).range([0, 544]);
+    chart.yScale = d3.scaleLinear().domain([0, 1]).range([240, 0]);
+    initializeScaffold(chart);
+    renderAxes(chart, { isInitialRender: true });
+
+    var yLabels = Array.from(chart.element.querySelectorAll(".y-axis .tick text"))
+      .map(function(node) { return node.textContent; });
+    expect(yLabels).toContain("0.2");
+    expect(yLabels).not.toContain("500.000m");
+  });
+
+  test("linear x axis can render positional category labels", function() {
+    var chart = baseChart();
+    chart.options.categoricalScale = { xAxis: false, yAxis: false };
+    chart.options.xAxisFormat = "";
+    chart.options.xTickLabels = { "1": "setosa", "2": "versicolor" };
+    chart.xScale = d3.scaleLinear().domain([0.5, 2.5]).range([0, 544]);
+    chart.yScale = d3.scaleLinear().domain([0, 1]).range([240, 0]);
+    initializeScaffold(chart);
+    renderAxes(chart, { isInitialRender: true });
+
+    var xLabels = Array.from(chart.element.querySelectorAll(".x-axis .tick text"))
+      .map(function(node) { return node.textContent; });
+    expect(xLabels).toEqual(["setosa", "versicolor"]);
+  });
+
   test("inline legend renders below chart title and away from toolbar", function() {
     var chart = baseChart();
     initializeScaffold(chart);

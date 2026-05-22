@@ -4,6 +4,16 @@ test_that("setAxisFormat sets axis formats", {
   expect_equal(widget$x$config$axes$yAxisFormat, ".1f")
 })
 
+test_that("setAxisFormat label-only calls preserve existing formats", {
+  widget <- myIO::myIO() |>
+    myIO::setAxisFormat(yAxis = ".1%") |>
+    myIO::setAxisFormat(yLabel = "Rate")
+
+  expect_equal(widget$x$config$axes$yAxisFormat, ".1%")
+  expect_equal(widget$x$config$axes$yAxisLabel, "Rate")
+  expect_equal(widget$x$config$axes$xAxisFormat, "")
+})
+
 test_that("myIO title serializes without changing omitted default", {
   expect_null(myIO::myIO()$x$config$title)
   widget <- myIO::myIO(title = "Quarterly Signups")

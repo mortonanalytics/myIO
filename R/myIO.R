@@ -92,11 +92,12 @@ myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL
         colorScheme = list(colors = OKABE_ITO_PALETTE, domain = c("none"), enabled = FALSE)
       ),
       axes = list(
-        xAxisFormat = "s",
-        yAxisFormat = "s",
+        xAxisFormat = "",
+        yAxisFormat = "",
         xAxisLabel = NULL,
         yAxisLabel = NULL,
-        toolTipFormat = "s"
+        toolTipFormat = "",
+        xTickLabels = NULL
       ),
       interactions = list(
         dragPoints = FALSE,
