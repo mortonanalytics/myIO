@@ -1,13 +1,18 @@
 import { describe, expect, test } from "vitest";
 import fs from "node:fs";
+import { spawnSync } from "node:child_process";
 import { buildSchema } from "../../tools/build-myio-schema.mjs";
 
 function sorted(values) {
   return Array.from(values).sort();
 }
 
+// Fresh generation shells out to Rscript; skip on Node-only CI runners that
+// lack R. Drift is still enforced locally and on any R-capable runner.
+const hasRscript = spawnSync("Rscript", ["--version"]).error === undefined;
+
 describe("generated myIO schema", function() {
-  test("committed schema matches a fresh generation exactly", function() {
+  test.skipIf(!hasRscript)("committed schema matches a fresh generation exactly", function() {
     const committed = JSON.parse(fs.readFileSync("inst/myio-schema.json", "utf8"));
     const generated = buildSchema();
     expect(committed).toEqual(generated);

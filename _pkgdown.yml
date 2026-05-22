@@ -61,6 +61,9 @@ articles:
   - title: Migration
     contents:
       - plotly-migration
+  - title: LLM & Agents
+    contents:
+      - llm-tool-calling
   - title: Gallery
     contents:
       - gallery
@@ -121,6 +124,15 @@ reference:
     desc: Use myIO widgets in Shiny applications
     contents:
       - starts_with("myIO-shiny")
+  - title: LLM Tool Calling
+    desc: Machine-readable schema and validators for agent-built chart specs
+    contents:
+      - myio_list_chart_types
+      - myio_chart_schema
+      - myio_validate_spec
+      - myio_list_functions
+      - myio_function_signature
+      - myio_validate_call
   - title: Diagnostics
     desc: Debugging and error reporting
     contents:
