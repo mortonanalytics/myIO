@@ -46,6 +46,6 @@ myIO() |> setAxisFormat(xAxis = ".0f", yAxis = ".1f")
 myIO() |> setAxisFormat(xLabel = "Weight (lbs)", yLabel = "MPG")
 
 # Label-only calls preserve previously configured formats
-myIO() |> setAxisFormat(yAxis = ".1%") |> setAxisFormat(yLabel = "Rate")
+myIO() |> setAxisFormat(yAxis = ".2f") |> setAxisFormat(yLabel = "Rate")
 
 }
