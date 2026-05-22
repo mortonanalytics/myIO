@@ -39179,7 +39179,7 @@ void main() {
       var transitionSpeed = chart.options.transition.speed;
       var isVertical = layer.options && layer.options.orientation === "vertical";
       var fillOpacity = layer.options && typeof layer.options.areaOpacity === "number" ? layer.options.areaOpacity : 0.4;
-      var boundaryStroke = !(layer.options && layer.options.boundaryStroke === false);
+      var boundaryStroke = !!(layer.options && layer.options.boundaryStroke === true);
       var valueArea;
       if (isVertical) {
         valueArea = d3.area().curve(d3.curveMonotoneY).y(function(d) {
