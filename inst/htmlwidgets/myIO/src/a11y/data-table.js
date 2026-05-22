@@ -23,8 +23,29 @@ export class DataTableFallback {
     var layers = this.chart.config.layers;
     var maxRows = 500;
 
-    for (var i = 0; i < layers.length; i++) {
-      var layer = layers[i];
+    var fanGroups = new Map();
+    var regularLayers = [];
+
+    for (var groupIndex = 0; groupIndex < layers.length; groupIndex++) {
+      var candidate = layers[groupIndex];
+      if (candidate && candidate._composite === "fan") {
+        var key = String(candidate.id || "").replace(/_sub_\d+$/, "") || candidate.label || "fan";
+        if (!fanGroups.has(key)) {
+          fanGroups.set(key, []);
+        }
+        fanGroups.get(key).push(candidate);
+      } else {
+        regularLayers.push(candidate);
+      }
+    }
+
+    var self = this;
+    fanGroups.forEach(function(groupLayers) {
+      self.renderFanTable(groupLayers, maxRows);
+    });
+
+    for (var i = 0; i < regularLayers.length; i++) {
+      var layer = regularLayers[i];
       var data = Array.isArray(layer.data) ? layer.data : [];
       var display = data.slice(0, maxRows);
       var columns = Object.values(layer.mapping || {}).filter(Boolean);
@@ -54,6 +75,63 @@ export class DataTableFallback {
     }
   }
 
+  renderFanTable(layers, maxRows) {
+    if (!layers || layers.length === 0) {
+      return;
+    }
+    var first = layers[0];
+    var xField = first.mapping && first.mapping.x_var ? first.mapping.x_var : "x_var";
+    var rowMap = new Map();
+    var levels = [];
+
+    layers.forEach(function(layer) {
+      var pct = layer.options && layer.options.interval_pct;
+      if (pct == null) {
+        return;
+      }
+      var suffix = formatLevel(pct);
+      levels.push(+pct);
+      (Array.isArray(layer.data) ? layer.data : []).forEach(function(d) {
+        var key = String(d[xField]);
+        if (!rowMap.has(key)) {
+          rowMap.set(key, { x_var: d[xField] });
+        }
+        var row = rowMap.get(key);
+        row["low_" + suffix] = d[layer.mapping.low_y];
+        row["high_" + suffix] = d[layer.mapping.high_y];
+      });
+    });
+
+    levels = Array.from(new Set(levels)).sort(function(a, b) { return a - b; });
+    var columns = ["x_var"];
+    levels.forEach(function(level) {
+      var suffix = formatLevel(level);
+      columns.push("low_" + suffix);
+      columns.push("high_" + suffix);
+    });
+
+    var rows = Array.from(rowMap.values());
+    var display = rows.slice(0, maxRows);
+    var table = this.tableContainer.append("table")
+      .attr("aria-label", "Data for " + (first._composite || "fan"));
+    var headerRow = table.append("thead").append("tr");
+    columns.forEach(function(column) {
+      headerRow.append("th").attr("scope", "col").text(column);
+    });
+    var tbody = table.append("tbody");
+    display.forEach(function(d) {
+      var row = tbody.append("tr");
+      columns.forEach(function(column) {
+        var value = d[column];
+        row.append("td").text(value != null ? String(value) : "");
+      });
+    });
+    if (rows.length > maxRows) {
+      this.tableContainer.append("p")
+        .text("Showing first " + maxRows + " of " + rows.length + " rows");
+    }
+  }
+
   toggle() {
     this.visible = !this.visible;
 
@@ -72,4 +150,8 @@ export class DataTableFallback {
       this.tableContainer.remove();
     }
   }
+}
+
+function formatLevel(level) {
+  return String(level).replace(/\.0+$/, "").replace(/(\.\d*?)0+$/, "$1");
 }

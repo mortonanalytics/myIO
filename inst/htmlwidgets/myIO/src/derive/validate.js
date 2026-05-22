@@ -21,6 +21,7 @@ const COMPAT_GROUP = {
   gauge: "standalone-gauge",
   text: "axes-continuous",
   bracket: "axes-continuous",
+  quantile_dots: "axes-categorical",
   radar: "standalone-radar",
   funnel: "standalone-funnel",
   parallel: "standalone-parallel"

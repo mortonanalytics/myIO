@@ -39178,6 +39178,8 @@ void main() {
       var key = layer.label;
       var transitionSpeed = chart.options.transition.speed;
       var isVertical = layer.options && layer.options.orientation === "vertical";
+      var fillOpacity = layer.options && typeof layer.options.areaOpacity === "number" ? layer.options.areaOpacity : 0.4;
+      var boundaryStroke = !(layer.options && layer.options.boundaryStroke === false);
       var valueArea;
       if (isVertical) {
         valueArea = d3.area().curve(d3.curveMonotoneY).y(function(d) {
@@ -39200,8 +39202,8 @@ void main() {
       linePath.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
       var newLinePath = linePath.enter().append("path").attr("clip-path", "url(#" + chart.element.id + "clip)").style("fill", function(d) {
         return resolveColor(chart, d[0][layer.mapping.group], layer.color);
-      }).style("opacity", 0).attr("class", tagName("area", chart.element.id, key));
-      linePath.merge(newLinePath).attr("clip-path", "url(#" + chart.element.id + "clip)").transition().ease(d3.easeQuad).duration(transitionSpeed).attr("d", valueArea).style("opacity", 0.4);
+      }).style("stroke", boundaryStroke ? layer.color : "none").style("stroke-width", boundaryStroke ? "1px" : "0").style("stroke-opacity", boundaryStroke ? 0.85 : 0).style("opacity", 0).attr("class", tagName("area", chart.element.id, key));
+      linePath.merge(newLinePath).attr("clip-path", "url(#" + chart.element.id + "clip)").transition().ease(d3.easeQuad).duration(transitionSpeed).attr("d", valueArea).style("stroke", boundaryStroke ? layer.color : "none").style("stroke-width", boundaryStroke ? "1px" : "0").style("stroke-opacity", boundaryStroke ? 0.85 : 0).style("opacity", fillOpacity);
     }
     formatTooltip(chart, d, layer) {
       var displayValue = d.density != null ? d.density : d[layer.mapping.high_y];
@@ -40002,7 +40004,7 @@ void main() {
         var key = layer._composite || layer.label;
         return {
           key,
-          label: layer.label,
+          label: layer.type === "quantile_dots" && layer.options && layer.options.source ? layer.label + " (" + layer.options.source + ")" : layer.label,
           color: layer.color || "#6b7280",
           visible: visibleKeys.indexOf(key) > -1 && hiddenKeys.indexOf(key) === -1,
           kind: layer.type
@@ -42575,6 +42577,119 @@ void main() {
     }
   };
 
+  // inst/htmlwidgets/myIO/src/renderers/QuantileDotsRenderer.js
+  var QuantileDotsRenderer = class {
+    static type = "quantile_dots";
+    static traits = {
+      hasAxes: true,
+      referenceLines: true,
+      legendType: "layer",
+      binning: false,
+      rolloverStyle: "element",
+      scaleCapabilities: { invertX: false }
+    };
+    static scaleHints = {
+      xScaleType: "band",
+      yScaleType: "linear",
+      xExtentFields: ["x_var"],
+      yExtentFields: ["y_var"],
+      domainMerge: "union"
+    };
+    static dataContract = {
+      x_var: { required: true },
+      y_var: { required: true, numeric: true },
+      quantile_rank: { required: true, numeric: true }
+    };
+    render(chart, layer) {
+      var xScale = chart.derived.xScale;
+      var yScale = chart.derived.yScale;
+      var radius = layer.options && layer.options.radius || 4;
+      var padding = layer.options && layer.options.padding || 1;
+      var diameter = 2 * radius + padding;
+      var xVar = layer.mapping.x_var;
+      var yVar = layer.mapping.y_var;
+      var bandWidth = typeof xScale.bandwidth === "function" ? xScale.bandwidth() : diameter * 4;
+      var byGroup = /* @__PURE__ */ new Map();
+      layer.data.forEach(function(d) {
+        var key = String(d[xVar]);
+        if (!byGroup.has(key)) {
+          byGroup.set(key, []);
+        }
+        byGroup.get(key).push(d);
+      });
+      byGroup.forEach(function(groupData) {
+        var placed = [];
+        groupData.sort(function(a, b) {
+          return +a[layer.mapping.quantile_rank] - +b[layer.mapping.quantile_rank];
+        });
+        groupData.forEach(function(d) {
+          var baseX = xScale(d[xVar]);
+          var centerX = baseX + (typeof xScale.bandwidth === "function" ? xScale.bandwidth() / 2 : 0);
+          var cy = yScale(d[yVar]);
+          var cx = centerX;
+          var found = false;
+          var maxOffset = Math.max(0, bandWidth / 2 - radius);
+          for (var attempt = 0; attempt < 500 && !found; attempt++) {
+            var offset = attempt === 0 ? 0 : attempt % 2 === 1 ? Math.ceil(attempt / 2) * diameter : -Math.ceil(attempt / 2) * diameter;
+            var candidateX = centerX + Math.max(-maxOffset, Math.min(maxOffset, offset));
+            var collision = false;
+            for (var i = 0; i < placed.length; i++) {
+              var dx = candidateX - placed[i].cx;
+              var dy = cy - placed[i].cy;
+              if (dx * dx + dy * dy < diameter * diameter) {
+                collision = true;
+                break;
+              }
+            }
+            if (!collision || Math.abs(offset) >= maxOffset) {
+              cx = candidateX;
+              found = true;
+            }
+          }
+          d._quantile_dot_cx = cx;
+          d._quantile_dot_cy = cy;
+          placed.push({ cx, cy });
+        });
+      });
+      var transitionSpeed = chart.options && chart.options.transition && typeof chart.options.transition.speed === "number" ? chart.options.transition.speed : 0;
+      var group = chart.dom.chartArea.selectAll(".tag-quantile_dots-" + layer.id).data([null]).join("g").attr("class", "tag-quantile_dots-" + layer.id);
+      var points = group.selectAll(".quantile-dots-point").data(layer.data, function(d) {
+        return d._source_key;
+      });
+      points.exit().transition().duration(transitionSpeed).attr("fill-opacity", 0).remove();
+      var entered = points.enter().append("circle").attr("class", "quantile-dots-point").attr("clip-path", "url(#" + chart.element.id + "clip)").attr("cx", function(d) {
+        return d._quantile_dot_cx;
+      }).attr("cy", function(d) {
+        return d._quantile_dot_cy;
+      }).attr("r", radius).attr("fill", layer.color).attr("fill-opacity", 0).attr("role", "graphics-symbol");
+      entered.merge(points).transition().duration(transitionSpeed).attr("cx", function(d) {
+        return d._quantile_dot_cx;
+      }).attr("cy", function(d) {
+        return d._quantile_dot_cy;
+      }).attr("r", radius).attr("fill", layer.color).attr("fill-opacity", 0.75);
+    }
+    getHoverSelector(chart, layer) {
+      return ".tag-quantile_dots-" + layer.id + " .quantile-dots-point";
+    }
+    formatTooltip(chart, d, layer) {
+      var yFormat = chart.runtime.activeYFormat || d3.format("s");
+      var source = layer.options && layer.options.source ? " (" + layer.options.source + ")" : "";
+      return {
+        title: String(d[layer.mapping.x_var]),
+        items: [{
+          color: layer.color,
+          label: layer.label + source,
+          value: "Q" + d[layer.mapping.quantile_rank] + ": " + yFormat(d[layer.mapping.y_var])
+        }],
+        value: d[layer.mapping.y_var],
+        raw: d
+      };
+    }
+    remove(chart, layer) {
+      chart.dom.chartArea.selectAll(".tag-quantile_dots-" + layer.id).remove();
+    }
+  };
+
   // inst/htmlwidgets/myIO/src/renderers/BumpRenderer.js
   var BumpRenderer = class {
     static type = "bump";
@@ -43161,6 +43276,9 @@ void main() {
     }
     if (!rendererRegistry.has(BeeswarmRenderer.type)) {
       registerRenderer(BeeswarmRenderer.type, new BeeswarmRenderer());
+    }
+    if (!rendererRegistry.has(QuantileDotsRenderer.type)) {
+      registerRenderer(QuantileDotsRenderer.type, new QuantileDotsRenderer());
     }
     if (!rendererRegistry.has(BumpRenderer.type)) {
       registerRenderer(BumpRenderer.type, new BumpRenderer());
@@ -44558,6 +44676,7 @@ void main() {
     gauge: "standalone-gauge",
     text: "axes-continuous",
     bracket: "axes-continuous",
+    quantile_dots: "axes-categorical",
     radar: "standalone-radar",
     funnel: "standalone-funnel",
     parallel: "standalone-parallel"
@@ -45358,7 +45477,9 @@ void main() {
     var xLabel = config && config.axes && config.axes.xAxisLabel || "x";
     var yLabel = config && config.axes && config.axes.yAxisLabel || "y";
     var prefix = types.length ? types.join(" and ") + " chart" : "chart";
-    return prefix + ": " + xLabel + " vs " + yLabel;
+    var label = prefix + ": " + xLabel + " vs " + yLabel;
+    var summaries = generateQuantileDotSummaries(layers);
+    return summaries.length ? label + ". " + summaries.join(" ") : label;
   }
   function generateLayerLabel(layer) {
     var label = layer && (layer.label || layer.type) || "series";
@@ -45367,6 +45488,22 @@ void main() {
   }
   function generatePointLabel(d, layer) {
     var mapping = layer && layer.mapping || {};
+    if (mapping.quantile_rank && d) {
+      var rank = d[mapping.quantile_rank];
+      var n = layer && layer.options && layer.options.n ? layer.options.n : inferDotCount(layer, d);
+      var value = mapping.y_var ? d[mapping.y_var] : d.value;
+      var text = "Q" + String(rank) + " of " + String(n) + ": " + String(value != null ? value : "");
+      var relationship = mapping.threshold_relationship ? d[mapping.threshold_relationship] : d.threshold_relationship;
+      var threshold = layer && layer.options ? layer.options.threshold : null;
+      if (relationship) {
+        text += ", " + String(relationship) + (threshold != null ? " threshold of " + String(threshold) : " threshold");
+      }
+      return text;
+    }
+    if (mapping.low_y && mapping.high_y && d) {
+      var densityLabel = d.density_label || layer && layer.options && layer.options.density_label || "interval";
+      return String(densityLabel) + ": " + String(d[mapping.low_y] != null ? d[mapping.low_y] : "") + " to " + String(d[mapping.high_y] != null ? d[mapping.high_y] : "");
+    }
     if (mapping.x_var && mapping.y_var && d) {
       return String(d[mapping.x_var] != null ? d[mapping.x_var] : "") + ": " + String(d[mapping.y_var] != null ? d[mapping.y_var] : "");
     }
@@ -45374,6 +45511,49 @@ void main() {
       return String(d[mapping.category] || "") + ": " + String(d[mapping.value] || "");
     }
     return "Data point";
+  }
+  function inferDotCount(layer, d) {
+    if (!layer || !Array.isArray(layer.data) || !layer.mapping || !layer.mapping.x_var || !d) {
+      return layer && Array.isArray(layer.data) ? layer.data.length : 0;
+    }
+    var xValue = d[layer.mapping.x_var];
+    return layer.data.filter(function(row) {
+      return row[layer.mapping.x_var] === xValue;
+    }).length;
+  }
+  function generateQuantileDotSummaries(layers) {
+    var summaries = [];
+    (layers || []).forEach(function(layer) {
+      if (!layer || layer.type !== "quantile_dots" || !Array.isArray(layer.data)) {
+        return;
+      }
+      var threshold = layer.options && layer.options.threshold;
+      if (threshold == null) {
+        return;
+      }
+      var mapping = layer.mapping || {};
+      var xVar = mapping.x_var;
+      var relVar = mapping.threshold_relationship || "threshold_relationship";
+      var n = layer.options && layer.options.n ? layer.options.n : null;
+      var groups = /* @__PURE__ */ new Map();
+      layer.data.forEach(function(row) {
+        var key = xVar ? String(row[xVar]) : "all";
+        if (!groups.has(key)) {
+          groups.set(key, { total: 0, below: 0 });
+        }
+        var summary = groups.get(key);
+        summary.total += 1;
+        if (row[relVar] === "below") {
+          summary.below += 1;
+        }
+      });
+      groups.forEach(function(summary, key) {
+        var denominator = n || summary.total;
+        var prefix = groups.size > 1 ? key + ": " : "";
+        summaries.push(prefix + summary.below + " of " + denominator + " dots below threshold of " + threshold + ".");
+      });
+    });
+    return summaries;
   }
 
   // inst/htmlwidgets/myIO/src/a11y/aria.js
@@ -45549,9 +45729,10 @@ void main() {
       this.layerIndex = Math.max(0, Math.min(maxIndex, this.layerIndex + delta));
       this.pointIndex = 0;
       this.state = "POINT";
-      this.focusCurrent();
+      this.focusCurrent({ includeLayerLabel: true });
     }
-    focusCurrent() {
+    focusCurrent(options) {
+      var opts = options || {};
       var layers = this.getNavigableLayers();
       var layer = layers[this.layerIndex];
       if (!layer || !layer.data || !layer.data.length) {
@@ -45573,13 +45754,8 @@ void main() {
       if (!target.empty()) {
         target.classed("myIO-kb-focus", true);
       }
-      var mapping = layer.mapping || {};
-      var text = "";
-      if (mapping.x_var && mapping.y_var && d) {
-        text = String(d[mapping.x_var]) + ": " + String(d[mapping.y_var]);
-      } else {
-        text = "Point " + (this.pointIndex + 1) + " of " + layer.data.length;
-      }
+      var pointText = generatePointLabel(d, layer);
+      var text = opts.includeLayerLabel ? generateLayerLabel(layer) + ": " + pointText : pointText;
       this.announce(text);
     }
     announce(text) {
@@ -45629,8 +45805,26 @@ void main() {
       this.tableContainer.selectAll("*").remove();
       var layers = this.chart.config.layers;
       var maxRows = 500;
-      for (var i = 0; i < layers.length; i++) {
-        var layer = layers[i];
+      var fanGroups = /* @__PURE__ */ new Map();
+      var regularLayers = [];
+      for (var groupIndex = 0; groupIndex < layers.length; groupIndex++) {
+        var candidate = layers[groupIndex];
+        if (candidate && candidate._composite === "fan") {
+          var key = String(candidate.id || "").replace(/_sub_\d+$/, "") || candidate.label || "fan";
+          if (!fanGroups.has(key)) {
+            fanGroups.set(key, []);
+          }
+          fanGroups.get(key).push(candidate);
+        } else {
+          regularLayers.push(candidate);
+        }
+      }
+      var self2 = this;
+      fanGroups.forEach(function(groupLayers) {
+        self2.renderFanTable(groupLayers, maxRows);
+      });
+      for (var i = 0; i < regularLayers.length; i++) {
+        var layer = regularLayers[i];
         var data = Array.isArray(layer.data) ? layer.data : [];
         var display = data.slice(0, maxRows);
         var columns = Object.values(layer.mapping || {}).filter(Boolean);
@@ -45653,6 +45847,59 @@ void main() {
         }
       }
     }
+    renderFanTable(layers, maxRows) {
+      if (!layers || layers.length === 0) {
+        return;
+      }
+      var first = layers[0];
+      var xField = first.mapping && first.mapping.x_var ? first.mapping.x_var : "x_var";
+      var rowMap = /* @__PURE__ */ new Map();
+      var levels = [];
+      layers.forEach(function(layer) {
+        var pct = layer.options && layer.options.interval_pct;
+        if (pct == null) {
+          return;
+        }
+        var suffix = formatLevel(pct);
+        levels.push(+pct);
+        (Array.isArray(layer.data) ? layer.data : []).forEach(function(d) {
+          var key = String(d[xField]);
+          if (!rowMap.has(key)) {
+            rowMap.set(key, { x_var: d[xField] });
+          }
+          var row = rowMap.get(key);
+          row["low_" + suffix] = d[layer.mapping.low_y];
+          row["high_" + suffix] = d[layer.mapping.high_y];
+        });
+      });
+      levels = Array.from(new Set(levels)).sort(function(a, b) {
+        return a - b;
+      });
+      var columns = ["x_var"];
+      levels.forEach(function(level) {
+        var suffix = formatLevel(level);
+        columns.push("low_" + suffix);
+        columns.push("high_" + suffix);
+      });
+      var rows = Array.from(rowMap.values());
+      var display = rows.slice(0, maxRows);
+      var table = this.tableContainer.append("table").attr("aria-label", "Data for " + (first._composite || "fan"));
+      var headerRow = table.append("thead").append("tr");
+      columns.forEach(function(column) {
+        headerRow.append("th").attr("scope", "col").text(column);
+      });
+      var tbody = table.append("tbody");
+      display.forEach(function(d) {
+        var row = tbody.append("tr");
+        columns.forEach(function(column) {
+          var value = d[column];
+          row.append("td").text(value != null ? String(value) : "");
+        });
+      });
+      if (rows.length > maxRows) {
+        this.tableContainer.append("p").text("Showing first " + maxRows + " of " + rows.length + " rows");
+      }
+    }
     toggle() {
       this.visible = !this.visible;
       if (this.visible) {
@@ -45670,6 +45917,9 @@ void main() {
       }
     }
   };
+  function formatLevel(level) {
+    return String(level).replace(/\.0+$/, "").replace(/(\.\d*?)0+$/, "$1");
+  }
 
   // inst/htmlwidgets/myIO/src/Chart.js
   var MIN_CHART_WIDTH = 280;

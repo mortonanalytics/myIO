@@ -65,6 +65,9 @@ addIoLayer <- function(myIO,
   if (type == "waterfall" && transform == "identity") {
     transform <- "cumulative"
   }
+  if (type == "quantile_dots" && transform == "identity") {
+    transform <- "quantile_dots"
+  }
 
   if (is.null(color) && !("group" %in% names(mapping)) && type != "gauge") {
     color <- if (type %in% c("donut", "treemap", "sankey", "waffle", "funnel", "radar", "parallel")) {
@@ -74,8 +77,13 @@ addIoLayer <- function(myIO,
     }
   }
 
+  transform_mapping <- mapping
+
   # Auto-inject mapping for transforms that produce output columns (Decision #11)
   mapping <- inject_transform_mapping(transform, mapping)
+  if (transform == "quantile_dots") {
+    mapping$y_var <- "value"
+  }
 
   layer_id <- next_layer_id(existing_layers)
 
@@ -114,7 +122,7 @@ addIoLayer <- function(myIO,
   }
 
   if (length(grep("group", names(mapping))) == 0) {
-    transformed <- transform_fn(data, mapping, options)
+    transformed <- transform_fn(data, transform_mapping, options)
     transformed_data <- transformed$data
 
     if (type == "treemap") {
@@ -253,6 +261,9 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
       stop("addIoLayer(): Layer label '", label, "' already exists. Each layer must have a unique label.", call. = FALSE)
     }
   }
+  if (type == "quantile_dots" && "group" %in% names(mapping)) {
+    stop("addIoLayer(): type 'quantile_dots' uses `x_var` as the distribution group; do not supply a separate `group` mapping.", call. = FALSE)
+  }
 
   # Override required mapping for transforms that produce output columns
   transform_contract <- TRANSFORM_INPUT_CONTRACTS[[transform]]
@@ -307,7 +318,7 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
 
   numeric_fields <- intersect(c("y_var", "value", "low_y", "high_y", "open", "high", "low", "close"), names(mapping))
   numeric_fields <- setdiff(numeric_fields, skip_fields)
-  if (type %in% c("line", "point", "bar", "hexbin", "area", "groupedBar", "histogram", "gauge", "donut", "candlestick", "waterfall", "sankey", "violin")) {
+  if (type %in% c("line", "point", "bar", "hexbin", "area", "groupedBar", "histogram", "gauge", "donut", "candlestick", "waterfall", "sankey", "violin", "quantile_dots", "fan")) {
     for (nf in numeric_fields) {
       if (!is.numeric(data[[mapping[[nf]]]])) {
         stop("addIoLayer(): Mapped field '", mapping[[nf]], "' must be numeric for type '", type, "'.", call. = FALSE)
@@ -444,6 +455,14 @@ TRANSFORM_INPUT_CONTRACTS <- list(
     skip_column_check = c("x_var", "y_var", "low_y", "high_y"),
     auto_mapping = list(x_var = "time", y_var = "surv",
                         low_y = "ci_lower", high_y = "ci_upper")
+  ),
+  quantile_dots = list(
+    required_map = c("x_var", "y_var"),
+    skip_column_check = c("quantile_rank", "threshold_relationship"),
+    auto_mapping = list(
+      quantile_rank = "quantile_rank",
+      threshold_relationship = "threshold_relationship"
+    )
   )
 )
 
