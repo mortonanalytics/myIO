@@ -10,47 +10,137 @@ vignette: >
 ```{r, include=FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 library(myIO)
+# Render tool results as the JSON an agent actually receives.
+as_json <- function(x) {
+  cat(jsonlite::toJSON(x, pretty = TRUE, auto_unbox = TRUE, null = "null"))
+}
 ```
 
-myIO ships a generated schema that agents can use to produce contract-correct chart specs. The schema is generated from the R and JavaScript contracts and is available to both R helpers and a standalone MCP server.
+myIO is **agent-buildable**. It ships a machine-readable schema generated from
+its own R and JavaScript contracts — every chart type, its required mappings and
+valid transforms, and every exported function signature. Because the schema is
+generated from the engine (never hand-authored), it cannot drift from what the
+library actually renders.
 
-## R helpers
+Agents read that schema through six tools — available both as R functions
+(shown here) and as a standalone MCP server — to produce **contract-correct**
+chart specs and to **self-repair** when they get one wrong.
 
-List chart types:
+## The full chart surface
+
+The schema covers every chart type the engine can render — not a curated subset:
 
 ```{r}
-head(myio_list_chart_types())
+myio_list_chart_types()
 ```
 
-Validate a chart spec:
+```{r}
+length(myio_list_chart_types())   # chart types
+length(myio_list_functions())     # exported function signatures
+```
+
+Each type carries its own contract: which mappings are required, which fields
+must be numeric, and which transforms are valid for it.
 
 ```{r}
-spec <- list(
+as_json(myio_chart_schema("boxplot"))
+```
+
+## Validating a chart spec
+
+A model's first attempt frequently hallucinates mapping keys. `myio_validate_spec()`
+catches the structural mistakes and returns stable error `code`s plus
+fuzzy-matched `suggestion`s:
+
+```{r}
+bad_spec <- list(
   type = "boxplot",
   mapping = list(column_var = "Species", value_var = "Sepal.Width")
 )
-myio_validate_spec(spec)
+as_json(myio_validate_spec(bad_spec))
 ```
 
-Pass a column type map to catch data-contract issues:
+Feeding those suggestions back (`column_var` → `x_var`, `value_var` → `y_var`)
+produces a spec that validates:
 
 ```{r}
-myio_validate_spec(
+good_spec <- list(
+  type = "boxplot",
+  mapping = list(x_var = "Species", y_var = "Sepal.Width")
+)
+as_json(myio_validate_spec(good_spec))
+```
+
+Pass a column type map to also check the spec against real data — mapped columns
+must exist, and numeric fields must map to numeric columns:
+
+```{r}
+as_json(myio_validate_spec(
   list(type = "point", mapping = list(x_var = "wt", y_var = "mpg")),
   columns = list(wt = "numeric", mpg = "character")
-)
+))
 ```
 
-Validate function-call argument names:
+## Validating function calls
+
+The same applies to `set*()` calls — wrong argument names are a common LLM
+mistake. `myio_validate_call()` checks the function name and its arguments
+against the real signature:
 
 ```{r}
-myio_validate_call("setAxisFormat", list(axis_x = ".0f"))
+as_json(myio_validate_call("setAxisFormat", list(axis_x = ".0f")))
+```
+
+```{r}
 myio_function_signature("setAxisFormat")
+```
+
+## The six tools
+
+| Tool | R function | Purpose |
+|------|------------|---------|
+| `list_chart_types` | `myio_list_chart_types()` | Every chart type in the schema |
+| `get_chart_schema` | `myio_chart_schema(type)` | One type's contract (or all) |
+| `validate_spec` | `myio_validate_spec(spec, columns)` | Validate a chart spec, with optional data-contract checks |
+| `list_functions` | `myio_list_functions()` | Every exported function name |
+| `get_function_signature` | `myio_function_signature(fn)` | A function's argument names |
+| `validate_call` | `myio_validate_call(fn, args)` | Validate a function name + arguments |
+
+All six return the same stable error codes: `UNKNOWN_TYPE`, `MISSING_MAPPING`,
+`UNKNOWN_MAPPING_KEY`, `INVALID_TRANSFORM`, `MISSING_COLUMN`,
+`NON_NUMERIC_COLUMN`, `UNKNOWN_FUNCTION`, `UNKNOWN_ARGUMENT`.
+
+## A repair loop
+
+The pattern an agent follows, whether it calls the R functions or the MCP tools:
+
+1. Propose a chart spec.
+2. Call `validate_spec`.
+3. If `valid` is `false`, apply the `suggestion` for each error and go to 2.
+4. Once valid, validate any accompanying `set*()` call with `validate_call`.
+
+```{r}
+spec <- list(type = "boxplot",
+             mapping = list(column_var = "Species", value_var = "Sepal.Width"))
+res  <- myio_validate_spec(spec)
+
+while (!res$valid) {
+  for (err in res$errors) {
+    if (!is.null(err$suggestion) && identical(err$code, "UNKNOWN_MAPPING_KEY")) {
+      spec$mapping[[err$suggestion]] <- spec$mapping[[err$field]]
+      spec$mapping[[err$field]] <- NULL
+    }
+  }
+  res <- myio_validate_spec(spec)
+}
+as_json(spec)
 ```
 
 ## MCP server
 
-The MCP package is intentionally separate from the R package so CRAN does not need Node dependencies.
+For agents that speak the Model Context Protocol (Claude Desktop, Claude Code,
+Cursor), the same six tools are exposed by a standalone Node server. It is kept
+separate from the R package so CRAN never needs Node dependencies.
 
 ```{sh, eval=FALSE}
 cd mcp
@@ -58,7 +148,7 @@ npm install
 node server.mjs
 ```
 
-Claude Desktop / Claude Code style configuration:
+Client configuration (Claude Desktop / Claude Code / Cursor use the same shape):
 
 ```json
 {
@@ -71,49 +161,17 @@ Claude Desktop / Claude Code style configuration:
 }
 ```
 
-Cursor uses the same command and args in its MCP configuration.
+The MCP server reads the same generated schema, so its results are identical to
+the R functions above — enforced by a shared conformance corpus that both
+implementations must pass.
 
-The server exposes six tools:
+## What validation guarantees — and what it does not
 
-- `list_chart_types`
-- `get_chart_schema`
-- `validate_spec`
-- `list_functions`
-- `get_function_signature`
-- `validate_call`
-
-## Ollama loop
-
-For local tool-calling loops, expose the same six tools with JSON inputs. A minimal repair flow is:
-
-1. Ask the model for a chart spec.
-2. Call `validate_spec`.
-3. If `valid` is `FALSE`, feed the error codes and suggestions back to the model.
-4. Repeat until the tool returns `valid = TRUE`.
-5. Validate any proposed R call with `validate_call`.
-
-Example repair:
-
-```json
-{
-  "type": "boxplot",
-  "mapping": {
-    "column_var": "Species",
-    "value_var": "Sepal.Width"
-  }
-}
+`validate_spec` and `validate_call` guarantee **contract correctness**: a known
+chart type, an allowed transform, the expected mapping keys, optional
+data-column compatibility, and known function arguments. They do **not**
+guarantee that the chosen chart is the *right* chart for the question, or that a
+mapped column is semantically meaningful — choosing a boxplot when a histogram
+was wanted is a valid spec. Semantic and aesthetic judgement remains the model's
+job; the tools close the structural-error class.
 ```
-
-`validate_spec` returns `MISSING_MAPPING` for `x_var` and `y_var`, plus `UNKNOWN_MAPPING_KEY` suggestions for the hallucinated keys. The repaired spec is:
-
-```json
-{
-  "type": "boxplot",
-  "mapping": {
-    "x_var": "Species",
-    "y_var": "Sepal.Width"
-  }
-}
-```
-
-Validation guarantees contract correctness: known chart type, allowed transform, expected mapping keys, optional data-column compatibility, and known function arguments. It does not guarantee the semantic or aesthetic quality of the selected chart.
