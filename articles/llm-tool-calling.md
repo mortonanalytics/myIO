@@ -157,8 +157,12 @@ as_json(myio_chart_schema("boxplot"))
 #>     "x_var",
 #>     "y_var"
 #>   ],
-#>   "numeric_fields": "y_var",
-#>   "valid_transforms": "identity",
+#>   "numeric_fields": [
+#>     "y_var"
+#>   ],
+#>   "valid_transforms": [
+#>     "identity"
+#>   ],
 #>   "group": "axes-categorical",
 #>   "data_contract": null,
 #>   "scale_hints": null

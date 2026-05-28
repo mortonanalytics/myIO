@@ -211,8 +211,12 @@ fields, valid transforms — which the model can fetch on demand:</p>
 <span><span class="co">#&gt;     "x_var",</span></span>
 <span><span class="co">#&gt;     "y_var"</span></span>
 <span><span class="co">#&gt;   ],</span></span>
-<span><span class="co">#&gt;   "numeric_fields": "y_var",</span></span>
-<span><span class="co">#&gt;   "valid_transforms": "identity",</span></span>
+<span><span class="co">#&gt;   "numeric_fields": [</span></span>
+<span><span class="co">#&gt;     "y_var"</span></span>
+<span><span class="co">#&gt;   ],</span></span>
+<span><span class="co">#&gt;   "valid_transforms": [</span></span>
+<span><span class="co">#&gt;     "identity"</span></span>
+<span><span class="co">#&gt;   ],</span></span>
 <span><span class="co">#&gt;   "group": "axes-categorical",</span></span>
 <span><span class="co">#&gt;   "data_contract": null,</span></span>
 <span><span class="co">#&gt;   "scale_hints": null</span></span>

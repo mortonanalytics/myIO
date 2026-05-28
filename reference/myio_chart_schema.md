@@ -37,10 +37,14 @@ myio_chart_schema("boxplot")
 #> 
 #> 
 #> $numeric_fields
+#> $numeric_fields[[1]]
 #> [1] "y_var"
 #> 
+#> 
 #> $valid_transforms
+#> $valid_transforms[[1]]
 #> [1] "identity"
+#> 
 #> 
 #> $group
 #> [1] "axes-categorical"
