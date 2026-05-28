@@ -52,7 +52,6 @@ articles:
   - title: Shiny & Interactions
     contents:
       - shiny-integration
-      - articles/shiny-interactions
   - title: Big-data & Linking
     contents:
       - large-data-linking
