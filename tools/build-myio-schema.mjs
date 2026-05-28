@@ -60,6 +60,16 @@ function evaluateLiteral(expression) {
   return Function(`"use strict"; return (${expression});`)();
 }
 
+// dump-r-contracts.R serializes with jsonlite auto_unbox=TRUE, which renders a
+// length-1 vector (e.g. c("value")) as a scalar string. Downstream validators
+// iterate these fields and treat a string as iterable — splitting "value" into
+// v,a,l,u,e. Force every list-typed field back to an array here so the schema
+// is canonical and consumers never see a scalar.
+function asArray(value) {
+  if (value === undefined || value === null) return [];
+  return Array.isArray(value) ? value : [value];
+}
+
 function readRendererContracts() {
   const files = fs.readdirSync(RENDERER_DIR)
     .filter((file) => file.endsWith("Renderer.js"))
@@ -85,18 +95,18 @@ export function buildSchema() {
     { cwd: ROOT, encoding: "utf8" }
   ));
   const renderers = readRendererContracts();
+  const composites = asArray(rContracts.composites);
   const types = {};
 
   for (const type of rContracts.allowed_types) {
     const renderer = renderers[type] || null;
-    const requiredMappings = rContracts.required_mappings[type] || [];
-    const numericFields = rContracts.numeric_fields[type] || [];
+    const validTransforms = asArray(rContracts.valid_combinations[type]);
     types[type] = {
-      kind: rContracts.composites.includes(type) ? "composite" : "primitive",
+      kind: composites.includes(type) ? "composite" : "primitive",
       renderer_type: Boolean(renderer),
-      required_mappings: requiredMappings,
-      numeric_fields: numericFields,
-      valid_transforms: rContracts.valid_combinations[type] || ["identity"],
+      required_mappings: asArray(rContracts.required_mappings[type]),
+      numeric_fields: asArray(rContracts.numeric_fields[type]),
+      valid_transforms: validTransforms.length ? validTransforms : ["identity"],
       group: rContracts.compatibility_groups[type] || "unknown",
       data_contract: renderer ? renderer.data_contract : null,
       scale_hints: renderer ? renderer.scale_hints : null
@@ -121,11 +131,14 @@ export function buildSchema() {
     ],
     types,
     renderer_types: Object.keys(renderers).sort(),
-    composites: rContracts.composites,
-    transforms: rContracts.transforms,
+    composites,
+    transforms: asArray(rContracts.transforms),
     compatibility_groups: rContracts.compatibility_groups,
     transform_input_contracts: rContracts.transform_input_contracts,
-    function_signatures: rContracts.function_signatures
+    function_signatures: Object.fromEntries(
+      Object.entries(rContracts.function_signatures)
+        .map(([fn, args]) => [fn, asArray(args)])
+    )
   };
 }
 
