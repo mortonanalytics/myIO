@@ -98,7 +98,9 @@
         "x_var",
         "y_var"
       ],
-      "numeric_fields": "y_var",
+      "numeric_fields": [
+        "y_var"
+      ],
       "valid_transforms": [
         "identity",
         "mean",
@@ -136,7 +138,9 @@
         "y_var",
         "radius"
       ],
-      "valid_transforms": "identity",
+      "valid_transforms": [
+        "identity"
+      ],
       "group": "axes-hex",
       "data_contract": {
         "x_var": {
@@ -170,7 +174,9 @@
         "level_2"
       ],
       "numeric_fields": [],
-      "valid_transforms": "identity",
+      "valid_transforms": [
+        "identity"
+      ],
       "group": "standalone-treemap",
       "data_contract": {
         "level_1": {
@@ -189,9 +195,15 @@
     "gauge": {
       "kind": "primitive",
       "renderer_type": true,
-      "required_mappings": "value",
-      "numeric_fields": "value",
-      "valid_transforms": "identity",
+      "required_mappings": [
+        "value"
+      ],
+      "numeric_fields": [
+        "value"
+      ],
+      "valid_transforms": [
+        "identity"
+      ],
       "group": "standalone-gauge",
       "data_contract": {
         "value": {
@@ -208,8 +220,12 @@
         "x_var",
         "y_var"
       ],
-      "numeric_fields": "y_var",
-      "valid_transforms": "identity",
+      "numeric_fields": [
+        "y_var"
+      ],
+      "valid_transforms": [
+        "identity"
+      ],
       "group": "standalone-donut",
       "data_contract": {
         "x_var": {
@@ -263,8 +279,12 @@
         "x_var",
         "y_var"
       ],
-      "numeric_fields": "y_var",
-      "valid_transforms": "identity",
+      "numeric_fields": [
+        "y_var"
+      ],
+      "valid_transforms": [
+        "identity"
+      ],
       "group": "axes-categorical",
       "data_contract": {
         "x_var": {
@@ -290,9 +310,15 @@
     "histogram": {
       "kind": "primitive",
       "renderer_type": true,
-      "required_mappings": "value",
-      "numeric_fields": "value",
-      "valid_transforms": "identity",
+      "required_mappings": [
+        "value"
+      ],
+      "numeric_fields": [
+        "value"
+      ],
+      "valid_transforms": [
+        "identity"
+      ],
       "group": "axes-binned",
       "data_contract": {
         "value": {
@@ -317,8 +343,12 @@
         "y_var",
         "value"
       ],
-      "numeric_fields": "value",
-      "valid_transforms": "identity",
+      "numeric_fields": [
+        "value"
+      ],
+      "valid_transforms": [
+        "identity"
+      ],
       "group": "axes-matrix",
       "data_contract": {
         "x_var": {
@@ -357,7 +387,9 @@
         "low",
         "close"
       ],
-      "valid_transforms": "identity",
+      "valid_transforms": [
+        "identity"
+      ],
       "group": "axes-continuous",
       "data_contract": {
         "x_var": {
@@ -400,7 +432,9 @@
         "x_var",
         "y_var"
       ],
-      "numeric_fields": "y_var",
+      "numeric_fields": [
+        "y_var"
+      ],
       "valid_transforms": [
         "identity",
         "cumulative"
@@ -433,8 +467,12 @@
         "target",
         "value"
       ],
-      "numeric_fields": "value",
-      "valid_transforms": "identity",
+      "numeric_fields": [
+        "value"
+      ],
+      "valid_transforms": [
+        "identity"
+      ],
       "group": "standalone-flow",
       "data_contract": {
         "source": {
@@ -457,8 +495,12 @@
         "x_var",
         "y_var"
       ],
-      "numeric_fields": "y_var",
-      "valid_transforms": "identity",
+      "numeric_fields": [
+        "y_var"
+      ],
+      "valid_transforms": [
+        "identity"
+      ],
       "group": "axes-categorical",
       "data_contract": null,
       "scale_hints": null
@@ -470,8 +512,12 @@
         "x_var",
         "y_var"
       ],
-      "numeric_fields": "y_var",
-      "valid_transforms": "identity",
+      "numeric_fields": [
+        "y_var"
+      ],
+      "valid_transforms": [
+        "identity"
+      ],
       "group": "axes-categorical",
       "data_contract": null,
       "scale_hints": null
@@ -484,8 +530,12 @@
         "y_var",
         "group"
       ],
-      "numeric_fields": "x_var",
-      "valid_transforms": "identity",
+      "numeric_fields": [
+        "x_var"
+      ],
+      "valid_transforms": [
+        "identity"
+      ],
       "group": "axes-binned",
       "data_contract": null,
       "scale_hints": null
@@ -537,8 +587,12 @@
         "x_var",
         "y_var"
       ],
-      "numeric_fields": "y_var",
-      "valid_transforms": "identity",
+      "numeric_fields": [
+        "y_var"
+      ],
+      "valid_transforms": [
+        "identity"
+      ],
       "group": "axes-continuous",
       "data_contract": {},
       "scale_hints": {
@@ -556,7 +610,9 @@
         "x_var",
         "y_var"
       ],
-      "numeric_fields": "y_var",
+      "numeric_fields": [
+        "y_var"
+      ],
       "valid_transforms": [
         "identity"
       ],
@@ -571,7 +627,9 @@
         "x_var",
         "y_var"
       ],
-      "numeric_fields": "y_var",
+      "numeric_fields": [
+        "y_var"
+      ],
       "valid_transforms": [
         "identity",
         "pairwise_test"
@@ -608,7 +666,9 @@
         "x_var",
         "y_var"
       ],
-      "numeric_fields": "y_var",
+      "numeric_fields": [
+        "y_var"
+      ],
       "valid_transforms": [
         "identity"
       ],
@@ -619,8 +679,12 @@
     "qq": {
       "kind": "composite",
       "renderer_type": false,
-      "required_mappings": "y_var",
-      "numeric_fields": "y_var",
+      "required_mappings": [
+        "y_var"
+      ],
+      "numeric_fields": [
+        "y_var"
+      ],
       "valid_transforms": [
         "identity"
       ],
@@ -635,7 +699,9 @@
         "x_var",
         "y_var"
       ],
-      "numeric_fields": "y_var",
+      "numeric_fields": [
+        "y_var"
+      ],
       "valid_transforms": [
         "identity",
         "mean",
@@ -674,7 +740,9 @@
         "low_y",
         "high_y"
       ],
-      "valid_transforms": "identity",
+      "valid_transforms": [
+        "identity"
+      ],
       "group": "axes-categorical",
       "data_contract": {
         "x_var": {
@@ -708,8 +776,12 @@
         "category",
         "value"
       ],
-      "numeric_fields": "value",
-      "valid_transforms": "identity",
+      "numeric_fields": [
+        "value"
+      ],
+      "valid_transforms": [
+        "identity"
+      ],
       "group": "standalone-waffle",
       "data_contract": {
         "category": {
@@ -729,8 +801,12 @@
         "x_var",
         "y_var"
       ],
-      "numeric_fields": "y_var",
-      "valid_transforms": "identity",
+      "numeric_fields": [
+        "y_var"
+      ],
+      "valid_transforms": [
+        "identity"
+      ],
       "group": "axes-continuous",
       "data_contract": {
         "x_var": {
@@ -761,8 +837,12 @@
         "y_var",
         "group"
       ],
-      "numeric_fields": "y_var",
-      "valid_transforms": "identity",
+      "numeric_fields": [
+        "y_var"
+      ],
+      "valid_transforms": [
+        "identity"
+      ],
       "group": "axes-continuous",
       "data_contract": {
         "x_var": {
@@ -793,8 +873,12 @@
         "axis",
         "value"
       ],
-      "numeric_fields": "value",
-      "valid_transforms": "identity",
+      "numeric_fields": [
+        "value"
+      ],
+      "valid_transforms": [
+        "identity"
+      ],
       "group": "standalone-radar",
       "data_contract": {
         "axis": {
@@ -814,8 +898,12 @@
         "stage",
         "value"
       ],
-      "numeric_fields": "value",
-      "valid_transforms": "identity",
+      "numeric_fields": [
+        "value"
+      ],
+      "valid_transforms": [
+        "identity"
+      ],
       "group": "standalone-funnel",
       "data_contract": {
         "stage": {
@@ -831,9 +919,13 @@
     "parallel": {
       "kind": "primitive",
       "renderer_type": true,
-      "required_mappings": "dimensions",
+      "required_mappings": [
+        "dimensions"
+      ],
       "numeric_fields": [],
-      "valid_transforms": "identity",
+      "valid_transforms": [
+        "identity"
+      ],
       "group": "standalone-parallel",
       "data_contract": {
         "dimensions": {
@@ -853,7 +945,9 @@
         "time",
         "status"
       ],
-      "valid_transforms": "identity",
+      "valid_transforms": [
+        "identity"
+      ],
       "group": "axes-continuous",
       "data_contract": null,
       "scale_hints": null
@@ -861,9 +955,15 @@
     "histogram_fit": {
       "kind": "composite",
       "renderer_type": false,
-      "required_mappings": "value",
-      "numeric_fields": "value",
-      "valid_transforms": "identity",
+      "required_mappings": [
+        "value"
+      ],
+      "numeric_fields": [
+        "value"
+      ],
+      "valid_transforms": [
+        "identity"
+      ],
       "group": "axes-binned",
       "data_contract": null,
       "scale_hints": null
@@ -875,8 +975,12 @@
         "date",
         "value"
       ],
-      "numeric_fields": "value",
-      "valid_transforms": "identity",
+      "numeric_fields": [
+        "value"
+      ],
+      "valid_transforms": [
+        "identity"
+      ],
       "group": "standalone-calendar",
       "data_contract": {
         "date": {
@@ -896,7 +1000,9 @@
         "x_var",
         "y_var"
       ],
-      "numeric_fields": "y_var",
+      "numeric_fields": [
+        "y_var"
+      ],
       "valid_transforms": [
         "identity",
         "quantile_dots"
@@ -934,8 +1040,12 @@
         "x_var",
         "y_var"
       ],
-      "numeric_fields": "y_var",
-      "valid_transforms": "identity",
+      "numeric_fields": [
+        "y_var"
+      ],
+      "valid_transforms": [
+        "identity"
+      ],
       "group": "axes-continuous",
       "data_contract": null,
       "scale_hints": null
@@ -1138,7 +1248,9 @@
       "transform",
       "options"
     ],
-    "clear_duckdb_wasm_cache": "version",
+    "clear_duckdb_wasm_cache": [
+      "version"
+    ],
     "defineCategoricalAxis": [
       "myIO",
       "xAxis",
@@ -1177,9 +1289,15 @@
       "webgl_threshold",
       "unify_data_path"
     ],
-    "myio_chart_schema": "type",
-    "myio_function_signature": "fn",
-    "myIO_last_error": "outputId",
+    "myio_chart_schema": [
+      "type"
+    ],
+    "myio_function_signature": [
+      "fn"
+    ],
+    "myIO_last_error": [
+      "outputId"
+    ],
     "myio_list_chart_types": [],
     "myio_list_functions": [],
     "myio_validate_call": [
