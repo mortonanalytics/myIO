@@ -14,3 +14,6 @@ A list with class `myIO_duckdb_wasm_status` and fields
 \description{
 DuckDB-WASM cache status
 }
+\examples{
+duckdb_wasm_status()
+}

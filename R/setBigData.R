@@ -14,10 +14,9 @@
 #'   sources, pass `schema = c("col1", "col2", ...)` or a schema field list.
 #'
 #' @details
-#' This function writes the `x.bigdata.*` payload fields described in
-#' `md/design/large-dataset-virtualization-contract.md`, section "Widget
-#' payload shape", and follows that document's row-key contract. DBI sources
-#' are stored as an internal session-scoped marker in
+#' This function writes the `x.bigdata.*` payload fields consumed by the
+#' widget's large-dataset virtualization path and follows its row-key
+#' contract. DBI sources are stored as an internal session-scoped marker in
 #' `x.bigdata$dbi_handle_internal`; render-time source registration is handled
 #' by the source registry phase.
 #'

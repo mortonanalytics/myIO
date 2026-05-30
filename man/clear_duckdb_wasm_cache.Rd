@@ -16,3 +16,9 @@ Number of removed entries, invisibly.
 \description{
 Remove DuckDB-WASM cache entries
 }
+\examples{
+\donttest{
+# Removes cached DuckDB-WASM binaries from the user cache.
+clear_duckdb_wasm_cache()
+}
+}

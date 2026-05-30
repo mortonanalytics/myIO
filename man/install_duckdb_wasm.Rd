@@ -32,3 +32,9 @@ so the in-browser big-data engine is available for subsequent widgets.
 This follows the keras3 / torch / reticulate pattern: the binary is
 NOT bundled with the R package and is not required for small-data use.
 }
+\examples{
+\dontrun{
+# Downloads ~22 MB from the upstream mirror into the user cache.
+install_duckdb_wasm()
+}
+}

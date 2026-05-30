@@ -7,7 +7,7 @@
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-Create interactive 'd3.js' visualizations from R with built-in statistical transforms. Computes confidence intervals, regression fits, LOESS smoothing, moving averages, and error bars in R and renders them as composable chart layers via 'htmlwidgets'. Supports 20 chart types including boxplots, violin plots, Q-Q diagnostic plots, and group comparisons with pairwise significance testing. Works in 'RStudio', 'Shiny', and 'R Markdown'.
+Create interactive 'd3.js' visualizations from R with built-in statistical transforms. Computes confidence intervals, regression fits, LOESS smoothing, moving averages, error bars, and uncertainty visualizations (quantile dot plots and fan charts) in R and renders them as composable chart layers via 'htmlwidgets'. Supports 36 chart types including boxplots, violin plots, Q-Q diagnostic plots, calendar heatmaps, survival curves, and group comparisons with pairwise significance testing. Also provides a machine-readable chart specification schema with validators so that large language model agents can author and verify charts. Works in 'RStudio', 'Shiny', and 'R Markdown'.
 }
 \seealso{
 Useful links:
@@ -20,6 +20,13 @@ Useful links:
 }
 \author{
 \strong{Maintainer}: Ryan Morton \email{morton@myma.us} [copyright holder]
+
+Other contributors:
+\itemize{
+  \item Mike Bostock (D3.js, d3-hexbin, and d3-sankey libraries) [copyright holder]
+  \item James Hall (jsPDF library) [copyright holder]
+  \item yWorks GmbH (jsPDF library) [copyright holder]
+}
 
 }
 \keyword{internal}

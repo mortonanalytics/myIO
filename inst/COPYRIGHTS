@@ -19,16 +19,12 @@ License:   BSD-3-Clause
 Copyright: 2019 Mike Bostock
 URL:       https://github.com/d3/d3-sankey
 
-Name:      W3.CSS
-Version:   4.13
-License:   MIT
-Copyright: Jan Egil and Borge Refsnes
-URL:       https://www.w3schools.com/w3css/
-
 Name:      jsPDF
 Version:   2.5.2
 License:   MIT
-Copyright: 2010-2021 James Hall
+Copyright: 2010-2021 James Hall, 2015-2021 yWorks GmbH, and contributors
+           credited in the file header of
+           inst/htmlwidgets/myIO/lib/jspdf/jspdf.umd.min.js
 URL:       https://github.com/parallax/jsPDF
 Source:    https://www.npmjs.com/package/jspdf
 
