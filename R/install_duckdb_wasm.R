@@ -15,6 +15,11 @@
 #'   `!interactive()`.
 #'
 #' @return Invisibly returns the cache path where the binary was installed.
+#' @examples
+#' \dontrun{
+#' # Downloads ~22 MB from the upstream mirror into the user cache.
+#' install_duckdb_wasm()
+#' }
 #' @export
 install_duckdb_wasm <- function(version = NULL, from = NULL,
                                 force = FALSE, quiet = !interactive()) {
@@ -86,6 +91,8 @@ install_duckdb_wasm <- function(version = NULL, from = NULL,
 #' @return A list with class `myIO_duckdb_wasm_status` and fields
 #'   `installed` (logical), `version` (chr or NA), `cache_dir` (chr),
 #'   `size_bytes` (numeric).
+#' @examples
+#' duckdb_wasm_status()
 #' @export
 duckdb_wasm_status <- function() {
   cache_dir <- duckdb_wasm_cache_dir()
@@ -124,6 +131,11 @@ print.myIO_duckdb_wasm_status <- function(x, ...) {
 #' @param version Character scalar naming a specific version to remove. If
 #'   NULL, removes all cached versions.
 #' @return Number of removed entries, invisibly.
+#' @examples
+#' \donttest{
+#' # Removes cached DuckDB-WASM binaries from the user cache.
+#' clear_duckdb_wasm_cache()
+#' }
 #' @export
 clear_duckdb_wasm_cache <- function(version = NULL) {
   cache_dir <- duckdb_wasm_cache_dir()

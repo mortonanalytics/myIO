@@ -20,12 +20,13 @@ The only NOTE is "New submission".
 ## Notes
 
 * This is a new submission to CRAN.
-* The package bundles the following minified JavaScript and CSS libraries in
-  `inst/htmlwidgets/lib/` as required by the htmlwidgets framework:
-  - d3.js v7.9.0 (ISC license, ~273 KB)
-  - d3-hexbin v0.2.2 (BSD-3-Clause, ~2 KB)
-  - d3-sankey v0.12.3 (BSD-3-Clause, ~6 KB)
-  - W3.CSS v4.13 (MIT license, ~23 KB)
+* The package bundles the following minified JavaScript and CSS libraries
+  under `inst/htmlwidgets/` as required by the htmlwidgets framework:
+  - d3.js v7.9.0 (ISC license, ~273 KB; copyright Mike Bostock)
+  - d3-hexbin v0.2.2 (BSD-3-Clause, ~2 KB; copyright Mike Bostock)
+  - d3-sankey v0.12.3 (BSD-3-Clause, ~6 KB; copyright Mike Bostock)
+  - jsPDF v2.5.2 (MIT license, ~357 KB; copyright James Hall and yWorks GmbH)
+  These copyright holders are listed in Authors@R with role "cph".
   See `inst/COPYRIGHTS` for full attribution.
 * myIO differs from existing interactive visualization packages (plotly,
   echarts4r, highcharter) by computing statistical transforms (confidence

@@ -21,5 +21,12 @@ Useful links:
 \author{
 \strong{Maintainer}: Ryan Morton \email{morton@myma.us} [copyright holder]
 
+Other contributors:
+\itemize{
+  \item Mike Bostock (D3.js, d3-hexbin, and d3-sankey libraries) [copyright holder]
+  \item James Hall (jsPDF library) [copyright holder]
+  \item yWorks GmbH (jsPDF library) [copyright holder]
+}
+
 }
 \keyword{internal}

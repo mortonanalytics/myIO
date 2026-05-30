@@ -2,8 +2,15 @@ Package: myIO
 Type: Package
 Title: Interactive Data Visualizations Using 'd3.js'
 Version: 1.2.0
-Authors@R: person("Ryan", "Morton", email = "morton@myma.us",
-    role = c("aut", "cre", "cph"))
+Authors@R: c(
+    person("Ryan", "Morton", email = "morton@myma.us",
+           role = c("aut", "cre", "cph")),
+    person("Mike", "Bostock", role = "cph",
+           comment = "D3.js, d3-hexbin, and d3-sankey libraries"),
+    person("James", "Hall", role = "cph",
+           comment = "jsPDF library"),
+    person(given = "yWorks GmbH", role = "cph",
+           comment = "jsPDF library"))
 Description: Create interactive 'd3.js' visualizations from R with built-in
     statistical transforms. Computes confidence intervals, regression fits,
     LOESS smoothing, moving averages, error bars, and uncertainty
@@ -19,6 +26,7 @@ URL: https://mortonanalytics.github.io/myIO/, https://github.com/mortonanalytics
 BugReports: https://github.com/mortonanalytics/myIO/issues
 Depends: R (>= 4.1.0)
 Encoding: UTF-8
+Language: en-US
 RoxygenNote: 7.3.2
 Suggests:
   testthat (>= 3.0.0),
