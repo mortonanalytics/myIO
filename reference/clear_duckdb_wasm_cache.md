@@ -18,3 +18,12 @@ clear_duckdb_wasm_cache(version = NULL)
 ## Value
 
 Number of removed entries, invisibly.
+
+## Examples
+
+``` r
+# \donttest{
+# Removes cached DuckDB-WASM binaries from the user cache.
+clear_duckdb_wasm_cache()
+# }
+```

@@ -38,15 +38,15 @@ A modified `myIO` htmlwidget.
 ## Examples
 
 ``` r
-if (interactive()) {
-  w1 <- myIO() |>
-    addIoLayer(type = "point", label = "a",
-      data = mtcars, mapping = list(x_var = "wt", y_var = "mpg"))
-  w2 <- myIO() |>
-    addIoLayer(type = "point", label = "b",
-      data = mtcars, mapping = list(x_var = "hp", y_var = "mpg"))
-  linked <- linkCharts(w1, w2, on = "cyl")
-  linked[[1]] <- setLinkedCursor(linked[[1]])
-  linked[[2]] <- setLinkedCursor(linked[[2]])
-}
+# \donttest{
+w1 <- myIO() |>
+  addIoLayer(type = "point", label = "a",
+    data = mtcars, mapping = list(x_var = "wt", y_var = "mpg"))
+w2 <- myIO() |>
+  addIoLayer(type = "point", label = "b",
+    data = mtcars, mapping = list(x_var = "hp", y_var = "mpg"))
+linked <- linkCharts(w1, w2, on = "cyl")
+linked[[1]] <- setLinkedCursor(linked[[1]])
+linked[[2]] <- setLinkedCursor(linked[[2]])
+# }
 ```

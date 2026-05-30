@@ -46,13 +46,13 @@ A list of modified myIO widgets with matching link config.
 ## Examples
 
 ``` r
-if (interactive()) {
-  w1 <- myIO() |>
-    addIoLayer(type = "point", label = "scatter",
-      data = mtcars, mapping = list(x_var = "wt", y_var = "mpg"))
-  w2 <- myIO() |>
-    addIoLayer(type = "bar", label = "bars",
-      data = mtcars, mapping = list(x_var = "cyl", y_var = "mpg"))
-  linked <- linkCharts(w1, w2, on = "cyl")
-}
+# \donttest{
+w1 <- myIO() |>
+  addIoLayer(type = "point", label = "scatter",
+    data = mtcars, mapping = list(x_var = "wt", y_var = "mpg"))
+w2 <- myIO() |>
+  addIoLayer(type = "bar", label = "bars",
+    data = mtcars, mapping = list(x_var = "cyl", y_var = "mpg"))
+linked <- linkCharts(w1, w2, on = "cyl")
+# }
 ```

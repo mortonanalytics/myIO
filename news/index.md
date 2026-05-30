@@ -1,6 +1,34 @@
 # Changelog
 
-## myIO 1.2.0 (development)
+## myIO 1.2.0
+
+### LLM tool-calling schema
+
+- New machine-readable chart specification schema
+  (`inst/myio-schema.json`) describing all chart types, required
+  mappings, valid transforms, and function signatures, generated from
+  the package’s own contracts.
+- Six exported R tools let large language model agents author and verify
+  charts against that schema:
+  [`myio_list_chart_types()`](https://mortonanalytics.github.io/myIO/reference/myio_list_chart_types.md),
+  [`myio_chart_schema()`](https://mortonanalytics.github.io/myIO/reference/myio_chart_schema.md),
+  [`myio_validate_spec()`](https://mortonanalytics.github.io/myIO/reference/myio_validate_spec.md),
+  [`myio_list_functions()`](https://mortonanalytics.github.io/myIO/reference/myio_list_functions.md),
+  [`myio_function_signature()`](https://mortonanalytics.github.io/myIO/reference/myio_function_signature.md),
+  and
+  [`myio_validate_call()`](https://mortonanalytics.github.io/myIO/reference/myio_validate_call.md).
+  A Model Context Protocol server in the package’s source repository
+  exposes the same six tools to MCP-compatible clients.
+- New vignette `llm-tool-calling` demonstrates a
+  generate-validate-repair loop.
+
+### Uncertainty visualizations
+
+- New `quantile_dots` chart type and `quantile_dots` transform render a
+  Wilkinson dot plot of predictive quantiles for communicating
+  uncertainty.
+- New `fan` composite renders a fan chart of nested prediction intervals
+  around a central estimate.
 
 ### Gallery and chart context
 
@@ -172,6 +200,14 @@
   for embedding in table cells (reactable, DT, gt). Strips legend, axes,
   reference lines, and all interactions. Default height 20px. Supports
   line, bar, and area layer types.
+
+### Bug fixes
+
+- [`myio_validate_spec()`](https://mortonanalytics.github.io/myIO/reference/myio_validate_spec.md)
+  and the chart specification schema no longer reject valid specs for
+  chart types with a single required mapping (for example `histogram`,
+  `gauge`, and `qq`). The schema now always represents list-typed fields
+  as arrays.
 
 ## myIO 1.1.0
 
