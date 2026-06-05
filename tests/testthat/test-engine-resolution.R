@@ -45,6 +45,8 @@ test_that("new_source_id produces distinct values across calls", {
 })
 
 test_that("wasm_cache_url_for returns NULL when cache is absent", {
+  empty_cache <- withr::local_tempdir()
+  withr::local_envvar(R_USER_CACHE_DIR = empty_cache)
   expect_null(myIO:::wasm_cache_url_for("wasm"))
 })
 

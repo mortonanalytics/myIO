@@ -31,9 +31,14 @@
 #' myIO() |>
 #'   setBigData("data/large.parquet", schema = c("id", "x", "y"), rowkey_col = "id")
 #'
-#' con <- DBI::dbConnect(duckdb::duckdb())
-#' myIO() |>
-#'   setBigData(con, table = "observations", rowkey_col = "id")
+#' if (requireNamespace("duckdb", quietly = TRUE)) {
+#'   con <- DBI::dbConnect(duckdb::duckdb())
+#'   obs <- data.frame(id = seq_len(nrow(mtcars)), mpg = mtcars$mpg)
+#'   DBI::dbWriteTable(con, "observations", obs)
+#'   myIO() |>
+#'     setBigData(con, table = "observations", rowkey_col = "id")
+#'   DBI::dbDisconnect(con, shutdown = TRUE)
+#' }
 #' }
 setBigData <- function(widget, source, rowkey_col = NULL, ...) {
   if (!inherits(widget, "htmlwidget") ||

@@ -31,7 +31,7 @@ Adds a slider control below the chart that adjusts a transform option
 and triggers reactive re-rendering in Shiny.
 }
 \examples{
-\donttest{
+\dontrun{
 # In a Shiny server function:
 output$chart <- renderMyIO({
   myIO(data = mtcars) |>

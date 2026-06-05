@@ -16,7 +16,7 @@
 #'
 #' @return Invisibly returns the cache path where the binary was installed.
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' # Downloads ~22 MB from the upstream mirror into the user cache.
 #' install_duckdb_wasm()
 #' }

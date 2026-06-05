@@ -14,7 +14,7 @@
 #'
 #' @return A modified \code{myIO} htmlwidget with slider config attached.
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' # In a Shiny server function:
 #' output$chart <- renderMyIO({
 #'   myIO(data = mtcars) |>

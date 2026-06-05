@@ -1,3 +1,19 @@
+## Resubmission
+
+This is a resubmission addressing the review by Beni Altmann (2026-06-05):
+
+- Added `\value` documentation. Non-exported `composite_*` and `transform_*`
+  helpers are now `@noRd` (they are internal and were never intended as user
+  API); the one exported function that lacked it, `stop_duckdb_wasm_missing`,
+  now documents its `@return`.
+- Replaced `\dontrun{}` with `\donttest{}` where the example is genuinely
+  executable (`setBigData`), and made that example self-contained.
+- Two examples retain `\dontrun{}` by design and are noted here:
+  - `install_duckdb_wasm()` downloads ~22 MB from a network mirror, which is
+    not permitted in executed examples.
+  - `setSlider()` only runs inside a live Shiny server (reactive `output`
+    context) and cannot execute standalone.
+
 ## Submission
 
 This is a new submission. No version of myIO is currently on CRAN.
