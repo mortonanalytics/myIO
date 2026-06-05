@@ -13,6 +13,8 @@ This is a resubmission addressing the review by Beni Altmann (2026-06-05):
     not permitted in executed examples.
   - `setSlider()` only runs inside a live Shiny server (reactive `output`
     context) and cannot execute standalone.
+  - `clear_duckdb_wasm_cache()` deletes files from the user cache, which an
+    executed example must not do.
 
 ## Submission
 

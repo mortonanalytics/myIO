@@ -132,7 +132,7 @@ print.myIO_duckdb_wasm_status <- function(x, ...) {
 #'   NULL, removes all cached versions.
 #' @return Number of removed entries, invisibly.
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' # Removes cached DuckDB-WASM binaries from the user cache.
 #' clear_duckdb_wasm_cache()
 #' }
