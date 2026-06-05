@@ -1,6 +1,6 @@
 #' LOESS smoothing transform
 #'
-#' @keywords internal
+#' @noRd
 transform_loess <- function(data, mapping, options = list()) {
   x_vals <- data[[mapping$x_var]]
   y_vals <- data[[mapping$y_var]]

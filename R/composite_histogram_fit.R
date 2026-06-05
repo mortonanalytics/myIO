@@ -3,7 +3,7 @@
 #' Expands into a histogram layer plus a fitted density line.
 #' Optionally includes a text annotation with distribution parameters.
 #'
-#' @keywords internal
+#' @noRd
 composite_histogram_fit <- function(data, mapping, label, color, options) {
   family <- if (is.null(options$family)) "normal" else options$family
   show_params <- if (is.null(options$showParams)) FALSE else isTRUE(options$showParams)

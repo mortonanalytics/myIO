@@ -1,6 +1,6 @@
 #' Boxplot composite expansion
 #'
-#' @keywords internal
+#' @noRd
 composite_boxplot <- function(data, mapping, label, color, options) {
   show_outliers <- !isFALSE(options$showOutliers)
   whisker_type <- if (is.null(options$whiskerType)) "tukey" else options$whiskerType

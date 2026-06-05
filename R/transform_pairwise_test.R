@@ -1,6 +1,6 @@
 #' Pairwise hypothesis test transform
 #'
-#' @keywords internal
+#' @noRd
 transform_pairwise_test <- function(data, mapping, options = list()) {
   method      <- if (is.null(options$method))     "t.test"  else options$method
   p_adjust    <- if (is.null(options$p_adjust))   "none"    else options$p_adjust
@@ -106,7 +106,7 @@ transform_pairwise_test <- function(data, mapping, options = list()) {
   )
 }
 
-#' @keywords internal
+#' @noRd
 format_p_label <- function(p) {
   if (is.na(p))        return("p = NA")
   if (p < 0.001)       return("p < 0.001 ***")

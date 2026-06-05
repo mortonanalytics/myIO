@@ -24,7 +24,7 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' myIO(data = mtcars) |>
 #'   setBigData(mtcars)
 #'

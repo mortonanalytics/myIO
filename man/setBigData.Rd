@@ -35,7 +35,7 @@ contract. DBI sources are stored as an internal session-scoped marker in
 by the source registry phase.
 }
 \examples{
-\dontrun{
+\donttest{
 myIO(data = mtcars) |>
   setBigData(mtcars)
 

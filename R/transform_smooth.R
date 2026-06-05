@@ -1,6 +1,6 @@
 #' Moving average / exponential smoothing transform
 #'
-#' @keywords internal
+#' @noRd
 transform_smooth <- function(data, mapping, options = list()) {
   method <- if (is.null(options$method)) "sma" else options$method
   x_vals <- data[[mapping$x_var]]

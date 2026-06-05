@@ -1,6 +1,6 @@
 #' Identity transform
 #'
-#' @keywords internal
+#' @noRd
 transform_identity <- function(data, mapping, options = list()) {
   list(
     data = data,

@@ -6,6 +6,10 @@
 \usage{
 stop_duckdb_wasm_missing()
 }
+\value{
+Does not return; always throws a condition of class
+  \code{myIOError_duckdb_wasm_missing}.
+}
 \description{
 Raise a DuckDB-WASM missing-runtime condition
 }

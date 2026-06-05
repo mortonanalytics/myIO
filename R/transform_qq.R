@@ -1,6 +1,6 @@
 #' Q-Q diagnostic transform
 #'
-#' @keywords internal
+#' @noRd
 transform_qq <- function(data, mapping, options = list()) {
   distribution <- if (is.null(options$distribution)) "norm" else options$distribution
   qfunc        <- options$qfunc

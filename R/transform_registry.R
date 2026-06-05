@@ -1,6 +1,6 @@
 #' Transform registry
 #'
-#' @keywords internal
+#' @noRd
 transform_registry <- function() {
   list(
     identity = transform_identity,
@@ -26,7 +26,7 @@ transform_registry <- function() {
   )
 }
 
-#' @keywords internal
+#' @noRd
 get_transform <- function(name) {
   registry <- transform_registry()
   transform <- registry[[name]]

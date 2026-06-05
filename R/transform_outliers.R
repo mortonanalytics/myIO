@@ -1,6 +1,6 @@
 #' Outliers transform
 #'
-#' @keywords internal
+#' @noRd
 transform_outliers <- function(data, mapping, options = list()) {
   x_values <- data[[mapping$x_var]]
   y_values <- data[[mapping$y_var]]

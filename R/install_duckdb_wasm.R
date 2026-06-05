@@ -16,7 +16,7 @@
 #'
 #' @return Invisibly returns the cache path where the binary was installed.
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Downloads ~22 MB from the upstream mirror into the user cache.
 #' install_duckdb_wasm()
 #' }
@@ -155,6 +155,8 @@ clear_duckdb_wasm_cache <- function(version = NULL) {
 
 #' Raise a DuckDB-WASM missing-runtime condition
 #'
+#' @return Does not return; always throws a condition of class
+#'   \code{myIOError_duckdb_wasm_missing}.
 #' @keywords internal
 #' @export
 stop_duckdb_wasm_missing <- function() {

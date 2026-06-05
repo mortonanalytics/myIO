@@ -1,6 +1,6 @@
 #' Linear model transform
 #'
-#' @keywords internal
+#' @noRd
 transform_lm <- function(data, mapping, options = list()) {
   model <- stats::lm(data[[mapping$y_var]] ~ data[[mapping$x_var]])
   transformed <- data.frame(

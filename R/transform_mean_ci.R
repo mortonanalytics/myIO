@@ -1,6 +1,6 @@
 #' Group mean with confidence interval transform
 #'
-#' @keywords internal
+#' @noRd
 transform_mean_ci <- function(data, mapping, options = list()) {
   level <- if (is.null(options$level)) 0.95 else options$level
   method <- if (is.null(options$method)) "t" else options$method

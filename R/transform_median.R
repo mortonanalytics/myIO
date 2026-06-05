@@ -1,6 +1,6 @@
 #' Median transform
 #'
-#' @keywords internal
+#' @noRd
 transform_median <- function(data, mapping, options = list()) {
   x_values <- data[[mapping$x_var]]
   y_values <- data[[mapping$y_var]]

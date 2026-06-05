@@ -1,6 +1,6 @@
 #' Ridgeline composite expansion
 #'
-#' @keywords internal
+#' @noRd
 composite_ridgeline <- function(data, mapping, label, color, options) {
   overlap <- if (is.null(options$overlap)) 0.4 else as.numeric(options$overlap)
   bandwidth <- options$bandwidth

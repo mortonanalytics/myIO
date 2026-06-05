@@ -1,6 +1,6 @@
 #' Cumulative transform
 #'
-#' @keywords internal
+#' @noRd
 transform_cumulative <- function(data, mapping, options = list()) {
   as_truthy <- function(x) {
     if (is.logical(x)) {

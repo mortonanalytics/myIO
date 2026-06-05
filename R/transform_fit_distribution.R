@@ -4,7 +4,7 @@
 #' Returns a grid of x values and scaled density values suitable for overlaying
 #' on a histogram.
 #'
-#' @keywords internal
+#' @noRd
 transform_fit_distribution <- function(data, mapping, options = list()) {
   family <- if (is.null(options$family)) "normal" else options$family
   n_grid <- if (is.null(options$n_grid)) 100L else as.integer(options$n_grid)

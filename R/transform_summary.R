@@ -1,6 +1,6 @@
 #' Summary statistics transform
 #'
-#' @keywords internal
+#' @noRd
 transform_summary <- function(data, mapping, options = list()) {
   stat <- if (is.null(options$stat)) "count" else options$stat
   x_values <- data[[mapping$x_var]]

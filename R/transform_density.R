@@ -1,6 +1,6 @@
 #' Density transform
 #'
-#' @keywords internal
+#' @noRd
 transform_density <- function(data, mapping, options = list()) {
   values <- data[[mapping$y_var]]
   values <- values[!is.na(values)]

@@ -2,7 +2,7 @@
 #'
 #' Expands into scatter + trend line + CI band + R² annotation sublayers.
 #'
-#' @keywords internal
+#' @noRd
 composite_regression <- function(data, mapping, label, color, options) {
   method <- if (is.null(options$method)) "lm" else options$method
   show_ci <- if (is.null(options$showCI)) TRUE else isTRUE(options$showCI)

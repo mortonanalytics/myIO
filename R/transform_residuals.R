@@ -1,6 +1,6 @@
 #' Regression residuals transform
 #'
-#' @keywords internal
+#' @noRd
 transform_residuals <- function(data, mapping, options = list()) {
   method <- if (is.null(options$method)) "lm" else options$method
   x_vals <- data[[mapping$x_var]]

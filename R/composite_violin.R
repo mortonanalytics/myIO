@@ -1,6 +1,6 @@
 #' Violin composite expansion
 #'
-#' @keywords internal
+#' @noRd
 composite_violin <- function(data, mapping, label, color, options) {
   show_box <- !isFALSE(options$showBox)
   show_median <- !isFALSE(options$showMedian)

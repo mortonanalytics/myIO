@@ -1,6 +1,6 @@
 #' Confidence / prediction interval transform
 #'
-#' @keywords internal
+#' @noRd
 transform_ci <- function(data, mapping, options = list()) {
   method <- if (is.null(options$method)) "lm" else options$method
   level <- if (is.null(options$level)) 0.95 else options$level

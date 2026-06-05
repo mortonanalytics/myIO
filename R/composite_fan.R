@@ -1,6 +1,6 @@
 #' Fan chart composite expansion
 #'
-#' @keywords internal
+#' @noRd
 composite_fan <- function(data, mapping, label, color, options) {
   levels <- if (is.null(options$levels)) c(50, 80, 95) else options$levels
   if (!is.numeric(levels) || length(levels) < 1L || any(is.na(levels)) ||

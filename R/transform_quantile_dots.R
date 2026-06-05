@@ -1,6 +1,6 @@
 #' Quantile dots transform
 #'
-#' @keywords internal
+#' @noRd
 transform_quantile_dots <- function(data, mapping, options = list()) {
   valid_sources <- c("bootstrap", "posterior", "ensemble", "empirical")
   source <- options$source

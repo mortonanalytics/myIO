@@ -1,11 +1,11 @@
 #' Composite expansion helpers
 #'
-#' @keywords internal
+#' @noRd
 is_composite <- function(type) {
   type %in% names(composite_registry())
 }
 
-#' @keywords internal
+#' @noRd
 expandComposite <- function(type, data, mapping, label, color, options) {
   registry <- composite_registry()
   composite_fn <- registry[[type]]

@@ -2,7 +2,7 @@
 #'
 #' Expands into step-curve line + CI band + censored-observation markers.
 #'
-#' @keywords internal
+#' @noRd
 composite_survfit <- function(data, mapping, label, color, options) {
   level <- if (is.null(options$level)) 0.95 else options$level
   show_ci <- if (is.null(options$showCI)) TRUE else isTRUE(options$showCI)

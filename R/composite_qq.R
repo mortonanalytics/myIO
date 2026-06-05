@@ -1,6 +1,6 @@
 #' Q-Q plot composite expansion
 #'
-#' @keywords internal
+#' @noRd
 composite_qq <- function(data, mapping, label, color, options) {
   show_envelope <- if (is.null(options$envelope)) TRUE else options$envelope
   has_group <- !is.null(mapping$group) && mapping$group %in% colnames(data)
@@ -23,7 +23,7 @@ composite_qq <- function(data, mapping, label, color, options) {
   build_qq_sublayers(data, mapping, label, base_color, options, show_envelope)
 }
 
-#' @keywords internal
+#' @noRd
 build_qq_sublayers <- function(data, mapping, label, color, options, show_envelope) {
   qq_result <- transform_qq(data, mapping, options)
   sublayers <- list()

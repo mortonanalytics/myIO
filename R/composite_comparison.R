@@ -1,6 +1,6 @@
 #' Comparison composite expansion
 #'
-#' @keywords internal
+#' @noRd
 composite_comparison <- function(data, mapping, label, color, options) {
   method      <- if (is.null(options$method))   "t.test" else options$method
   p_adjust    <- if (is.null(options$p_adjust)) "none"   else options$p_adjust
