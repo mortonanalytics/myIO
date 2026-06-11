@@ -7,3 +7,8 @@ Raise a DuckDB-WASM missing-runtime condition
 ``` r
 stop_duckdb_wasm_missing()
 ```
+
+## Value
+
+Does not return; always throws a condition of class
+`myIOError_duckdb_wasm_missing`.

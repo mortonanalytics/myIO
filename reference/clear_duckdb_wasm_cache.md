@@ -22,8 +22,8 @@ Number of removed entries, invisibly.
 ## Examples
 
 ``` r
-# \donttest{
+if (FALSE) { # \dontrun{
 # Removes cached DuckDB-WASM binaries from the user cache.
 clear_duckdb_wasm_cache()
-# }
+} # }
 ```
