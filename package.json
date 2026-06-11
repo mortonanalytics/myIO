@@ -12,11 +12,11 @@
     "test:playwright": "playwright test tests/playwright"
   },
   "dependencies": {
-    "alasql": "^4.4.0",
-    "apache-arrow": "^17.0.0",
+    "alasql": "^4.17.3",
+    "apache-arrow": "^21.1.0",
     "d3-force": "^3.0.0",
     "regl": "^2.1.0",
-    "regl-scatterplot": "^1.12.0"
+    "regl-scatterplot": "^1.16.0"
   },
   "overrides": {
     "shell-quote": "^1.8.4"
