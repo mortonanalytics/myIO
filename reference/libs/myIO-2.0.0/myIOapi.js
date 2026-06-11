@@ -168,7 +168,7 @@
   var init_utf8 = __esm({
     "node_modules/apache-arrow/util/utf8.mjs"() {
       decoder = new TextDecoder("utf-8");
-      decodeUtf8 = (buffer) => decoder.decode(buffer);
+      decodeUtf8 = decoder.decode.bind(decoder);
       encoder = new TextEncoder();
       encodeUtf8 = (value) => encoder.encode(value);
     }
@@ -480,7 +480,8 @@
         }
       } while (!done);
     } catch (e) {
-      (threw = true) && typeof it.throw === "function" && it.throw(e);
+      threw = true;
+      typeof it.throw === "function" && it.throw(e);
     } finally {
       threw === false && typeof it.return === "function" && it.return(null);
     }
@@ -514,7 +515,8 @@
           }
         } while (!done);
       } catch (e) {
-        (threw = true) && typeof it.throw === "function" && (yield __await(it.throw(e)));
+        threw = true;
+        typeof it.throw === "function" && (yield __await(it.throw(e)));
       } finally {
         threw === false && typeof it.return === "function" && (yield __await(it.return(new Uint8Array(0))));
       }
@@ -549,7 +551,8 @@
           }
         } while (!done);
       } catch (e) {
-        (threw = true) && (yield __await(it["cancel"](e)));
+        threw = true;
+        yield __await(it["cancel"](e));
       } finally {
         threw === false ? yield __await(it["cancel"]()) : source["locked"] && it.releaseLock();
       }
@@ -814,8 +817,8 @@
   var init_byte_buffer = __esm({
     "node_modules/flatbuffers/mjs/byte-buffer.js"() {
       init_constants();
-      init_utils();
       init_encoding();
+      init_utils();
       ByteBuffer = class _ByteBuffer {
         /**
          * Create a new ByteBuffer with a given array of bytes (`Uint8Array`)
@@ -1569,13 +1572,10 @@
   var init_flatbuffers = __esm({
     "node_modules/flatbuffers/mjs/flatbuffers.js"() {
       init_constants();
-      init_constants();
-      init_constants();
-      init_constants();
       init_utils();
-      init_encoding();
       init_builder();
       init_byte_buffer();
+      init_encoding();
     }
   });
 
@@ -3354,6 +3354,7 @@
         Type3[Type3["DurationMillisecond"] = -28] = "DurationMillisecond";
         Type3[Type3["DurationMicrosecond"] = -29] = "DurationMicrosecond";
         Type3[Type3["DurationNanosecond"] = -30] = "DurationNanosecond";
+        Type3[Type3["IntervalMonthDayNano"] = -31] = "IntervalMonthDayNano";
       })(Type2 || (Type2 = {}));
       (function(BufferType2) {
         BufferType2[BufferType2["OFFSET"] = 0] = "OFFSET";
@@ -3458,11 +3459,14 @@
         number |= word * (BigInt(1) << BigInt(64 * i++));
       }
     }
-    if (typeof scale === "number") {
-      const denominator = BigInt(Math.pow(10, scale));
+    if (typeof scale === "number" && scale > 0) {
+      const denominator = BigInt("1".padEnd(scale + 1, "0"));
       const quotient = number / denominator;
-      const remainder = number % denominator;
-      return bigIntToNumber(quotient) + bigIntToNumber(remainder) / bigIntToNumber(denominator);
+      const remainder = negative ? -(number % denominator) : number % denominator;
+      const integerPart = bigIntToNumber(quotient);
+      const fractionPart = `${remainder}`.padStart(scale, "0");
+      const sign2 = negative && integerPart === 0 ? "-" : "";
+      return +`${sign2}${integerPart}.${fractionPart}`;
     }
     return bigIntToNumber(number);
   }
@@ -3521,7 +3525,7 @@
     "node_modules/apache-arrow/util/bn.mjs"() {
       init_buffer();
       init_bigint();
-      isArrowBigNumSymbol = Symbol.for("isArrowBigNum");
+      isArrowBigNumSymbol = /* @__PURE__ */ Symbol.for("isArrowBigNum");
       BigNum.prototype[isArrowBigNumSymbol] = true;
       BigNum.prototype.toJSON = function() {
         return `"${bigNumToString(this)}"`;
@@ -3597,8 +3601,12 @@
     switch (type.typeId) {
       case Type2.Decimal:
         return type.bitWidth / 32;
-      case Type2.Interval:
+      case Type2.Interval: {
+        if (t.unit === IntervalUnit.MONTH_DAY_NANO) {
+          return 4;
+        }
         return 1 + t.unit;
+      }
       // case Type.Int: return 1 + +((t as Int_).bitWidth > 32);
       // case Type.Time: return 1 + +((t as Time_).bitWidth > 32);
       case Type2.FixedSizeList:
@@ -3609,7 +3617,7 @@
         return 1;
     }
   }
-  var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, DataType, Null2, Int_, Int8, Int16, Int32, Int64, Uint8, Uint16, Uint32, Uint64, Float, Float16, Float32, Float64, Binary2, LargeBinary2, Utf82, LargeUtf82, Bool2, Decimal2, Date_, DateDay, DateMillisecond, Time_, TimeSecond, TimeMillisecond, TimeMicrosecond, TimeNanosecond, Timestamp_, TimestampSecond, TimestampMillisecond, TimestampMicrosecond, TimestampNanosecond, Interval_, IntervalDayTime, IntervalYearMonth, Duration2, DurationSecond, DurationMillisecond, DurationMicrosecond, DurationNanosecond, List2, Struct, Union_, DenseUnion, SparseUnion, FixedSizeBinary2, FixedSizeList2, Map_, getId, Dictionary;
+  var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, DataType, Null2, Int_, Int8, Int16, Int32, Int64, Uint8, Uint16, Uint32, Uint64, Float, Float16, Float32, Float64, Binary2, LargeBinary2, Utf82, LargeUtf82, Bool2, Decimal2, Date_, DateDay, DateMillisecond, Time_, TimeSecond, TimeMillisecond, TimeMicrosecond, TimeNanosecond, Timestamp_, TimestampSecond, TimestampMillisecond, TimestampMicrosecond, TimestampNanosecond, Interval_, IntervalDayTime, IntervalYearMonth, IntervalMonthDayNano, Duration2, DurationSecond, DurationMillisecond, DurationMicrosecond, DurationNanosecond, List2, Struct, Union_, DenseUnion, SparseUnion, FixedSizeBinary2, FixedSizeList2, Map_, getId, Dictionary;
   var init_type2 = __esm({
     "node_modules/apache-arrow/type.mjs"() {
       init_bigint();
@@ -4091,6 +4099,11 @@
           super(IntervalUnit.YEAR_MONTH);
         }
       };
+      IntervalMonthDayNano = class extends Interval_ {
+        constructor() {
+          super(IntervalUnit.MONTH_DAY_NANO);
+        }
+      };
       Duration2 = class extends DataType {
         constructor(unit) {
           super(Type2.Duration);
@@ -4454,6 +4467,9 @@
       case Type2.IntervalYearMonth:
         fn = visitor.visitIntervalYearMonth || visitor.visitInterval;
         break;
+      case Type2.IntervalMonthDayNano:
+        fn = visitor.visitIntervalMonthDayNano || visitor.visitInterval;
+        break;
       case Type2.Duration:
         fn = visitor.visitDuration;
         break;
@@ -4560,6 +4576,8 @@
             return Type2.IntervalDayTime;
           case IntervalUnit.YEAR_MONTH:
             return Type2.IntervalYearMonth;
+          case IntervalUnit.MONTH_DAY_NANO:
+            return Type2.IntervalMonthDayNano;
         }
         return Type2.Interval;
       case Type2.Duration:
@@ -4704,6 +4722,7 @@
       Visitor.prototype.visitSparseUnion = null;
       Visitor.prototype.visitIntervalDayTime = null;
       Visitor.prototype.visitIntervalYearMonth = null;
+      Visitor.prototype.visitIntervalMonthDayNano = null;
       Visitor.prototype.visitDuration = null;
       Visitor.prototype.visitDurationSecond = null;
       Visitor.prototype.visitDurationMillisecond = null;
@@ -4770,7 +4789,7 @@
       }
     };
   }
-  var SetVisitor, setEpochMsToDays, setVariableWidthBytes, setBool, setInt, setFloat, setFloat16, setAnyFloat, setDateDay, setDateMillisecond, setFixedSizeBinary, setBinary, setUtf8, setDate, setTimestampSecond, setTimestampMillisecond, setTimestampMicrosecond, setTimestampNanosecond, setTimestamp, setTimeSecond, setTimeMillisecond, setTimeMicrosecond, setTimeNanosecond, setTime, setDecimal, setList, setMap, _setStructArrayValue, _setStructVectorValue, _setStructMapValue, _setStructObjectValue, setStruct, setUnion, setDenseUnion, setSparseUnion, setDictionary, setIntervalValue, setIntervalDayTime, setIntervalYearMonth, setDurationSecond, setDurationMillisecond, setDurationMicrosecond, setDurationNanosecond, setDuration, setFixedSizeList, instance;
+  var SetVisitor, setEpochMsToDays, setVariableWidthBytes, setBool, setInt, setFloat, setFloat16, setAnyFloat, setDateDay, setDateMillisecond, setFixedSizeBinary, setBinary, setUtf8, setDate, setTimestampSecond, setTimestampMillisecond, setTimestampMicrosecond, setTimestampNanosecond, setTimestamp, setTimeSecond, setTimeMillisecond, setTimeMicrosecond, setTimeNanosecond, setTime, setDecimal, setList, setMap, _setStructArrayValue, _setStructVectorValue, _setStructMapValue, _setStructObjectValue, setStruct, setUnion, setDenseUnion, setSparseUnion, setDictionary, setIntervalValue, setIntervalDayTime, setIntervalYearMonth, setIntervalMonthDayNano, setDurationSecond, setDurationMillisecond, setDurationMicrosecond, setDurationNanosecond, setDuration, setFixedSizeList, instance;
   var init_set = __esm({
     "node_modules/apache-arrow/visitor/set.mjs"() {
       init_vector2();
@@ -4931,13 +4950,23 @@
         (_a5 = data.dictionary) === null || _a5 === void 0 ? void 0 : _a5.set(data.values[index], value);
       };
       setIntervalValue = (data, index, value) => {
-        data.type.unit === IntervalUnit.DAY_TIME ? setIntervalDayTime(data, index, value) : setIntervalYearMonth(data, index, value);
+        switch (data.type.unit) {
+          case IntervalUnit.YEAR_MONTH:
+            return setIntervalYearMonth(data, index, value);
+          case IntervalUnit.DAY_TIME:
+            return setIntervalDayTime(data, index, value);
+          case IntervalUnit.MONTH_DAY_NANO:
+            return setIntervalMonthDayNano(data, index, value);
+        }
       };
       setIntervalDayTime = ({ values }, index, value) => {
         values.set(value.subarray(0, 2), 2 * index);
       };
       setIntervalYearMonth = ({ values }, index, value) => {
         values[index] = value[0] * 12 + value[1] % 12;
+      };
+      setIntervalMonthDayNano = ({ values, stride }, index, value) => {
+        values.set(value.subarray(0, stride), stride * index);
       };
       setDurationSecond = ({ values }, index, value) => {
         values[index] = value;
@@ -5019,6 +5048,7 @@
       SetVisitor.prototype.visitInterval = wrapSet(setIntervalValue);
       SetVisitor.prototype.visitIntervalDayTime = wrapSet(setIntervalDayTime);
       SetVisitor.prototype.visitIntervalYearMonth = wrapSet(setIntervalYearMonth);
+      SetVisitor.prototype.visitIntervalMonthDayNano = wrapSet(setIntervalMonthDayNano);
       SetVisitor.prototype.visitDuration = wrapSet(setDuration);
       SetVisitor.prototype.visitDurationSecond = wrapSet(setDurationSecond);
       SetVisitor.prototype.visitDurationMillisecond = wrapSet(setDurationMillisecond);
@@ -5031,19 +5061,19 @@
   });
 
   // node_modules/apache-arrow/row/struct.mjs
-  var kParent, kRowIndex, StructRow, StructRowIterator, StructRowProxyHandler;
+  var kParent, kRowIndex, StructRow, StructRowIterator, StructRowProxyHandler, structRowProxyHandler;
   var init_struct2 = __esm({
     "node_modules/apache-arrow/row/struct.mjs"() {
       init_pretty();
       init_get();
       init_set();
-      kParent = Symbol.for("parent");
-      kRowIndex = Symbol.for("rowIndex");
+      kParent = /* @__PURE__ */ Symbol.for("parent");
+      kRowIndex = /* @__PURE__ */ Symbol.for("rowIndex");
       StructRow = class {
         constructor(parent, rowIndex) {
           this[kParent] = parent;
           this[kRowIndex] = rowIndex;
-          return new Proxy(this, new StructRowProxyHandler());
+          return new Proxy(this, structRowProxyHandler);
         }
         toArray() {
           return Object.values(this.toJSON());
@@ -5061,7 +5091,7 @@
         toString() {
           return `{${[...this].map(([key, val]) => `${valueToString(key)}: ${valueToString(val)}`).join(", ")}}`;
         }
-        [Symbol.for("nodejs.util.inspect.custom")]() {
+        [/* @__PURE__ */ Symbol.for("nodejs.util.inspect.custom")]() {
           return this.toString();
         }
         [Symbol.iterator]() {
@@ -5113,10 +5143,10 @@
           return row[kParent].type.children.map((f) => f.name);
         }
         has(row, key) {
-          return row[kParent].type.children.findIndex((f) => f.name === key) !== -1;
+          return row[kParent].type.children.some((f) => f.name === key);
         }
         getOwnPropertyDescriptor(row, key) {
-          if (row[kParent].type.children.findIndex((f) => f.name === key) !== -1) {
+          if (row[kParent].type.children.some((f) => f.name === key)) {
             return { writable: true, enumerable: true, configurable: true };
           }
           return;
@@ -5143,6 +5173,7 @@
           return false;
         }
       };
+      structRowProxyHandler = new StructRowProxyHandler();
     }
   });
 
@@ -5150,7 +5181,7 @@
   function wrapGet(fn) {
     return (data, _1) => data.getValid(_1) ? fn(data, _1) : null;
   }
-  var GetVisitor, epochDaysToMs, getNull, getVariableWidthBytes, getBool, getDateDay, getDateMillisecond, getNumeric, getFloat16, getBigInts, getFixedSizeBinary, getBinary, getUtf8, getInt, getFloat, getDate, getTimestampSecond, getTimestampMillisecond, getTimestampMicrosecond, getTimestampNanosecond, getTimestamp, getTimeSecond, getTimeMillisecond, getTimeMicrosecond, getTimeNanosecond, getTime, getDecimal, getList, getMap, getStruct, getUnion, getDenseUnion, getSparseUnion, getDictionary, getInterval, getIntervalDayTime, getIntervalYearMonth, getDurationSecond, getDurationMillisecond, getDurationMicrosecond, getDurationNanosecond, getDuration, getFixedSizeList, instance2;
+  var GetVisitor, epochDaysToMs, getNull, getVariableWidthBytes, getBool, getDateDay, getDateMillisecond, getNumeric, getFloat16, getBigInts, getFixedSizeBinary, getBinary, getUtf8, getInt, getFloat, getDate, getTimestampSecond, getTimestampMillisecond, getTimestampMicrosecond, getTimestampNanosecond, getTimestamp, getTimeSecond, getTimeMillisecond, getTimeMicrosecond, getTimeNanosecond, getTime, getDecimal, getList, getMap, getStruct, getUnion, getDenseUnion, getSparseUnion, getDictionary, getInterval, getIntervalDayTime, getIntervalYearMonth, getIntervalMonthDayNano, getDurationSecond, getDurationMillisecond, getDurationMicrosecond, getDurationNanosecond, getDuration, getFixedSizeList, instance2;
   var init_get = __esm({
     "node_modules/apache-arrow/visitor/get.mjs"() {
       init_bn();
@@ -5259,7 +5290,7 @@
         var _a5;
         return (_a5 = data.dictionary) === null || _a5 === void 0 ? void 0 : _a5.get(data.values[index]);
       };
-      getInterval = (data, index) => data.type.unit === IntervalUnit.DAY_TIME ? getIntervalDayTime(data, index) : getIntervalYearMonth(data, index);
+      getInterval = (data, index) => data.type.unit === IntervalUnit.MONTH_DAY_NANO ? getIntervalMonthDayNano(data, index) : data.type.unit === IntervalUnit.DAY_TIME ? getIntervalDayTime(data, index) : getIntervalYearMonth(data, index);
       getIntervalDayTime = ({ values }, index) => values.subarray(2 * index, 2 * (index + 1));
       getIntervalYearMonth = ({ values }, index) => {
         const interval = values[index];
@@ -5268,6 +5299,7 @@
         int32s[1] = Math.trunc(interval % 12);
         return int32s;
       };
+      getIntervalMonthDayNano = ({ values }, index) => values.subarray(4 * index, 4 * (index + 1));
       getDurationSecond = ({ values }, index) => values[index];
       getDurationMillisecond = ({ values }, index) => values[index];
       getDurationMicrosecond = ({ values }, index) => values[index];
@@ -5333,6 +5365,7 @@
       GetVisitor.prototype.visitInterval = wrapGet(getInterval);
       GetVisitor.prototype.visitIntervalDayTime = wrapGet(getIntervalDayTime);
       GetVisitor.prototype.visitIntervalYearMonth = wrapGet(getIntervalYearMonth);
+      GetVisitor.prototype.visitIntervalMonthDayNano = wrapGet(getIntervalMonthDayNano);
       GetVisitor.prototype.visitDuration = wrapGet(getDuration);
       GetVisitor.prototype.visitDurationSecond = wrapGet(getDurationSecond);
       GetVisitor.prototype.visitDurationMillisecond = wrapGet(getDurationMillisecond);
@@ -5352,10 +5385,10 @@
       init_pretty();
       init_get();
       init_set();
-      kKeys = Symbol.for("keys");
-      kVals = Symbol.for("vals");
-      kKeysAsStrings = Symbol.for("kKeysAsStrings");
-      _kKeysAsStrings = Symbol.for("_kKeysAsStrings");
+      kKeys = /* @__PURE__ */ Symbol.for("keys");
+      kVals = /* @__PURE__ */ Symbol.for("vals");
+      kKeysAsStrings = /* @__PURE__ */ Symbol.for("kKeysAsStrings");
+      _kKeysAsStrings = /* @__PURE__ */ Symbol.for("_kKeysAsStrings");
       MapRow = class {
         constructor(slice) {
           this[kKeys] = new Vector([slice.children[0]]).memoize();
@@ -5387,7 +5420,7 @@
         toString() {
           return `{${[...this].map(([key, val]) => `${valueToString(key)}: ${valueToString(val)}`).join(", ")}}`;
         }
-        [Symbol.for("nodejs.util.inspect.custom")]() {
+        [/* @__PURE__ */ Symbol.for("nodejs.util.inspect.custom")]() {
           return this.toString();
         }
       };
@@ -6316,6 +6349,7 @@
       IndexOfVisitor.prototype.visitInterval = indexOfValue;
       IndexOfVisitor.prototype.visitIntervalDayTime = indexOfValue;
       IndexOfVisitor.prototype.visitIntervalYearMonth = indexOfValue;
+      IndexOfVisitor.prototype.visitIntervalMonthDayNano = indexOfValue;
       IndexOfVisitor.prototype.visitDuration = indexOfValue;
       IndexOfVisitor.prototype.visitDurationSecond = indexOfValue;
       IndexOfVisitor.prototype.visitDurationMillisecond = indexOfValue;
@@ -6416,6 +6450,7 @@
       IteratorVisitor.prototype.visitInterval = vectorIterator;
       IteratorVisitor.prototype.visitIntervalDayTime = vectorIterator;
       IteratorVisitor.prototype.visitIntervalYearMonth = vectorIterator;
+      IteratorVisitor.prototype.visitIntervalMonthDayNano = vectorIterator;
       IteratorVisitor.prototype.visitDuration = vectorIterator;
       IteratorVisitor.prototype.visitDurationSecond = vectorIterator;
       IteratorVisitor.prototype.visitDurationMillisecond = vectorIterator;
@@ -7653,6 +7688,925 @@ return true;`);
     }
   });
 
+  // node_modules/apache-arrow/fb/message.mjs
+  var Message;
+  var init_message = __esm({
+    "node_modules/apache-arrow/fb/message.mjs"() {
+      init_flatbuffers();
+      init_key_value();
+      init_message_header();
+      init_metadata_version();
+      Message = class _Message {
+        constructor() {
+          this.bb = null;
+          this.bb_pos = 0;
+        }
+        __init(i, bb) {
+          this.bb_pos = i;
+          this.bb = bb;
+          return this;
+        }
+        static getRootAsMessage(bb, obj) {
+          return (obj || new _Message()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+        }
+        static getSizePrefixedRootAsMessage(bb, obj) {
+          bb.setPosition(bb.position() + SIZE_PREFIX_LENGTH);
+          return (obj || new _Message()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+        }
+        version() {
+          const offset = this.bb.__offset(this.bb_pos, 4);
+          return offset ? this.bb.readInt16(this.bb_pos + offset) : MetadataVersion.V1;
+        }
+        headerType() {
+          const offset = this.bb.__offset(this.bb_pos, 6);
+          return offset ? this.bb.readUint8(this.bb_pos + offset) : MessageHeader.NONE;
+        }
+        header(obj) {
+          const offset = this.bb.__offset(this.bb_pos, 8);
+          return offset ? this.bb.__union(obj, this.bb_pos + offset) : null;
+        }
+        bodyLength() {
+          const offset = this.bb.__offset(this.bb_pos, 10);
+          return offset ? this.bb.readInt64(this.bb_pos + offset) : BigInt("0");
+        }
+        customMetadata(index, obj) {
+          const offset = this.bb.__offset(this.bb_pos, 12);
+          return offset ? (obj || new KeyValue()).__init(this.bb.__indirect(this.bb.__vector(this.bb_pos + offset) + index * 4), this.bb) : null;
+        }
+        customMetadataLength() {
+          const offset = this.bb.__offset(this.bb_pos, 12);
+          return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
+        }
+        static startMessage(builder) {
+          builder.startObject(5);
+        }
+        static addVersion(builder, version2) {
+          builder.addFieldInt16(0, version2, MetadataVersion.V1);
+        }
+        static addHeaderType(builder, headerType) {
+          builder.addFieldInt8(1, headerType, MessageHeader.NONE);
+        }
+        static addHeader(builder, headerOffset) {
+          builder.addFieldOffset(2, headerOffset, 0);
+        }
+        static addBodyLength(builder, bodyLength) {
+          builder.addFieldInt64(3, bodyLength, BigInt("0"));
+        }
+        static addCustomMetadata(builder, customMetadataOffset) {
+          builder.addFieldOffset(4, customMetadataOffset, 0);
+        }
+        static createCustomMetadataVector(builder, data) {
+          builder.startVector(4, data.length, 4);
+          for (let i = data.length - 1; i >= 0; i--) {
+            builder.addOffset(data[i]);
+          }
+          return builder.endVector();
+        }
+        static startCustomMetadataVector(builder, numElems) {
+          builder.startVector(4, numElems, 4);
+        }
+        static endMessage(builder) {
+          const offset = builder.endObject();
+          return offset;
+        }
+        static finishMessageBuffer(builder, offset) {
+          builder.finish(offset);
+        }
+        static finishSizePrefixedMessageBuffer(builder, offset) {
+          builder.finish(offset, void 0, true);
+        }
+        static createMessage(builder, version2, headerType, headerOffset, bodyLength, customMetadataOffset) {
+          _Message.startMessage(builder);
+          _Message.addVersion(builder, version2);
+          _Message.addHeaderType(builder, headerType);
+          _Message.addHeader(builder, headerOffset);
+          _Message.addBodyLength(builder, bodyLength);
+          _Message.addCustomMetadata(builder, customMetadataOffset);
+          return _Message.endMessage(builder);
+        }
+      };
+    }
+  });
+
+  // node_modules/apache-arrow/visitor/typeassembler.mjs
+  var TypeAssembler, instance5;
+  var init_typeassembler = __esm({
+    "node_modules/apache-arrow/visitor/typeassembler.mjs"() {
+      init_visitor();
+      init_null();
+      init_int();
+      init_floating_point();
+      init_binary();
+      init_large_binary();
+      init_bool();
+      init_utf82();
+      init_large_utf8();
+      init_decimal();
+      init_date();
+      init_time();
+      init_timestamp();
+      init_interval();
+      init_duration();
+      init_list();
+      init_struct();
+      init_union();
+      init_dictionary_encoding();
+      init_fixed_size_binary();
+      init_fixed_size_list();
+      init_map();
+      TypeAssembler = class extends Visitor {
+        visit(node, builder) {
+          return node == null || builder == null ? void 0 : super.visit(node, builder);
+        }
+        visitNull(_node, b) {
+          Null.startNull(b);
+          return Null.endNull(b);
+        }
+        visitInt(node, b) {
+          Int.startInt(b);
+          Int.addBitWidth(b, node.bitWidth);
+          Int.addIsSigned(b, node.isSigned);
+          return Int.endInt(b);
+        }
+        visitFloat(node, b) {
+          FloatingPoint.startFloatingPoint(b);
+          FloatingPoint.addPrecision(b, node.precision);
+          return FloatingPoint.endFloatingPoint(b);
+        }
+        visitBinary(_node, b) {
+          Binary.startBinary(b);
+          return Binary.endBinary(b);
+        }
+        visitLargeBinary(_node, b) {
+          LargeBinary.startLargeBinary(b);
+          return LargeBinary.endLargeBinary(b);
+        }
+        visitBool(_node, b) {
+          Bool.startBool(b);
+          return Bool.endBool(b);
+        }
+        visitUtf8(_node, b) {
+          Utf8.startUtf8(b);
+          return Utf8.endUtf8(b);
+        }
+        visitLargeUtf8(_node, b) {
+          LargeUtf8.startLargeUtf8(b);
+          return LargeUtf8.endLargeUtf8(b);
+        }
+        visitDecimal(node, b) {
+          Decimal.startDecimal(b);
+          Decimal.addScale(b, node.scale);
+          Decimal.addPrecision(b, node.precision);
+          Decimal.addBitWidth(b, node.bitWidth);
+          return Decimal.endDecimal(b);
+        }
+        visitDate(node, b) {
+          Date2.startDate(b);
+          Date2.addUnit(b, node.unit);
+          return Date2.endDate(b);
+        }
+        visitTime(node, b) {
+          Time.startTime(b);
+          Time.addUnit(b, node.unit);
+          Time.addBitWidth(b, node.bitWidth);
+          return Time.endTime(b);
+        }
+        visitTimestamp(node, b) {
+          const timezone = node.timezone && b.createString(node.timezone) || void 0;
+          Timestamp.startTimestamp(b);
+          Timestamp.addUnit(b, node.unit);
+          if (timezone !== void 0) {
+            Timestamp.addTimezone(b, timezone);
+          }
+          return Timestamp.endTimestamp(b);
+        }
+        visitInterval(node, b) {
+          Interval.startInterval(b);
+          Interval.addUnit(b, node.unit);
+          return Interval.endInterval(b);
+        }
+        visitDuration(node, b) {
+          Duration.startDuration(b);
+          Duration.addUnit(b, node.unit);
+          return Duration.endDuration(b);
+        }
+        visitList(_node, b) {
+          List.startList(b);
+          return List.endList(b);
+        }
+        visitStruct(_node, b) {
+          Struct_.startStruct_(b);
+          return Struct_.endStruct_(b);
+        }
+        visitUnion(node, b) {
+          Union.startTypeIdsVector(b, node.typeIds.length);
+          const typeIds = Union.createTypeIdsVector(b, node.typeIds);
+          Union.startUnion(b);
+          Union.addMode(b, node.mode);
+          Union.addTypeIds(b, typeIds);
+          return Union.endUnion(b);
+        }
+        visitDictionary(node, b) {
+          const indexType = this.visit(node.indices, b);
+          DictionaryEncoding.startDictionaryEncoding(b);
+          DictionaryEncoding.addId(b, BigInt(node.id));
+          DictionaryEncoding.addIsOrdered(b, node.isOrdered);
+          if (indexType !== void 0) {
+            DictionaryEncoding.addIndexType(b, indexType);
+          }
+          return DictionaryEncoding.endDictionaryEncoding(b);
+        }
+        visitFixedSizeBinary(node, b) {
+          FixedSizeBinary.startFixedSizeBinary(b);
+          FixedSizeBinary.addByteWidth(b, node.byteWidth);
+          return FixedSizeBinary.endFixedSizeBinary(b);
+        }
+        visitFixedSizeList(node, b) {
+          FixedSizeList.startFixedSizeList(b);
+          FixedSizeList.addListSize(b, node.listSize);
+          return FixedSizeList.endFixedSizeList(b);
+        }
+        visitMap(node, b) {
+          Map2.startMap(b);
+          Map2.addKeysSorted(b, node.keysSorted);
+          return Map2.endMap(b);
+        }
+      };
+      instance5 = new TypeAssembler();
+    }
+  });
+
+  // node_modules/apache-arrow/ipc/metadata/json.mjs
+  function schemaFromJSON(_schema, dictionaries = /* @__PURE__ */ new Map()) {
+    return new Schema2(schemaFieldsFromJSON(_schema, dictionaries), customMetadataFromJSON(_schema["metadata"]), dictionaries);
+  }
+  function recordBatchFromJSON(b) {
+    return new RecordBatch2(b["count"], fieldNodesFromJSON(b["columns"]), buffersFromJSON(b["columns"]), null);
+  }
+  function dictionaryBatchFromJSON(b) {
+    return new DictionaryBatch2(recordBatchFromJSON(b["data"]), b["id"], b["isDelta"]);
+  }
+  function schemaFieldsFromJSON(_schema, dictionaries) {
+    return (_schema["fields"] || []).filter(Boolean).map((f) => Field2.fromJSON(f, dictionaries));
+  }
+  function fieldChildrenFromJSON(_field, dictionaries) {
+    return (_field["children"] || []).filter(Boolean).map((f) => Field2.fromJSON(f, dictionaries));
+  }
+  function fieldNodesFromJSON(xs) {
+    return (xs || []).reduce((fieldNodes, column) => [
+      ...fieldNodes,
+      new FieldNode2(column["count"], nullCountFromJSON(column["VALIDITY"])),
+      ...fieldNodesFromJSON(column["children"])
+    ], []);
+  }
+  function buffersFromJSON(xs, buffers = []) {
+    for (let i = -1, n = (xs || []).length; ++i < n; ) {
+      const column = xs[i];
+      column["VALIDITY"] && buffers.push(new BufferRegion(buffers.length, column["VALIDITY"].length));
+      column["TYPE_ID"] && buffers.push(new BufferRegion(buffers.length, column["TYPE_ID"].length));
+      column["OFFSET"] && buffers.push(new BufferRegion(buffers.length, column["OFFSET"].length));
+      column["DATA"] && buffers.push(new BufferRegion(buffers.length, column["DATA"].length));
+      buffers = buffersFromJSON(column["children"], buffers);
+    }
+    return buffers;
+  }
+  function nullCountFromJSON(validity) {
+    return (validity || []).reduce((sum, val) => sum + +(val === 0), 0);
+  }
+  function fieldFromJSON(_field, dictionaries) {
+    let id;
+    let keys2;
+    let field;
+    let dictMeta;
+    let type;
+    let dictType;
+    if (!dictionaries || !(dictMeta = _field["dictionary"])) {
+      type = typeFromJSON(_field, fieldChildrenFromJSON(_field, dictionaries));
+      field = new Field2(_field["name"], type, _field["nullable"], customMetadataFromJSON(_field["metadata"]));
+    } else if (!dictionaries.has(id = dictMeta["id"])) {
+      keys2 = (keys2 = dictMeta["indexType"]) ? indexTypeFromJSON(keys2) : new Int32();
+      dictionaries.set(id, type = typeFromJSON(_field, fieldChildrenFromJSON(_field, dictionaries)));
+      dictType = new Dictionary(type, keys2, id, dictMeta["isOrdered"]);
+      field = new Field2(_field["name"], dictType, _field["nullable"], customMetadataFromJSON(_field["metadata"]));
+    } else {
+      keys2 = (keys2 = dictMeta["indexType"]) ? indexTypeFromJSON(keys2) : new Int32();
+      dictType = new Dictionary(dictionaries.get(id), keys2, id, dictMeta["isOrdered"]);
+      field = new Field2(_field["name"], dictType, _field["nullable"], customMetadataFromJSON(_field["metadata"]));
+    }
+    return field || null;
+  }
+  function customMetadataFromJSON(metadata = []) {
+    return new Map(metadata.map(({ key, value }) => [key, value]));
+  }
+  function indexTypeFromJSON(_type) {
+    return new Int_(_type["isSigned"], _type["bitWidth"]);
+  }
+  function typeFromJSON(f, children) {
+    const typeId = f["type"]["name"];
+    switch (typeId) {
+      case "NONE":
+        return new Null2();
+      case "null":
+        return new Null2();
+      case "binary":
+        return new Binary2();
+      case "largebinary":
+        return new LargeBinary2();
+      case "utf8":
+        return new Utf82();
+      case "largeutf8":
+        return new LargeUtf82();
+      case "bool":
+        return new Bool2();
+      case "list":
+        return new List2((children || [])[0]);
+      case "struct":
+        return new Struct(children || []);
+      case "struct_":
+        return new Struct(children || []);
+    }
+    switch (typeId) {
+      case "int": {
+        const t = f["type"];
+        return new Int_(t["isSigned"], t["bitWidth"]);
+      }
+      case "floatingpoint": {
+        const t = f["type"];
+        return new Float(Precision[t["precision"]]);
+      }
+      case "decimal": {
+        const t = f["type"];
+        return new Decimal2(t["scale"], t["precision"], t["bitWidth"]);
+      }
+      case "date": {
+        const t = f["type"];
+        return new Date_(DateUnit[t["unit"]]);
+      }
+      case "time": {
+        const t = f["type"];
+        return new Time_(TimeUnit[t["unit"]], t["bitWidth"]);
+      }
+      case "timestamp": {
+        const t = f["type"];
+        return new Timestamp_(TimeUnit[t["unit"]], t["timezone"]);
+      }
+      case "interval": {
+        const t = f["type"];
+        return new Interval_(IntervalUnit[t["unit"]]);
+      }
+      case "duration": {
+        const t = f["type"];
+        return new Duration2(TimeUnit[t["unit"]]);
+      }
+      case "union": {
+        const t = f["type"];
+        const [m, ...ms] = (t["mode"] + "").toLowerCase();
+        const mode = m.toUpperCase() + ms.join("");
+        return new Union_(UnionMode[mode], t["typeIds"] || [], children || []);
+      }
+      case "fixedsizebinary": {
+        const t = f["type"];
+        return new FixedSizeBinary2(t["byteWidth"]);
+      }
+      case "fixedsizelist": {
+        const t = f["type"];
+        return new FixedSizeList2(t["listSize"], (children || [])[0]);
+      }
+      case "map": {
+        const t = f["type"];
+        return new Map_((children || [])[0], t["keysSorted"]);
+      }
+    }
+    throw new Error(`Unrecognized type: "${typeId}"`);
+  }
+  var init_json = __esm({
+    "node_modules/apache-arrow/ipc/metadata/json.mjs"() {
+      init_schema2();
+      init_type2();
+      init_message2();
+      init_enum();
+    }
+  });
+
+  // node_modules/apache-arrow/ipc/metadata/message.mjs
+  function messageHeaderFromJSON(message, type) {
+    return (() => {
+      switch (type) {
+        case MessageHeader.Schema:
+          return Schema2.fromJSON(message);
+        case MessageHeader.RecordBatch:
+          return RecordBatch2.fromJSON(message);
+        case MessageHeader.DictionaryBatch:
+          return DictionaryBatch2.fromJSON(message);
+      }
+      throw new Error(`Unrecognized Message type: { name: ${MessageHeader[type]}, type: ${type} }`);
+    });
+  }
+  function decodeMessageHeader(message, type) {
+    return (() => {
+      switch (type) {
+        case MessageHeader.Schema:
+          return Schema2.decode(message.header(new Schema()), /* @__PURE__ */ new Map(), message.version());
+        case MessageHeader.RecordBatch:
+          return RecordBatch2.decode(message.header(new RecordBatch()), message.version());
+        case MessageHeader.DictionaryBatch:
+          return DictionaryBatch2.decode(message.header(new DictionaryBatch()), message.version());
+      }
+      throw new Error(`Unrecognized Message type: { name: ${MessageHeader[type]}, type: ${type} }`);
+    });
+  }
+  function decodeSchema(_schema, dictionaries = /* @__PURE__ */ new Map(), version2 = MetadataVersion.V5) {
+    const fields = decodeSchemaFields(_schema, dictionaries);
+    return new Schema2(fields, decodeCustomMetadata(_schema), dictionaries, version2);
+  }
+  function decodeRecordBatch(batch, version2 = MetadataVersion.V5) {
+    const recordBatch = new RecordBatch2(batch.length(), decodeFieldNodes(batch), decodeBuffers(batch, version2), decodeBodyCompression(batch.compression()));
+    return recordBatch;
+  }
+  function decodeDictionaryBatch(batch, version2 = MetadataVersion.V5) {
+    return new DictionaryBatch2(RecordBatch2.decode(batch.data(), version2), batch.id(), batch.isDelta());
+  }
+  function decodeBufferRegion(b) {
+    return new BufferRegion(b.offset(), b.length());
+  }
+  function decodeFieldNode(f) {
+    return new FieldNode2(f.length(), f.nullCount());
+  }
+  function decodeFieldNodes(batch) {
+    const nodes = [];
+    for (let f, i = -1, j = -1, n = batch.nodesLength(); ++i < n; ) {
+      if (f = batch.nodes(i)) {
+        nodes[++j] = FieldNode2.decode(f);
+      }
+    }
+    return nodes;
+  }
+  function decodeBuffers(batch, version2) {
+    const bufferRegions = [];
+    for (let b, i = -1, j = -1, n = batch.buffersLength(); ++i < n; ) {
+      if (b = batch.buffers(i)) {
+        if (version2 < MetadataVersion.V4) {
+          b.bb_pos += 8 * (i + 1);
+        }
+        bufferRegions[++j] = BufferRegion.decode(b);
+      }
+    }
+    return bufferRegions;
+  }
+  function decodeSchemaFields(schema, dictionaries) {
+    const fields = [];
+    for (let f, i = -1, j = -1, n = schema.fieldsLength(); ++i < n; ) {
+      if (f = schema.fields(i)) {
+        fields[++j] = Field2.decode(f, dictionaries);
+      }
+    }
+    return fields;
+  }
+  function decodeFieldChildren(field, dictionaries) {
+    const children = [];
+    for (let f, i = -1, j = -1, n = field.childrenLength(); ++i < n; ) {
+      if (f = field.children(i)) {
+        children[++j] = Field2.decode(f, dictionaries);
+      }
+    }
+    return children;
+  }
+  function decodeField(f, dictionaries) {
+    let id;
+    let field;
+    let type;
+    let keys2;
+    let dictType;
+    let dictMeta;
+    if (!dictionaries || !(dictMeta = f.dictionary())) {
+      type = decodeFieldType(f, decodeFieldChildren(f, dictionaries));
+      field = new Field2(f.name(), type, f.nullable(), decodeCustomMetadata(f));
+    } else if (!dictionaries.has(id = bigIntToNumber(dictMeta.id()))) {
+      keys2 = (keys2 = dictMeta.indexType()) ? decodeIndexType(keys2) : new Int32();
+      dictionaries.set(id, type = decodeFieldType(f, decodeFieldChildren(f, dictionaries)));
+      dictType = new Dictionary(type, keys2, id, dictMeta.isOrdered());
+      field = new Field2(f.name(), dictType, f.nullable(), decodeCustomMetadata(f));
+    } else {
+      keys2 = (keys2 = dictMeta.indexType()) ? decodeIndexType(keys2) : new Int32();
+      dictType = new Dictionary(dictionaries.get(id), keys2, id, dictMeta.isOrdered());
+      field = new Field2(f.name(), dictType, f.nullable(), decodeCustomMetadata(f));
+    }
+    return field || null;
+  }
+  function decodeCustomMetadata(parent) {
+    const data = /* @__PURE__ */ new Map();
+    if (parent) {
+      for (let entry, key, i = -1, n = Math.trunc(parent.customMetadataLength()); ++i < n; ) {
+        if ((entry = parent.customMetadata(i)) && (key = entry.key()) != null) {
+          data.set(key, entry.value());
+        }
+      }
+    }
+    return data;
+  }
+  function decodeIndexType(_type) {
+    return new Int_(_type.isSigned(), _type.bitWidth());
+  }
+  function decodeFieldType(f, children) {
+    const typeId = f.typeType();
+    switch (typeId) {
+      case Type["NONE"]:
+        return new Null2();
+      case Type["Null"]:
+        return new Null2();
+      case Type["Binary"]:
+        return new Binary2();
+      case Type["LargeBinary"]:
+        return new LargeBinary2();
+      case Type["Utf8"]:
+        return new Utf82();
+      case Type["LargeUtf8"]:
+        return new LargeUtf82();
+      case Type["Bool"]:
+        return new Bool2();
+      case Type["List"]:
+        return new List2((children || [])[0]);
+      case Type["Struct_"]:
+        return new Struct(children || []);
+    }
+    switch (typeId) {
+      case Type["Int"]: {
+        const t = f.type(new Int());
+        return new Int_(t.isSigned(), t.bitWidth());
+      }
+      case Type["FloatingPoint"]: {
+        const t = f.type(new FloatingPoint());
+        return new Float(t.precision());
+      }
+      case Type["Decimal"]: {
+        const t = f.type(new Decimal());
+        return new Decimal2(t.scale(), t.precision(), t.bitWidth());
+      }
+      case Type["Date"]: {
+        const t = f.type(new Date2());
+        return new Date_(t.unit());
+      }
+      case Type["Time"]: {
+        const t = f.type(new Time());
+        return new Time_(t.unit(), t.bitWidth());
+      }
+      case Type["Timestamp"]: {
+        const t = f.type(new Timestamp());
+        return new Timestamp_(t.unit(), t.timezone());
+      }
+      case Type["Interval"]: {
+        const t = f.type(new Interval());
+        return new Interval_(t.unit());
+      }
+      case Type["Duration"]: {
+        const t = f.type(new Duration());
+        return new Duration2(t.unit());
+      }
+      case Type["Union"]: {
+        const t = f.type(new Union());
+        return new Union_(t.mode(), t.typeIdsArray() || [], children || []);
+      }
+      case Type["FixedSizeBinary"]: {
+        const t = f.type(new FixedSizeBinary());
+        return new FixedSizeBinary2(t.byteWidth());
+      }
+      case Type["FixedSizeList"]: {
+        const t = f.type(new FixedSizeList());
+        return new FixedSizeList2(t.listSize(), (children || [])[0]);
+      }
+      case Type["Map"]: {
+        const t = f.type(new Map2());
+        return new Map_((children || [])[0], t.keysSorted());
+      }
+    }
+    throw new Error(`Unrecognized type: "${Type[typeId]}" (${typeId})`);
+  }
+  function decodeBodyCompression(b) {
+    return b ? new BodyCompression2(b.codec(), b.method()) : null;
+  }
+  function encodeSchema(b, schema) {
+    const fieldOffsets = schema.fields.map((f) => Field2.encode(b, f));
+    Schema.startFieldsVector(b, fieldOffsets.length);
+    const fieldsVectorOffset = Schema.createFieldsVector(b, fieldOffsets);
+    const metadataOffset = !(schema.metadata && schema.metadata.size > 0) ? -1 : Schema.createCustomMetadataVector(b, [...schema.metadata].map(([k, v]) => {
+      const key = b.createString(`${k}`);
+      const val = b.createString(`${v}`);
+      KeyValue.startKeyValue(b);
+      KeyValue.addKey(b, key);
+      KeyValue.addValue(b, val);
+      return KeyValue.endKeyValue(b);
+    }));
+    Schema.startSchema(b);
+    Schema.addFields(b, fieldsVectorOffset);
+    Schema.addEndianness(b, platformIsLittleEndian ? Endianness.Little : Endianness.Big);
+    if (metadataOffset !== -1) {
+      Schema.addCustomMetadata(b, metadataOffset);
+    }
+    return Schema.endSchema(b);
+  }
+  function encodeField(b, field) {
+    let nameOffset = -1;
+    let typeOffset = -1;
+    let dictionaryOffset = -1;
+    const type = field.type;
+    let typeId = field.typeId;
+    if (!DataType.isDictionary(type)) {
+      typeOffset = instance5.visit(type, b);
+    } else {
+      typeId = type.dictionary.typeId;
+      dictionaryOffset = instance5.visit(type, b);
+      typeOffset = instance5.visit(type.dictionary, b);
+    }
+    const childOffsets = (type.children || []).map((f) => Field2.encode(b, f));
+    const childrenVectorOffset = Field.createChildrenVector(b, childOffsets);
+    const metadataOffset = !(field.metadata && field.metadata.size > 0) ? -1 : Field.createCustomMetadataVector(b, [...field.metadata].map(([k, v]) => {
+      const key = b.createString(`${k}`);
+      const val = b.createString(`${v}`);
+      KeyValue.startKeyValue(b);
+      KeyValue.addKey(b, key);
+      KeyValue.addValue(b, val);
+      return KeyValue.endKeyValue(b);
+    }));
+    if (field.name) {
+      nameOffset = b.createString(field.name);
+    }
+    Field.startField(b);
+    Field.addType(b, typeOffset);
+    Field.addTypeType(b, typeId);
+    Field.addChildren(b, childrenVectorOffset);
+    Field.addNullable(b, !!field.nullable);
+    if (nameOffset !== -1) {
+      Field.addName(b, nameOffset);
+    }
+    if (dictionaryOffset !== -1) {
+      Field.addDictionary(b, dictionaryOffset);
+    }
+    if (metadataOffset !== -1) {
+      Field.addCustomMetadata(b, metadataOffset);
+    }
+    return Field.endField(b);
+  }
+  function encodeRecordBatch(b, recordBatch) {
+    const nodes = recordBatch.nodes || [];
+    const buffers = recordBatch.buffers || [];
+    RecordBatch.startNodesVector(b, nodes.length);
+    for (const n of nodes.slice().reverse())
+      FieldNode2.encode(b, n);
+    const nodesVectorOffset = b.endVector();
+    RecordBatch.startBuffersVector(b, buffers.length);
+    for (const b_ of buffers.slice().reverse())
+      BufferRegion.encode(b, b_);
+    const buffersVectorOffset = b.endVector();
+    let bodyCompressionOffset = null;
+    if (recordBatch.compression !== null) {
+      bodyCompressionOffset = encodeBodyCompression(b, recordBatch.compression);
+    }
+    RecordBatch.startRecordBatch(b);
+    RecordBatch.addLength(b, BigInt(recordBatch.length));
+    RecordBatch.addNodes(b, nodesVectorOffset);
+    RecordBatch.addBuffers(b, buffersVectorOffset);
+    if (recordBatch.compression !== null && bodyCompressionOffset) {
+      RecordBatch.addCompression(b, bodyCompressionOffset);
+    }
+    return RecordBatch.endRecordBatch(b);
+  }
+  function encodeBodyCompression(b, node) {
+    BodyCompression.startBodyCompression(b);
+    BodyCompression.addCodec(b, node.type);
+    BodyCompression.addMethod(b, node.method);
+    return BodyCompression.endBodyCompression(b);
+  }
+  function encodeDictionaryBatch(b, dictionaryBatch) {
+    const dataOffset = RecordBatch2.encode(b, dictionaryBatch.data);
+    DictionaryBatch.startDictionaryBatch(b);
+    DictionaryBatch.addId(b, BigInt(dictionaryBatch.id));
+    DictionaryBatch.addIsDelta(b, dictionaryBatch.isDelta);
+    DictionaryBatch.addData(b, dataOffset);
+    return DictionaryBatch.endDictionaryBatch(b);
+  }
+  function encodeFieldNode(b, node) {
+    return FieldNode.createFieldNode(b, BigInt(node.length), BigInt(node.nullCount));
+  }
+  function encodeBufferRegion(b, node) {
+    return Buffer2.createBuffer(b, BigInt(node.offset), BigInt(node.length));
+  }
+  var Builder4, ByteBuffer3, Message2, RecordBatch2, DictionaryBatch2, BufferRegion, FieldNode2, BodyCompression2, platformIsLittleEndian;
+  var init_message2 = __esm({
+    "node_modules/apache-arrow/ipc/metadata/message.mjs"() {
+      init_flatbuffers();
+      init_schema();
+      init_int();
+      init_record_batch();
+      init_dictionary_batch();
+      init_buffer2();
+      init_field();
+      init_field_node();
+      init_type();
+      init_key_value();
+      init_endianness();
+      init_floating_point();
+      init_decimal();
+      init_date();
+      init_time();
+      init_timestamp();
+      init_interval();
+      init_duration();
+      init_union();
+      init_fixed_size_binary();
+      init_fixed_size_list();
+      init_map();
+      init_message();
+      init_body_compression();
+      init_body_compression_method();
+      init_schema2();
+      init_buffer();
+      init_bigint();
+      init_enum();
+      init_typeassembler();
+      init_json();
+      init_type2();
+      Builder4 = Builder;
+      ByteBuffer3 = ByteBuffer;
+      Message2 = class _Message {
+        /** @nocollapse */
+        static fromJSON(msg, headerType) {
+          const message = new _Message(0, MetadataVersion.V5, headerType);
+          message._createHeader = messageHeaderFromJSON(msg, headerType);
+          return message;
+        }
+        /** @nocollapse */
+        static decode(buf) {
+          buf = new ByteBuffer3(toUint8Array(buf));
+          const _message = Message.getRootAsMessage(buf);
+          const bodyLength = _message.bodyLength();
+          const version2 = _message.version();
+          const headerType = _message.headerType();
+          const message = new _Message(bodyLength, version2, headerType);
+          message._createHeader = decodeMessageHeader(_message, headerType);
+          return message;
+        }
+        /** @nocollapse */
+        static encode(message) {
+          const b = new Builder4();
+          let headerOffset = -1;
+          if (message.isSchema()) {
+            headerOffset = Schema2.encode(b, message.header());
+          } else if (message.isRecordBatch()) {
+            headerOffset = RecordBatch2.encode(b, message.header());
+          } else if (message.isDictionaryBatch()) {
+            headerOffset = DictionaryBatch2.encode(b, message.header());
+          }
+          Message.startMessage(b);
+          Message.addVersion(b, MetadataVersion.V5);
+          Message.addHeader(b, headerOffset);
+          Message.addHeaderType(b, message.headerType);
+          Message.addBodyLength(b, BigInt(message.bodyLength));
+          Message.finishMessageBuffer(b, Message.endMessage(b));
+          return b.asUint8Array();
+        }
+        /** @nocollapse */
+        static from(header, bodyLength = 0) {
+          if (header instanceof Schema2) {
+            return new _Message(0, MetadataVersion.V5, MessageHeader.Schema, header);
+          }
+          if (header instanceof RecordBatch2) {
+            return new _Message(bodyLength, MetadataVersion.V5, MessageHeader.RecordBatch, header);
+          }
+          if (header instanceof DictionaryBatch2) {
+            return new _Message(bodyLength, MetadataVersion.V5, MessageHeader.DictionaryBatch, header);
+          }
+          throw new Error(`Unrecognized Message header: ${header}`);
+        }
+        get type() {
+          return this.headerType;
+        }
+        get version() {
+          return this._version;
+        }
+        get headerType() {
+          return this._headerType;
+        }
+        get compression() {
+          return this._compression;
+        }
+        get bodyLength() {
+          return this._bodyLength;
+        }
+        header() {
+          return this._createHeader();
+        }
+        isSchema() {
+          return this.headerType === MessageHeader.Schema;
+        }
+        isRecordBatch() {
+          return this.headerType === MessageHeader.RecordBatch;
+        }
+        isDictionaryBatch() {
+          return this.headerType === MessageHeader.DictionaryBatch;
+        }
+        constructor(bodyLength, version2, headerType, header) {
+          this._version = version2;
+          this._headerType = headerType;
+          this.body = new Uint8Array(0);
+          this._compression = header === null || header === void 0 ? void 0 : header.compression;
+          header && (this._createHeader = () => header);
+          this._bodyLength = bigIntToNumber(bodyLength);
+        }
+      };
+      RecordBatch2 = class {
+        get nodes() {
+          return this._nodes;
+        }
+        get length() {
+          return this._length;
+        }
+        get buffers() {
+          return this._buffers;
+        }
+        get compression() {
+          return this._compression;
+        }
+        constructor(length, nodes, buffers, compression) {
+          this._nodes = nodes;
+          this._buffers = buffers;
+          this._length = bigIntToNumber(length);
+          this._compression = compression;
+        }
+      };
+      DictionaryBatch2 = class {
+        get id() {
+          return this._id;
+        }
+        get data() {
+          return this._data;
+        }
+        get isDelta() {
+          return this._isDelta;
+        }
+        get length() {
+          return this.data.length;
+        }
+        get nodes() {
+          return this.data.nodes;
+        }
+        get buffers() {
+          return this.data.buffers;
+        }
+        constructor(data, id, isDelta = false) {
+          this._data = data;
+          this._isDelta = isDelta;
+          this._id = bigIntToNumber(id);
+        }
+      };
+      BufferRegion = class {
+        constructor(offset, length) {
+          this.offset = bigIntToNumber(offset);
+          this.length = bigIntToNumber(length);
+        }
+      };
+      FieldNode2 = class {
+        constructor(length, nullCount) {
+          this.length = bigIntToNumber(length);
+          this.nullCount = bigIntToNumber(nullCount);
+        }
+      };
+      BodyCompression2 = class {
+        constructor(type, method = BodyCompressionMethod.BUFFER) {
+          this.type = type;
+          this.method = method;
+        }
+      };
+      Field2["encode"] = encodeField;
+      Field2["decode"] = decodeField;
+      Field2["fromJSON"] = fieldFromJSON;
+      Schema2["encode"] = encodeSchema;
+      Schema2["decode"] = decodeSchema;
+      Schema2["fromJSON"] = schemaFromJSON;
+      RecordBatch2["encode"] = encodeRecordBatch;
+      RecordBatch2["decode"] = decodeRecordBatch;
+      RecordBatch2["fromJSON"] = recordBatchFromJSON;
+      DictionaryBatch2["encode"] = encodeDictionaryBatch;
+      DictionaryBatch2["decode"] = decodeDictionaryBatch;
+      DictionaryBatch2["fromJSON"] = dictionaryBatchFromJSON;
+      FieldNode2["encode"] = encodeFieldNode;
+      FieldNode2["decode"] = decodeFieldNode;
+      BufferRegion["encode"] = encodeBufferRegion;
+      BufferRegion["decode"] = decodeBufferRegion;
+      BodyCompression2["encode"] = encodeBodyCompression;
+      BodyCompression2["decode"] = decodeBodyCompression;
+      platformIsLittleEndian = (() => {
+        const buffer = new ArrayBuffer(2);
+        new DataView(buffer).setInt16(
+          0,
+          256,
+          true
+          /* littleEndian */
+        );
+        return new Int16Array(buffer)[0] === 256;
+      })();
+    }
+  });
+
   // node_modules/apache-arrow/io/interfaces.mjs
   var ITERATOR_DONE, ArrowJSON, ReadableInterop, AsyncQueue;
   var init_interfaces = __esm({
@@ -8421,6 +9375,72 @@ return true;`);
     }
   });
 
+  // node_modules/apache-arrow/util/interval.mjs
+  var interval_exports = {};
+  __export(interval_exports, {
+    toIntervalDayTimeInt32Array: () => toIntervalDayTimeInt32Array,
+    toIntervalDayTimeObjects: () => toIntervalDayTimeObjects,
+    toIntervalMonthDayNanoInt32Array: () => toIntervalMonthDayNanoInt32Array,
+    toIntervalMonthDayNanoObjects: () => toIntervalMonthDayNanoObjects
+  });
+  function toIntervalDayTimeInt32Array(objects) {
+    var _a5, _b2;
+    const length = objects.length;
+    const array = new Int32Array(length * 2);
+    for (let oi = 0, ai = 0; oi < length; oi++) {
+      const interval = objects[oi];
+      array[ai++] = (_a5 = interval["days"]) !== null && _a5 !== void 0 ? _a5 : 0;
+      array[ai++] = (_b2 = interval["milliseconds"]) !== null && _b2 !== void 0 ? _b2 : 0;
+    }
+    return array;
+  }
+  function toIntervalMonthDayNanoInt32Array(objects) {
+    var _a5, _b2;
+    const length = objects.length;
+    const data = new Int32Array(length * 4);
+    for (let oi = 0, ai = 0; oi < length; oi++) {
+      const interval = objects[oi];
+      data[ai++] = (_a5 = interval["months"]) !== null && _a5 !== void 0 ? _a5 : 0;
+      data[ai++] = (_b2 = interval["days"]) !== null && _b2 !== void 0 ? _b2 : 0;
+      const nanoseconds = interval["nanoseconds"];
+      if (nanoseconds) {
+        data[ai++] = Number(BigInt(nanoseconds) & BigInt(4294967295));
+        data[ai++] = Number(BigInt(nanoseconds) >> BigInt(32));
+      } else {
+        ai += 2;
+      }
+    }
+    return data;
+  }
+  function toIntervalDayTimeObjects(array) {
+    const length = array.length;
+    const objects = new Array(length / 2);
+    for (let ai = 0, oi = 0; ai < length; ai += 2) {
+      objects[oi++] = {
+        "days": array[ai],
+        "milliseconds": array[ai + 1]
+      };
+    }
+    return objects;
+  }
+  function toIntervalMonthDayNanoObjects(array, stringifyNano) {
+    const length = array.length;
+    const objects = new Array(length / 4);
+    for (let ai = 0, oi = 0; ai < length; ai += 4) {
+      const nanoseconds = BigInt(array[ai + 3]) << BigInt(32) | BigInt(array[ai + 2] >>> 0);
+      objects[oi++] = {
+        "months": array[ai],
+        "days": array[ai + 1],
+        "nanoseconds": stringifyNano ? `${nanoseconds}` : nanoseconds
+      };
+    }
+    return objects;
+  }
+  var init_interval2 = __esm({
+    "node_modules/apache-arrow/util/interval.mjs"() {
+    }
+  });
+
   // node_modules/apache-arrow/visitor/vectorloader.mjs
   function binaryDataFromJSON(values) {
     const joined = values.join("");
@@ -8430,7 +9450,7 @@ return true;`);
     }
     return data;
   }
-  var VectorLoader, JSONVectorLoader;
+  var VectorLoader, JSONVectorLoader, CompressedVectorLoader;
   var init_vectorloader = __esm({
     "node_modules/apache-arrow/visitor/vectorloader.mjs"() {
       init_data();
@@ -8442,6 +9462,7 @@ return true;`);
       init_int2();
       init_enum();
       init_buffer();
+      init_interval2();
       VectorLoader = class extends Visitor {
         constructor(bytes, nodes, buffers, dictionaries, metadataVersion = MetadataVersion.V5) {
           super();
@@ -8580,8 +9601,26 @@ return true;`);
             return packBools(sources[offset]);
           } else if (DataType.isUtf8(type) || DataType.isLargeUtf8(type)) {
             return encodeUtf8(sources[offset].join(""));
+          } else if (DataType.isInterval(type)) {
+            switch (type.unit) {
+              case IntervalUnit.DAY_TIME:
+                return toIntervalDayTimeInt32Array(sources[offset]);
+              case IntervalUnit.MONTH_DAY_NANO:
+                return toIntervalMonthDayNanoInt32Array(sources[offset]);
+              default:
+                break;
+            }
           }
           return toArrayBufferView(Uint8Array, toArrayBufferView(type.ArrayType, sources[offset].map((x) => +x)));
+        }
+      };
+      CompressedVectorLoader = class extends VectorLoader {
+        constructor(bodyChunks, nodes, buffers, dictionaries, metadataVersion) {
+          super(new Uint8Array(0), nodes, buffers, dictionaries, metadataVersion);
+          this.bodyChunks = bodyChunks;
+        }
+        readData(_type, _buffer = this.nextBufferRange()) {
+          return this.bodyChunks[this.buffersIndex];
         }
       };
     }
@@ -8825,9 +9864,15 @@ return true;`);
         setValue(index, value) {
           const [child] = this.children;
           const start = index * this.stride;
-          for (let i = -1, n = value.length; ++i < n; ) {
+          for (let i = -1, n = this.stride; ++i < n; ) {
             child.set(start + i, value[i]);
           }
+        }
+        setValid(index, valid) {
+          if (!super.setValid(index, valid)) {
+            this.children[0].setValid((index + 1) * this.stride - 1, false);
+          }
+          return valid;
         }
         addChild(child, name = "0") {
           if (this.numChildren > 0) {
@@ -8865,8 +9910,8 @@ return true;`);
   });
 
   // node_modules/apache-arrow/builder/interval.mjs
-  var IntervalBuilder, IntervalDayTimeBuilder, IntervalYearMonthBuilder;
-  var init_interval2 = __esm({
+  var IntervalBuilder, IntervalDayTimeBuilder, IntervalYearMonthBuilder, IntervalMonthDayNanoBuilder;
+  var init_interval3 = __esm({
     "node_modules/apache-arrow/builder/interval.mjs"() {
       init_builder2();
       init_set();
@@ -8879,6 +9924,9 @@ return true;`);
       IntervalYearMonthBuilder = class extends IntervalBuilder {
       };
       IntervalYearMonthBuilder.prototype._setValue = setIntervalYearMonth;
+      IntervalMonthDayNanoBuilder = class extends IntervalBuilder {
+      };
+      IntervalMonthDayNanoBuilder.prototype._setValue = setIntervalMonthDayNano;
     }
   });
 
@@ -9157,6 +10205,7 @@ return true;`);
           const childIndex = this.type.typeIdToChildIndex[childTypeId];
           const child = this.children[childIndex];
           child === null || child === void 0 ? void 0 : child.set(index, value);
+          this.length = Math.max(index + 1, this.length);
         }
         addChild(child, name = `${this.children.length}`) {
           const childTypeId = this.children.push(child);
@@ -9184,6 +10233,7 @@ return true;`);
           const child = this.getChildAt(this.type.typeIdToChildIndex[id]);
           const denseIndex = this._offsets.set(index, child.length).buffer[index];
           child === null || child === void 0 ? void 0 : child.set(denseIndex, value);
+          this.length = Math.max(index + 1, this.length);
         }
       };
     }
@@ -9252,7 +10302,7 @@ return true;`);
   });
 
   // node_modules/apache-arrow/visitor/builderctor.mjs
-  var GetBuilderCtor, instance5;
+  var GetBuilderCtor, instance6;
   var init_builderctor = __esm({
     "node_modules/apache-arrow/visitor/builderctor.mjs"() {
       init_visitor();
@@ -9265,7 +10315,7 @@ return true;`);
       init_fixedsizebinary();
       init_fixedsizelist();
       init_float();
-      init_interval2();
+      init_interval3();
       init_duration2();
       init_int3();
       init_list2();
@@ -9407,6 +10457,9 @@ return true;`);
         visitIntervalYearMonth() {
           return IntervalYearMonthBuilder;
         }
+        visitIntervalMonthDayNano() {
+          return IntervalMonthDayNanoBuilder;
+        }
         visitDuration() {
           return DurationBuilder;
         }
@@ -9429,7 +10482,7 @@ return true;`);
           return MapBuilder;
         }
       };
-      instance5 = new GetBuilderCtor();
+      instance6 = new GetBuilderCtor();
     }
   });
 
@@ -9459,16 +10512,16 @@ return true;`);
     return type === other || compareConstructor(type, other) && type.unit === other.unit && type.bitWidth === other.bitWidth;
   }
   function compareList(type, other) {
-    return type === other || compareConstructor(type, other) && type.children.length === other.children.length && instance6.compareManyFields(type.children, other.children);
+    return type === other || compareConstructor(type, other) && type.children.length === other.children.length && instance7.compareManyFields(type.children, other.children);
   }
   function compareStruct(type, other) {
-    return type === other || compareConstructor(type, other) && type.children.length === other.children.length && instance6.compareManyFields(type.children, other.children);
+    return type === other || compareConstructor(type, other) && type.children.length === other.children.length && instance7.compareManyFields(type.children, other.children);
   }
   function compareUnion(type, other) {
-    return type === other || compareConstructor(type, other) && type.mode === other.mode && type.typeIds.every((x, i) => x === other.typeIds[i]) && instance6.compareManyFields(type.children, other.children);
+    return type === other || compareConstructor(type, other) && type.mode === other.mode && type.typeIds.every((x, i) => x === other.typeIds[i]) && instance7.compareManyFields(type.children, other.children);
   }
   function compareDictionary(type, other) {
-    return type === other || compareConstructor(type, other) && type.id === other.id && type.isOrdered === other.isOrdered && instance6.visit(type.indices, other.indices) && instance6.visit(type.dictionary, other.dictionary);
+    return type === other || compareConstructor(type, other) && type.id === other.id && type.isOrdered === other.isOrdered && instance7.visit(type.indices, other.indices) && instance7.visit(type.dictionary, other.dictionary);
   }
   function compareInterval(type, other) {
     return type === other || compareConstructor(type, other) && type.unit === other.unit;
@@ -9477,21 +10530,21 @@ return true;`);
     return type === other || compareConstructor(type, other) && type.unit === other.unit;
   }
   function compareFixedSizeList(type, other) {
-    return type === other || compareConstructor(type, other) && type.listSize === other.listSize && type.children.length === other.children.length && instance6.compareManyFields(type.children, other.children);
+    return type === other || compareConstructor(type, other) && type.listSize === other.listSize && type.children.length === other.children.length && instance7.compareManyFields(type.children, other.children);
   }
   function compareMap(type, other) {
-    return type === other || compareConstructor(type, other) && type.keysSorted === other.keysSorted && type.children.length === other.children.length && instance6.compareManyFields(type.children, other.children);
+    return type === other || compareConstructor(type, other) && type.keysSorted === other.keysSorted && type.children.length === other.children.length && instance7.compareManyFields(type.children, other.children);
   }
   function compareSchemas(schema, other) {
-    return instance6.compareSchemas(schema, other);
+    return instance7.compareSchemas(schema, other);
   }
   function compareFields(field, other) {
-    return instance6.compareFields(field, other);
+    return instance7.compareFields(field, other);
   }
   function compareTypes(type, other) {
-    return instance6.visit(type, other);
+    return instance7.visit(type, other);
   }
-  var TypeComparator, instance6;
+  var TypeComparator, instance7;
   var init_typecomparator = __esm({
     "node_modules/apache-arrow/visitor/typecomparator.mjs"() {
       init_visitor();
@@ -9549,6 +10602,7 @@ return true;`);
       TypeComparator.prototype.visitInterval = compareInterval;
       TypeComparator.prototype.visitIntervalDayTime = compareInterval;
       TypeComparator.prototype.visitIntervalYearMonth = compareInterval;
+      TypeComparator.prototype.visitIntervalMonthDayNano = compareInterval;
       TypeComparator.prototype.visitDuration = compareDuration;
       TypeComparator.prototype.visitDurationSecond = compareDuration;
       TypeComparator.prototype.visitDurationMillisecond = compareDuration;
@@ -9556,14 +10610,14 @@ return true;`);
       TypeComparator.prototype.visitDurationNanosecond = compareDuration;
       TypeComparator.prototype.visitFixedSizeList = compareFixedSizeList;
       TypeComparator.prototype.visitMap = compareMap;
-      instance6 = new TypeComparator();
+      instance7 = new TypeComparator();
     }
   });
 
   // node_modules/apache-arrow/factories.mjs
   function makeBuilder(options) {
     const type = options.type;
-    const builder = new (instance5.getVisitFn(type)())(options);
+    const builder = new (instance6.getVisitFn(type)())(options);
     if (type.children && type.children.length > 0) {
       const children = options["children"] || [];
       const defaultOptions = { "nullValues": options["nullValues"] };
@@ -9590,7 +10644,7 @@ return true;`);
   }
   function tableFromJSON(array) {
     const vector = vectorFromArray(array);
-    const batch = new RecordBatch2(new Schema2(vector.type.children), vector.data[0]);
+    const batch = new RecordBatch3(new Schema2(vector.type.children), vector.data[0]);
     return new Table(batch);
   }
   function inferType(value) {
@@ -9759,7 +10813,7 @@ return true;`);
     }
     return [
       schema = schema.assign(fields),
-      batches.map((data) => new RecordBatch2(schema, data))
+      batches.map((data) => new RecordBatch3(schema, data))
     ];
   }
   function distributeChildren(fields, batchLength, children, columns, memo) {
@@ -9850,13 +10904,13 @@ return true;`);
           }
           const unwrap = (x) => {
             if (x) {
-              if (x instanceof RecordBatch2) {
+              if (x instanceof RecordBatch3) {
                 return [x];
               } else if (x instanceof _Table) {
                 return x.batches;
               } else if (x instanceof Data) {
                 if (x.type instanceof Struct) {
-                  return [new RecordBatch2(new Schema2(x.type.children), x)];
+                  return [new RecordBatch3(new Schema2(x.type.children), x)];
                 }
               } else if (Array.isArray(x)) {
                 return x.flatMap((v) => unwrap(v));
@@ -9867,7 +10921,7 @@ return true;`);
                 const vecs = keys2.map((k) => new Vector([x[k]]));
                 const batchSchema = schema !== null && schema !== void 0 ? schema : new Schema2(keys2.map((k, i) => new Field2(String(k), vecs[i].type, vecs[i].nullable)));
                 const [, batches2] = distributeVectorsIntoRecordBatches(batchSchema, vecs);
-                return batches2.length === 0 ? [new RecordBatch2(x)] : batches2;
+                return batches2.length === 0 ? [new RecordBatch3(x)] : batches2;
               }
             }
             return [];
@@ -9878,7 +10932,7 @@ return true;`);
             throw new TypeError("Table constructor expects a [Schema, RecordBatch[]] pair.");
           }
           for (const batch of batches) {
-            if (!(batch instanceof RecordBatch2)) {
+            if (!(batch instanceof RecordBatch3)) {
               throw new TypeError("Table constructor expects a [Schema, RecordBatch[]] pair.");
             }
             if (!compareSchemas(schema, batch.schema)) {
@@ -9997,7 +11051,7 @@ return true;`);
         concat(...others) {
           const schema = this.schema;
           const data = this.data.concat(others.flatMap(({ data: data2 }) => data2));
-          return new _Table(schema, data.map((data2) => new RecordBatch2(schema, data2)));
+          return new _Table(schema, data.map((data2) => new RecordBatch3(schema, data2)));
         }
         /**
          * Return a zero-copy sub-section of this Table.
@@ -10009,7 +11063,7 @@ return true;`);
           const schema = this.schema;
           [begin, end] = clampRange({ length: this.numRows }, begin, end);
           const data = sliceChunks(this.data, this._offsets, begin, end);
-          return new _Table(schema, data.map((chunk) => new RecordBatch2(schema, chunk)));
+          return new _Table(schema, data.map((chunk) => new RecordBatch3(schema, chunk)));
         }
         /**
          * Returns a child Vector by name, or null if this Vector has no child with the given name.
@@ -10160,7 +11214,7 @@ return true;`);
     }
     return dictionaries;
   }
-  var _a4, RecordBatch2, _InternalEmptyPlaceholderRecordBatch;
+  var _a4, RecordBatch3, _InternalEmptyPlaceholderRecordBatch;
   var init_recordbatch2 = __esm({
     "node_modules/apache-arrow/recordbatch.mjs"() {
       init_data();
@@ -10173,7 +11227,7 @@ return true;`);
       init_set();
       init_indexof();
       init_iterator();
-      RecordBatch2 = class _RecordBatch {
+      RecordBatch3 = class _RecordBatch {
         constructor(...args) {
           switch (args.length) {
             case 2: {
@@ -10378,905 +11432,18 @@ return true;`);
         }
       };
       _a4 = Symbol.toStringTag;
-      RecordBatch2[_a4] = ((proto) => {
+      RecordBatch3[_a4] = ((proto) => {
         proto._nullCount = -1;
         proto[Symbol.isConcatSpreadable] = true;
         return "RecordBatch";
-      })(RecordBatch2.prototype);
-      _InternalEmptyPlaceholderRecordBatch = class extends RecordBatch2 {
+      })(RecordBatch3.prototype);
+      _InternalEmptyPlaceholderRecordBatch = class extends RecordBatch3 {
         constructor(schema) {
           const children = schema.fields.map((f) => makeData({ type: f.type }));
           const data = makeData({ type: new Struct(schema.fields), nullCount: 0, children });
           super(schema, data);
         }
       };
-    }
-  });
-
-  // node_modules/apache-arrow/fb/message.mjs
-  var Message;
-  var init_message = __esm({
-    "node_modules/apache-arrow/fb/message.mjs"() {
-      init_flatbuffers();
-      init_key_value();
-      init_message_header();
-      init_metadata_version();
-      Message = class _Message {
-        constructor() {
-          this.bb = null;
-          this.bb_pos = 0;
-        }
-        __init(i, bb) {
-          this.bb_pos = i;
-          this.bb = bb;
-          return this;
-        }
-        static getRootAsMessage(bb, obj) {
-          return (obj || new _Message()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
-        }
-        static getSizePrefixedRootAsMessage(bb, obj) {
-          bb.setPosition(bb.position() + SIZE_PREFIX_LENGTH);
-          return (obj || new _Message()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
-        }
-        version() {
-          const offset = this.bb.__offset(this.bb_pos, 4);
-          return offset ? this.bb.readInt16(this.bb_pos + offset) : MetadataVersion.V1;
-        }
-        headerType() {
-          const offset = this.bb.__offset(this.bb_pos, 6);
-          return offset ? this.bb.readUint8(this.bb_pos + offset) : MessageHeader.NONE;
-        }
-        header(obj) {
-          const offset = this.bb.__offset(this.bb_pos, 8);
-          return offset ? this.bb.__union(obj, this.bb_pos + offset) : null;
-        }
-        bodyLength() {
-          const offset = this.bb.__offset(this.bb_pos, 10);
-          return offset ? this.bb.readInt64(this.bb_pos + offset) : BigInt("0");
-        }
-        customMetadata(index, obj) {
-          const offset = this.bb.__offset(this.bb_pos, 12);
-          return offset ? (obj || new KeyValue()).__init(this.bb.__indirect(this.bb.__vector(this.bb_pos + offset) + index * 4), this.bb) : null;
-        }
-        customMetadataLength() {
-          const offset = this.bb.__offset(this.bb_pos, 12);
-          return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
-        }
-        static startMessage(builder) {
-          builder.startObject(5);
-        }
-        static addVersion(builder, version2) {
-          builder.addFieldInt16(0, version2, MetadataVersion.V1);
-        }
-        static addHeaderType(builder, headerType) {
-          builder.addFieldInt8(1, headerType, MessageHeader.NONE);
-        }
-        static addHeader(builder, headerOffset) {
-          builder.addFieldOffset(2, headerOffset, 0);
-        }
-        static addBodyLength(builder, bodyLength) {
-          builder.addFieldInt64(3, bodyLength, BigInt("0"));
-        }
-        static addCustomMetadata(builder, customMetadataOffset) {
-          builder.addFieldOffset(4, customMetadataOffset, 0);
-        }
-        static createCustomMetadataVector(builder, data) {
-          builder.startVector(4, data.length, 4);
-          for (let i = data.length - 1; i >= 0; i--) {
-            builder.addOffset(data[i]);
-          }
-          return builder.endVector();
-        }
-        static startCustomMetadataVector(builder, numElems) {
-          builder.startVector(4, numElems, 4);
-        }
-        static endMessage(builder) {
-          const offset = builder.endObject();
-          return offset;
-        }
-        static finishMessageBuffer(builder, offset) {
-          builder.finish(offset);
-        }
-        static finishSizePrefixedMessageBuffer(builder, offset) {
-          builder.finish(offset, void 0, true);
-        }
-        static createMessage(builder, version2, headerType, headerOffset, bodyLength, customMetadataOffset) {
-          _Message.startMessage(builder);
-          _Message.addVersion(builder, version2);
-          _Message.addHeaderType(builder, headerType);
-          _Message.addHeader(builder, headerOffset);
-          _Message.addBodyLength(builder, bodyLength);
-          _Message.addCustomMetadata(builder, customMetadataOffset);
-          return _Message.endMessage(builder);
-        }
-      };
-    }
-  });
-
-  // node_modules/apache-arrow/visitor/typeassembler.mjs
-  var TypeAssembler, instance7;
-  var init_typeassembler = __esm({
-    "node_modules/apache-arrow/visitor/typeassembler.mjs"() {
-      init_visitor();
-      init_null();
-      init_int();
-      init_floating_point();
-      init_binary();
-      init_large_binary();
-      init_bool();
-      init_utf82();
-      init_large_utf8();
-      init_decimal();
-      init_date();
-      init_time();
-      init_timestamp();
-      init_interval();
-      init_duration();
-      init_list();
-      init_struct();
-      init_union();
-      init_dictionary_encoding();
-      init_fixed_size_binary();
-      init_fixed_size_list();
-      init_map();
-      TypeAssembler = class extends Visitor {
-        visit(node, builder) {
-          return node == null || builder == null ? void 0 : super.visit(node, builder);
-        }
-        visitNull(_node, b) {
-          Null.startNull(b);
-          return Null.endNull(b);
-        }
-        visitInt(node, b) {
-          Int.startInt(b);
-          Int.addBitWidth(b, node.bitWidth);
-          Int.addIsSigned(b, node.isSigned);
-          return Int.endInt(b);
-        }
-        visitFloat(node, b) {
-          FloatingPoint.startFloatingPoint(b);
-          FloatingPoint.addPrecision(b, node.precision);
-          return FloatingPoint.endFloatingPoint(b);
-        }
-        visitBinary(_node, b) {
-          Binary.startBinary(b);
-          return Binary.endBinary(b);
-        }
-        visitLargeBinary(_node, b) {
-          LargeBinary.startLargeBinary(b);
-          return LargeBinary.endLargeBinary(b);
-        }
-        visitBool(_node, b) {
-          Bool.startBool(b);
-          return Bool.endBool(b);
-        }
-        visitUtf8(_node, b) {
-          Utf8.startUtf8(b);
-          return Utf8.endUtf8(b);
-        }
-        visitLargeUtf8(_node, b) {
-          LargeUtf8.startLargeUtf8(b);
-          return LargeUtf8.endLargeUtf8(b);
-        }
-        visitDecimal(node, b) {
-          Decimal.startDecimal(b);
-          Decimal.addScale(b, node.scale);
-          Decimal.addPrecision(b, node.precision);
-          Decimal.addBitWidth(b, node.bitWidth);
-          return Decimal.endDecimal(b);
-        }
-        visitDate(node, b) {
-          Date2.startDate(b);
-          Date2.addUnit(b, node.unit);
-          return Date2.endDate(b);
-        }
-        visitTime(node, b) {
-          Time.startTime(b);
-          Time.addUnit(b, node.unit);
-          Time.addBitWidth(b, node.bitWidth);
-          return Time.endTime(b);
-        }
-        visitTimestamp(node, b) {
-          const timezone = node.timezone && b.createString(node.timezone) || void 0;
-          Timestamp.startTimestamp(b);
-          Timestamp.addUnit(b, node.unit);
-          if (timezone !== void 0) {
-            Timestamp.addTimezone(b, timezone);
-          }
-          return Timestamp.endTimestamp(b);
-        }
-        visitInterval(node, b) {
-          Interval.startInterval(b);
-          Interval.addUnit(b, node.unit);
-          return Interval.endInterval(b);
-        }
-        visitDuration(node, b) {
-          Duration.startDuration(b);
-          Duration.addUnit(b, node.unit);
-          return Duration.endDuration(b);
-        }
-        visitList(_node, b) {
-          List.startList(b);
-          return List.endList(b);
-        }
-        visitStruct(_node, b) {
-          Struct_.startStruct_(b);
-          return Struct_.endStruct_(b);
-        }
-        visitUnion(node, b) {
-          Union.startTypeIdsVector(b, node.typeIds.length);
-          const typeIds = Union.createTypeIdsVector(b, node.typeIds);
-          Union.startUnion(b);
-          Union.addMode(b, node.mode);
-          Union.addTypeIds(b, typeIds);
-          return Union.endUnion(b);
-        }
-        visitDictionary(node, b) {
-          const indexType = this.visit(node.indices, b);
-          DictionaryEncoding.startDictionaryEncoding(b);
-          DictionaryEncoding.addId(b, BigInt(node.id));
-          DictionaryEncoding.addIsOrdered(b, node.isOrdered);
-          if (indexType !== void 0) {
-            DictionaryEncoding.addIndexType(b, indexType);
-          }
-          return DictionaryEncoding.endDictionaryEncoding(b);
-        }
-        visitFixedSizeBinary(node, b) {
-          FixedSizeBinary.startFixedSizeBinary(b);
-          FixedSizeBinary.addByteWidth(b, node.byteWidth);
-          return FixedSizeBinary.endFixedSizeBinary(b);
-        }
-        visitFixedSizeList(node, b) {
-          FixedSizeList.startFixedSizeList(b);
-          FixedSizeList.addListSize(b, node.listSize);
-          return FixedSizeList.endFixedSizeList(b);
-        }
-        visitMap(node, b) {
-          Map2.startMap(b);
-          Map2.addKeysSorted(b, node.keysSorted);
-          return Map2.endMap(b);
-        }
-      };
-      instance7 = new TypeAssembler();
-    }
-  });
-
-  // node_modules/apache-arrow/ipc/metadata/json.mjs
-  function schemaFromJSON(_schema, dictionaries = /* @__PURE__ */ new Map()) {
-    return new Schema2(schemaFieldsFromJSON(_schema, dictionaries), customMetadataFromJSON(_schema["metadata"]), dictionaries);
-  }
-  function recordBatchFromJSON(b) {
-    return new RecordBatch3(b["count"], fieldNodesFromJSON(b["columns"]), buffersFromJSON(b["columns"]));
-  }
-  function dictionaryBatchFromJSON(b) {
-    return new DictionaryBatch2(recordBatchFromJSON(b["data"]), b["id"], b["isDelta"]);
-  }
-  function schemaFieldsFromJSON(_schema, dictionaries) {
-    return (_schema["fields"] || []).filter(Boolean).map((f) => Field2.fromJSON(f, dictionaries));
-  }
-  function fieldChildrenFromJSON(_field, dictionaries) {
-    return (_field["children"] || []).filter(Boolean).map((f) => Field2.fromJSON(f, dictionaries));
-  }
-  function fieldNodesFromJSON(xs) {
-    return (xs || []).reduce((fieldNodes, column) => [
-      ...fieldNodes,
-      new FieldNode2(column["count"], nullCountFromJSON(column["VALIDITY"])),
-      ...fieldNodesFromJSON(column["children"])
-    ], []);
-  }
-  function buffersFromJSON(xs, buffers = []) {
-    for (let i = -1, n = (xs || []).length; ++i < n; ) {
-      const column = xs[i];
-      column["VALIDITY"] && buffers.push(new BufferRegion(buffers.length, column["VALIDITY"].length));
-      column["TYPE_ID"] && buffers.push(new BufferRegion(buffers.length, column["TYPE_ID"].length));
-      column["OFFSET"] && buffers.push(new BufferRegion(buffers.length, column["OFFSET"].length));
-      column["DATA"] && buffers.push(new BufferRegion(buffers.length, column["DATA"].length));
-      buffers = buffersFromJSON(column["children"], buffers);
-    }
-    return buffers;
-  }
-  function nullCountFromJSON(validity) {
-    return (validity || []).reduce((sum, val) => sum + +(val === 0), 0);
-  }
-  function fieldFromJSON(_field, dictionaries) {
-    let id;
-    let keys2;
-    let field;
-    let dictMeta;
-    let type;
-    let dictType;
-    if (!dictionaries || !(dictMeta = _field["dictionary"])) {
-      type = typeFromJSON(_field, fieldChildrenFromJSON(_field, dictionaries));
-      field = new Field2(_field["name"], type, _field["nullable"], customMetadataFromJSON(_field["metadata"]));
-    } else if (!dictionaries.has(id = dictMeta["id"])) {
-      keys2 = (keys2 = dictMeta["indexType"]) ? indexTypeFromJSON(keys2) : new Int32();
-      dictionaries.set(id, type = typeFromJSON(_field, fieldChildrenFromJSON(_field, dictionaries)));
-      dictType = new Dictionary(type, keys2, id, dictMeta["isOrdered"]);
-      field = new Field2(_field["name"], dictType, _field["nullable"], customMetadataFromJSON(_field["metadata"]));
-    } else {
-      keys2 = (keys2 = dictMeta["indexType"]) ? indexTypeFromJSON(keys2) : new Int32();
-      dictType = new Dictionary(dictionaries.get(id), keys2, id, dictMeta["isOrdered"]);
-      field = new Field2(_field["name"], dictType, _field["nullable"], customMetadataFromJSON(_field["metadata"]));
-    }
-    return field || null;
-  }
-  function customMetadataFromJSON(metadata = []) {
-    return new Map(metadata.map(({ key, value }) => [key, value]));
-  }
-  function indexTypeFromJSON(_type) {
-    return new Int_(_type["isSigned"], _type["bitWidth"]);
-  }
-  function typeFromJSON(f, children) {
-    const typeId = f["type"]["name"];
-    switch (typeId) {
-      case "NONE":
-        return new Null2();
-      case "null":
-        return new Null2();
-      case "binary":
-        return new Binary2();
-      case "largebinary":
-        return new LargeBinary2();
-      case "utf8":
-        return new Utf82();
-      case "largeutf8":
-        return new LargeUtf82();
-      case "bool":
-        return new Bool2();
-      case "list":
-        return new List2((children || [])[0]);
-      case "struct":
-        return new Struct(children || []);
-      case "struct_":
-        return new Struct(children || []);
-    }
-    switch (typeId) {
-      case "int": {
-        const t = f["type"];
-        return new Int_(t["isSigned"], t["bitWidth"]);
-      }
-      case "floatingpoint": {
-        const t = f["type"];
-        return new Float(Precision[t["precision"]]);
-      }
-      case "decimal": {
-        const t = f["type"];
-        return new Decimal2(t["scale"], t["precision"], t["bitWidth"]);
-      }
-      case "date": {
-        const t = f["type"];
-        return new Date_(DateUnit[t["unit"]]);
-      }
-      case "time": {
-        const t = f["type"];
-        return new Time_(TimeUnit[t["unit"]], t["bitWidth"]);
-      }
-      case "timestamp": {
-        const t = f["type"];
-        return new Timestamp_(TimeUnit[t["unit"]], t["timezone"]);
-      }
-      case "interval": {
-        const t = f["type"];
-        return new Interval_(IntervalUnit[t["unit"]]);
-      }
-      case "duration": {
-        const t = f["type"];
-        return new Duration2(TimeUnit[t["unit"]]);
-      }
-      case "union": {
-        const t = f["type"];
-        const [m, ...ms] = (t["mode"] + "").toLowerCase();
-        const mode = m.toUpperCase() + ms.join("");
-        return new Union_(UnionMode[mode], t["typeIds"] || [], children || []);
-      }
-      case "fixedsizebinary": {
-        const t = f["type"];
-        return new FixedSizeBinary2(t["byteWidth"]);
-      }
-      case "fixedsizelist": {
-        const t = f["type"];
-        return new FixedSizeList2(t["listSize"], (children || [])[0]);
-      }
-      case "map": {
-        const t = f["type"];
-        return new Map_((children || [])[0], t["keysSorted"]);
-      }
-    }
-    throw new Error(`Unrecognized type: "${typeId}"`);
-  }
-  var init_json = __esm({
-    "node_modules/apache-arrow/ipc/metadata/json.mjs"() {
-      init_schema2();
-      init_type2();
-      init_message2();
-      init_enum();
-    }
-  });
-
-  // node_modules/apache-arrow/ipc/metadata/message.mjs
-  function messageHeaderFromJSON(message, type) {
-    return (() => {
-      switch (type) {
-        case MessageHeader.Schema:
-          return Schema2.fromJSON(message);
-        case MessageHeader.RecordBatch:
-          return RecordBatch3.fromJSON(message);
-        case MessageHeader.DictionaryBatch:
-          return DictionaryBatch2.fromJSON(message);
-      }
-      throw new Error(`Unrecognized Message type: { name: ${MessageHeader[type]}, type: ${type} }`);
-    });
-  }
-  function decodeMessageHeader(message, type) {
-    return (() => {
-      switch (type) {
-        case MessageHeader.Schema:
-          return Schema2.decode(message.header(new Schema()), /* @__PURE__ */ new Map(), message.version());
-        case MessageHeader.RecordBatch:
-          return RecordBatch3.decode(message.header(new RecordBatch()), message.version());
-        case MessageHeader.DictionaryBatch:
-          return DictionaryBatch2.decode(message.header(new DictionaryBatch()), message.version());
-      }
-      throw new Error(`Unrecognized Message type: { name: ${MessageHeader[type]}, type: ${type} }`);
-    });
-  }
-  function decodeSchema(_schema, dictionaries = /* @__PURE__ */ new Map(), version2 = MetadataVersion.V5) {
-    const fields = decodeSchemaFields(_schema, dictionaries);
-    return new Schema2(fields, decodeCustomMetadata(_schema), dictionaries, version2);
-  }
-  function decodeRecordBatch(batch, version2 = MetadataVersion.V5) {
-    if (batch.compression() !== null) {
-      throw new Error("Record batch compression not implemented");
-    }
-    return new RecordBatch3(batch.length(), decodeFieldNodes(batch), decodeBuffers(batch, version2));
-  }
-  function decodeDictionaryBatch(batch, version2 = MetadataVersion.V5) {
-    return new DictionaryBatch2(RecordBatch3.decode(batch.data(), version2), batch.id(), batch.isDelta());
-  }
-  function decodeBufferRegion(b) {
-    return new BufferRegion(b.offset(), b.length());
-  }
-  function decodeFieldNode(f) {
-    return new FieldNode2(f.length(), f.nullCount());
-  }
-  function decodeFieldNodes(batch) {
-    const nodes = [];
-    for (let f, i = -1, j = -1, n = batch.nodesLength(); ++i < n; ) {
-      if (f = batch.nodes(i)) {
-        nodes[++j] = FieldNode2.decode(f);
-      }
-    }
-    return nodes;
-  }
-  function decodeBuffers(batch, version2) {
-    const bufferRegions = [];
-    for (let b, i = -1, j = -1, n = batch.buffersLength(); ++i < n; ) {
-      if (b = batch.buffers(i)) {
-        if (version2 < MetadataVersion.V4) {
-          b.bb_pos += 8 * (i + 1);
-        }
-        bufferRegions[++j] = BufferRegion.decode(b);
-      }
-    }
-    return bufferRegions;
-  }
-  function decodeSchemaFields(schema, dictionaries) {
-    const fields = [];
-    for (let f, i = -1, j = -1, n = schema.fieldsLength(); ++i < n; ) {
-      if (f = schema.fields(i)) {
-        fields[++j] = Field2.decode(f, dictionaries);
-      }
-    }
-    return fields;
-  }
-  function decodeFieldChildren(field, dictionaries) {
-    const children = [];
-    for (let f, i = -1, j = -1, n = field.childrenLength(); ++i < n; ) {
-      if (f = field.children(i)) {
-        children[++j] = Field2.decode(f, dictionaries);
-      }
-    }
-    return children;
-  }
-  function decodeField(f, dictionaries) {
-    let id;
-    let field;
-    let type;
-    let keys2;
-    let dictType;
-    let dictMeta;
-    if (!dictionaries || !(dictMeta = f.dictionary())) {
-      type = decodeFieldType(f, decodeFieldChildren(f, dictionaries));
-      field = new Field2(f.name(), type, f.nullable(), decodeCustomMetadata(f));
-    } else if (!dictionaries.has(id = bigIntToNumber(dictMeta.id()))) {
-      keys2 = (keys2 = dictMeta.indexType()) ? decodeIndexType(keys2) : new Int32();
-      dictionaries.set(id, type = decodeFieldType(f, decodeFieldChildren(f, dictionaries)));
-      dictType = new Dictionary(type, keys2, id, dictMeta.isOrdered());
-      field = new Field2(f.name(), dictType, f.nullable(), decodeCustomMetadata(f));
-    } else {
-      keys2 = (keys2 = dictMeta.indexType()) ? decodeIndexType(keys2) : new Int32();
-      dictType = new Dictionary(dictionaries.get(id), keys2, id, dictMeta.isOrdered());
-      field = new Field2(f.name(), dictType, f.nullable(), decodeCustomMetadata(f));
-    }
-    return field || null;
-  }
-  function decodeCustomMetadata(parent) {
-    const data = /* @__PURE__ */ new Map();
-    if (parent) {
-      for (let entry, key, i = -1, n = Math.trunc(parent.customMetadataLength()); ++i < n; ) {
-        if ((entry = parent.customMetadata(i)) && (key = entry.key()) != null) {
-          data.set(key, entry.value());
-        }
-      }
-    }
-    return data;
-  }
-  function decodeIndexType(_type) {
-    return new Int_(_type.isSigned(), _type.bitWidth());
-  }
-  function decodeFieldType(f, children) {
-    const typeId = f.typeType();
-    switch (typeId) {
-      case Type["NONE"]:
-        return new Null2();
-      case Type["Null"]:
-        return new Null2();
-      case Type["Binary"]:
-        return new Binary2();
-      case Type["LargeBinary"]:
-        return new LargeBinary2();
-      case Type["Utf8"]:
-        return new Utf82();
-      case Type["LargeUtf8"]:
-        return new LargeUtf82();
-      case Type["Bool"]:
-        return new Bool2();
-      case Type["List"]:
-        return new List2((children || [])[0]);
-      case Type["Struct_"]:
-        return new Struct(children || []);
-    }
-    switch (typeId) {
-      case Type["Int"]: {
-        const t = f.type(new Int());
-        return new Int_(t.isSigned(), t.bitWidth());
-      }
-      case Type["FloatingPoint"]: {
-        const t = f.type(new FloatingPoint());
-        return new Float(t.precision());
-      }
-      case Type["Decimal"]: {
-        const t = f.type(new Decimal());
-        return new Decimal2(t.scale(), t.precision(), t.bitWidth());
-      }
-      case Type["Date"]: {
-        const t = f.type(new Date2());
-        return new Date_(t.unit());
-      }
-      case Type["Time"]: {
-        const t = f.type(new Time());
-        return new Time_(t.unit(), t.bitWidth());
-      }
-      case Type["Timestamp"]: {
-        const t = f.type(new Timestamp());
-        return new Timestamp_(t.unit(), t.timezone());
-      }
-      case Type["Interval"]: {
-        const t = f.type(new Interval());
-        return new Interval_(t.unit());
-      }
-      case Type["Duration"]: {
-        const t = f.type(new Duration());
-        return new Duration2(t.unit());
-      }
-      case Type["Union"]: {
-        const t = f.type(new Union());
-        return new Union_(t.mode(), t.typeIdsArray() || [], children || []);
-      }
-      case Type["FixedSizeBinary"]: {
-        const t = f.type(new FixedSizeBinary());
-        return new FixedSizeBinary2(t.byteWidth());
-      }
-      case Type["FixedSizeList"]: {
-        const t = f.type(new FixedSizeList());
-        return new FixedSizeList2(t.listSize(), (children || [])[0]);
-      }
-      case Type["Map"]: {
-        const t = f.type(new Map2());
-        return new Map_((children || [])[0], t.keysSorted());
-      }
-    }
-    throw new Error(`Unrecognized type: "${Type[typeId]}" (${typeId})`);
-  }
-  function encodeSchema(b, schema) {
-    const fieldOffsets = schema.fields.map((f) => Field2.encode(b, f));
-    Schema.startFieldsVector(b, fieldOffsets.length);
-    const fieldsVectorOffset = Schema.createFieldsVector(b, fieldOffsets);
-    const metadataOffset = !(schema.metadata && schema.metadata.size > 0) ? -1 : Schema.createCustomMetadataVector(b, [...schema.metadata].map(([k, v]) => {
-      const key = b.createString(`${k}`);
-      const val = b.createString(`${v}`);
-      KeyValue.startKeyValue(b);
-      KeyValue.addKey(b, key);
-      KeyValue.addValue(b, val);
-      return KeyValue.endKeyValue(b);
-    }));
-    Schema.startSchema(b);
-    Schema.addFields(b, fieldsVectorOffset);
-    Schema.addEndianness(b, platformIsLittleEndian ? Endianness.Little : Endianness.Big);
-    if (metadataOffset !== -1) {
-      Schema.addCustomMetadata(b, metadataOffset);
-    }
-    return Schema.endSchema(b);
-  }
-  function encodeField(b, field) {
-    let nameOffset = -1;
-    let typeOffset = -1;
-    let dictionaryOffset = -1;
-    const type = field.type;
-    let typeId = field.typeId;
-    if (!DataType.isDictionary(type)) {
-      typeOffset = instance7.visit(type, b);
-    } else {
-      typeId = type.dictionary.typeId;
-      dictionaryOffset = instance7.visit(type, b);
-      typeOffset = instance7.visit(type.dictionary, b);
-    }
-    const childOffsets = (type.children || []).map((f) => Field2.encode(b, f));
-    const childrenVectorOffset = Field.createChildrenVector(b, childOffsets);
-    const metadataOffset = !(field.metadata && field.metadata.size > 0) ? -1 : Field.createCustomMetadataVector(b, [...field.metadata].map(([k, v]) => {
-      const key = b.createString(`${k}`);
-      const val = b.createString(`${v}`);
-      KeyValue.startKeyValue(b);
-      KeyValue.addKey(b, key);
-      KeyValue.addValue(b, val);
-      return KeyValue.endKeyValue(b);
-    }));
-    if (field.name) {
-      nameOffset = b.createString(field.name);
-    }
-    Field.startField(b);
-    Field.addType(b, typeOffset);
-    Field.addTypeType(b, typeId);
-    Field.addChildren(b, childrenVectorOffset);
-    Field.addNullable(b, !!field.nullable);
-    if (nameOffset !== -1) {
-      Field.addName(b, nameOffset);
-    }
-    if (dictionaryOffset !== -1) {
-      Field.addDictionary(b, dictionaryOffset);
-    }
-    if (metadataOffset !== -1) {
-      Field.addCustomMetadata(b, metadataOffset);
-    }
-    return Field.endField(b);
-  }
-  function encodeRecordBatch(b, recordBatch) {
-    const nodes = recordBatch.nodes || [];
-    const buffers = recordBatch.buffers || [];
-    RecordBatch.startNodesVector(b, nodes.length);
-    for (const n of nodes.slice().reverse())
-      FieldNode2.encode(b, n);
-    const nodesVectorOffset = b.endVector();
-    RecordBatch.startBuffersVector(b, buffers.length);
-    for (const b_ of buffers.slice().reverse())
-      BufferRegion.encode(b, b_);
-    const buffersVectorOffset = b.endVector();
-    RecordBatch.startRecordBatch(b);
-    RecordBatch.addLength(b, BigInt(recordBatch.length));
-    RecordBatch.addNodes(b, nodesVectorOffset);
-    RecordBatch.addBuffers(b, buffersVectorOffset);
-    return RecordBatch.endRecordBatch(b);
-  }
-  function encodeDictionaryBatch(b, dictionaryBatch) {
-    const dataOffset = RecordBatch3.encode(b, dictionaryBatch.data);
-    DictionaryBatch.startDictionaryBatch(b);
-    DictionaryBatch.addId(b, BigInt(dictionaryBatch.id));
-    DictionaryBatch.addIsDelta(b, dictionaryBatch.isDelta);
-    DictionaryBatch.addData(b, dataOffset);
-    return DictionaryBatch.endDictionaryBatch(b);
-  }
-  function encodeFieldNode(b, node) {
-    return FieldNode.createFieldNode(b, BigInt(node.length), BigInt(node.nullCount));
-  }
-  function encodeBufferRegion(b, node) {
-    return Buffer2.createBuffer(b, BigInt(node.offset), BigInt(node.length));
-  }
-  var Builder4, ByteBuffer3, Message2, RecordBatch3, DictionaryBatch2, BufferRegion, FieldNode2, platformIsLittleEndian;
-  var init_message2 = __esm({
-    "node_modules/apache-arrow/ipc/metadata/message.mjs"() {
-      init_flatbuffers();
-      init_schema();
-      init_int();
-      init_record_batch();
-      init_dictionary_batch();
-      init_buffer2();
-      init_field();
-      init_field_node();
-      init_type();
-      init_key_value();
-      init_endianness();
-      init_floating_point();
-      init_decimal();
-      init_date();
-      init_time();
-      init_timestamp();
-      init_interval();
-      init_duration();
-      init_union();
-      init_fixed_size_binary();
-      init_fixed_size_list();
-      init_map();
-      init_message();
-      init_schema2();
-      init_buffer();
-      init_bigint();
-      init_enum();
-      init_typeassembler();
-      init_json();
-      init_type2();
-      Builder4 = Builder;
-      ByteBuffer3 = ByteBuffer;
-      Message2 = class _Message {
-        /** @nocollapse */
-        static fromJSON(msg, headerType) {
-          const message = new _Message(0, MetadataVersion.V5, headerType);
-          message._createHeader = messageHeaderFromJSON(msg, headerType);
-          return message;
-        }
-        /** @nocollapse */
-        static decode(buf) {
-          buf = new ByteBuffer3(toUint8Array(buf));
-          const _message = Message.getRootAsMessage(buf);
-          const bodyLength = _message.bodyLength();
-          const version2 = _message.version();
-          const headerType = _message.headerType();
-          const message = new _Message(bodyLength, version2, headerType);
-          message._createHeader = decodeMessageHeader(_message, headerType);
-          return message;
-        }
-        /** @nocollapse */
-        static encode(message) {
-          const b = new Builder4();
-          let headerOffset = -1;
-          if (message.isSchema()) {
-            headerOffset = Schema2.encode(b, message.header());
-          } else if (message.isRecordBatch()) {
-            headerOffset = RecordBatch3.encode(b, message.header());
-          } else if (message.isDictionaryBatch()) {
-            headerOffset = DictionaryBatch2.encode(b, message.header());
-          }
-          Message.startMessage(b);
-          Message.addVersion(b, MetadataVersion.V5);
-          Message.addHeader(b, headerOffset);
-          Message.addHeaderType(b, message.headerType);
-          Message.addBodyLength(b, BigInt(message.bodyLength));
-          Message.finishMessageBuffer(b, Message.endMessage(b));
-          return b.asUint8Array();
-        }
-        /** @nocollapse */
-        static from(header, bodyLength = 0) {
-          if (header instanceof Schema2) {
-            return new _Message(0, MetadataVersion.V5, MessageHeader.Schema, header);
-          }
-          if (header instanceof RecordBatch3) {
-            return new _Message(bodyLength, MetadataVersion.V5, MessageHeader.RecordBatch, header);
-          }
-          if (header instanceof DictionaryBatch2) {
-            return new _Message(bodyLength, MetadataVersion.V5, MessageHeader.DictionaryBatch, header);
-          }
-          throw new Error(`Unrecognized Message header: ${header}`);
-        }
-        get type() {
-          return this.headerType;
-        }
-        get version() {
-          return this._version;
-        }
-        get headerType() {
-          return this._headerType;
-        }
-        get bodyLength() {
-          return this._bodyLength;
-        }
-        header() {
-          return this._createHeader();
-        }
-        isSchema() {
-          return this.headerType === MessageHeader.Schema;
-        }
-        isRecordBatch() {
-          return this.headerType === MessageHeader.RecordBatch;
-        }
-        isDictionaryBatch() {
-          return this.headerType === MessageHeader.DictionaryBatch;
-        }
-        constructor(bodyLength, version2, headerType, header) {
-          this._version = version2;
-          this._headerType = headerType;
-          this.body = new Uint8Array(0);
-          header && (this._createHeader = () => header);
-          this._bodyLength = bigIntToNumber(bodyLength);
-        }
-      };
-      RecordBatch3 = class {
-        get nodes() {
-          return this._nodes;
-        }
-        get length() {
-          return this._length;
-        }
-        get buffers() {
-          return this._buffers;
-        }
-        constructor(length, nodes, buffers) {
-          this._nodes = nodes;
-          this._buffers = buffers;
-          this._length = bigIntToNumber(length);
-        }
-      };
-      DictionaryBatch2 = class {
-        get id() {
-          return this._id;
-        }
-        get data() {
-          return this._data;
-        }
-        get isDelta() {
-          return this._isDelta;
-        }
-        get length() {
-          return this.data.length;
-        }
-        get nodes() {
-          return this.data.nodes;
-        }
-        get buffers() {
-          return this.data.buffers;
-        }
-        constructor(data, id, isDelta = false) {
-          this._data = data;
-          this._isDelta = isDelta;
-          this._id = bigIntToNumber(id);
-        }
-      };
-      BufferRegion = class {
-        constructor(offset, length) {
-          this.offset = bigIntToNumber(offset);
-          this.length = bigIntToNumber(length);
-        }
-      };
-      FieldNode2 = class {
-        constructor(length, nullCount) {
-          this.length = bigIntToNumber(length);
-          this.nullCount = bigIntToNumber(nullCount);
-        }
-      };
-      Field2["encode"] = encodeField;
-      Field2["decode"] = decodeField;
-      Field2["fromJSON"] = fieldFromJSON;
-      Schema2["encode"] = encodeSchema;
-      Schema2["decode"] = decodeSchema;
-      Schema2["fromJSON"] = schemaFromJSON;
-      RecordBatch3["encode"] = encodeRecordBatch;
-      RecordBatch3["decode"] = decodeRecordBatch;
-      RecordBatch3["fromJSON"] = recordBatchFromJSON;
-      DictionaryBatch2["encode"] = encodeDictionaryBatch;
-      DictionaryBatch2["decode"] = decodeDictionaryBatch;
-      DictionaryBatch2["fromJSON"] = dictionaryBatchFromJSON;
-      FieldNode2["encode"] = encodeFieldNode;
-      FieldNode2["decode"] = decodeFieldNode;
-      BufferRegion["encode"] = encodeBufferRegion;
-      BufferRegion["decode"] = decodeBufferRegion;
-      platformIsLittleEndian = (() => {
-        const buffer = new ArrayBuffer(2);
-        new DataView(buffer).setInt16(
-          0,
-          256,
-          true
-          /* littleEndian */
-        );
-        return new Int16Array(buffer)[0] === 256;
-      })();
     }
   });
 
@@ -11549,6 +11716,97 @@ return true;`);
     }
   });
 
+  // node_modules/apache-arrow/ipc/compression/validators.mjs
+  var Lz4FrameValidator, ZstdValidator, compressionValidators;
+  var init_validators = __esm({
+    "node_modules/apache-arrow/ipc/compression/validators.mjs"() {
+      init_compression_type();
+      Lz4FrameValidator = class {
+        constructor() {
+          this.LZ4_FRAME_MAGIC = new Uint8Array([4, 34, 77, 24]);
+          this.MIN_HEADER_LENGTH = 7;
+        }
+        isValidCodecEncode(codec) {
+          const testData = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]);
+          const compressed = codec.encode(testData);
+          return this._isValidCompressed(compressed);
+        }
+        _isValidCompressed(buffer) {
+          return this._hasMinimumLength(buffer) && this._hasValidMagicNumber(buffer) && this._hasValidVersion(buffer);
+        }
+        _hasMinimumLength(buffer) {
+          return buffer.length >= this.MIN_HEADER_LENGTH;
+        }
+        _hasValidMagicNumber(buffer) {
+          return this.LZ4_FRAME_MAGIC.every((byte, i) => buffer[i] === byte);
+        }
+        _hasValidVersion(buffer) {
+          const flg = buffer[4];
+          const versionBits = (flg & 192) >> 6;
+          return versionBits === 1;
+        }
+      };
+      ZstdValidator = class {
+        constructor() {
+          this.ZSTD_MAGIC = new Uint8Array([40, 181, 47, 253]);
+          this.MIN_HEADER_LENGTH = 6;
+        }
+        isValidCodecEncode(codec) {
+          const testData = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]);
+          const compressed = codec.encode(testData);
+          return this._isValidCompressed(compressed);
+        }
+        _isValidCompressed(buffer) {
+          return this._hasMinimumLength(buffer) && this._hasValidMagicNumber(buffer);
+        }
+        _hasMinimumLength(buffer) {
+          return buffer.length >= this.MIN_HEADER_LENGTH;
+        }
+        _hasValidMagicNumber(buffer) {
+          return this.ZSTD_MAGIC.every((byte, i) => buffer[i] === byte);
+        }
+      };
+      compressionValidators = {
+        [CompressionType.LZ4_FRAME]: new Lz4FrameValidator(),
+        [CompressionType.ZSTD]: new ZstdValidator()
+      };
+    }
+  });
+
+  // node_modules/apache-arrow/ipc/compression/registry.mjs
+  var _CompressionRegistry, compressionRegistry;
+  var init_registry = __esm({
+    "node_modules/apache-arrow/ipc/compression/registry.mjs"() {
+      init_compression_type();
+      init_validators();
+      _CompressionRegistry = class {
+        constructor() {
+          this.registry = {};
+        }
+        set(compression, codec) {
+          if ((codec === null || codec === void 0 ? void 0 : codec.encode) && typeof codec.encode === "function" && !compressionValidators[compression].isValidCodecEncode(codec)) {
+            throw new Error(`Encoder for ${CompressionType[compression]} is not valid.`);
+          }
+          this.registry[compression] = codec;
+        }
+        get(compression) {
+          var _a5;
+          return ((_a5 = this.registry) === null || _a5 === void 0 ? void 0 : _a5[compression]) || null;
+        }
+      };
+      compressionRegistry = new _CompressionRegistry();
+    }
+  });
+
+  // node_modules/apache-arrow/ipc/compression/constants.mjs
+  var LENGTH_NO_COMPRESSED_DATA, COMPRESS_LENGTH_PREFIX;
+  var init_constants2 = __esm({
+    "node_modules/apache-arrow/ipc/compression/constants.mjs"() {
+      LENGTH_NO_COMPRESSED_DATA = -1;
+      COMPRESS_LENGTH_PREFIX = 8;
+    }
+  });
+
   // node_modules/apache-arrow/ipc/reader.mjs
   function shouldAutoDestroy(self2, options) {
     return options && typeof options["autoDestroy"] === "boolean" ? options["autoDestroy"] : self2["autoDestroy"];
@@ -11616,6 +11874,7 @@ return true;`);
       init_enum();
       init_file();
       init_adapters();
+      init_message2();
       init_stream();
       init_file2();
       init_vectorloader();
@@ -11623,6 +11882,10 @@ return true;`);
       init_interfaces();
       init_message3();
       init_compat();
+      init_registry();
+      init_bigint();
+      init_flatbuffers();
+      init_constants2();
       RecordBatchReader = class _RecordBatchReader extends ReadableInterop {
         constructor(impl) {
           super();
@@ -11832,20 +12095,72 @@ return true;`);
           return this;
         }
         _loadRecordBatch(header, body) {
-          const children = this._loadVectors(header, body, this.schema.fields);
+          let children;
+          if (header.compression != null) {
+            const codec = compressionRegistry.get(header.compression.type);
+            if ((codec === null || codec === void 0 ? void 0 : codec.decode) && typeof codec.decode === "function") {
+              const { decommpressedBody, buffers } = this._decompressBuffers(header, body, codec);
+              children = this._loadCompressedVectors(header, decommpressedBody, this.schema.fields);
+              header = new RecordBatch2(header.length, header.nodes, buffers, null);
+            } else {
+              throw new Error("Record batch is compressed but codec not found");
+            }
+          } else {
+            children = this._loadVectors(header, body, this.schema.fields);
+          }
           const data = makeData({ type: new Struct(this.schema.fields), length: header.length, children });
-          return new RecordBatch2(this.schema, data);
+          return new RecordBatch3(this.schema, data);
         }
         _loadDictionaryBatch(header, body) {
           const { id, isDelta } = header;
           const { dictionaries, schema } = this;
           const dictionary = dictionaries.get(id);
           const type = schema.dictionaries.get(id);
-          const data = this._loadVectors(header.data, body, [type]);
+          let data;
+          if (header.data.compression != null) {
+            const codec = compressionRegistry.get(header.data.compression.type);
+            if ((codec === null || codec === void 0 ? void 0 : codec.decode) && typeof codec.decode === "function") {
+              const { decommpressedBody, buffers } = this._decompressBuffers(header.data, body, codec);
+              data = this._loadCompressedVectors(header.data, decommpressedBody, [type]);
+              header = new DictionaryBatch2(new RecordBatch2(header.data.length, header.data.nodes, buffers, null), id, isDelta);
+            } else {
+              throw new Error("Dictionary batch is compressed but codec not found");
+            }
+          } else {
+            data = this._loadVectors(header.data, body, [type]);
+          }
           return (dictionary && isDelta ? dictionary.concat(new Vector(data)) : new Vector(data)).memoize();
         }
         _loadVectors(header, body, types) {
           return new VectorLoader(body, header.nodes, header.buffers, this.dictionaries, this.schema.metadataVersion).visitMany(types);
+        }
+        _loadCompressedVectors(header, body, types) {
+          return new CompressedVectorLoader(body, header.nodes, header.buffers, this.dictionaries, this.schema.metadataVersion).visitMany(types);
+        }
+        _decompressBuffers(header, body, codec) {
+          const decompressedBuffers = [];
+          const newBufferRegions = [];
+          let currentOffset = 0;
+          for (const { offset, length } of header.buffers) {
+            if (length === 0) {
+              decompressedBuffers.push(new Uint8Array(0));
+              newBufferRegions.push(new BufferRegion(currentOffset, 0));
+              continue;
+            }
+            const byteBuf = new ByteBuffer(body.subarray(offset, offset + length));
+            const uncompressedLenth = bigIntToNumber(byteBuf.readInt64(0));
+            const bytes = byteBuf.bytes().subarray(COMPRESS_LENGTH_PREFIX);
+            const decompressed = uncompressedLenth === LENGTH_NO_COMPRESSED_DATA ? bytes : codec.decode(bytes);
+            decompressedBuffers.push(decompressed);
+            const padding = (currentOffset + 7 & ~7) - currentOffset;
+            currentOffset += padding;
+            newBufferRegions.push(new BufferRegion(currentOffset, decompressed.length));
+            currentOffset += decompressed.length;
+          }
+          return {
+            decommpressedBody: decompressedBuffers,
+            buffers: newBufferRegions
+          };
         }
       };
       RecordBatchStreamReaderImpl = class extends RecordBatchReaderImpl {
@@ -12291,7 +12606,7 @@ return true;`);
       VectorAssembler = class _VectorAssembler extends Visitor {
         /** @nocollapse */
         static assemble(...args) {
-          const unwrap = (nodes) => nodes.flatMap((node) => Array.isArray(node) ? unwrap(node) : node instanceof RecordBatch2 ? node.data.children : node.data);
+          const unwrap = (nodes) => nodes.flatMap((node) => Array.isArray(node) ? unwrap(node) : node instanceof RecordBatch3 ? node.data.children : node.data);
           const assembler = new _VectorAssembler();
           assembler.visitMany(unwrap(args));
           return assembler;
@@ -12472,6 +12787,7 @@ return true;`);
       init_enum();
       init_enum();
       init_bit();
+      init_interval2();
       init_type2();
       JSONVectorAssembler = class _JSONVectorAssembler extends Visitor {
         /** @nocollapse */
@@ -12552,7 +12868,14 @@ return true;`);
           };
         }
         visitInterval(data) {
-          return { "DATA": [...data.values] };
+          switch (data.type.unit) {
+            case IntervalUnit.YEAR_MONTH:
+              return { "DATA": [...data.values] };
+            case IntervalUnit.DAY_TIME:
+              return { "DATA": toIntervalDayTimeObjects(data.values) };
+            case IntervalUnit.MONTH_DAY_NANO:
+              return { "DATA": toIntervalMonthDayNanoObjects(data.values, true) };
+          }
         }
         visitDuration(data) {
           return { "DATA": [...bigNumsToStrings(data.values, 2)] };
@@ -12622,7 +12945,7 @@ return true;`);
     };
   }
   function dictionaryBatchToJSON(dictionary, id, isDelta = false) {
-    const [columns] = JSONVectorAssembler.assemble(new RecordBatch2({ [id]: dictionary }));
+    const [columns] = JSONVectorAssembler.assemble(new RecordBatch3({ [id]: dictionary }));
     return JSON.stringify({
       "id": id,
       "isDelta": isDelta,
@@ -12660,6 +12983,10 @@ return true;`);
       init_recordbatch2();
       init_interfaces();
       init_compat();
+      init_compression_type();
+      init_registry();
+      init_constants2();
+      init_flatbuffers();
       RecordBatchWriter = class extends ReadableInterop {
         /** @nocollapse */
         // @ts-ignore
@@ -12674,15 +13001,29 @@ return true;`);
           super();
           this._position = 0;
           this._started = false;
+          this._compression = null;
           this._sink = new AsyncByteQueue();
           this._schema = null;
           this._dictionaryBlocks = [];
           this._recordBatchBlocks = [];
           this._seenDictionaries = /* @__PURE__ */ new Map();
           this._dictionaryDeltaOffsets = /* @__PURE__ */ new Map();
-          isObject(options) || (options = { autoDestroy: true, writeLegacyIpcFormat: false });
+          isObject(options) || (options = { autoDestroy: true, writeLegacyIpcFormat: false, compressionType: null });
           this._autoDestroy = typeof options.autoDestroy === "boolean" ? options.autoDestroy : true;
           this._writeLegacyIpcFormat = typeof options.writeLegacyIpcFormat === "boolean" ? options.writeLegacyIpcFormat : false;
+          if (options.compressionType != null) {
+            if (this._writeLegacyIpcFormat) {
+              throw new Error("Legacy IPC format does not support columnar compression. Use modern IPC format (writeLegacyIpcFormat=false).");
+            }
+            if (Object.values(CompressionType).includes(options.compressionType)) {
+              this._compression = new BodyCompression2(options.compressionType);
+            } else {
+              const validCompressionTypes = Object.values(CompressionType).filter((v) => typeof v === "string");
+              throw new Error(`Unsupported compressionType: ${options.compressionType} Available types: ${validCompressionTypes.join(", ")}`);
+            }
+          } else {
+            this._compression = null;
+          }
         }
         toString(sync = false) {
           return this._sink.toString(sync);
@@ -12759,7 +13100,7 @@ return true;`);
             return this.finish() && void 0;
           } else if (payload instanceof Table && !(schema = payload.schema)) {
             return this.finish() && void 0;
-          } else if (payload instanceof RecordBatch2 && !(schema = payload.schema)) {
+          } else if (payload instanceof RecordBatch3 && !(schema = payload.schema)) {
             return this.finish() && void 0;
           }
           if (schema && !compareSchemas(schema, this._schema)) {
@@ -12768,7 +13109,7 @@ return true;`);
             }
             this.reset(this._sink, schema);
           }
-          if (payload instanceof RecordBatch2) {
+          if (payload instanceof RecordBatch3) {
             if (!(payload instanceof _InternalEmptyPlaceholderRecordBatch)) {
               this._writeRecordBatch(payload);
             }
@@ -12823,27 +13164,74 @@ return true;`);
           return nBytes > 0 ? this._write(new Uint8Array(nBytes)) : this;
         }
         _writeRecordBatch(batch) {
-          const { byteLength, nodes, bufferRegions, buffers } = VectorAssembler.assemble(batch);
-          const recordBatch = new RecordBatch3(batch.numRows, nodes, bufferRegions);
+          const { byteLength, nodes, bufferRegions, buffers } = this._assembleRecordBatch(batch);
+          const recordBatch = new RecordBatch2(batch.numRows, nodes, bufferRegions, this._compression);
           const message = Message2.from(recordBatch, byteLength);
           return this._writeDictionaries(batch)._writeMessage(message)._writeBodyBuffers(buffers);
         }
+        _assembleRecordBatch(batch) {
+          let { byteLength, nodes, bufferRegions, buffers } = VectorAssembler.assemble(batch);
+          if (this._compression != null) {
+            ({ byteLength, bufferRegions, buffers } = this._compressBodyBuffers(buffers));
+          }
+          return { byteLength, nodes, bufferRegions, buffers };
+        }
+        _compressBodyBuffers(buffers) {
+          const codec = compressionRegistry.get(this._compression.type);
+          if (!(codec === null || codec === void 0 ? void 0 : codec.encode) || typeof codec.encode !== "function") {
+            throw new Error(`Codec for compression type "${CompressionType[this._compression.type]}" has invalid encode method`);
+          }
+          let currentOffset = 0;
+          const compressedBuffers = [];
+          const bufferRegions = [];
+          for (const buffer of buffers) {
+            const byteBuf = toUint8Array(buffer);
+            if (byteBuf.length === 0) {
+              compressedBuffers.push(new Uint8Array(0), new Uint8Array(0));
+              bufferRegions.push(new BufferRegion(currentOffset, 0));
+              continue;
+            }
+            const compressed = codec.encode(byteBuf);
+            const isCompressionEffective = compressed.length < byteBuf.length;
+            const finalBuffer = isCompressionEffective ? compressed : byteBuf;
+            const byteLength = isCompressionEffective ? finalBuffer.length : LENGTH_NO_COMPRESSED_DATA;
+            const lengthPrefix = new ByteBuffer(new Uint8Array(COMPRESS_LENGTH_PREFIX));
+            lengthPrefix.writeInt64(0, BigInt(byteLength));
+            compressedBuffers.push(lengthPrefix.bytes(), new Uint8Array(finalBuffer));
+            const padding = (currentOffset + 7 & ~7) - currentOffset;
+            currentOffset += padding;
+            const fullBodyLength = COMPRESS_LENGTH_PREFIX + finalBuffer.length;
+            bufferRegions.push(new BufferRegion(currentOffset, fullBodyLength));
+            currentOffset += fullBodyLength;
+          }
+          const finalPadding = (currentOffset + 7 & ~7) - currentOffset;
+          currentOffset += finalPadding;
+          return { byteLength: currentOffset, bufferRegions, buffers: compressedBuffers };
+        }
         _writeDictionaryBatch(dictionary, id, isDelta = false) {
-          const { byteLength, nodes, bufferRegions, buffers } = VectorAssembler.assemble(new Vector([dictionary]));
-          const recordBatch = new RecordBatch3(dictionary.length, nodes, bufferRegions);
+          const { byteLength, nodes, bufferRegions, buffers } = this._assembleRecordBatch(new Vector([dictionary]));
+          const recordBatch = new RecordBatch2(dictionary.length, nodes, bufferRegions, this._compression);
           const dictionaryBatch = new DictionaryBatch2(recordBatch, id, isDelta);
           const message = Message2.from(dictionaryBatch, byteLength);
           return this._writeMessage(message)._writeBodyBuffers(buffers);
         }
         _writeBodyBuffers(buffers) {
-          let buffer;
-          let size, padding;
-          for (let i = -1, n = buffers.length; ++i < n; ) {
-            if ((buffer = buffers[i]) && (size = buffer.byteLength) > 0) {
-              this._write(buffer);
-              if ((padding = (size + 7 & ~7) - size) > 0) {
-                this._writePadding(padding);
-              }
+          const bufGroupSize = this._compression != null ? 2 : 1;
+          const bufs = new Array(bufGroupSize);
+          for (let i = 0; i < buffers.length; i += bufGroupSize) {
+            let size = 0;
+            for (let j = -1; ++j < bufGroupSize; ) {
+              bufs[j] = buffers[i + j];
+              size += bufs[j].byteLength;
+            }
+            if (size === 0) {
+              continue;
+            }
+            for (const buf of bufs)
+              this._write(buf);
+            const padding = (size + 7 & ~7) - size;
+            if (padding > 0) {
+              this._writePadding(padding);
             }
           }
           return this;
@@ -12881,8 +13269,8 @@ return true;`);
       };
       RecordBatchFileWriter = class _RecordBatchFileWriter extends RecordBatchWriter {
         /** @nocollapse */
-        static writeAll(input) {
-          const writer = new _RecordBatchFileWriter();
+        static writeAll(input, options) {
+          const writer = new _RecordBatchFileWriter(options);
           if (isPromise(input)) {
             return input.then((x) => writer.writeAll(x));
           } else if (isAsyncIterable(input)) {
@@ -12890,9 +13278,10 @@ return true;`);
           }
           return writeAll(writer, input);
         }
-        constructor() {
-          super();
+        constructor(options) {
+          super(options);
           this._autoDestroy = true;
+          this._writeLegacyIpcFormat = false;
         }
         // @ts-ignore
         _writeSchema(schema) {
@@ -13006,7 +13395,8 @@ return true;`);
         it ? next(controller, it) : controller.close();
       },
       cancel() {
-        ((it === null || it === void 0 ? void 0 : it.return) && it.return() || true) && (it = null);
+        (it === null || it === void 0 ? void 0 : it.return) && it.return();
+        it = null;
       }
     }), Object.assign({ highWaterMark: bm ? hwm : void 0 }, options));
     function next(controller, it2) {
@@ -13043,7 +13433,8 @@ return true;`);
       },
       cancel() {
         return __awaiter(this, void 0, void 0, function* () {
-          ((it === null || it === void 0 ? void 0 : it.return) && (yield it.return()) || true) && (it = null);
+          (it === null || it === void 0 ? void 0 : it.return) && (yield it.return());
+          it = null;
         });
       }
     }), Object.assign({ highWaterMark: bm ? hwm : void 0 }, options));
@@ -13265,8 +13656,9 @@ return true;`);
     }
     return new Table(reader.readAll());
   }
-  function tableToIPC(table, type = "stream") {
-    return (type === "stream" ? RecordBatchStreamWriter : RecordBatchFileWriter).writeAll(table).toUint8Array(true);
+  function tableToIPC(table, type = "stream", compressionType = null) {
+    const writerOptions = { compressionType };
+    return (type === "stream" ? RecordBatchStreamWriter : RecordBatchFileWriter).writeAll(table, writerOptions).toUint8Array(true);
   }
   var init_serialization = __esm({
     "node_modules/apache-arrow/ipc/serialization.mjs"() {
@@ -13282,6 +13674,7 @@ return true;`);
   var init_Arrow = __esm({
     "node_modules/apache-arrow/Arrow.mjs"() {
       init_message_header();
+      init_compression_type();
       init_enum();
       init_data();
       init_type2();
@@ -13303,7 +13696,7 @@ return true;`);
       init_int3();
       init_time2();
       init_timestamp2();
-      init_interval2();
+      init_interval3();
       init_duration2();
       init_utf83();
       init_largeutf8();
@@ -13318,6 +13711,7 @@ return true;`);
       init_reader();
       init_writer();
       init_serialization();
+      init_registry();
       init_message3();
       init_message2();
       init_recordbatch2();
@@ -13328,8 +13722,9 @@ return true;`);
       init_buffer();
       init_vector();
       init_pretty();
+      init_interval2();
       init_typecomparator();
-      util = Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, bn_exports), int_exports), bit_exports), math_exports), buffer_exports), vector_exports), pretty_exports), {
+      util = Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, bn_exports), int_exports), bit_exports), math_exports), buffer_exports), vector_exports), pretty_exports), interval_exports), {
         compareSchemas,
         compareFields,
         compareTypes
@@ -13352,6 +13747,7 @@ return true;`);
     BufferType: () => BufferType,
     Builder: () => Builder2,
     ByteStream: () => ByteStream,
+    CompressionType: () => CompressionType,
     Data: () => Data,
     DataType: () => DataType,
     DateBuilder: () => DateBuilder,
@@ -13404,6 +13800,8 @@ return true;`);
     IntervalBuilder: () => IntervalBuilder,
     IntervalDayTime: () => IntervalDayTime,
     IntervalDayTimeBuilder: () => IntervalDayTimeBuilder,
+    IntervalMonthDayNano: () => IntervalMonthDayNano,
+    IntervalMonthDayNanoBuilder: () => IntervalMonthDayNanoBuilder,
     IntervalUnit: () => IntervalUnit,
     IntervalYearMonth: () => IntervalYearMonth,
     IntervalYearMonthBuilder: () => IntervalYearMonthBuilder,
@@ -13424,7 +13822,7 @@ return true;`);
     Null: () => Null2,
     NullBuilder: () => NullBuilder,
     Precision: () => Precision,
-    RecordBatch: () => RecordBatch2,
+    RecordBatch: () => RecordBatch3,
     RecordBatchFileReader: () => RecordBatchFileReader,
     RecordBatchFileWriter: () => RecordBatchFileWriter,
     RecordBatchJSONWriter: () => RecordBatchJSONWriter,
@@ -13478,6 +13876,7 @@ return true;`);
     Visitor: () => Visitor,
     builderThroughAsyncIterable: () => builderThroughAsyncIterable,
     builderThroughIterable: () => builderThroughIterable,
+    compressionRegistry: () => compressionRegistry,
     makeBuilder: () => makeBuilder,
     makeData: () => makeData,
     makeTable: () => makeTable,
@@ -13527,7 +13926,7 @@ return true;`);
           }
           return arguments.length === 0 ? new S.Select({ columns: [new S.Column({ columnid: "*" })], from: [new S.ParamValue({ param: 0 })] }) : arguments.length === 1 && e.constructor === Array ? c.promise(e) : (typeof r == "function" && (n = t, t = r, r = []), typeof r != "object" && (r = [r]), typeof e == "string" && e[0] === "#" && typeof document == "object" ? e = document.querySelector(e).textContent : typeof e == "object" && e instanceof HTMLElement ? e = e.textContent : typeof e == "function" && (e = e.toString(), e = (/\/\*([\S\s]+)\*\//m.exec(e) || ["", "Function given as SQL. Plese Provide SQL string or have a /* ... */ syle comment with SQL in the function."])[1]), c.exec(e, r, t, n));
         };
-        c.version = "4.17.1", c.build = "develop-a8ee499a", c.debug = void 0;
+        c.version = "4.17.2", c.build = "develop-f960d23a", c.debug = void 0;
         var R2 = function() {
           return null;
         }, Os = "", rt = (function() {
@@ -21049,7 +21448,7 @@ Expecting ` + nr.join(", ") + ", got '" + (this.terminals_[Le] || Le) + "'" : Tn
           var s = { separator: ",", quote: '"', headers: true, raw: false };
           c.utils.extend(s, r);
           var o, a = [];
-          const f = !s.raw && !i?.intofns;
+          const f = !s.raw && !i?.intofns && c.options.csvStringToNumber;
           function m(p) {
             return f && p !== void 0 && p.length !== 0 && p == +p ? +p : p;
           }
@@ -32370,7 +32769,7 @@ Expecting ` + nr.join(", ") + ", got '" + (this.terminals_[Le] || Le) + "'" : Tn
   function crossProduct(x1, y1, x2, y2, px, py) {
     return (x2 - x1) * (py - y1) - (px - x1) * (y2 - y1);
   }
-  var import_regl, cubicIn, cubicInOut, cubicOut, linear, quadIn, quadInOut, quadOut, identity, hasSameElements, l2Norm, max$1, rangeMap, unionIntegers, assign, withConstructor, withStaticProperty, l2PointDist, createWorker$1, nextAnimationFrame, throttleAndDebounce, EPSILON, ARRAY_TYPE, createCamera, MOUSE_DOWN_MOVE_ACTIONS, KEY_MAP, dom2dCamera, FRAGMENT_SHADER$3, VERTEX_SHADER$1, I, FLOAT_BYTES$1, isPositiveNumber$1, isNestedArray, push, splice, createMesh, createLine, version, FRAGMENT_SHADER$2, VERTEX_SHADER, AUTO, COLOR_NORMAL_IDX, COLOR_ACTIVE_IDX, COLOR_HOVER_IDX, COLOR_BG_IDX, COLOR_NUM_STATES, FLOAT_BYTES, GL_EXTENSIONS, CLEAR_OPTIONS, MOUSE_MODE_PANZOOM, MOUSE_MODE_LASSO, MOUSE_MODE_ROTATE, MOUSE_MODES, DEFAULT_MOUSE_MODE, EASING_FNS, DEFAULT_EASING, CONTINUOUS, CATEGORICAL, VALUE_ZW_DATA_TYPES, LASSO_CLEAR_ON_DESELECT, LASSO_CLEAR_ON_END, LASSO_CLEAR_EVENTS, LASSO_BRUSH_MIN_MIN_DIST, DEFAULT_LASSO_COLOR, DEFAULT_LASSO_LINE_WIDTH, DEFAULT_LASSO_INITIATOR, DEFAULT_LASSO_MIN_DELAY$1, DEFAULT_LASSO_MIN_DIST$1, DEFAULT_LASSO_CLEAR_EVENT, DEFAULT_LASSO_ON_LONG_PRESS, DEFAULT_LASSO_LONG_PRESS_TIME, DEFAULT_LASSO_LONG_PRESS_AFTER_EFFECT_TIME, DEFAULT_LASSO_LONG_PRESS_EFFECT_DELAY, DEFAULT_LASSO_LONG_PRESS_REVERT_EFFECT_TIME, DEFAULT_LASSO_BRUSH_SIZE, KEY_ACTION_LASSO, KEY_ACTION_ROTATE, KEY_ACTION_MERGE, KEY_ACTION_REMOVE, KEY_ACTIONS, KEY_ALT, KEY_CMD, KEY_CTRL, KEY_META, KEY_SHIFT, KEYS, DEFAULT_ACTION_KEY_MAP, DEFAULT_DATA_ASPECT_RATIO, DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_GAMMA, MIN_POINT_SIZE, DEFAULT_POINT_SCALE_MODE, DEFAULT_POINT_SIZE, DEFAULT_POINT_SIZE_SELECTED, DEFAULT_POINT_OUTLINE_WIDTH, DEFAULT_SIZE_BY, DEFAULT_POINT_CONNECTION_SIZE, DEFAULT_POINT_CONNECTION_SIZE_ACTIVE, DEFAULT_POINT_CONNECTION_SIZE_BY, DEFAULT_POINT_CONNECTION_OPACITY, DEFAULT_POINT_CONNECTION_OPACITY_BY, DEFAULT_POINT_CONNECTION_OPACITY_ACTIVE, DEFAULT_OPACITY, DEFAULT_OPACITY_BY, DEFAULT_OPACITY_BY_DENSITY_FILL, DEFAULT_OPACITY_BY_DENSITY_DEBOUNCE_TIME, DEFAULT_OPACITY_INACTIVE_MAX, DEFAULT_OPACITY_INACTIVE_SCALE, DEFAULT_COLOR_BY, DEFAULT_COLOR_NORMAL, DEFAULT_COLOR_ACTIVE, DEFAULT_COLOR_HOVER, DEFAULT_COLOR_BG, DEFAULT_POINT_CONNECTION_COLOR_BY, DEFAULT_POINT_CONNECTION_COLOR_NORMAL, DEFAULT_POINT_CONNECTION_COLOR_ACTIVE, DEFAULT_POINT_CONNECTION_COLOR_HOVER, DEFAULT_ANNOTATION_LINE_COLOR, DEFAULT_ANNOTATION_LINE_WIDTH, DEFAULT_ANNOTATION_HVLINE_LIMIT, DEFAULT_TARGET, DEFAULT_DISTANCE, DEFAULT_ROTATION, DEFAULT_VIEW, IMAGE_LOAD_ERROR, DEFAULT_BACKGROUND_IMAGE, DEFAULT_SHOW_RETICLE, DEFAULT_RETICLE_COLOR, DEFAULT_DESELECT_ON_DBL_CLICK, DEFAULT_DESELECT_ON_ESCAPE, DEFAULT_SHOW_POINT_CONNECTIONS, DEFAULT_POINT_CONNECTION_MAX_INT_POINTS_PER_SEGMENT, DEFAULT_POINT_CONNECTION_INT_POINTS_TOLERANCE, DEFAULT_POINT_SIZE_MOUSE_DETECTION, DEFAULT_PERFORMANCE_MODE, SINGLE_CLICK_DELAY, LONG_CLICK_TIME, Z_NAMES, W_NAMES, DEFAULT_IMAGE_LOAD_TIMEOUT, DEFAULT_SPATIAL_INDEX_USE_WORKER, DEFAULT_CAMERA_IS_FIXED, DEFAULT_ANTI_ALIASING, DEFAULT_PIXEL_ALIGNED, DEFAULT_LASSO_TYPE$1, SKIP_DEPRECATION_VALUE_TRANSLATION, ERROR_POINTS_NOT_DRAWN, ERROR_INSTANCE_IS_DESTROYED, ERROR_IS_DRAWING, createKDBushClass, workerFn, KDBush$1, WORKER_THRESHOLD, createWorker, createKdbush, DEFAULT_LASSO_START_INITIATOR_SHOW, DEFAULT_LASSO_MIN_DELAY, DEFAULT_LASSO_MIN_DIST, DEFAULT_LASSO_TYPE, DEFAULT_BRUSH_SIZE, LASSO_SHOW_START_INITIATOR_TIME, LASSO_HIDE_START_INITIATOR_TIME, getInTime, getMainInAnimation, getEffectInAnimation, getCircleLeftInAnimation, getCircleRightInAnimation, getCircleInAnimation, getMainIn, getEffectIn, getCircleIn, getCircleLeftIn, getCircleRightIn, createLongPressInAnimations, getMainOutAnimation, getEffectOutAnimation, getCircleLeftOutAnimation, getCircleRightOutAnimation, getCircleOutAnimation, getMainOut, getEffectOut, getCircleRightOut, getCircleLeftOut, getCircleOut, createLongPressOutAnimations, createLongPressElements, exponentialMovingAverage, ifNotNull, cachedLassoStylesheets, getLassoStylesheets, addRule, removeRule, inAnimation, createInAnimationRule, inAnimationRuleIndex, outAnimation, createOutAnimationRule, outAnimationRuleIndex, createLasso, FRAGMENT_SHADER$1, createVertexShader, FRAGMENT_SHADER, SHADER$1, SHADER, checkReglExtensions, createRegl, dist, getBBox, isValidBBox, REGEX_HEX_TO_RGB, hexToRgb, isConditionalArray, isPositiveNumber, isStrictlyPositiveNumber, limit, loadImage, createTextureFromUrl, hexToRgba, REGEX_IS_HEX, isHex, isNormFloat, isNormFloatArray, isPointInPolygon, isString2, isUint8, isUint8Array, isRgb, isRgba, isMultipleColors, isSameRgbas, max, min, toRgba, flipObj, rgbBrightness, clip, toArrayOrientedPoints, isHorizontalLine, isVerticalLine, isDomRect, isRect, isPolygonAnnotation, isVertices, verticesToPolygon, insertionSort, createRenderer, worker, createSplineCurve, deprecations, checkDeprecations, getEncodingType, getEncodingIdx, createScatterplot, createSpatialIndex;
+  var import_regl, cubicIn, cubicInOut, cubicOut, linear, quadIn, quadInOut, quadOut, identity, hasSameElements, l2Norm, max$1, rangeMap, unionIntegers, assign, withConstructor, withStaticProperty, l2PointDist, createWorker$1, nextAnimationFrame, throttleAndDebounce, EPSILON, ARRAY_TYPE, createCamera, MOUSE_DOWN_MOVE_ACTIONS, KEY_MAP, dom2dCamera, FRAGMENT_SHADER$3, VERTEX_SHADER$1, I, FLOAT_BYTES$1, isPositiveNumber$1, isNestedArray, push, splice, createMesh, createLine, version, FRAGMENT_SHADER$2, VERTEX_SHADER, AUTO, COLOR_NORMAL_IDX, COLOR_ACTIVE_IDX, COLOR_HOVER_IDX, COLOR_BG_IDX, COLOR_NUM_STATES, FLOAT_BYTES, GL_EXTENSIONS, CLEAR_OPTIONS, MOUSE_MODE_PANZOOM, MOUSE_MODE_LASSO, MOUSE_MODE_ROTATE, MOUSE_MODES, DEFAULT_MOUSE_MODE, EASING_FNS, DEFAULT_EASING, CONTINUOUS, CATEGORICAL, VALUE_ZW_DATA_TYPES, LASSO_CLEAR_ON_DESELECT, LASSO_CLEAR_ON_END, LASSO_CLEAR_EVENTS, LASSO_BRUSH_MIN_MIN_DIST, DEFAULT_LASSO_COLOR, DEFAULT_LASSO_LINE_WIDTH, DEFAULT_LASSO_INITIATOR, DEFAULT_LASSO_MIN_DELAY$1, DEFAULT_LASSO_MIN_DIST$1, DEFAULT_LASSO_CLEAR_EVENT, DEFAULT_LASSO_ON_LONG_PRESS, DEFAULT_LASSO_LONG_PRESS_TIME, DEFAULT_LASSO_LONG_PRESS_AFTER_EFFECT_TIME, DEFAULT_LASSO_LONG_PRESS_EFFECT_DELAY, DEFAULT_LASSO_LONG_PRESS_REVERT_EFFECT_TIME, DEFAULT_LASSO_BRUSH_SIZE, KEY_ACTION_LASSO, KEY_ACTION_ROTATE, KEY_ACTION_MERGE, KEY_ACTION_REMOVE, KEY_ACTIONS, KEY_ALT, KEY_CMD, KEY_CTRL, KEY_META, KEY_SHIFT, KEYS, DEFAULT_ACTION_KEY_MAP, DEFAULT_DATA_ASPECT_RATIO, DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_GAMMA, MIN_POINT_SIZE, DEFAULT_POINT_SCALE_MODE, DEFAULT_POINT_SIZE, DEFAULT_POINT_SIZE_SELECTED, DEFAULT_POINT_OUTLINE_WIDTH, DEFAULT_SIZE_BY, DEFAULT_POINT_ORDER, DEFAULT_POINT_CONNECTION_SIZE, DEFAULT_POINT_CONNECTION_SIZE_ACTIVE, DEFAULT_POINT_CONNECTION_SIZE_BY, DEFAULT_POINT_CONNECTION_OPACITY, DEFAULT_POINT_CONNECTION_OPACITY_BY, DEFAULT_POINT_CONNECTION_OPACITY_ACTIVE, DEFAULT_OPACITY, DEFAULT_OPACITY_BY, DEFAULT_OPACITY_BY_DENSITY_FILL, DEFAULT_OPACITY_BY_DENSITY_DEBOUNCE_TIME, DEFAULT_OPACITY_INACTIVE_MAX, DEFAULT_OPACITY_INACTIVE_SCALE, DEFAULT_COLOR_BY, DEFAULT_COLOR_NORMAL, DEFAULT_COLOR_ACTIVE, DEFAULT_COLOR_HOVER, DEFAULT_COLOR_BG, DEFAULT_POINT_CONNECTION_COLOR_BY, DEFAULT_POINT_CONNECTION_COLOR_NORMAL, DEFAULT_POINT_CONNECTION_COLOR_ACTIVE, DEFAULT_POINT_CONNECTION_COLOR_HOVER, DEFAULT_ANNOTATION_LINE_COLOR, DEFAULT_ANNOTATION_LINE_WIDTH, DEFAULT_ANNOTATION_HVLINE_LIMIT, DEFAULT_TARGET, DEFAULT_DISTANCE, DEFAULT_ROTATION, DEFAULT_VIEW, IMAGE_LOAD_ERROR, DEFAULT_BACKGROUND_IMAGE, DEFAULT_SHOW_RETICLE, DEFAULT_RETICLE_COLOR, DEFAULT_DESELECT_ON_DBL_CLICK, DEFAULT_DESELECT_ON_ESCAPE, DEFAULT_SHOW_POINT_CONNECTIONS, DEFAULT_POINT_CONNECTION_MAX_INT_POINTS_PER_SEGMENT, DEFAULT_POINT_CONNECTION_INT_POINTS_TOLERANCE, DEFAULT_POINT_SIZE_MOUSE_DETECTION, DEFAULT_PERFORMANCE_MODE, SINGLE_CLICK_DELAY, LONG_CLICK_TIME, Z_NAMES, W_NAMES, DEFAULT_IMAGE_LOAD_TIMEOUT, DEFAULT_SPATIAL_INDEX_USE_WORKER, DEFAULT_CAMERA_IS_FIXED, DEFAULT_ANTI_ALIASING, DEFAULT_PIXEL_ALIGNED, DEFAULT_LASSO_TYPE$1, SKIP_DEPRECATION_VALUE_TRANSLATION, ERROR_POINTS_NOT_DRAWN, ERROR_INSTANCE_IS_DESTROYED, ERROR_IS_DRAWING, createKDBushClass, workerFn, KDBush$1, WORKER_THRESHOLD, createWorker, createKdbush, DEFAULT_LASSO_START_INITIATOR_SHOW, DEFAULT_LASSO_MIN_DELAY, DEFAULT_LASSO_MIN_DIST, DEFAULT_LASSO_TYPE, DEFAULT_BRUSH_SIZE, LASSO_SHOW_START_INITIATOR_TIME, LASSO_HIDE_START_INITIATOR_TIME, getInTime, getMainInAnimation, getEffectInAnimation, getCircleLeftInAnimation, getCircleRightInAnimation, getCircleInAnimation, getMainIn, getEffectIn, getCircleIn, getCircleLeftIn, getCircleRightIn, createLongPressInAnimations, getMainOutAnimation, getEffectOutAnimation, getCircleLeftOutAnimation, getCircleRightOutAnimation, getCircleOutAnimation, getMainOut, getEffectOut, getCircleRightOut, getCircleLeftOut, getCircleOut, createLongPressOutAnimations, createLongPressElements, exponentialMovingAverage, ifNotNull, cachedLassoStylesheets, getLassoStylesheets, addRule, removeRule, inAnimation, createInAnimationRule, inAnimationRuleIndex, outAnimation, createOutAnimationRule, outAnimationRuleIndex, createLasso, FRAGMENT_SHADER$1, createVertexShader, FRAGMENT_SHADER, SHADER$1, SHADER, checkReglExtensions, createRegl, dist, getBBox, isValidBBox, REGEX_HEX_TO_RGB, hexToRgb, isConditionalArray, isPositiveNumber, isStrictlyPositiveNumber, limit, loadImage, createTextureFromUrl, hexToRgba, REGEX_IS_HEX, isHex, isNormFloat, isNormFloatArray, isPointInPolygon, isString2, isUint8, isUint8Array, isRgb, isRgba, isMultipleColors, isSameRgbas, max, min, toRgba, flipObj, rgbBrightness, clip, toArrayOrientedPoints, isHorizontalLine, isVerticalLine, isDomRect, isRect, isPolygonAnnotation, isVertices, verticesToPolygon, insertionSort, createRenderer, worker, createSplineCurve, deprecations, checkDeprecations, getEncodingType, getEncodingIdx, createScatterplot, createSpatialIndex;
   var init_regl_scatterplot_esm = __esm({
     "node_modules/regl-scatterplot/dist/regl-scatterplot.esm.js"() {
       init_dist();
@@ -33364,7 +33763,7 @@ void main() {
           setStyle
         };
       };
-      version = "1.15.0";
+      version = "1.16.0";
       FRAGMENT_SHADER$2 = `
 precision mediump float;
 
@@ -33478,6 +33877,7 @@ void main () {
       DEFAULT_POINT_SIZE_SELECTED = 2;
       DEFAULT_POINT_OUTLINE_WIDTH = 2;
       DEFAULT_SIZE_BY = null;
+      DEFAULT_POINT_ORDER = null;
       DEFAULT_POINT_CONNECTION_SIZE = 2;
       DEFAULT_POINT_CONNECTION_SIZE_ACTIVE = 2;
       DEFAULT_POINT_CONNECTION_SIZE_BY = null;
@@ -33544,7 +33944,7 @@ void main () {
       DEFAULT_ANTI_ALIASING = 0.5;
       DEFAULT_PIXEL_ALIGNED = false;
       DEFAULT_LASSO_TYPE$1 = "lasso";
-      SKIP_DEPRECATION_VALUE_TRANSLATION = Symbol(
+      SKIP_DEPRECATION_VALUE_TRANSLATION = /* @__PURE__ */ Symbol(
         "SKIP_DEPRECATION_VALUE_TRANSLATION"
       );
       ERROR_POINTS_NOT_DRAWN = "Points have not been drawn";
@@ -35645,6 +36045,7 @@ void main() {
           opacityInactiveMax = DEFAULT_OPACITY_INACTIVE_MAX,
           opacityInactiveScale = DEFAULT_OPACITY_INACTIVE_SCALE,
           sizeBy = DEFAULT_SIZE_BY,
+          pointOrder = DEFAULT_POINT_ORDER,
           pointScaleMode = DEFAULT_POINT_SCALE_MODE,
           height = DEFAULT_HEIGHT,
           width = DEFAULT_WIDTH,
@@ -35804,6 +36205,8 @@ void main() {
         let normalPointsIndexBuffer;
         let selectedPointsIndexBuffer;
         let hoveredPointIndexBuffer;
+        let pointOrderIndices = null;
+        let pointOrderIndex = null;
         let cameraZoomTargetStart;
         let cameraZoomTargetEnd;
         let cameraZoomDistanceStart;
@@ -36598,6 +37001,42 @@ void main() {
         const setSizeBy = (type) => {
           sizeBy = getEncodingType(type, DEFAULT_SIZE_BY);
         };
+        const setPointOrder = (newPointOrder) => {
+          if (newPointOrder === null || newPointOrder === void 0) {
+            pointOrder = null;
+          } else if (Array.isArray(newPointOrder)) {
+            pointOrder = newPointOrder;
+          } else {
+            return;
+          }
+          if (isPointsDrawn) {
+            computePointOrderIndex();
+            if (isPointsFiltered) {
+              const filteredPointsBuffer = [];
+              if (pointOrderIndices !== null) {
+                for (let i = 0; i < pointOrderIndices.length; i++) {
+                  if (filteredPointsSet.has(pointOrderIndices[i])) {
+                    filteredPointsBuffer.push.apply(
+                      filteredPointsBuffer,
+                      indexToStateTexCoord(pointOrderIndices[i])
+                    );
+                  }
+                }
+              } else {
+                const sortedFiltered = insertionSort([...filteredPointsSet]);
+                for (const idx of sortedFiltered) {
+                  filteredPointsBuffer.push.apply(
+                    filteredPointsBuffer,
+                    indexToStateTexCoord(idx)
+                  );
+                }
+              }
+              normalPointsIndexBuffer.subdata(filteredPointsBuffer);
+            } else {
+              normalPointsIndexBuffer.subdata(getEffectivePointIndex(numPoints));
+            }
+          }
+        };
         const setPointConnectionColorBy = (type) => {
           pointConnectionColorBy = getEncodingType(
             type,
@@ -36900,6 +37339,37 @@ void main() {
           }
           return index;
         };
+        const computePointOrderIndex = () => {
+          if (pointOrder === null) {
+            pointOrderIndices = null;
+            pointOrderIndex = null;
+            return;
+          }
+          const includedSet = /* @__PURE__ */ new Set();
+          const orderedIndices = [];
+          for (let i = 0; i < pointOrder.length; i++) {
+            const idx = pointOrder[i];
+            if (Number.isFinite(idx) && idx >= 0 && idx < numPoints && !includedSet.has(idx)) {
+              orderedIndices.push(idx);
+              includedSet.add(idx);
+            }
+          }
+          for (let i = 0; i < numPoints; i++) {
+            if (!includedSet.has(i)) {
+              orderedIndices.push(i);
+            }
+          }
+          pointOrderIndices = orderedIndices;
+          pointOrderIndex = new Float32Array(orderedIndices.length * 2);
+          let j = 0;
+          for (let i = 0; i < orderedIndices.length; i++) {
+            const texCoord = indexToStateTexCoord(orderedIndices[i]);
+            pointOrderIndex[j] = texCoord[0];
+            pointOrderIndex[j + 1] = texCoord[1];
+            j += 2;
+          }
+        };
+        const getEffectivePointIndex = (count) => pointOrderIndex !== null ? pointOrderIndex : createPointIndex(count);
         const createStateTexture = (newPoints, dataTypes = {}) => {
           const numNewPoints = newPoints.length;
           stateTexRes = Math.max(2, Math.ceil(Math.sqrt(numNewPoints)));
@@ -36971,8 +37441,14 @@ void main() {
         const setPoints = (newPoints, options = {}) => new Promise((resolve) => {
           isPointsDrawn = false;
           const preventFilterReset = options?.preventFilterReset && newPoints.length === numPoints;
+          const prevNumPoints = numPoints;
           numPoints = newPoints.length;
           numPointsInView = numPoints;
+          if (prevNumPoints > 0 && numPoints !== prevNumPoints) {
+            pointOrder = null;
+            pointOrderIndices = null;
+            pointOrderIndex = null;
+          }
           if (stateTex) {
             stateTex.destroy();
           }
@@ -36981,10 +37457,11 @@ void main() {
             w: options.wDataType
           });
           if (!preventFilterReset) {
+            computePointOrderIndex();
             normalPointsIndexBuffer({
               usage: "static",
               type: "float",
-              data: createPointIndex(numPoints)
+              data: getEffectivePointIndex(numPoints)
             });
           }
           createKdbush(options.spatialIndex || newPoints, {
@@ -37161,7 +37638,7 @@ void main() {
         const unfilter = ({ preventEvent = false } = {}) => {
           isPointsFiltered = false;
           filteredPointsSet.clear();
-          normalPointsIndexBuffer.subdata(createPointIndex(numPoints));
+          normalPointsIndexBuffer.subdata(getEffectivePointIndex(numPoints));
           return new Promise((resolve) => {
             const finish = () => {
               pubSub.subscribe(
@@ -37205,8 +37682,18 @@ void main() {
               filteredSelectedPoints.push(pointIdx);
             }
           }
-          const sortedFilteredPoints = insertionSort([...filteredPoints]);
-          for (const pointIdx of sortedFilteredPoints) {
+          let orderedFilteredPoints;
+          if (pointOrderIndices !== null) {
+            orderedFilteredPoints = [];
+            for (let i = 0; i < pointOrderIndices.length; i++) {
+              if (filteredPointsSet.has(pointOrderIndices[i])) {
+                orderedFilteredPoints.push(pointOrderIndices[i]);
+              }
+            }
+          } else {
+            orderedFilteredPoints = insertionSort([...filteredPoints]);
+          }
+          for (const pointIdx of orderedFilteredPoints) {
             filteredPointsBuffer.push.apply(
               filteredPointsBuffer,
               indexToStateTexCoord(pointIdx)
@@ -38055,6 +38542,9 @@ void main() {
           if (property === "sizeBy") {
             return sizeBy;
           }
+          if (property === "pointOrder") {
+            return pointOrder !== null ? [...pointOrder] : null;
+          }
           if (property === "deselectOnDblClick") {
             return deselectOnDblClick;
           }
@@ -38328,6 +38818,9 @@ void main() {
           }
           if (properties.sizeBy !== void 0) {
             setSizeBy(properties.sizeBy);
+          }
+          if (properties.pointOrder !== void 0) {
+            setPointOrder(properties.pointOrder);
           }
           if (properties.opacity !== void 0) {
             setOpacity(properties.opacity);
@@ -48343,10 +48836,10 @@ void main() {
 /*! Bundled license information:
 
 alasql/dist/alasql.min.js:
-  (*! AlaSQL v4.17.1 build: develop-a8ee499a | © 2014-2025 Andrey Gershun & Mathias Wulff | License: MIT *)
+  (*! AlaSQL v4.17.2 build: develop-f960d23a | © 2014-2025 Andrey Gershun & Mathias Wulff | License: MIT *)
   (*
   @module alasql
-  @version 4.17.1
+  @version 4.17.2
   
   AlaSQL - JavaScript SQL database
   © 2014-2025	Andrey Gershun & Mathias Wulff
