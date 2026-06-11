@@ -23,12 +23,12 @@
   },
   "devDependencies": {
     "@duckdb/duckdb-wasm": "^1.28.0",
-    "@playwright/test": "^1.47.0",
-    "@vitest/coverage-v8": "^3.2.6",
+    "@playwright/test": "^1.60.0",
+    "@vitest/coverage-v8": "^4.1.8",
     "d3": "^7.9.0",
     "d3-sankey": "^0.12.3",
-    "esbuild": "^0.25.10",
-    "jsdom": "^26.1.0",
-    "vitest": "^3.2.6"
+    "esbuild": "^0.28.0",
+    "jsdom": "^29.1.1",
+    "vitest": "^4.1.8"
   }
 }
