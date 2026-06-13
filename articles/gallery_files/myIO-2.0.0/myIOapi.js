@@ -40525,6 +40525,11 @@ void main() {
   var GRADIENT_HEIGHT = 14;
   var GRADIENT_WIDTH = 180;
   function injectExportLegend(chart) {
+    var existingSvg = chart.svg && chart.svg.node ? chart.svg.node() : null;
+    if (existingSvg && existingSvg.querySelector && existingSvg.querySelector(".myIO-inline-legend")) {
+      return { extraHeight: 0, cleanup: function() {
+      } };
+    }
     var legendData = buildLegendData(chart, chart.runtime && chart.runtime._legendState);
     if (!legendData || !legendData.type) {
       return { extraHeight: 0, cleanup: function() {

@@ -2,6 +2,8 @@
 
 ## myIO 1.2.0
 
+CRAN release: 2026-06-11
+
 ### LLM tool-calling schema
 
 - New machine-readable chart specification schema
