@@ -123,6 +123,32 @@ describe("injectExportLegend", function() {
     cleanup(c.svg);
   });
 
+  test("skips injection when an inline legend is already present (GH #64)", function() {
+    var c = makeChart({
+      plotLayers: [
+        { label: "Series A", color: "#ff0000", type: "line" },
+        { label: "Series B", color: "#0000ff", type: "line" }
+      ]
+    });
+    c.chart.currentLayers = c.chart.plotLayers;
+
+    // Simulate the inline legend the chart renders into its own SVG.
+    var inline = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    inline.setAttribute("class", "myIO-inline-legend");
+    c.svg.appendChild(inline);
+
+    var result = injectExportLegend(c.chart);
+
+    expect(result.extraHeight).toBe(0);
+    expect(c.svg.querySelector(".myIO-export-legend")).toBeNull();
+    // Original SVG dimensions are untouched.
+    expect(c.svg.getAttribute("height")).toBe("300");
+
+    result.cleanup();
+    expect(c.svg.querySelector(".myIO-export-legend")).toBeNull();
+    cleanup(c.svg);
+  });
+
   test("injects continuous legend with gradient", function() {
     var mockScale = function(v) { return "rgb(" + Math.round(v) + ",0,0)"; };
     mockScale.domain = function() { return [0, 100]; };
