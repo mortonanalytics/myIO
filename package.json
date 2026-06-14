@@ -3,7 +3,6 @@
   "private": true,
   "scripts": {
     "build": "esbuild inst/htmlwidgets/myIO/src/index.js --bundle --format=iife --external:@duckdb/duckdb-wasm --loader:.wasm=file --outfile=inst/htmlwidgets/myIO/myIOapi.js",
-    "build:worker": "esbuild inst/htmlwidgets/myIO/src/renderers/webgl/beeswarm-layout.worker.js --bundle --format=iife --outfile=inst/htmlwidgets/myIO/workers/beeswarm-layout.js",
     "schema": "node tools/build-myio-schema.mjs",
     "watch": "esbuild inst/htmlwidgets/myIO/src/index.js --bundle --format=iife --outfile=inst/htmlwidgets/myIO/myIOapi.js --watch",
     "verify": "npm run build && node -e \"require('fs').readFileSync('inst/htmlwidgets/myIO/myIOapi.js','utf8')\" && echo 'Bundle OK'",
