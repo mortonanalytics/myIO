@@ -18,6 +18,8 @@ coverage/
 /.claude
 .mcp.json
 /.playwright-mcp
+/test-results
+/playwright-report
 /screenshots
 /screenshots-review
 review-home.png
