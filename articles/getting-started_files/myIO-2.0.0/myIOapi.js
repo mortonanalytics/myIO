@@ -48726,86 +48726,11 @@ void main() {
     scatter: WebGLScatter,
     line: WebGLLine,
     area: WebGLArea
-    // beeswarm: intentionally absent; see createBeeswarmPipeline below.
   };
   function createWebGLRenderer(opts) {
     const Cls = RENDERERS[opts.kind];
     if (!Cls) return null;
     return new Cls(opts);
-  }
-  function createBeeswarmPipeline({
-    el,
-    width,
-    height,
-    xScale,
-    yScale,
-    palette,
-    workerUrl
-  }) {
-    const scatter = new WebGLScatter({ el, width, height, xScale, yScale, palette });
-    let worker3 = null;
-    let lastPositions = null;
-    async function layout(points, { collideRadius = 3, iterations = 120 } = {}) {
-      return new Promise((resolve, reject) => {
-        if (!workerUrl) {
-          return reject(new Error(
-            "createBeeswarmPipeline: workerUrl is required. Typically '<htmlwidgets-asset-root>/workers/beeswarm-layout.js' built by `npm run build:worker`."
-          ));
-        }
-        if (!worker3) {
-          worker3 = new Worker(workerUrl, { type: "module" });
-        }
-        const onMsg = async (evt) => {
-          worker3.removeEventListener("message", onMsg);
-          if (evt.data?.error) return reject(new Error(evt.data.error));
-          lastPositions = evt.data.positions;
-          const rows = new Array(points.length);
-          for (let i = 0; i < points.length; i++) {
-            rows[i] = {
-              x: lastPositions[i * 2],
-              y: lastPositions[i * 2 + 1],
-              category: points[i].category || 0
-            };
-          }
-          await scatter.update(rows);
-          resolve(rows);
-        };
-        worker3.addEventListener("message", onMsg);
-        const xDesc = {
-          domain: xScale.domain ? xScale.domain() : [0, 1],
-          range: xScale.range ? xScale.range() : [0, width]
-        };
-        const yDesc = {
-          domain: yScale.domain ? yScale.domain() : [0, 1],
-          range: yScale.range ? yScale.range() : [0, height]
-        };
-        worker3.postMessage({
-          points,
-          xScale: xDesc,
-          yScale: yDesc,
-          collideRadius,
-          iterations
-        });
-      });
-    }
-    function destroy() {
-      if (worker3) {
-        try {
-          worker3.terminate();
-        } catch (_) {
-        }
-        worker3 = null;
-      }
-      if (scatter) scatter.destroy();
-    }
-    return {
-      layout,
-      destroy,
-      scatter,
-      get positions() {
-        return lastPositions;
-      }
-    };
   }
 
   // inst/htmlwidgets/myIO/src/index.js
@@ -48825,7 +48750,6 @@ void main() {
     };
     window.myIO.webglRenderers = {
       createWebGLRenderer,
-      createBeeswarmPipeline,
       WebGLScatter,
       WebGLLine,
       WebGLArea

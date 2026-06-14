@@ -12,7 +12,6 @@ import { CrosstalkAdapter } from "./crosstalk-adapter/index.js";
 import { createEngine } from "./engines/index.js";
 import {
   createWebGLRenderer,
-  createBeeswarmPipeline,
   WebGLScatter,
   WebGLLine,
   WebGLArea
@@ -33,7 +32,6 @@ if (typeof window !== "undefined") {
   window.myIO.getCoordinator = function() { return globalThis.__myioCoordinator || null; };
   window.myIO.webglRenderers = {
     createWebGLRenderer,
-    createBeeswarmPipeline,
     WebGLScatter,
     WebGLLine,
     WebGLArea
