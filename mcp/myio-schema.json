@@ -1315,6 +1315,10 @@
       "width",
       "height"
     ],
+    "myIOProxy": [
+      "outputId",
+      "session"
+    ],
     "print.myIO_duckdb_wasm_status": [
       "x",
       "..."
@@ -1463,6 +1467,10 @@
     "suppressLegend": [
       "myIO",
       "suppressLegend"
+    ],
+    "updateMyIOData": [
+      "proxy",
+      "..."
     ]
   }
 }

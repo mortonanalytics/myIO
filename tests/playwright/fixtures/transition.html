@@ -57,6 +57,11 @@
       return circles.map(function (c) { return +c.getAttribute("cy"); });
     };
 
+    // myIOProxy partial-update path: swap layer "L" data in place (no destroy).
+    window.__proxyUpdate = function (rows) {
+      window.__chart.updateData([{ label: "L", data: rows }]);
+    };
+
     // Grouped/stacked bar path: guards that transitionGrouped/transitionStacked
     // (groupedBarHelpers.js) resolve their easingFor/staggerDelay imports — a
     // missing import there throws only when toggleGroupedLayout fires, which the

@@ -471,6 +471,34 @@ export class myIOchart {
     this.renderCurrentLayers();
   }
 
+  // Shiny proxy partial-update (myIOProxy): swap the data of existing layers by
+  // label and re-render through the same data-join path as a normal update.
+  // Unlike a full renderValue (which destroys + recreates the chart), this
+  // preserves brush/zoom/toggle state and animates the transition. Unknown
+  // labels are ignored; `updates` is [{ label, data }].
+  updateData(updates) {
+    if (!Array.isArray(updates) || !this.config || !Array.isArray(this.config.layers)) {
+      return;
+    }
+    // Null-prototype map so a layer label like "__proto__"/"constructor" cannot
+    // pollute Object.prototype, and an incoming update.label of "__proto__"
+    // cannot spoof a match; the hasOwnProperty guard reinforces this.
+    const byLabel = Object.create(null);
+    this.config.layers.forEach(function(layer) { byLabel[layer.label] = layer; });
+    updates.forEach(function(update) {
+      if (update &&
+          Object.prototype.hasOwnProperty.call(byLabel, update.label) &&
+          Array.isArray(update.data)) {
+        byLabel[update.label].data = update.data;
+      }
+    });
+    // Mutating the shared layer objects updates whatever subset is currently
+    // visible (derived.currentLayers references the same objects), so we do NOT
+    // reset currentLayers here — that would re-show legend-toggled-off layers.
+    this.syncLegacyAliases();
+    this.renderCurrentLayers();
+  }
+
   resize(width, height) {
     if (!width || !height || width < 2 || height < 2) return;
     const wasSheetOpen = this.runtime && this.runtime._sheetOpen === true;

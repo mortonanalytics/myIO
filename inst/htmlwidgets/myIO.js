@@ -25,7 +25,8 @@ HTMLWidgets.widget({
           var coordinatorMarkSpec = null;
           var coordinatorQueryTemplate = "";
           if (this.myIOchart) {
-            // Destroy and recreate to handle layer count/type changes cleanly
+            // Destroy and recreate to handle layer count/type changes cleanly.
+            // The chart's "destroy" event unregisters it from the proxy registry.
             this.myIOchart.destroy();
             d3.select(el).selectAll("*").remove();
             this.myIOchart = null;
@@ -115,6 +116,21 @@ HTMLWidgets.widget({
               height: height
             });
             var id = el.id;
+            // Register for myIOProxy() partial updates immediately after
+            // construction (before any async coordinator work) so the registry
+            // never has an empty window across a re-render where an in-flight
+            // proxy message could be dropped. The chart's "destroy" event reaps
+            // the entry on re-render and on teardown.
+            if (HTMLWidgets.shinyMode && window.myIO &&
+                typeof window.myIO.registerInstance === "function") {
+              window.myIO.registerInstance(id, this.myIOchart);
+              window.myIO.installProxyHandler();
+              this.myIOchart.on("destroy", function() {
+                if (window.myIO && typeof window.myIO.unregisterInstance === "function") {
+                  window.myIO.unregisterInstance(id);
+                }
+              });
+            }
             this.myIOchart.on("error", function(e) {
               el._myIO_lastError = {
                 message: e.message,

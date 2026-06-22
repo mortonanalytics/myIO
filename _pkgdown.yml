@@ -126,6 +126,7 @@ reference:
     desc: Use myIO widgets in Shiny applications
     contents:
       - starts_with("myIO-shiny")
+      - myIOProxy
   - title: LLM Tool Calling
     desc: Machine-readable schema and validators for agent-built chart specs
     contents:
