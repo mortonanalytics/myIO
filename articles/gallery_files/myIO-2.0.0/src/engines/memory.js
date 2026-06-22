@@ -7,6 +7,8 @@
 // under the same bundle, but build-time the production bundle can
 // tree-shake unreachable MemoryEngine paths.
 
+import { b64ToBytes } from "../utils/b64-to-bytes.js";
+
 export class MemoryEngine {
   constructor(config = {}) {
     this.sources = new Map();
@@ -28,7 +30,7 @@ export class MemoryEngine {
         // Test double supports inline_ipc only.
         continue;
       }
-      const bytes = Uint8Array.from(atob(src.ipcB64), c => c.charCodeAt(0));
+      const bytes = b64ToBytes(src.ipcB64);
       const table = arrow.tableFromIPC(bytes);
       const rows = table.toArray().map(r => Object.assign({}, r));
       // Register as an alasql virtual table under the sourceId.

@@ -40,6 +40,8 @@
 ### Gallery
 
 - [Gallery](https://mortonanalytics.github.io/myIO/articles/gallery.md):
+- [Theme
+  Gallery](https://mortonanalytics.github.io/myIO/articles/theme-gallery.md):
 
 ### Help
 

@@ -23,21 +23,41 @@
   “x”.`) instead of bare`stopifnot()`failures.`setColorScheme()\` errors
   are likewise function-prefixed. No change to which inputs are
   accepted.
+
 - [`setTheme()`](https://mortonanalytics.github.io/myIO/reference/setTheme.md)
   now warns when passed an unknown argument that lacks the required `--`
   prefix (e.g. a misspelled `text_colour`) and suggests the intended
   argument, instead of silently dropping it. Valid `--`-prefixed CSS
   overrides are unaffected.
+
 - [`setTheme()`](https://mortonanalytics.github.io/myIO/reference/setTheme.md)
   documents the named `preset` values (`"midnight"`, `"ocean"`,
   `"forest"`, `"sunset"`, `"monochrome"`, `"neon"`, `"corporate"`,
   `"academic"`, `"nature"`, `"minimal"`, `"retro"`, `"warm"`, plus
   `"light"`/`"dark"`); the `preset` argument was already functional.
+
 - [`setLinked()`](https://mortonanalytics.github.io/myIO/reference/setLinked.md)
   and
   [`linkCharts()`](https://mortonanalytics.github.io/myIO/reference/linkCharts.md)
   now cross-reference each other in their documentation to clarify when
-  to use the Crosstalk path versus the group-identifier path.
+  to use the Crosstalk path versus the group-identifier path. \##
+  Documentation
+
+- New “Theme Gallery” article renders the same chart under all named
+  presets (`midnight`, `ocean`, `forest`, `sunset`, `monochrome`,
+  `neon`, `corporate`, `academic`, `nature`, `minimal`, `retro`, `warm`,
+  plus `light`/`dark`) as live, side-by-side previews, and shows how to
+  layer custom CSS overrides on top of a preset. \## Performance and
+  reliability
+
+- Inline Arrow IPC payloads now decode via the native
+  `Uint8Array.fromBase64` when the browser provides it (falling back to
+  the previous `atob` loop), avoiding a per-character JavaScript
+  callback over large payloads in the in-memory and DuckDB-WASM engines.
+
+- Added a regression test confirming charts that already render an
+  inline legend are not given a duplicated legend on image/SVG export
+  (GH [\#64](https://github.com/mortonanalytics/myIO/issues/64)).
 
 ## myIO 1.2.0
 

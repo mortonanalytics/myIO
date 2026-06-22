@@ -1,0 +1,71 @@
+import { resolveColor, tagName } from "../utils/responsive.js";
+
+export class AreaRenderer {
+  static type = "area";
+  static traits = { hasAxes: true, referenceLines: true, legendType: "layer", binning: false, rolloverStyle: "overlay", scaleCapabilities: { invertX: true } };
+  static scaleHints = { xScaleType: "linear", yScaleType: "linear", yExtentFields: ["low_y", "high_y"], domainMerge: "union" };
+  static dataContract = { x_var: { required: true, numeric: true } };
+
+  render(chart, layer) {
+    var data = layer.data;
+    var key = layer.label;
+    var transitionSpeed = chart.options.transition.speed;
+    var isVertical = layer.options && layer.options.orientation === "vertical";
+    var fillOpacity = layer.options && typeof layer.options.areaOpacity === "number" ? layer.options.areaOpacity : 0.4;
+    var boundaryStroke = !!(layer.options && layer.options.boundaryStroke === true);
+
+    var valueArea;
+    if (isVertical) {
+      valueArea = d3.area()
+        .curve(d3.curveMonotoneY)
+        .y(function(d) { return chart.yScale(d[layer.mapping.y_var]); })
+        .x0(function(d) { return chart.xScale(d[layer.mapping.low_x]); })
+        .x1(function(d) { return chart.xScale(d[layer.mapping.high_x]); });
+    } else {
+      valueArea = d3.area()
+        .curve(d3.curveMonotoneX)
+        .x(function(d) { return chart.xScale(d[layer.mapping.x_var]); })
+        .y0(function(d) { return chart.yScale(d[layer.mapping.low_y]); })
+        .y1(function(d) { return chart.yScale(d[layer.mapping.high_y]); });
+    }
+
+    var linePath = chart.chart
+      .selectAll("." + tagName("area", chart.element.id, key))
+      .data([data]);
+
+    linePath.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
+
+    var newLinePath = linePath.enter().append("path")
+      .attr("clip-path", "url(#" + chart.element.id + "clip)")
+      .style("fill", function(d) {
+        return resolveColor(chart, d[0][layer.mapping.group], layer.color);
+      })
+      .style("stroke", boundaryStroke ? layer.color : "none")
+      .style("stroke-width", boundaryStroke ? "1px" : "0")
+      .style("stroke-opacity", boundaryStroke ? 0.85 : 0)
+      .style("opacity", 0)
+      .attr("class", tagName("area", chart.element.id, key));
+
+    linePath.merge(newLinePath)
+      .attr("clip-path", "url(#" + chart.element.id + "clip)")
+      .transition()
+      .ease(d3.easeQuad)
+      .duration(transitionSpeed)
+      .attr("d", valueArea)
+      .style("stroke", boundaryStroke ? layer.color : "none")
+      .style("stroke-width", boundaryStroke ? "1px" : "0")
+      .style("stroke-opacity", boundaryStroke ? 0.85 : 0)
+      .style("opacity", fillOpacity);
+  }
+
+  formatTooltip(chart, d, layer) {
+    var displayValue = d.density != null ? d.density : d[layer.mapping.high_y];
+    var titleField = layer.options && layer.options.orientation === "vertical" ? layer.mapping.y_var : layer.mapping.x_var;
+    var titleValue = d[titleField];
+    return { title: titleField + ": " + titleValue, body: layer.label + ": " + displayValue, color: layer.color, label: layer.label, value: displayValue, raw: d };
+  }
+
+  remove(chart, layer) {
+    chart.dom.chartArea.selectAll("." + tagName("area", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
+  }
+}
