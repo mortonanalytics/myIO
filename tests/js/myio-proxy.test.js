@@ -56,6 +56,24 @@ describe("Chart.updateData (myIOProxy partial update)", () => {
     expect(() => chart.updateData([{ label: "pts", data: "bad" }])).not.toThrow();
     expect(chart.config.layers[0].data.length).toBe(1);
   });
+
+  test("does not reset visibility (preserves legend-toggled subset)", () => {
+    const chart = makeChart([{ x: 1, y: 10 }]);
+    chart.renderCurrentLayers = vi.fn();
+    // Simulate a legend toggle leaving an empty visible subset.
+    chart.derived.currentLayers = [];
+    chart.updateData([{ label: "pts", data: [{ x: 1, y: 10 }, { x: 2, y: 20 }] }]);
+    expect(chart.derived.currentLayers).toEqual([]); // not reset to all layers
+    expect(chart.config.layers[0].data.length).toBe(2); // data still swapped
+  });
+
+  test("does not pollute Object.prototype via a __proto__ label", () => {
+    const chart = makeChart([{ x: 1, y: 10 }]);
+    chart.renderCurrentLayers = vi.fn();
+    chart.updateData([{ label: "__proto__", data: [{ x: 9, y: 9 }] }]);
+    expect(({}).data).toBeUndefined();
+    expect(chart.config.layers[0].data.length).toBe(1);
+  });
 });
 
 describe("proxy message handler wiring", () => {
@@ -65,12 +83,13 @@ describe("proxy message handler wiring", () => {
       addCustomMessageHandler: (name, fn) => { handlers[name] = fn; }
     };
     delete window.myIO; // fresh namespace for this test
+    vi.resetModules();  // force index.js top-level to re-run and re-populate window.myIO
     await import("../../inst/htmlwidgets/myIO/src/index.js");
 
     window.myIO.installProxyHandler();
     expect(typeof handlers["myio:proxy-update"]).toBe("function");
 
-    const fakeChart = { updateData: vi.fn() };
+    const fakeChart = { config: {}, updateData: vi.fn() };
     window.myIO.registerInstance("chartA", fakeChart);
 
     const payload = { id: "chartA", layers: [{ label: "pts", data: [{ x: 1, y: 2 }] }] };
@@ -79,6 +98,16 @@ describe("proxy message handler wiring", () => {
 
     // unknown id is a no-op
     expect(() => handlers["myio:proxy-update"]({ id: "missing", layers: [] })).not.toThrow();
+
+    // a __proto__ id must not resolve to Object.prototype
+    expect(() => handlers["myio:proxy-update"]({ id: "__proto__", layers: [] })).not.toThrow();
+
+    // a destroyed chart (config nulled) is lazily reaped, not called
+    const deadChart = { config: null, updateData: vi.fn() };
+    window.myIO.registerInstance("chartDead", deadChart);
+    handlers["myio:proxy-update"]({ id: "chartDead", layers: [] });
+    expect(deadChart.updateData).not.toHaveBeenCalled();
+    expect(window.myIO._instances["chartDead"]).toBeUndefined();
 
     // unregister removes it
     window.myIO.unregisterInstance("chartA");

@@ -480,14 +480,21 @@ export class myIOchart {
     if (!Array.isArray(updates) || !this.config || !Array.isArray(this.config.layers)) {
       return;
     }
-    const byLabel = {};
+    // Null-prototype map so a layer label like "__proto__"/"constructor" cannot
+    // pollute Object.prototype, and an incoming update.label of "__proto__"
+    // cannot spoof a match; the hasOwnProperty guard reinforces this.
+    const byLabel = Object.create(null);
     this.config.layers.forEach(function(layer) { byLabel[layer.label] = layer; });
     updates.forEach(function(update) {
-      if (update && byLabel[update.label] && Array.isArray(update.data)) {
+      if (update &&
+          Object.prototype.hasOwnProperty.call(byLabel, update.label) &&
+          Array.isArray(update.data)) {
         byLabel[update.label].data = update.data;
       }
     });
-    this.derived.currentLayers = this.config.layers;
+    // Mutating the shared layer objects updates whatever subset is currently
+    // visible (derived.currentLayers references the same objects), so we do NOT
+    // reset currentLayers here — that would re-show legend-toggled-off layers.
     this.syncLegacyAliases();
     this.renderCurrentLayers();
   }

@@ -69,3 +69,15 @@ test("updateData swaps layer data in place and re-renders (same svg, no destroy)
   expect(sameSvg).toBe(true);
   expect(errors, errors.join("\n")).toHaveLength(0);
 });
+
+test("a proxy update immediately after a re-mount is not lost", async ({ page }) => {
+  // Guards the destroy->reconstruct registry window: a Shiny reactive re-render
+  // followed at once by a proxy update must still reach the new chart.
+  await ready(page);
+  await page.evaluate(() => {
+    (window as any).__mount({ speed: 0 });        // re-render in place
+    (window as any).__proxyUpdate([{ x: 2, y: 10 }, { x: 5, y: 50 }, { x: 8, y: 90 }]);
+  });
+  await page.waitForTimeout(50);
+  expect(await page.locator("circle[class^='tag-point']").count()).toBe(3);
+});
