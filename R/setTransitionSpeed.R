@@ -8,6 +8,8 @@
 #' @return A modified \code{myIO} htmlwidget object with updated transition
 #'   speed.
 #'
+#' @seealso \code{\link{setTransition}} to also configure easing and stagger.
+#'
 #' @examples
 #' # Set transition speed to 500ms
 #' myIO() |> setTransitionSpeed(speed = 500)
@@ -18,9 +20,5 @@
 #' @export
 
 setTransitionSpeed <- function(myIO, speed){
-  assert_myIO(myIO)
-
-  myIO$x$config$transitions$speed <- speed
-
-  return(myIO)
+  setTransition(myIO, duration = speed)
 }

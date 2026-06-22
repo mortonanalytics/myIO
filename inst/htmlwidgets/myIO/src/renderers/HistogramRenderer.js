@@ -1,3 +1,4 @@
+import { easingFor } from "../transitions/easing.js";
 import { resolveColor, tagName } from "../utils/responsive.js";
 
 export class HistogramRenderer {
@@ -31,7 +32,7 @@ export class HistogramRenderer {
 
     bars.merge(newBars)
       .transition()
-      .ease(d3.easeQuad)
+      .ease(easingFor(chart, d3.easeQuad))
       .duration(transitionSpeed)
       .attr("x", function(d) { return chart.xScale(d.x0) + 1; })
       .attr("width", function(d) { return Math.max(0, chart.xScale(d.x1) - chart.xScale(d.x0) - 1); })

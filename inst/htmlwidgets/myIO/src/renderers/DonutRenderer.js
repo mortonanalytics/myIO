@@ -1,3 +1,4 @@
+import { easingFor } from "../transitions/easing.js";
 import { syncOrdinalLegendData } from "../layout/legend.js";
 import { isColorSchemeActive } from "../utils/responsive.js";
 
@@ -33,7 +34,7 @@ export class DonutRenderer {
     var outerArc = d3.arc().innerRadius(radius * 0.9).outerRadius(radius * 0.9);
 
     var path = chart.chart.selectAll(".donut").data(pie(data), function(d) { return d.data[xVar]; });
-    path.exit().transition().duration(transitionSpeed).ease(d3.easeQuad)
+    path.exit().transition().duration(transitionSpeed).ease(easingFor(chart, d3.easeQuad))
       .attrTween("d", function(a) {
         var end = { startAngle: a.endAngle, endAngle: a.endAngle };
         var i = d3.interpolate(a, end);
@@ -47,7 +48,7 @@ export class DonutRenderer {
       .attr("d", arc)
       .each(function(d) { this._current = d; });
 
-    path.merge(newPath).transition().duration(transitionSpeed).ease(d3.easeQuad)
+    path.merge(newPath).transition().duration(transitionSpeed).ease(easingFor(chart, d3.easeQuad))
       .attr("fill", function(d) { return chart.colorDiscrete(d.data[xVar]); })
       .attrTween("d", function(a) {
         this._current = this._current || a;
@@ -68,7 +69,7 @@ export class DonutRenderer {
       .attr("dy", ".35em")
       .text(function(d) { return d.data[xVar]; });
 
-    textLabel.merge(newText).transition().duration(transitionSpeed).ease(d3.easeQuad)
+    textLabel.merge(newText).transition().duration(transitionSpeed).ease(easingFor(chart, d3.easeQuad))
       .text(function(d) { return d.data[xVar]; })
       .style("opacity", function(d) { return Math.abs(d.endAngle - d.startAngle) > 0.3 ? 1 : 0; })
       .attrTween("transform", function(d) {
@@ -101,7 +102,7 @@ export class DonutRenderer {
       .style("opacity", 0)
       .style("stroke", "gray");
 
-    polyline.merge(newPolyline).transition().duration(transitionSpeed).ease(d3.easeQuad)
+    polyline.merge(newPolyline).transition().duration(transitionSpeed).ease(easingFor(chart, d3.easeQuad))
       .style("opacity", function(d) { return Math.abs(d.endAngle - d.startAngle) > 0.3 ? 1 : 0; })
       .attrTween("points", function(d) {
         this._current = this._current || d;

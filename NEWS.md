@@ -1,5 +1,19 @@
 # myIO (development version)
 
+## New features
+
+* New `setTransition(duration, easing, stagger)` configures chart animations:
+  `duration` in milliseconds, `easing` (one of `"linear"`, `"quad"`, `"cubic"`,
+  `"sin"`, `"exp"`, `"circle"`, `"back"`, `"bounce"`, `"elastic"`, mapped to the
+  corresponding d3 easing), and `stagger` (per-element cascade delay in ms).
+  All arguments are optional and additive; unset values keep each renderer's
+  existing defaults, so the change is fully backward compatible.
+  `setTransitionSpeed()` is now a thin wrapper over `setTransition(duration = )`.
+  Animation stays fully opt-out-able: `duration = 0` disables it, and easing and
+  stagger automatically no-op when the effective duration is 0, including under
+  the viewer's `prefers-reduced-motion: reduce` system setting. A Playwright e2e
+  spec verifies animate-when-on, still-when-off, and still-under-reduced-motion.
+
 ## Performance and tooling
 
 * The production JavaScript bundle is now minified. The shipped

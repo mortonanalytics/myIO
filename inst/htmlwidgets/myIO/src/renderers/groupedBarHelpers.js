@@ -1,3 +1,4 @@
+import { easingFor } from "../transitions/easing.js";
 import { updateYAxis } from "../layout/axes.js";
 
 export function transitionGrouped(chart, data, colors, bandwidth) {
@@ -7,7 +8,7 @@ export function transitionGrouped(chart, data, colors, bandwidth) {
   var bars = d3.select(chart.element).selectAll(".tag-grouped-bar-g").selectAll("rect").data(function(d) { return d; });
 
   bars.exit()
-    .transition().ease(d3.easeQuadIn).duration(transitionSpeed)
+    .transition().ease(easingFor(chart, d3.easeQuadIn)).duration(transitionSpeed)
     .attr("y", chart.yScale(0))
     .attr("height", 0)
     .style("opacity", 0)
@@ -23,9 +24,9 @@ export function transitionGrouped(chart, data, colors, bandwidth) {
 
   barsEnter.merge(bars)
     .transition()
-    .ease(d3.easeQuad)
+    .ease(easingFor(chart, d3.easeQuad))
     .duration(transitionSpeed)
-    .delay(function(d) { return d.idx * 20; })
+    .delay(staggerDelay(chart, 20, function(d) { return d.idx; }))
     .attr("x", function(d) { return chart.xScale(+d.data[0]) + bandwidth * d.idx; })
     .attr("width", bandwidth)
     .attr("y", function(d) { return chart.yScale(d[1] - d[0]); })
@@ -42,7 +43,7 @@ export function transitionStacked(chart, data, colors, bandwidth) {
   var bars = d3.select(chart.element).selectAll(".tag-grouped-bar-g").selectAll("rect").data(function(d) { return d; });
 
   bars.exit()
-    .transition().ease(d3.easeQuadIn).duration(transitionSpeed)
+    .transition().ease(easingFor(chart, d3.easeQuadIn)).duration(transitionSpeed)
     .attr("y", yScale(0))
     .attr("height", 0)
     .style("opacity", 0)
@@ -58,9 +59,9 @@ export function transitionStacked(chart, data, colors, bandwidth) {
 
   barsEnter.merge(bars)
     .transition()
-    .ease(d3.easeQuad)
+    .ease(easingFor(chart, d3.easeQuad))
     .duration(transitionSpeed)
-    .delay(function(d) { return d.idx * 20; })
+    .delay(staggerDelay(chart, 20, function(d) { return d.idx; }))
     .attr("x", function(d) { return chart.xScale(+d.data[0]); })
     .attr("width", bandwidth * data.length)
     .attr("y", function(d) { return yScale(d[1]); })

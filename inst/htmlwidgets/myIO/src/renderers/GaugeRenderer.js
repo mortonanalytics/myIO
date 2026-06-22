@@ -1,3 +1,4 @@
+import { easingFor } from "../transitions/easing.js";
 import { getChartHeight } from "../layout/scaffold.js";
 
 export class GaugeRenderer {
@@ -52,7 +53,7 @@ export class GaugeRenderer {
       .attr("d", bandArcFor);
 
     bandsEnter.merge(bands)
-      .transition().duration(transitionSpeed).ease(d3.easeQuad)
+      .transition().duration(transitionSpeed).ease(easingFor(chart, d3.easeQuad))
       .attr("fill", function(d) { return d.color; })
       .attr("opacity", 0.24)
       .attr("d", bandArcFor);
@@ -71,7 +72,7 @@ export class GaugeRenderer {
       .each(function(d) { this._current = d; });
 
     newPathBackground.merge(pathBackground)
-      .transition().duration(transitionSpeed).ease(d3.easeBack)
+      .transition().duration(transitionSpeed).ease(easingFor(chart, d3.easeBack))
       .attr("fill", "rgba(107, 114, 128, 0.22)")
       .attrTween("d", function(a) {
         this._current = this._current || a;
@@ -94,7 +95,7 @@ export class GaugeRenderer {
       .each(function(d) { this._current = d; });
 
     newPath.merge(path)
-      .transition().duration(transitionSpeed).ease(d3.easeBack)
+      .transition().duration(transitionSpeed).ease(easingFor(chart, d3.easeBack))
       .attr("fill", function(d, i) { return [layer.color || colorForValue(value, thresholds), "transparent"][i]; })
       .attrTween("d", function(a) {
         this._current = this._current || a;
