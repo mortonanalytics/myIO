@@ -177,4 +177,31 @@ describe("injectExportLegend", function() {
     result.cleanup();
     cleanup(c.svg);
   });
+
+  // GH #64 regression: grouped/discrete charts that already serialize an
+  // inline legend (.myIO-inline-legend) inside the SVG must NOT get a second
+  // injected legend on export.
+  test("does not inject a second legend when an inline legend is present (GH #64)", function() {
+    var c = makeChart({
+      plotLayers: [
+        { label: "Series A", color: "#ff0000", type: "line" },
+        { label: "Series B", color: "#0000ff", type: "line" }
+      ]
+    });
+    c.chart.currentLayers = c.chart.plotLayers;
+
+    // Simulate the inline legend the chart renders for grouped/discrete series.
+    var inline = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    inline.setAttribute("class", "myIO-inline-legend");
+    c.svg.appendChild(inline);
+
+    var result = injectExportLegend(c.chart);
+
+    expect(result.extraHeight).toBe(0);
+    expect(c.svg.querySelector(".myIO-export-legend")).toBeNull();
+    // The original inline legend is untouched.
+    expect(c.svg.querySelectorAll(".myIO-inline-legend").length).toBe(1);
+    result.cleanup();
+    cleanup(c.svg);
+  });
 });
