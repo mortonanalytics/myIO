@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Classic <script src> loading of the built IIFE bundle (works over file://). -->
+  <script src="/inst/htmlwidgets/lib/d3.min.js"></script>
+  <script src="/inst/htmlwidgets/myIO/myIOapi.js"></script>
+</head>
+<body style="margin:0">
+  <div id="chart"></div>
+  <script>
+    // The htmlwidgets runtime provides this global in a real deployment; the
+    // shared hover handler reads HTMLWidgets.shinyMode. Stub it for the fixture.
+    window.HTMLWidgets = window.HTMLWidgets || { shinyMode: false };
+
+    function makeConfig(layers) {
+      return {
+        specVersion: 1,
+        layers: layers,
+        layout: { margin: { top: 30, bottom: 60, left: 50, right: 5 }, suppressLegend: false, suppressAxis: { xAxis: false, yAxis: false } },
+        scales: { xlim: { min: null, max: null }, ylim: { min: null, max: null }, categoricalScale: { xAxis: true, yAxis: false }, flipAxis: false, colorScheme: { colors: ["#4E79A7"], domain: ["B"], enabled: false } },
+        axes: { xAxisFormat: "s", yAxisFormat: "s", xAxisLabel: null, yAxisLabel: null, toolTipFormat: "s" },
+        interactions: { dragPoints: false, toggleY: { variable: null, format: null }, toolTipOptions: { suppressY: false } },
+        theme: {},
+        transitions: { speed: 0 },
+        referenceLines: { x: null, y: null }
+      };
+    }
+
+    function barLayer(data) {
+      return {
+        id: "layer_B", type: "bar", label: "B", data: data,
+        mapping: { x_var: "cat", y_var: "val" }, options: { barSize: "large" },
+        transform: "identity", transformMeta: {}, encoding: {}, sourceKey: "_source_key",
+        derivedFrom: null, order: 1, visibility: true, color: "#4E79A7"
+      };
+    }
+
+    window.__mountBars = function () {
+      d3.select("#chart").selectAll("*").remove();
+      window.__chart = new myIOchart({
+        element: document.getElementById("chart"),
+        config: makeConfig([barLayer([
+          { cat: "alpha", val: 30 }, { cat: "bravo", val: 55 }, { cat: "charlie", val: 18 }
+        ])]),
+        width: Math.min(window.innerWidth, 380), height: 300
+      });
+    };
+
+    window.__tooltipVisible = function () {
+      var t = document.querySelector(".toolTip");
+      return !!t && t.getAttribute("aria-hidden") === "false";
+    };
+    window.__tooltipText = function () {
+      var t = document.querySelector(".toolTip");
+      return t ? t.textContent : "";
+    };
+
+    window.__mountBars();
+    window.__myioTestReady = true;
+  </script>
+</body>
+</html>
