@@ -67,6 +67,7 @@ articles:
   - title: Gallery
     contents:
       - articles/gallery
+      - articles/theme-gallery
   - title: Help
     contents:
       - articles/troubleshooting

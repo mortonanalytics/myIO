@@ -1,0 +1,89 @@
+---
+title: "Theme Gallery"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Theme Gallery}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(myIO)
+```
+
+## Overview
+
+myIO ships named theme presets that recolor the entire chart — background,
+gridlines, text, tooltip, brush, and reference-line colors — in one call:
+
+```{r usage, eval = FALSE}
+myIO() |>
+  addIoLayer(
+    type = "point", label = "obs", data = mtcars,
+    mapping = list(x_var = "wt", y_var = "mpg")
+  ) |>
+  setTheme(preset = "midnight")
+```
+
+Each preview below is the same scatter-plus-trend chart rendered under a
+different preset, so you can compare them directly. `"light"` and `"dark"`
+are also available via `setTheme(mode = "light" | "dark")`.
+
+```{r presets-list}
+myio_theme_presets <- c(
+  "light", "dark", "midnight", "ocean", "forest", "sunset",
+  "monochrome", "neon", "corporate", "academic", "nature",
+  "minimal", "retro", "warm"
+)
+myio_theme_presets
+```
+
+## Live previews
+
+```{r gallery, echo = FALSE}
+themed_demo <- function(preset) {
+  myIO() |>
+    addIoLayer(
+      type = "point", label = "observations", data = mtcars,
+      mapping = list(x_var = "wt", y_var = "mpg")
+    ) |>
+    addIoLayer(
+      type = "line", transform = "lm", label = "trend", data = mtcars,
+      mapping = list(x_var = "wt", y_var = "mpg")
+    ) |>
+    setTheme(preset = preset) |>
+    setTitle(paste0('setTheme(preset = "', preset, '")')) |>
+    setAxisFormat(xLabel = "Weight (1000 lbs)", yLabel = "Miles per Gallon") |>
+    setMargin(top = 40, bottom = 60, left = 60, right = 10)
+}
+
+htmltools::tagList(
+  lapply(myio_theme_presets, function(p) {
+    htmltools::div(
+      style = "margin-bottom: 1.5rem;",
+      themed_demo(p)
+    )
+  })
+)
+```
+
+## Custom overrides
+
+Presets are a starting point. Layer your own CSS custom properties on top with
+`setTheme(overrides = ...)` or the `--`-prefixed `...` arguments:
+
+```{r overrides, eval = FALSE}
+myIO() |>
+  addIoLayer(
+    type = "point", label = "obs", data = mtcars,
+    mapping = list(x_var = "wt", y_var = "mpg")
+  ) |>
+  setTheme(
+    preset = "midnight",
+    overrides = list("--chart-annotation-ring" = "#22d3ee")
+  )
+```

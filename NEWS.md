@@ -28,6 +28,13 @@
 * `setLinked()` and `linkCharts()` now cross-reference each other in their
   documentation to clarify when to use the Crosstalk path versus the
   group-identifier path.
+## Documentation
+
+* New "Theme Gallery" article renders the same chart under all named presets
+  (`midnight`, `ocean`, `forest`, `sunset`, `monochrome`, `neon`, `corporate`,
+  `academic`, `nature`, `minimal`, `retro`, `warm`, plus `light`/`dark`) as
+  live, side-by-side previews, and shows how to layer custom CSS overrides on
+  top of a preset.
 
 # myIO 1.2.0
 
