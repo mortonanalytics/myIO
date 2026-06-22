@@ -17,10 +17,10 @@
 #'   ignored. Default NULL.
 #' @param overrides Named list of CSS custom property overrides
 #'   (e.g., \code{list("--chart-tooltip-bg" = "#222")}).
-#' @param text_color deprecated; use \code{textColor}.
-#' @param grid_color deprecated; use \code{gridColor}.
 #' @param ... additional CSS custom property overrides; only names with a
-#'   \code{--} prefix are applied. Other names are ignored with a warning.
+#'   \code{--} prefix are applied. Also accepts the deprecated \code{text_color}
+#'   and \code{grid_color} aliases for \code{textColor} and \code{gridColor}.
+#'   Other names are ignored with a warning.
 #'
 #' @return A modified \code{myIO} htmlwidget object with updated theme
 #'   configuration.
@@ -34,12 +34,22 @@
 #' @export
 setTheme <- function(myIO, textColor = NULL, gridColor = NULL, bg = NULL,
                      font = NULL, mode = NULL, preset = NULL,
-                     overrides = list(), text_color = NULL, grid_color = NULL,
-                     ...) {
+                     overrides = list(), ...) {
   assert_myIO(myIO)
 
-  textColor <- deprecated_alias(textColor, text_color, "textColor", "text_color", "setTheme")
-  gridColor <- deprecated_alias(gridColor, grid_color, "gridColor", "grid_color", "setTheme")
+  dots <- list(...)
+  # Deprecated snake_case color aliases (kept out of the formals to avoid
+  # partial-match collision with textColor/gridColor). camelCase wins if both.
+  if (!is.null(dots[["text_color"]])) {
+    deprecate_arg("text_color", "textColor", "setTheme")
+    if (is.null(textColor)) textColor <- dots[["text_color"]]
+    dots[["text_color"]] <- NULL
+  }
+  if (!is.null(dots[["grid_color"]])) {
+    deprecate_arg("grid_color", "gridColor", "setTheme")
+    if (is.null(gridColor)) gridColor <- dots[["grid_color"]]
+    dots[["grid_color"]] <- NULL
+  }
 
   if (!is.null(mode)) {
     check_choice(mode, c("light", "dark", "auto"), "mode", "setTheme")
@@ -53,7 +63,6 @@ setTheme <- function(myIO, textColor = NULL, gridColor = NULL, bg = NULL,
   if (!is.null(font)) values[["--chart-font"]] <- font
 
   # Legacy ... args (backward compat): only `--`-prefixed names are applied.
-  dots <- list(...)
   ignored <- character(0)
   for (name in names(dots)) {
     if (startsWith(name, "--")) {

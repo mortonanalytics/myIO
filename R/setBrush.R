@@ -9,7 +9,8 @@
 #'   or \code{"y"}
 #' @param onSelect behavior in static mode: \code{"highlight"} (default)
 #'   or \code{"export"} (scopes CSV download to selected points)
-#' @param on_select deprecated; use \code{onSelect}.
+#' @param ... reserved; accepts the deprecated \code{on_select} alias for
+#'   \code{onSelect}.
 #'
 #' @return A modified \code{myIO} htmlwidget object with brush interaction
 #'   enabled.
@@ -22,9 +23,10 @@
 #'   setBrush()
 #'
 #' @export
-setBrush <- function(myIO, direction = "xy", onSelect = NULL, on_select = NULL) {
+setBrush <- function(myIO, direction = "xy", onSelect = NULL, ...) {
   assert_myIO(myIO)
-  onSelect <- deprecated_alias(onSelect, on_select, "onSelect", "on_select", "setBrush")
+  dep <- resolve_dot_aliases(list(...), c(onSelect = "on_select"), "setBrush")
+  if (is.null(onSelect)) onSelect <- dep$onSelect
   if (is.null(onSelect)) onSelect <- "highlight"
   check_choice(direction, c("xy", "x", "y"), "direction", "setBrush")
   check_choice(onSelect, c("highlight", "export"), "onSelect", "setBrush")

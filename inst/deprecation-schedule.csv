@@ -1,0 +1,7 @@
+symbol,type,deprecated_in,remove_after,replacement
+setBrush:on_select,argument,development,next-major,onSelect
+setFacet:min_width,argument,development,next-major,minWidth
+setFacet:label_position,argument,development,next-major,labelPosition
+setTheme:text_color,argument,development,next-major,textColor
+setTheme:grid_color,argument,development,next-major,gridColor
+setBigData:rowkey_col,argument,development,next-major,rowkeyCol

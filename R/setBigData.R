@@ -9,8 +9,8 @@
 #'   `.arrow`, `.feather`, or `.csv`, or a `DBIConnection`.
 #' @param rowkeyCol Optional name of the column that uniquely identifies rows
 #'   for Crosstalk-compatible linked selections.
-#' @param rowkey_col deprecated; use \code{rowkeyCol}.
-#' @param ... Additional source-specific options. For DBI sources, pass
+#' @param ... Additional source-specific options. Also accepts the deprecated
+#'   \code{rowkey_col} alias for \code{rowkeyCol}. For DBI sources, pass
 #'   `table = "name"` so myIO can query the table schema. For file path or URL
 #'   sources, pass `schema = c("col1", "col2", ...)` or a schema field list.
 #'
@@ -41,15 +41,23 @@
 #'   DBI::dbDisconnect(con, shutdown = TRUE)
 #' }
 #' }
-setBigData <- function(widget, source, rowkeyCol = NULL, ..., rowkey_col = NULL) {
+setBigData <- function(widget, source, rowkeyCol = NULL, ...) {
   if (!inherits(widget, "htmlwidget") ||
       !identical(attr(widget, "package"), "myIO")) {
     stop("setBigData() expects a myIO widget object.", call. = FALSE)
   }
 
-  rowkeyCol <- deprecated_alias(rowkeyCol, rowkey_col, "rowkeyCol", "rowkey_col", "setBigData")
+  dots <- list(...)
+  # Deprecated snake_case alias (kept out of the formals so it cannot
+  # partial-match-collide with rowkeyCol). camelCase wins if both supplied.
+  if (!is.null(dots[["rowkey_col"]])) {
+    deprecate_arg("rowkey_col", "rowkeyCol", "setBigData")
+    if (is.null(rowkeyCol)) rowkeyCol <- dots[["rowkey_col"]]
+    dots[["rowkey_col"]] <- NULL
+  }
 
-  payload <- .make_bigdata_payload(source, rowkey_col = rowkeyCol, ...)
+  payload <- do.call(.make_bigdata_payload,
+                     c(list(source, rowkey_col = rowkeyCol), dots))
 
   if (is.null(widget$x)) widget$x <- list()
   if (is.null(widget$x$bigdata)) widget$x$bigdata <- list()

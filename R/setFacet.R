@@ -20,8 +20,8 @@
 #'   }
 #' @param labelPosition Character. Where to show panel labels:
 #'   \code{"top"} (default) or \code{"bottom"}.
-#' @param min_width deprecated; use \code{minWidth}.
-#' @param label_position deprecated; use \code{labelPosition}.
+#' @param ... reserved; accepts the deprecated \code{min_width} and
+#'   \code{label_position} aliases for \code{minWidth} and \code{labelPosition}.
 #' @return Modified myIO widget.
 #' @export
 #' @examples
@@ -30,14 +30,17 @@
 #'              mapping = list(x_var = "Sepal.Length", y_var = "Sepal.Width")) |>
 #'   setFacet("Species", ncol = 3)
 setFacet <- function(myIO, var, ncol = NULL, minWidth = NULL,
-                     scales = "fixed", labelPosition = NULL,
-                     min_width = NULL, label_position = NULL) {
+                     scales = "fixed", labelPosition = NULL, ...) {
   assert_myIO(myIO)
   check_string(var, "var", "setFacet")
-  minWidth <- deprecated_alias(minWidth, min_width, "minWidth", "min_width", "setFacet")
+  dep <- resolve_dot_aliases(
+    list(...),
+    c(minWidth = "min_width", labelPosition = "label_position"),
+    "setFacet"
+  )
+  if (is.null(minWidth)) minWidth <- dep$minWidth
   if (is.null(minWidth)) minWidth <- 200
-  labelPosition <- deprecated_alias(labelPosition, label_position,
-                                    "labelPosition", "label_position", "setFacet")
+  if (is.null(labelPosition)) labelPosition <- dep$labelPosition
   if (is.null(labelPosition)) labelPosition <- "top"
   if (!is.null(ncol)) {
     check_number(ncol, "ncol", "setFacet")

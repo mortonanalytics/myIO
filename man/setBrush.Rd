@@ -4,7 +4,7 @@
 \alias{setBrush}
 \title{Enable Brush Selection}
 \usage{
-setBrush(myIO, direction = "xy", onSelect = NULL, on_select = NULL)
+setBrush(myIO, direction = "xy", onSelect = NULL, ...)
 }
 \arguments{
 \item{myIO}{an htmlwidget object created by the \code{myIO()} function}
@@ -15,7 +15,8 @@ or \code{"y"}}
 \item{onSelect}{behavior in static mode: \code{"highlight"} (default)
 or \code{"export"} (scopes CSV download to selected points)}
 
-\item{on_select}{deprecated; use \code{onSelect}.}
+\item{...}{reserved; accepts the deprecated \code{on_select} alias for
+\code{onSelect}.}
 }
 \value{
 A modified \code{myIO} htmlwidget object with brush interaction

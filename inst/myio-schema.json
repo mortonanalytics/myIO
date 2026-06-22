@@ -1347,14 +1347,13 @@
       "widget",
       "source",
       "rowkeyCol",
-      "...",
-      "rowkey_col"
+      "..."
     ],
     "setBrush": [
       "myIO",
       "direction",
       "onSelect",
-      "on_select"
+      "..."
     ],
     "setColorScheme": [
       "myIO",
@@ -1377,8 +1376,7 @@
       "minWidth",
       "scales",
       "labelPosition",
-      "min_width",
-      "label_position"
+      "..."
     ],
     "setLayerOpacity": [
       "myIO",
@@ -1431,8 +1429,6 @@
       "mode",
       "preset",
       "overrides",
-      "text_color",
-      "grid_color",
       "..."
     ],
     "setTitle": [

@@ -13,8 +13,6 @@ setTheme(
   mode = NULL,
   preset = NULL,
   overrides = list(),
-  text_color = NULL,
-  grid_color = NULL,
   ...
 )
 }
@@ -42,12 +40,10 @@ ignored. Default NULL.}
 \item{overrides}{Named list of CSS custom property overrides
 (e.g., \code{list("--chart-tooltip-bg" = "#222")}).}
 
-\item{text_color}{deprecated; use \code{textColor}.}
-
-\item{grid_color}{deprecated; use \code{gridColor}.}
-
 \item{...}{additional CSS custom property overrides; only names with a
-\code{--} prefix are applied. Other names are ignored with a warning.}
+\code{--} prefix are applied. Also accepts the deprecated \code{text_color}
+and \code{grid_color} aliases for \code{textColor} and \code{gridColor}.
+Other names are ignored with a warning.}
 }
 \value{
 A modified \code{myIO} htmlwidget object with updated theme

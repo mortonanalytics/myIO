@@ -36,6 +36,24 @@ test_that("setFacet: snake_case aliases still work but warn", {
   expect_equal(w2$x$config$facet$labelPosition, "bottom")
 })
 
+test_that("setFacet: camelCase wins when both forms supplied", {
+  expect_warning(w <- setFacet(myIO(), "g", minWidth = 320, min_width = 100), "min_width")
+  expect_equal(w$x$config$facet$minWidth, 320)
+})
+
+test_that("setFacet: rejects an unknown extra argument", {
+  expect_error(setFacet(myIO(), "g", bogus = 1), "bogus")
+})
+
+test_that("partial matching of the canonical name still works (no collision)", {
+  # `min`/`text` previously could ambiguously match both forms; with the
+  # snake_case aliases out of the formals they bind cleanly to the camelCase arg.
+  expect_silent(w <- setFacet(myIO(), "g", min = 275))
+  expect_equal(w$x$config$facet$minWidth, 275)
+  expect_silent(t <- setTheme(myIO(), text = "#abc"))
+  expect_equal(t$x$config$theme$values[["--chart-text-color"]], "#abc")
+})
+
 test_that("setFacet: validation messages use the canonical name", {
   expect_error(setFacet(myIO(), "g", minWidth = -1), "minWidth")
 })
@@ -49,6 +67,17 @@ test_that("setTheme: camelCase textColor/gridColor work silently", {
 test_that("setTheme: snake_case color args still work but warn", {
   expect_warning(w <- setTheme(myIO(), text_color = "#111"), "text_color")
   expect_equal(w$x$config$theme$values[["--chart-text-color"]], "#111")
+})
+
+test_that("setTheme: camelCase wins when both color forms supplied", {
+  expect_warning(w <- setTheme(myIO(), textColor = "#222", text_color = "#999"),
+                 "text_color")
+  expect_equal(w$x$config$theme$values[["--chart-text-color"]], "#222")
+})
+
+test_that("setTheme: --prefixed CSS overrides still pass through ...", {
+  expect_silent(w <- setTheme(myIO(), `--chart-tooltip-bg` = "#000"))
+  expect_equal(w$x$config$theme$values[["--chart-tooltip-bg"]], "#000")
 })
 
 test_that("setBigData: camelCase rowkeyCol works; snake_case warns", {

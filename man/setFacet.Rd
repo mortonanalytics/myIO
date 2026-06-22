@@ -11,8 +11,7 @@ setFacet(
   minWidth = NULL,
   scales = "fixed",
   labelPosition = NULL,
-  min_width = NULL,
-  label_position = NULL
+  ...
 )
 }
 \arguments{
@@ -38,9 +37,8 @@ is NULL. Default 200.}
 \item{labelPosition}{Character. Where to show panel labels:
 \code{"top"} (default) or \code{"bottom"}.}
 
-\item{min_width}{deprecated; use \code{minWidth}.}
-
-\item{label_position}{deprecated; use \code{labelPosition}.}
+\item{...}{reserved; accepts the deprecated \code{min_width} and
+\code{label_position} aliases for \code{minWidth} and \code{labelPosition}.}
 }
 \value{
 Modified myIO widget.
