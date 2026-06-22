@@ -38,6 +38,10 @@ test_that("setTransitionSpeed remains a thin wrapper over duration", {
   expect_null(w$x$config$transitions$easing)
 })
 
+test_that("setTransitionSpeed inherits duration validation (rejects negative)", {
+  expect_error(setTransitionSpeed(myIO(), -1), "duration")
+})
+
 test_that("setTransition rejects non-myIO input", {
   expect_error(setTransition(list()), class = "error")
 })

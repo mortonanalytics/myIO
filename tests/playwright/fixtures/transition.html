@@ -57,6 +57,39 @@
       return circles.map(function (c) { return +c.getAttribute("cy"); });
     };
 
+    // Grouped/stacked bar path: guards that transitionGrouped/transitionStacked
+    // (groupedBarHelpers.js) resolve their easingFor/staggerDelay imports — a
+    // missing import there throws only when toggleGroupedLayout fires, which the
+    // jsdom unit suite cannot exercise (jsdom lacks SVG transform.baseVal).
+    function barLayer(label, color, data) {
+      return {
+        id: "layer_" + label, type: "bar", label: label, data: data,
+        mapping: { x_var: "cat", y_var: "val" }, options: { barSize: "large" },
+        transform: "identity", transformMeta: {}, encoding: {}, sourceKey: "_source_key",
+        derivedFrom: null, order: 1, visibility: true, color: color
+      };
+    }
+
+    window.__mountGrouped = function (transitions) {
+      d3.select("#chart").selectAll("*").remove();
+      var layers = [
+        barLayer("A", "#4E79A7", [{ cat: "x", val: 3 }, { cat: "y", val: 5 }, { cat: "z", val: 2 }]),
+        barLayer("B", "#E69F00", [{ cat: "x", val: 4 }, { cat: "y", val: 1 }, { cat: "z", val: 6 }])
+      ];
+      var cfg = makeConfig(layers, transitions);
+      cfg.scales.xlim = { min: null, max: null };
+      cfg.scales.ylim = { min: null, max: null };
+      cfg.scales.categoricalScale = { xAxis: true, yAxis: false };
+      cfg.scales.colorScheme = { colors: ["#4E79A7", "#E69F00"], domain: ["A", "B"], enabled: true };
+      window.__chart = new myIOchart({
+        element: document.getElementById("chart"), config: cfg, width: 640, height: 400
+      });
+    };
+
+    window.__toggleLayout = function () {
+      window.__chart.toggleGroupedLayout(window.__chart.config.layers);
+    };
+
     window.__myioTestReady = true;
   </script>
 </body>

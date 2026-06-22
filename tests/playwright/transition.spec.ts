@@ -99,6 +99,22 @@ test("duration = 0 does not animate (instant jump to target)", async ({ page }) 
   expect(Math.abs(at30 - start)).toBeGreaterThan(50);
 });
 
+test("grouped/stacked bar transition path resolves easingFor/staggerDelay (no throw)", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+  await ready(page);
+  await page.evaluate(() => {
+    (window as any).__mountGrouped({ speed: 300, stagger: 15 });
+    (window as any).__toggleLayout(); // -> transitionStacked
+    (window as any).__toggleLayout(); // -> transitionGrouped
+  });
+  await page.waitForTimeout(400);
+  // The contract under test is "no ReferenceError from the wired transition
+  // helpers"; toggleGroupedLayout must complete cleanly with stagger configured.
+  expect(errors, errors.join("\n")).toHaveLength(0);
+  expect(await page.locator("svg").count()).toBeGreaterThan(0);
+});
+
 test("prefers-reduced-motion: reduce forces no animation even when duration > 0", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await ready(page);

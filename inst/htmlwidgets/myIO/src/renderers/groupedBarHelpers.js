@@ -1,4 +1,4 @@
-import { easingFor } from "../transitions/easing.js";
+import { easingFor, staggerDelay } from "../transitions/easing.js";
 import { updateYAxis } from "../layout/axes.js";
 
 export function transitionGrouped(chart, data, colors, bandwidth) {
