@@ -13,8 +13,8 @@
 #'
 #' @param data a data frame sorted by the x mapping (the line/area contract).
 #' @param mapping layer mapping; uses \code{x_var} and \code{y_var}.
-#' @param options list; \code{threshold} = max points to keep (integer >= 2,
-#'   default 2000).
+#' @param options list; \code{threshold} = max points to keep (integer >= 3,
+#'   default 2000). Requires non-NA x and y values.
 #' @return list(data = downsampled rows, meta).
 #' @noRd
 transform_lttb <- function(data, mapping, options = list()) {
@@ -23,15 +23,22 @@ transform_lttb <- function(data, mapping, options = list()) {
     threshold <- 2000L
   }
   if (!is.numeric(threshold) || length(threshold) != 1L || is.na(threshold) ||
-      threshold < 2) {
+      threshold < 3) {
     stop("addIoLayer(): `options$threshold` for transform 'lttb' must be a ",
-         "single number >= 2.", call. = FALSE)
+         "single number >= 3.", call. = FALSE)
   }
   threshold <- as.integer(floor(threshold))
 
-  x <- data[[mapping$x_var]]
-  y <- data[[mapping$y_var]]
-  keep <- lttb_select(as.numeric(x), as.numeric(y), threshold)
+  x <- as.numeric(data[[mapping$x_var]])
+  y <- as.numeric(data[[mapping$y_var]])
+  # LTTB's triangle-area selection is undefined for NA gaps (areas become NA and
+  # no bucket winner can be chosen). Line gaps are idiomatic in R, so fail loudly
+  # rather than silently dropping or crashing deep in the algorithm.
+  if (anyNA(x) || anyNA(y)) {
+    stop("addIoLayer(): transform 'lttb' requires non-NA x and y values. ",
+         "Remove or impute NAs before downsampling.", call. = FALSE)
+  }
+  keep <- lttb_select(x, y, threshold)
 
   list(
     data = data[keep, , drop = FALSE],
@@ -72,11 +79,15 @@ lttb_select <- function(x, y, threshold) {
     avg_x <- mean(x[avg_range])
     avg_y <- mean(y[avg_range])
 
-    # Candidate points in the *current* bucket.
+    # Candidate points in the *current* bucket. The upper bound is exclusive:
+    # adjacent buckets share an endpoint (bucket i's range_end == bucket i+1's
+    # range_start), so an inclusive range lets a point be picked by two buckets
+    # and produces a duplicate index on flat/collinear geometry. bucket_size > 1
+    # for every valid threshold < n, so the half-open range is never empty.
     range_start <- as.integer(floor((i - 1) * bucket_size)) + 2L
     range_end <- as.integer(floor(i * bucket_size)) + 2L
     range_end <- min(range_end, n)
-    idxs <- range_start:range_end
+    idxs <- range_start:(range_end - 1L)
 
     ax <- x[a]
     ay <- y[a]
