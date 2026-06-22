@@ -86,6 +86,15 @@
   inline legend are not given a duplicated legend on image/SVG export
   (GH [\#64](https://github.com/mortonanalytics/myIO/issues/64)).
 
+- Layer-data serialization
+  ([`addIoLayer()`](https://mortonanalytics.github.io/myIO/reference/addIoLayer.md))
+  is faster for large data: the row-rectangling step now extracts
+  columns once and indexes per row instead of subsetting the data frame
+  on every row, roughly 5x faster at 100k rows. The emitted JSON is
+  byte-identical to before (pinned by tests across numeric, integer,
+  character, logical, factor, Date, and POSIXct columns), so every chart
+  type renders exactly as it did.
+
 ## myIO 1.2.0
 
 CRAN release: 2026-06-11
