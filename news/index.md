@@ -18,6 +18,14 @@
   including under the viewer’s `prefers-reduced-motion: reduce` system
   setting. A Playwright e2e spec verifies animate-when-on,
   still-when-off, and still-under-reduced-motion.
+- New opt-in `"lttb"` transform for `line` layers downsamples a large
+  series with Largest-Triangle-Three-Buckets, shipping at most
+  `options$threshold` points (default 2000) while preserving the visual
+  shape:
+  `addIoLayer(type = "line", transform = "lttb", options = list(threshold = 1000))`.
+  Off by default (`identity`); runs on the in-memory/SVG path and is
+  independent of the DuckDB-WASM engine’s own SQL-side LTTB, so it never
+  double-downsamples.
 
 ### Performance and tooling
 
