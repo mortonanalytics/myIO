@@ -34,6 +34,11 @@
   `touchstart` on a bar surfaces the tooltip with the datum’s content
   and `touchend` dismisses it, guarding the mobile hover path against
   the production bundle.
+- The `file://` deployment e2e (self-contained widget opened directly
+  from disk) is now exercised for real: its fixture loads the IIFE
+  bundle via a classic `<script src>` rather than an ES module, so the
+  file-protocol → SVG-engine fallback is verified under `file://`
+  instead of skipped.
 
 ### Improved error messages and API ergonomics
 
