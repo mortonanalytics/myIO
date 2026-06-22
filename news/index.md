@@ -26,6 +26,17 @@
   Off by default (`identity`); runs on the in-memory/SVG path and is
   independent of the DuckDB-WASM engine’s own SQL-side LTTB, so it never
   double-downsamples.
+- New
+  [`myIOProxy()`](https://mortonanalytics.github.io/myIO/reference/myIOProxy.md) +
+  [`updateMyIOData()`](https://mortonanalytics.github.io/myIO/reference/myIOProxy.md)
+  update a rendered chart’s layer data in place from the Shiny server
+  without re-running
+  [`renderMyIO()`](https://mortonanalytics.github.io/myIO/reference/myIO-shiny.md).
+  Layers are matched by label and swapped through the existing data-join
+  path, so only the changed marks transition and brush/zoom/toggle state
+  is preserved (the full re-render destroyed and recreated the chart,
+  flickering and dropping state):
+  `myIOProxy("chart") |> updateMyIOData(series = new_df)`.
 
 ### Performance and tooling
 

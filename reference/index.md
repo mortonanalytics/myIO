@@ -99,6 +99,9 @@ Use myIO widgets in Shiny applications
 - [`myIOOutput()`](https://mortonanalytics.github.io/myIO/reference/myIO-shiny.md)
   [`renderMyIO()`](https://mortonanalytics.github.io/myIO/reference/myIO-shiny.md)
   : Shiny Bindings for myIO
+- [`myIOProxy()`](https://mortonanalytics.github.io/myIO/reference/myIOProxy.md)
+  [`updateMyIOData()`](https://mortonanalytics.github.io/myIO/reference/myIOProxy.md)
+  : Update a myIO chart in place from the Shiny server
 
 ## LLM Tool Calling
 
