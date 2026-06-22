@@ -1,3 +1,4 @@
+import { easingFor, staggerDelay } from "../transitions/easing.js";
 import { pointRadius, resolveColor, strokeWidth, tagName } from "../utils/responsive.js";
 
 export class LineRenderer {
@@ -40,7 +41,7 @@ export class LineRenderer {
 
     linePath.merge(newLinePath)
       .transition()
-      .ease(d3.easeQuad)
+      .ease(easingFor(chart, d3.easeQuad))
       .duration(transitionSpeed)
       .style("opacity", 1)
       .style("stroke-width", strokeWidth(chart))
@@ -66,7 +67,7 @@ export class LineRenderer {
 
     points
       .transition()
-      .ease(d3.easeQuad)
+      .ease(easingFor(chart, d3.easeQuad))
       .duration(transitionSpeed)
       .attr("r", pointRadius(chart))
       .style("fill", function(d) {
@@ -95,7 +96,7 @@ export class LineRenderer {
       })
       .attr("class", tagName("point", chart.element.id, layer.label))
       .transition()
-      .ease(d3.easeQuad)
+      .ease(easingFor(chart, d3.easeQuad))
       .duration(transitionSpeed)
       .style("opacity", 1);
   }

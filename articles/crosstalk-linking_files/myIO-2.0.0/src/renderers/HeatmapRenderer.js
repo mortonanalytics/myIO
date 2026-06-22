@@ -1,3 +1,4 @@
+import { easingFor } from "../transitions/easing.js";
 import { tagName } from "../utils/responsive.js";
 
 export class HeatmapRenderer {
@@ -47,7 +48,7 @@ export class HeatmapRenderer {
 
     cells.merge(newCells)
       .transition()
-      .ease(d3.easeQuad)
+      .ease(easingFor(chart, d3.easeQuad))
       .duration(transitionSpeed)
       .attr("x", function(d) { return chart.xScale(d[xVar]); })
       .attr("y", function(d) { return chart.yScale(d[yVar]); })

@@ -130,7 +130,7 @@ matter:
   length(myio_list_chart_types())   # chart types
   #> [1] 36
   length(myio_list_functions())     # exported function signatures
-  #> [1] 41
+  #> [1] 42
   ```
 
 - **Stable, machine-readable errors.** Every result is

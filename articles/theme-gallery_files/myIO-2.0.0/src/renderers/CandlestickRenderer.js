@@ -1,3 +1,4 @@
+import { easingFor } from "../transitions/easing.js";
 import { tagName } from "../utils/responsive.js";
 
 export class CandlestickRenderer {
@@ -61,18 +62,18 @@ export class CandlestickRenderer {
     var merged = candle.merge(enter);
 
     merged
-      .transition().ease(d3.easeQuad).duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeQuad)).duration(transitionSpeed)
       .style("opacity", 1);
 
     merged.select("line.wick")
-      .transition().ease(d3.easeQuad).duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeQuad)).duration(transitionSpeed)
       .attr("x1", candleX)
       .attr("x2", candleX)
       .attr("y1", function(d) { return chart.yScale(+d[lowVar]); })
       .attr("y2", function(d) { return chart.yScale(+d[highVar]); });
 
     merged.select("rect.body")
-      .transition().ease(d3.easeQuad).duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeQuad)).duration(transitionSpeed)
       .attr("x", function(d) { return candleX(d) - width / 2; })
       .attr("y", bodyTop)
       .attr("width", width)

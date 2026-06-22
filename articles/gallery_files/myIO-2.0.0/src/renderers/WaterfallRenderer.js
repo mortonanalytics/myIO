@@ -1,3 +1,4 @@
+import { easingFor } from "../transitions/easing.js";
 import { tagName } from "../utils/responsive.js";
 
 export class WaterfallRenderer {
@@ -41,7 +42,7 @@ export class WaterfallRenderer {
 
     bars.merge(newBars)
       .transition()
-      .ease(d3.easeQuad)
+      .ease(easingFor(chart, d3.easeQuad))
       .duration(transitionSpeed)
       .attr("x", function(d) { return chart.xScale(d[xVar]) + barOffset; })
       .attr("width", barWidth)
@@ -83,7 +84,7 @@ export class WaterfallRenderer {
 
     connectorLines.merge(newConnectors)
       .transition()
-      .ease(d3.easeQuad)
+      .ease(easingFor(chart, d3.easeQuad))
       .duration(transitionSpeed)
       .style("opacity", 1)
       .attr("x1", function(d, i) { return chart.xScale(layer.data[i][xVar]) + barOffset + barWidth; })

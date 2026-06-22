@@ -1,3 +1,4 @@
+import { easingFor } from "../transitions/easing.js";
 import { tagName } from "../utils/responsive.js";
 
 export class HexbinRenderer {
@@ -37,7 +38,7 @@ export class HexbinRenderer {
       .attr("fill", "white");
 
     bins.merge(newbins)
-      .transition().ease(d3.easeQuad).duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeQuad)).duration(transitionSpeed)
       .attr("d", hexbin.hexagon())
       .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
       .attr("fill", function(d) { return chart.colorContinuous(d.length); });

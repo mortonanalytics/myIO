@@ -1,3 +1,4 @@
+import { easingFor } from "../transitions/easing.js";
 import { tagName } from "../utils/responsive.js";
 
 export class RangeBarRenderer {
@@ -54,7 +55,7 @@ export class RangeBarRenderer {
 
     bars.merge(newBars)
       .transition()
-      .ease(d3.easeQuad)
+      .ease(easingFor(chart, d3.easeQuad))
       .duration(transitionSpeed)
       .attr("x", function(d) { return chart.xScale(d[xVar]) - barWidth / 2; })
       .attr("y", topY)
@@ -145,31 +146,31 @@ function renderErrorBars(chart, layer) {
   var merged = groups.merge(enter);
 
   merged
-    .transition().ease(d3.easeQuad).duration(transitionSpeed)
+    .transition().ease(easingFor(chart, d3.easeQuad)).duration(transitionSpeed)
     .style("opacity", 1);
 
   merged.select(".mean-ci-whisker")
-    .transition().ease(d3.easeQuad).duration(transitionSpeed)
+    .transition().ease(easingFor(chart, d3.easeQuad)).duration(transitionSpeed)
     .attr("x1", centerX).attr("x2", centerX)
     .attr("y1", lowY).attr("y2", highY)
     .attr("stroke", color);
 
   merged.select(".mean-ci-cap-low")
-    .transition().ease(d3.easeQuad).duration(transitionSpeed)
+    .transition().ease(easingFor(chart, d3.easeQuad)).duration(transitionSpeed)
     .attr("x1", function(d) { return centerX(d) - capWidth / 2; })
     .attr("x2", function(d) { return centerX(d) + capWidth / 2; })
     .attr("y1", lowY).attr("y2", lowY)
     .attr("stroke", color);
 
   merged.select(".mean-ci-cap-high")
-    .transition().ease(d3.easeQuad).duration(transitionSpeed)
+    .transition().ease(easingFor(chart, d3.easeQuad)).duration(transitionSpeed)
     .attr("x1", function(d) { return centerX(d) - capWidth / 2; })
     .attr("x2", function(d) { return centerX(d) + capWidth / 2; })
     .attr("y1", highY).attr("y2", highY)
     .attr("stroke", color);
 
   merged.select(".mean-ci-point")
-    .transition().ease(d3.easeQuad).duration(transitionSpeed)
+    .transition().ease(easingFor(chart, d3.easeQuad)).duration(transitionSpeed)
     .attr("cx", centerX).attr("cy", meanY)
     .attr("r", radius)
     .attr("fill", color);

@@ -1,3 +1,4 @@
+import { easingFor, staggerDelay } from "../transitions/easing.js";
 import { pointRadius, resolveColor, tagName } from "../utils/responsive.js";
 
 export class PointRenderer {
@@ -36,8 +37,9 @@ export class PointRenderer {
 
     points
       .transition()
-      .ease(d3.easeQuad)
+      .ease(easingFor(chart, d3.easeQuad))
       .duration(transitionSpeed)
+      .delay(staggerDelay(chart, 0))
       .attr("r", pointRadius(chart))
       .style("fill", function(d) {
         return resolveColor(chart, d[layer.mapping.group], layer.color);
@@ -65,8 +67,9 @@ export class PointRenderer {
       })
       .attr("class", tagName("point", chart.element.id, layer.label))
       .transition()
-      .ease(d3.easeQuad)
+      .ease(easingFor(chart, d3.easeQuad))
       .duration(transitionSpeed)
+      .delay(staggerDelay(chart, 0))
       .style("opacity", 1);
 
     if (chart.options.dragPoints == true) {
@@ -105,7 +108,7 @@ function renderCrosshairsX(chart, layer) {
 
   crosshairsX.transition()
     .duration(transitionSpeed)
-    .ease(d3.easeQuad)
+    .ease(easingFor(chart, d3.easeQuad))
     .attr("x1", function(d) { return chart.xScale(d[layer.mapping.low_x]); })
     .attr("x2", function(d) { return chart.xScale(d[layer.mapping.high_x]); })
     .attr("y1", function(d) { return chart.yScale(d[layer.mapping.y_var]); })
@@ -125,7 +128,7 @@ function renderCrosshairsX(chart, layer) {
     .transition()
     .delay(transitionSpeed)
     .duration(transitionSpeed)
-    .ease(d3.easeQuad)
+    .ease(easingFor(chart, d3.easeQuad))
     .attr("x1", function(d) { return chart.xScale(d[layer.mapping.low_x]); })
     .attr("x2", function(d) { return chart.xScale(d[layer.mapping.high_x]); });
 }
@@ -145,7 +148,7 @@ function renderMedianLine(chart, layer) {
 
   lines.transition()
     .duration(transitionSpeed)
-    .ease(d3.easeQuad)
+    .ease(easingFor(chart, d3.easeQuad))
     .attr("x1", function(d) { return chart.xScale(d[layer.mapping.x_var]) - barHalfWidth; })
     .attr("x2", function(d) { return chart.xScale(d[layer.mapping.x_var]) + barHalfWidth; })
     .attr("y1", function(d) { return chart.yScale(d[layer.mapping.y_var]); })
@@ -165,7 +168,7 @@ function renderMedianLine(chart, layer) {
     .transition()
     .delay(transitionSpeed)
     .duration(transitionSpeed)
-    .ease(d3.easeQuad)
+    .ease(easingFor(chart, d3.easeQuad))
     .style("opacity", 1)
     .attr("x1", function(d) { return chart.xScale(d[layer.mapping.x_var]) - barHalfWidth; })
     .attr("x2", function(d) { return chart.xScale(d[layer.mapping.x_var]) + barHalfWidth; });
@@ -185,7 +188,7 @@ function renderWhiskerCaps(chart, layer) {
 
   caps.transition()
     .duration(transitionSpeed)
-    .ease(d3.easeQuad)
+    .ease(easingFor(chart, d3.easeQuad))
     .attr("x1", function(d) { return chart.xScale(d[layer.mapping.x_var]) - capHalfWidth; })
     .attr("x2", function(d) { return chart.xScale(d[layer.mapping.x_var]) + capHalfWidth; })
     .attr("y1", function(d) { return chart.yScale(d[capYField]); })
@@ -207,7 +210,7 @@ function renderWhiskerCaps(chart, layer) {
     // Wait for whisker line to finish growing, then open the cap
     .delay(transitionSpeed * 2)
     .duration(transitionSpeed)
-    .ease(d3.easeQuad)
+    .ease(easingFor(chart, d3.easeQuad))
     .attr("x1", function(d) { return chart.xScale(d[layer.mapping.x_var]) - capHalfWidth; })
     .attr("x2", function(d) { return chart.xScale(d[layer.mapping.x_var]) + capHalfWidth; });
 }
@@ -226,7 +229,7 @@ function renderWhiskerLine(chart, layer) {
   lines.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
 
   lines.transition()
-    .ease(d3.easeQuad)
+    .ease(easingFor(chart, d3.easeQuad))
     .duration(transitionSpeed)
     .attr("x1", function(d) { return chart.xScale(d[layer.mapping.x_var]); })
     .attr("x2", function(d) { return chart.xScale(d[layer.mapping.x_var]); })
@@ -247,7 +250,7 @@ function renderWhiskerLine(chart, layer) {
     .attr("class", tagName("crosshairY", chart.element.id, layer.label))
     .transition()
     .delay(transitionSpeed)
-    .ease(d3.easeQuad)
+    .ease(easingFor(chart, d3.easeQuad))
     .duration(transitionSpeed)
     // Grow toward whisker endpoint
     .attr("y2", function(d) { return chart.yScale(d[whiskerEndField]); });
@@ -262,7 +265,7 @@ function renderCrosshairsY(chart, layer) {
   crosshairsY.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
 
   crosshairsY.transition()
-    .ease(d3.easeQuad)
+    .ease(easingFor(chart, d3.easeQuad))
     .duration(transitionSpeed)
     .attr("x1", function(d) { return chart.xScale(d[layer.mapping.x_var]); })
     .attr("x2", function(d) { return chart.xScale(d[layer.mapping.x_var]); })
@@ -282,7 +285,7 @@ function renderCrosshairsY(chart, layer) {
     .attr("class", tagName("crosshairY", chart.element.id, layer.label))
     .transition()
     .delay(transitionSpeed)
-    .ease(d3.easeQuad)
+    .ease(easingFor(chart, d3.easeQuad))
     .duration(transitionSpeed)
     .attr("y1", function(d) { return chart.yScale(d[layer.mapping.low_y]); })
     .attr("y2", function(d) { return chart.yScale(d[layer.mapping.high_y]); });

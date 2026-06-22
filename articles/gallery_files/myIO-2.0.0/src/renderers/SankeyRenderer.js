@@ -1,3 +1,4 @@
+import { easingFor } from "../transitions/easing.js";
 import { getChartHeight } from "../layout/scaffold.js";
 import { tagName } from "../utils/responsive.js";
 
@@ -62,7 +63,7 @@ export class SankeyRenderer {
 
     link.merge(newLink)
       .transition()
-      .ease(d3.easeQuad)
+      .ease(easingFor(chart, d3.easeQuad))
       .duration(chart.options.transition.speed)
       .style("opacity", 1)
       .attr("d", d3.sankeyLinkHorizontal())
@@ -88,7 +89,7 @@ export class SankeyRenderer {
 
     node.merge(newNode)
       .transition()
-      .ease(d3.easeQuad)
+      .ease(easingFor(chart, d3.easeQuad))
       .duration(chart.options.transition.speed)
       .style("opacity", 1)
       .attr("x", function(d) { return d.x0; })
