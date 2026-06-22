@@ -50,9 +50,10 @@ subset of the data.</p>
 <span>  <span class="va">myIO</span>,</span>
 <span>  <span class="va">var</span>,</span>
 <span>  ncol <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  min_width <span class="op">=</span> <span class="fl">200</span>,</span>
+<span>  minWidth <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  scales <span class="op">=</span> <span class="st">"fixed"</span>,</span>
-<span>  label_position <span class="op">=</span> <span class="st">"top"</span></span>
+<span>  labelPosition <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -71,10 +72,10 @@ one layer's data.</p></dd>
 
 <dt id="arg-ncol">ncol<a class="anchor" aria-label="anchor" href="#arg-ncol"></a></dt>
 <dd><p>Integer or NULL. Number of columns in the grid. If NULL,
-auto-computes from <code>min_width</code> and container width.</p></dd>
+auto-computes from <code>minWidth</code> and container width.</p></dd>
 
 
-<dt id="arg-min-width">min_width<a class="anchor" aria-label="anchor" href="#arg-min-width"></a></dt>
+<dt id="arg-minwidth">minWidth<a class="anchor" aria-label="anchor" href="#arg-minwidth"></a></dt>
 <dd><p>Numeric. Minimum panel width in pixels when <code>ncol</code>
 is NULL. Default 200.</p></dd>
 
@@ -87,9 +88,14 @@ is NULL. Default 200.</p></dd>
 </ul></dd>
 
 
-<dt id="arg-label-position">label_position<a class="anchor" aria-label="anchor" href="#arg-label-position"></a></dt>
+<dt id="arg-labelposition">labelPosition<a class="anchor" aria-label="anchor" href="#arg-labelposition"></a></dt>
 <dd><p>Character. Where to show panel labels:
 <code>"top"</code> (default) or <code>"bottom"</code>.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>reserved; accepts the deprecated <code>min_width</code> and
+<code>label_position</code> aliases for <code>minWidth</code> and <code>labelPosition</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

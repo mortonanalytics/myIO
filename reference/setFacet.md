@@ -11,9 +11,10 @@ setFacet(
   myIO,
   var,
   ncol = NULL,
-  min_width = 200,
+  minWidth = NULL,
   scales = "fixed",
-  label_position = "top"
+  labelPosition = NULL,
+  ...
 )
 ```
 
@@ -31,9 +32,9 @@ setFacet(
 - ncol:
 
   Integer or NULL. Number of columns in the grid. If NULL, auto-computes
-  from `min_width` and container width.
+  from `minWidth` and container width.
 
-- min_width:
+- minWidth:
 
   Numeric. Minimum panel width in pixels when `ncol` is NULL. Default
   200.
@@ -50,10 +51,15 @@ setFacet(
 
   - `"free"` – independent x and y scales per panel
 
-- label_position:
+- labelPosition:
 
   Character. Where to show panel labels: `"top"` (default) or
   `"bottom"`.
+
+- ...:
+
+  reserved; accepts the deprecated `min_width` and `label_position`
+  aliases for `minWidth` and `labelPosition`.
 
 ## Value
 

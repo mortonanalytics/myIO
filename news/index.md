@@ -50,6 +50,16 @@
 
 ### Improved error messages and API ergonomics
 
+- Argument names are now consistently camelCase across setters.
+  `setBrush(onSelect)`, `setFacet(minWidth, labelPosition)`,
+  `setTheme(textColor, gridColor)`, and `setBigData(rowkeyCol)` are the
+  canonical forms (matching `colorScheme`, `xAxis`, etc.). The previous
+  snake_case names (`on_select`, `min_width`, `label_position`,
+  `text_color`, `grid_color`, `rowkey_col`) keep working as deprecated
+  aliases that emit a one-line warning; existing code is unaffected
+  aside from the warning. When both forms are supplied the camelCase
+  value wins.
+
 - [`setFacet()`](https://mortonanalytics.github.io/myIO/reference/setFacet.md),
   [`setLayerOpacity()`](https://mortonanalytics.github.io/myIO/reference/setLayerOpacity.md),
   and `setTheme(mode = )` now report invalid arguments with consistent,

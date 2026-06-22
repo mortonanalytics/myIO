@@ -7,7 +7,7 @@ input in Shiny or exportable in static HTML.
 ## Usage
 
 ``` r
-setBrush(myIO, direction = "xy", on_select = "highlight")
+setBrush(myIO, direction = "xy", onSelect = NULL, ...)
 ```
 
 ## Arguments
@@ -22,10 +22,14 @@ setBrush(myIO, direction = "xy", on_select = "highlight")
 
   brush direction: `"xy"` (default), `"x"`, or `"y"`
 
-- on_select:
+- onSelect:
 
   behavior in static mode: `"highlight"` (default) or `"export"` (scopes
   CSV download to selected points)
+
+- ...:
+
+  reserved; accepts the deprecated `on_select` alias for `onSelect`.
 
 ## Value
 

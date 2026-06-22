@@ -133,6 +133,10 @@ myIO() |>
   ) |>
   setAxisFormat(xLabel = "Horsepower", yLabel = "Quarter Mile Time (s)") |>
   setMargin(top = 20, bottom = 70, left = 60, right = 10)
+#> Warning in deprecate_arg("text_color", "textColor", "setTheme"): setTheme():
+#> argument `text_color` is deprecated; use `textColor` instead.
+#> Warning in deprecate_arg("grid_color", "gridColor", "setTheme"): setTheme():
+#> argument `grid_color` is deprecated; use `gridColor` instead.
 ```
 
 ## Donut Chart

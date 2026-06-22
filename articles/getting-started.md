@@ -129,6 +129,10 @@ myIO() |>
     bg = "#1a1a2e",
     font = "Fira Code, monospace"
   )
+#> Warning in deprecate_arg("text_color", "textColor", "setTheme"): setTheme():
+#> argument `text_color` is deprecated; use `textColor` instead.
+#> Warning in deprecate_arg("grid_color", "gridColor", "setTheme"): setTheme():
+#> argument `grid_color` is deprecated; use `gridColor` instead.
 ```
 
 See [Transforms &
