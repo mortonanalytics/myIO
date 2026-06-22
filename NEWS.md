@@ -65,6 +65,12 @@
   in-memory and DuckDB-WASM engines.
 * Added a regression test confirming charts that already render an inline
   legend are not given a duplicated legend on image/SVG export (GH #64).
+* Layer-data serialization (`addIoLayer()`) is faster for large data: the
+  row-rectangling step now extracts columns once and indexes per row instead of
+  subsetting the data frame on every row, roughly 5x faster at 100k rows. The
+  emitted JSON is byte-identical to before (pinned by tests across numeric,
+  integer, character, logical, factor, Date, and POSIXct columns), so every
+  chart type renders exactly as it did.
 
 # myIO 1.2.0
 
