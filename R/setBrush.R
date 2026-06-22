@@ -7,8 +7,9 @@
 #' @param myIO an htmlwidget object created by the \code{myIO()} function
 #' @param direction brush direction: \code{"xy"} (default), \code{"x"},
 #'   or \code{"y"}
-#' @param on_select behavior in static mode: \code{"highlight"} (default)
+#' @param onSelect behavior in static mode: \code{"highlight"} (default)
 #'   or \code{"export"} (scopes CSV download to selected points)
+#' @param on_select deprecated; use \code{onSelect}.
 #'
 #' @return A modified \code{myIO} htmlwidget object with brush interaction
 #'   enabled.
@@ -21,14 +22,16 @@
 #'   setBrush()
 #'
 #' @export
-setBrush <- function(myIO, direction = "xy", on_select = "highlight") {
+setBrush <- function(myIO, direction = "xy", onSelect = NULL, on_select = NULL) {
   assert_myIO(myIO)
+  onSelect <- deprecated_alias(onSelect, on_select, "onSelect", "on_select", "setBrush")
+  if (is.null(onSelect)) onSelect <- "highlight"
   check_choice(direction, c("xy", "x", "y"), "direction", "setBrush")
-  check_choice(on_select, c("highlight", "export"), "on_select", "setBrush")
+  check_choice(onSelect, c("highlight", "export"), "onSelect", "setBrush")
   myIO$x$config$interactions$brush <- list(
     enabled = TRUE,
     direction = direction,
-    onSelect = on_select
+    onSelect = onSelect
   )
   myIO
 }

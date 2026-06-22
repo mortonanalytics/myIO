@@ -43,3 +43,19 @@ check_class <- function(x, cls, arg_name, fn_name) {
          paste(class(x), collapse = "/"), ".", call. = FALSE)
   }
 }
+
+# Resolve a camelCase argument that has a deprecated snake_case alias. The
+# camelCase form is canonical (matches colorScheme/xAxis/xRef etc.); the
+# snake_case form keeps working but warns. Both default to NULL in the caller,
+# which then coalesces the result to the real default. Precedence: if both are
+# supplied the camelCase value wins. Returns NULL when neither is supplied.
+deprecated_alias <- function(new_val, old_val, new_name, old_name, fn_name) {
+  if (!is.null(old_val)) {
+    warning(fn_name, "(): argument `", old_name, "` is deprecated; use `",
+            new_name, "` instead.", call. = FALSE)
+    if (is.null(new_val)) {
+      return(old_val)
+    }
+  }
+  new_val
+}

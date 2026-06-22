@@ -57,7 +57,7 @@ test_that("setBigData preserves rowkey_col when user supplies it", {
   skip_if_not_installed("arrow")
   skip_if_not_installed("base64enc")
   df <- data.frame(id = 1:5, val = rnorm(5))
-  w <- myIO::myIO() |> myIO:::setBigData(df, rowkey_col = "id")
+  w <- myIO::myIO() |> myIO:::setBigData(df, rowkeyCol = "id")
   expect_equal(w$x$bigdata$rowkey_col, "id")
 })
 
@@ -65,7 +65,7 @@ test_that("setBigData rejects rowkey_col that is not in the source schema", {
   skip_if_not_installed("arrow")
   skip_if_not_installed("base64enc")
   df <- data.frame(a = 1, b = 2)
-  err <- tryCatch(myIO:::setBigData(myIO::myIO(), df, rowkey_col = "nope"),
+  err <- tryCatch(myIO:::setBigData(myIO::myIO(), df, rowkeyCol = "nope"),
                   error = function(e) e)
   expect_s3_class(err, "myIOError_engine_unsupported_source")
 })

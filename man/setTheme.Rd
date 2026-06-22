@@ -6,22 +6,24 @@
 \usage{
 setTheme(
   myIO,
-  text_color = NULL,
-  grid_color = NULL,
+  textColor = NULL,
+  gridColor = NULL,
   bg = NULL,
   font = NULL,
   mode = NULL,
   preset = NULL,
   overrides = list(),
+  text_color = NULL,
+  grid_color = NULL,
   ...
 )
 }
 \arguments{
 \item{myIO}{an htmlwidget object created by the myIO() function}
 
-\item{text_color}{text and label color}
+\item{textColor}{text and label color}
 
-\item{grid_color}{grid line color}
+\item{gridColor}{grid line color}
 
 \item{bg}{background color}
 
@@ -40,6 +42,10 @@ ignored. Default NULL.}
 \item{overrides}{Named list of CSS custom property overrides
 (e.g., \code{list("--chart-tooltip-bg" = "#222")}).}
 
+\item{text_color}{deprecated; use \code{textColor}.}
+
+\item{grid_color}{deprecated; use \code{gridColor}.}
+
 \item{...}{additional CSS custom property overrides; only names with a
 \code{--} prefix are applied. Other names are ignored with a warning.}
 }
@@ -52,7 +58,7 @@ Sets chart theme tokens using CSS custom properties
 }
 \examples{
 myIO() |>
-  setTheme(text_color = "#222222", grid_color = "#d9d9d9")
+  setTheme(textColor = "#222222", gridColor = "#d9d9d9")
 
 myIO() |>
   setTheme(mode = "dark", bg = "#1a1a2e")

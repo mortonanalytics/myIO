@@ -15,7 +15,7 @@ test_that("setBrush rejects non-myIO input", {
 })
 
 test_that("setBrush with x direction and export", {
-  w <- myIO() |> setBrush(direction = "x", on_select = "export")
+  w <- myIO() |> setBrush(direction = "x", onSelect = "export")
   expect_equal(w$x$config$interactions$brush$direction, "x")
   expect_equal(w$x$config$interactions$brush$onSelect, "export")
 })

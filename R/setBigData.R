@@ -7,8 +7,9 @@
 #' @param source A supported big-data source: a `data.frame`, an Arrow table or
 #'   record-batch reader, a single file path or URL ending in `.parquet`,
 #'   `.arrow`, `.feather`, or `.csv`, or a `DBIConnection`.
-#' @param rowkey_col Optional name of the column that uniquely identifies rows
+#' @param rowkeyCol Optional name of the column that uniquely identifies rows
 #'   for Crosstalk-compatible linked selections.
+#' @param rowkey_col deprecated; use \code{rowkeyCol}.
 #' @param ... Additional source-specific options. For DBI sources, pass
 #'   `table = "name"` so myIO can query the table schema. For file path or URL
 #'   sources, pass `schema = c("col1", "col2", ...)` or a schema field list.
@@ -29,24 +30,26 @@
 #'   setBigData(mtcars)
 #'
 #' myIO() |>
-#'   setBigData("data/large.parquet", schema = c("id", "x", "y"), rowkey_col = "id")
+#'   setBigData("data/large.parquet", schema = c("id", "x", "y"), rowkeyCol = "id")
 #'
 #' if (requireNamespace("duckdb", quietly = TRUE)) {
 #'   con <- DBI::dbConnect(duckdb::duckdb())
 #'   obs <- data.frame(id = seq_len(nrow(mtcars)), mpg = mtcars$mpg)
 #'   DBI::dbWriteTable(con, "observations", obs)
 #'   myIO() |>
-#'     setBigData(con, table = "observations", rowkey_col = "id")
+#'     setBigData(con, table = "observations", rowkeyCol = "id")
 #'   DBI::dbDisconnect(con, shutdown = TRUE)
 #' }
 #' }
-setBigData <- function(widget, source, rowkey_col = NULL, ...) {
+setBigData <- function(widget, source, rowkeyCol = NULL, ..., rowkey_col = NULL) {
   if (!inherits(widget, "htmlwidget") ||
       !identical(attr(widget, "package"), "myIO")) {
     stop("setBigData() expects a myIO widget object.", call. = FALSE)
   }
 
-  payload <- .make_bigdata_payload(source, rowkey_col = rowkey_col, ...)
+  rowkeyCol <- deprecated_alias(rowkeyCol, rowkey_col, "rowkeyCol", "rowkey_col", "setBigData")
+
+  payload <- .make_bigdata_payload(source, rowkey_col = rowkeyCol, ...)
 
   if (is.null(widget$x)) widget$x <- list()
   if (is.null(widget$x$bigdata)) widget$x$bigdata <- list()

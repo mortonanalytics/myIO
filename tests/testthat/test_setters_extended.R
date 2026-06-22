@@ -3,7 +3,7 @@
 # --- setTheme ---
 
 test_that("setTheme sets all theme properties", {
-  w <- myIO::setTheme(myIO::myIO(), text_color = "white", grid_color = "#333", bg = "#1a1a2e", font = "monospace")
+  w <- myIO::setTheme(myIO::myIO(), textColor = "white", gridColor = "#333", bg = "#1a1a2e", font = "monospace")
   expect_equal(w$x$config$theme$values[["--chart-text-color"]], "white")
   expect_equal(w$x$config$theme$values[["--chart-grid-color"]], "#333")
   expect_equal(w$x$config$theme$values[["--chart-bg"]], "#1a1a2e")
@@ -11,7 +11,7 @@ test_that("setTheme sets all theme properties", {
 })
 
 test_that("setTheme removes NULL properties", {
-  w <- myIO::setTheme(myIO::myIO(), text_color = "red")
+  w <- myIO::setTheme(myIO::myIO(), textColor = "red")
   expect_equal(w$x$config$theme$values[["--chart-text-color"]], "red")
   expect_null(w$x$config$theme$values[["--chart-grid-color"]])
   expect_null(w$x$config$theme$values[["--chart-bg"]])

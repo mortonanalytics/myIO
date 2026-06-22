@@ -3,8 +3,8 @@
 #' Sets chart theme tokens using CSS custom properties
 #'
 #' @param myIO an htmlwidget object created by the myIO() function
-#' @param text_color text and label color
-#' @param grid_color grid line color
+#' @param textColor text and label color
+#' @param gridColor grid line color
 #' @param bg background color
 #' @param font font family
 #' @param mode Character or NULL. Theme mode: "light", "dark", or "auto".
@@ -17,6 +17,8 @@
 #'   ignored. Default NULL.
 #' @param overrides Named list of CSS custom property overrides
 #'   (e.g., \code{list("--chart-tooltip-bg" = "#222")}).
+#' @param text_color deprecated; use \code{textColor}.
+#' @param grid_color deprecated; use \code{gridColor}.
 #' @param ... additional CSS custom property overrides; only names with a
 #'   \code{--} prefix are applied. Other names are ignored with a warning.
 #'
@@ -24,16 +26,20 @@
 #'   configuration.
 #' @examples
 #' myIO() |>
-#'   setTheme(text_color = "#222222", grid_color = "#d9d9d9")
+#'   setTheme(textColor = "#222222", gridColor = "#d9d9d9")
 #'
 #' myIO() |>
 #'   setTheme(mode = "dark", bg = "#1a1a2e")
 #'
 #' @export
-setTheme <- function(myIO, text_color = NULL, grid_color = NULL, bg = NULL,
+setTheme <- function(myIO, textColor = NULL, gridColor = NULL, bg = NULL,
                      font = NULL, mode = NULL, preset = NULL,
-                     overrides = list(), ...) {
+                     overrides = list(), text_color = NULL, grid_color = NULL,
+                     ...) {
   assert_myIO(myIO)
+
+  textColor <- deprecated_alias(textColor, text_color, "textColor", "text_color", "setTheme")
+  gridColor <- deprecated_alias(gridColor, grid_color, "gridColor", "grid_color", "setTheme")
 
   if (!is.null(mode)) {
     check_choice(mode, c("light", "dark", "auto"), "mode", "setTheme")
@@ -41,8 +47,8 @@ setTheme <- function(myIO, text_color = NULL, grid_color = NULL, bg = NULL,
 
   # Existing behavior: named args -> theme values (with -- prefix)
   values <- list()
-  if (!is.null(text_color)) values[["--chart-text-color"]] <- text_color
-  if (!is.null(grid_color)) values[["--chart-grid-color"]] <- grid_color
+  if (!is.null(textColor)) values[["--chart-text-color"]] <- textColor
+  if (!is.null(gridColor)) values[["--chart-grid-color"]] <- gridColor
   if (!is.null(bg)) values[["--chart-bg"]] <- bg
   if (!is.null(font)) values[["--chart-font"]] <- font
 
@@ -57,7 +63,7 @@ setTheme <- function(myIO, text_color = NULL, grid_color = NULL, bg = NULL,
     }
   }
   if (length(ignored) > 0) {
-    known <- c("text_color", "grid_color", "bg", "font", "mode", "preset")
+    known <- c("textColor", "gridColor", "bg", "font", "mode", "preset")
     hints <- vapply(ignored, function(nm) {
       hit <- known[startsWith(known, substr(nm, 1, 3))]
       if (length(hit)) paste0(" Did you mean `", hit[1], "`?") else ""
