@@ -78,7 +78,7 @@ test_that("reference lines update config", {
 })
 
 test_that("setTheme prefixes extra CSS custom properties", {
-  widget <- myIO::setTheme(myIO::myIO(), text_color = "#111111",
+  widget <- myIO::setTheme(myIO::myIO(), textColor = "#111111",
                            "--chart-accent" = "#ff6600", "--chart-border" = "1px solid")
   expect_equal(widget$x$config$theme$values[["--chart-text-color"]], "#111111")
   expect_equal(widget$x$config$theme$values[["--chart-accent"]], "#ff6600")

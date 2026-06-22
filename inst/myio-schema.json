@@ -1346,13 +1346,14 @@
     "setBigData": [
       "widget",
       "source",
-      "rowkey_col",
+      "rowkeyCol",
       "..."
     ],
     "setBrush": [
       "myIO",
       "direction",
-      "on_select"
+      "onSelect",
+      "..."
     ],
     "setColorScheme": [
       "myIO",
@@ -1372,9 +1373,10 @@
       "myIO",
       "var",
       "ncol",
-      "min_width",
+      "minWidth",
       "scales",
-      "label_position"
+      "labelPosition",
+      "..."
     ],
     "setLayerOpacity": [
       "myIO",
@@ -1420,8 +1422,8 @@
     ],
     "setTheme": [
       "myIO",
-      "text_color",
-      "grid_color",
+      "textColor",
+      "gridColor",
       "bg",
       "font",
       "mode",

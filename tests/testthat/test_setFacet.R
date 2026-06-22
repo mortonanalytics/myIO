@@ -19,17 +19,17 @@ test_that("setFacet validates inputs", {
   expect_error(setFacet(p, c("a", "b")))   # length > 1
   expect_error(setFacet(p, "x", ncol = -1)) # negative
   expect_error(setFacet(p, "x", scales = "invalid"))
-  expect_error(setFacet(p, "x", label_position = "left"))
+  expect_error(setFacet(p, "x", labelPosition = "left"))
 })
 
 test_that("setFacet emits fn-prefixed, actionable error messages", {
   p <- myIO(iris)
   expect_error(setFacet(p, 123), "setFacet\\(\\): `var`")
   expect_error(setFacet(p, "x", ncol = -1), "setFacet\\(\\): `ncol` must be >= 1")
-  expect_error(setFacet(p, "x", min_width = 0), "setFacet\\(\\): `min_width` must be > 0")
+  expect_error(setFacet(p, "x", minWidth = 0), "setFacet\\(\\): `minWidth` must be > 0")
   expect_error(setFacet(p, "x", scales = "invalid"), 'setFacet\\(\\): `scales` must be')
-  expect_error(setFacet(p, "x", label_position = "left"),
-               'setFacet\\(\\): `label_position` must be')
+  expect_error(setFacet(p, "x", labelPosition = "left"),
+               'setFacet\\(\\): `labelPosition` must be')
 })
 
 test_that("setFacet with explicit ncol", {
@@ -52,7 +52,7 @@ test_that("setFacet label_position bottom", {
   p <- myIO(iris) |>
     addIoLayer("point", label = "pts",
                mapping = list(x_var = "Sepal.Length", y_var = "Sepal.Width")) |>
-    setFacet("Species", label_position = "bottom")
+    setFacet("Species", labelPosition = "bottom")
   expect_equal(p$x$config$facet$labelPosition, "bottom")
 })
 
@@ -60,7 +60,7 @@ test_that("setFacet custom min_width", {
   p <- myIO(iris) |>
     addIoLayer("point", label = "pts",
                mapping = list(x_var = "Sepal.Length", y_var = "Sepal.Width")) |>
-    setFacet("Species", min_width = 300)
+    setFacet("Species", minWidth = 300)
   expect_equal(p$x$config$facet$minWidth, 300)
 })
 

@@ -454,7 +454,7 @@ test_that("Theme demo renders with custom theme and reference line", {
       data = df,
       mapping = list(x_var = "hp", y_var = "mpg", group = "cyl")
     ) |>
-    setTheme(text_color = "#e0e0e0", grid_color = "#333333", bg = "#1a1a2e", font = "monospace") |>
+    setTheme(textColor = "#e0e0e0", gridColor = "#333333", bg = "#1a1a2e", font = "monospace") |>
     setAxisFormat(xLabel = "Horsepower", yLabel = "MPG") |>
     setReferenceLines(yRef = mean(df$mpg))
 

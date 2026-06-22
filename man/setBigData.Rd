@@ -4,7 +4,7 @@
 \alias{setBigData}
 \title{Attach a big-data source to a myIO widget}
 \usage{
-setBigData(widget, source, rowkey_col = NULL, ...)
+setBigData(widget, source, rowkeyCol = NULL, ...)
 }
 \arguments{
 \item{widget}{A myIO htmlwidget object.}
@@ -13,10 +13,11 @@ setBigData(widget, source, rowkey_col = NULL, ...)
 record-batch reader, a single file path or URL ending in `.parquet`,
 `.arrow`, `.feather`, or `.csv`, or a `DBIConnection`.}
 
-\item{rowkey_col}{Optional name of the column that uniquely identifies rows
+\item{rowkeyCol}{Optional name of the column that uniquely identifies rows
 for Crosstalk-compatible linked selections.}
 
-\item{...}{Additional source-specific options. For DBI sources, pass
+\item{...}{Additional source-specific options. Also accepts the deprecated
+\code{rowkey_col} alias for \code{rowkeyCol}. For DBI sources, pass
 `table = "name"` so myIO can query the table schema. For file path or URL
 sources, pass `schema = c("col1", "col2", ...)` or a schema field list.}
 }
@@ -40,14 +41,14 @@ myIO(data = mtcars) |>
   setBigData(mtcars)
 
 myIO() |>
-  setBigData("data/large.parquet", schema = c("id", "x", "y"), rowkey_col = "id")
+  setBigData("data/large.parquet", schema = c("id", "x", "y"), rowkeyCol = "id")
 
 if (requireNamespace("duckdb", quietly = TRUE)) {
   con <- DBI::dbConnect(duckdb::duckdb())
   obs <- data.frame(id = seq_len(nrow(mtcars)), mpg = mtcars$mpg)
   DBI::dbWriteTable(con, "observations", obs)
   myIO() |>
-    setBigData(con, table = "observations", rowkey_col = "id")
+    setBigData(con, table = "observations", rowkeyCol = "id")
   DBI::dbDisconnect(con, shutdown = TRUE)
 }
 }

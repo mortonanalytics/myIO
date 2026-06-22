@@ -8,9 +8,10 @@ setFacet(
   myIO,
   var,
   ncol = NULL,
-  min_width = 200,
+  minWidth = NULL,
   scales = "fixed",
-  label_position = "top"
+  labelPosition = NULL,
+  ...
 )
 }
 \arguments{
@@ -20,9 +21,9 @@ setFacet(
 one layer's data.}
 
 \item{ncol}{Integer or NULL. Number of columns in the grid. If NULL,
-auto-computes from \code{min_width} and container width.}
+auto-computes from \code{minWidth} and container width.}
 
-\item{min_width}{Numeric. Minimum panel width in pixels when \code{ncol}
+\item{minWidth}{Numeric. Minimum panel width in pixels when \code{ncol}
 is NULL. Default 200.}
 
 \item{scales}{Character. Scale sharing mode:
@@ -33,8 +34,11 @@ is NULL. Default 200.}
   \item \code{"free"} -- independent x and y scales per panel
 }}
 
-\item{label_position}{Character. Where to show panel labels:
+\item{labelPosition}{Character. Where to show panel labels:
 \code{"top"} (default) or \code{"bottom"}.}
+
+\item{...}{reserved; accepts the deprecated \code{min_width} and
+\code{label_position} aliases for \code{minWidth} and \code{labelPosition}.}
 }
 \value{
 Modified myIO widget.
