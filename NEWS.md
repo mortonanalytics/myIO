@@ -1,3 +1,15 @@
+# myIO (development version)
+
+## Performance and tooling
+
+* The production JavaScript bundle is now minified. The shipped
+  `inst/htmlwidgets/myIO/myIOapi.js` drops from 2.32 MB to 1.20 MB raw
+  (398,650 to 298,757 bytes gzipped, -25%) with no behavior change; the
+  development `watch` build stays unminified for debugging.
+* End-to-end tests now run from a committed `playwright.config.ts` and a new
+  `e2e` CI workflow. The suite builds and loads the minified `myIOapi.js`,
+  guarding the production bundle that source-importing unit tests cannot catch.
+
 # myIO 1.2.0
 
 ## LLM tool-calling schema

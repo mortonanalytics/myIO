@@ -46,10 +46,14 @@ test_that("v1.1 linkable types continue to participate (regression)", {
   }
 })
 
-test_that("LINKABLE_TYPES bundle contains expanded allowlist", {
-  bundle_path <- system.file("htmlwidgets/myIO/myIOapi.js", package = "myIO")
-  if (!nzchar(bundle_path)) bundle_path <- "inst/htmlwidgets/myIO/myIOapi.js"
-  src <- readLines(bundle_path, warn = FALSE)
+test_that("LINKABLE_TYPES source allowlist contains expanded set", {
+  # Read the source module, not the built bundle: the production build is
+  # minified, which renames the internal `LINKABLE_TYPES` identifier. The
+  # source ships in inst/ and is the stable contract for the allowlist.
+  src_path <- system.file("htmlwidgets/myIO/src/interactions/linked.js",
+                          package = "myIO")
+  if (!nzchar(src_path)) src_path <- "inst/htmlwidgets/myIO/src/interactions/linked.js"
+  src <- readLines(src_path, warn = FALSE)
   joined <- paste(src, collapse = "\n")
   pattern <- 'LINKABLE_TYPES\\s*=\\s*\\[([^\\]]+)\\]'
   m <- regmatches(joined, regexpr(pattern, joined, perl = TRUE))
