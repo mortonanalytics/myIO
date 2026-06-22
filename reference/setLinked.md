@@ -67,6 +67,12 @@ setLinked(
 
 A modified `myIO` htmlwidget with Crosstalk linking.
 
+## See also
+
+[`linkCharts`](https://mortonanalytics.github.io/myIO/reference/linkCharts.md)
+for group-identifier linking that does not require Crosstalk (e.g.
+static R Markdown / Quarto HTML).
+
 ## Examples
 
 ``` r

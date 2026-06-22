@@ -47,8 +47,11 @@ setTheme(
 
 - preset:
 
-  Character or NULL. Named preset (reserved for future use). Default
-  NULL.
+  Character or NULL. Named theme preset applied as a complete palette.
+  One of `"light"`, `"dark"`, `"midnight"`, `"ocean"`, `"forest"`,
+  `"sunset"`, `"monochrome"`, `"neon"`, `"corporate"`, `"academic"`,
+  `"nature"`, `"minimal"`, `"retro"`, or `"warm"`. Unrecognized values
+  are ignored. Default NULL.
 
 - overrides:
 
@@ -57,7 +60,8 @@ setTheme(
 
 - ...:
 
-  additional CSS custom property overrides with \`–\` prefix
+  additional CSS custom property overrides; only names with a `--`
+  prefix are applied. Other names are ignored with a warning.
 
 ## Value
 

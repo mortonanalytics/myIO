@@ -40,6 +40,17 @@
 <ul><li>The production JavaScript bundle is now minified. The shipped <code>inst/htmlwidgets/myIO/myIOapi.js</code> drops from 2.32 MB to 1.20 MB raw (398,650 to 298,757 bytes gzipped, -25%) with no behavior change; the development <code>watch</code> build stays unminified for debugging.</li>
 <li>End-to-end tests now run from a committed <code>playwright.config.ts</code> and a new <code>e2e</code> CI workflow. The suite builds and loads the minified <code>myIOapi.js</code>, guarding the production bundle that source-importing unit tests cannot catch.</li>
 </ul></div>
+<div class="section level3">
+<h3 id="improved-error-messages-and-api-ergonomics-development-version">Improved error messages and API ergonomics<a class="anchor" aria-label="anchor" href="#improved-error-messages-and-api-ergonomics-development-version"></a></h3>
+<ul><li>
+<code><a href="../reference/setFacet.html">setFacet()</a></code>, <code><a href="../reference/setLayerOpacity.html">setLayerOpacity()</a></code>, and <code>setTheme(mode = )</code> now report invalid arguments with consistent, actionable messages (e.g. <code>setFacet(): \</code>scales` must be “fixed”, “free_x”, “free_y”, “free”, not “x”.<code>) instead of bare</code>stopifnot()<code>failures.</code>setColorScheme()` errors are likewise function-prefixed. No change to which inputs are accepted.</li>
+<li>
+<code><a href="../reference/setTheme.html">setTheme()</a></code> now warns when passed an unknown argument that lacks the required <code>--</code> prefix (e.g. a misspelled <code>text_colour</code>) and suggests the intended argument, instead of silently dropping it. Valid <code>--</code>-prefixed CSS overrides are unaffected.</li>
+<li>
+<code><a href="../reference/setTheme.html">setTheme()</a></code> documents the named <code>preset</code> values (<code>"midnight"</code>, <code>"ocean"</code>, <code>"forest"</code>, <code>"sunset"</code>, <code>"monochrome"</code>, <code>"neon"</code>, <code>"corporate"</code>, <code>"academic"</code>, <code>"nature"</code>, <code>"minimal"</code>, <code>"retro"</code>, <code>"warm"</code>, plus <code>"light"</code>/<code>"dark"</code>); the <code>preset</code> argument was already functional.</li>
+<li>
+<code><a href="../reference/setLinked.html">setLinked()</a></code> and <code><a href="../reference/linkCharts.html">linkCharts()</a></code> now cross-reference each other in their documentation to clarify when to use the Crosstalk path versus the group-identifier path.</li>
+</ul></div>
 </div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.2.0" id="myio-120">myIO 1.2.0<a class="anchor" aria-label="anchor" href="#myio-120"></a></h2><p class="text-muted">CRAN release: 2026-06-11</p>

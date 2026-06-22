@@ -43,6 +43,12 @@ linkCharts(..., on, group = NULL, cursor = FALSE, cursorAxis = "x")
 
 A list of modified myIO widgets with matching link config.
 
+## See also
+
+[`setLinked`](https://mortonanalytics.github.io/myIO/reference/setLinked.md)
+for Crosstalk `SharedData`-based linking (use that path inside Shiny or
+with reactive filters).
+
 ## Examples
 
 ``` r

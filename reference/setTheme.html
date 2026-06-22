@@ -83,8 +83,12 @@ Default NULL (no mode, manual CSS vars only).</p></dd>
 
 
 <dt id="arg-preset">preset<a class="anchor" aria-label="anchor" href="#arg-preset"></a></dt>
-<dd><p>Character or NULL. Named preset (reserved for future use).
-Default NULL.</p></dd>
+<dd><p>Character or NULL. Named theme preset applied as a complete
+palette. One of <code>"light"</code>, <code>"dark"</code>, <code>"midnight"</code>,
+<code>"ocean"</code>, <code>"forest"</code>, <code>"sunset"</code>, <code>"monochrome"</code>,
+<code>"neon"</code>, <code>"corporate"</code>, <code>"academic"</code>, <code>"nature"</code>,
+<code>"minimal"</code>, <code>"retro"</code>, or <code>"warm"</code>. Unrecognized values are
+ignored. Default NULL.</p></dd>
 
 
 <dt id="arg-overrides">overrides<a class="anchor" aria-label="anchor" href="#arg-overrides"></a></dt>
@@ -93,7 +97,8 @@ Default NULL.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>additional CSS custom property overrides with `–` prefix</p></dd>
+<dd><p>additional CSS custom property overrides; only names with a
+<code>--</code> prefix are applied. Other names are ignored with a warning.</p></dd>
 
 </dl></div>
     <div class="section level2">
