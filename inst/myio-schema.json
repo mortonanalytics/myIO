@@ -31,7 +31,8 @@
         "lm",
         "loess",
         "polynomial",
-        "smooth"
+        "smooth",
+        "lttb"
       ],
       "group": "axes-continuous",
       "data_contract": {
@@ -1111,7 +1112,8 @@
     "qq",
     "survfit",
     "fit_distribution",
-    "quantile_dots"
+    "quantile_dots",
+    "lttb"
   ],
   "compatibility_groups": {
     "line": "axes-continuous",

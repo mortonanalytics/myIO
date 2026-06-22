@@ -22,7 +22,8 @@ transform_registry <- function() {
     qq = transform_qq,
     survfit = transform_survfit,
     fit_distribution = transform_fit_distribution,
-    quantile_dots = transform_quantile_dots
+    quantile_dots = transform_quantile_dots,
+    lttb = transform_lttb
   )
 }
 
