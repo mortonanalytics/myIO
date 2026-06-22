@@ -22,6 +22,16 @@ test_that("setFacet validates inputs", {
   expect_error(setFacet(p, "x", label_position = "left"))
 })
 
+test_that("setFacet emits fn-prefixed, actionable error messages", {
+  p <- myIO(iris)
+  expect_error(setFacet(p, 123), "setFacet\\(\\): `var`")
+  expect_error(setFacet(p, "x", ncol = -1), "setFacet\\(\\): `ncol` must be >= 1")
+  expect_error(setFacet(p, "x", min_width = 0), "setFacet\\(\\): `min_width` must be > 0")
+  expect_error(setFacet(p, "x", scales = "invalid"), 'setFacet\\(\\): `scales` must be')
+  expect_error(setFacet(p, "x", label_position = "left"),
+               'setFacet\\(\\): `label_position` must be')
+})
+
 test_that("setFacet with explicit ncol", {
   p <- myIO(iris) |>
     addIoLayer("point", label = "pts",

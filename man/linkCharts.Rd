@@ -42,3 +42,7 @@ linked <- linkCharts(w1, w2, on = "cyl")
 }
 
 }
+\seealso{
+\code{\link{setLinked}} for Crosstalk \code{SharedData}-based
+  linking (use that path inside Shiny or with reactive filters).
+}

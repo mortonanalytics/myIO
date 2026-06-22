@@ -13,8 +13,12 @@
 #' @export
 setLayerOpacity <- function(myIO, label, opacity) {
   assert_myIO(myIO)
-  stopifnot(is.character(label), length(label) == 1)
-  stopifnot(is.numeric(opacity), length(opacity) == 1, opacity >= 0, opacity <= 1)
+  check_string(label, "label", "setLayerOpacity")
+  check_number(opacity, "opacity", "setLayerOpacity")
+  if (opacity < 0 || opacity > 1) {
+    stop("setLayerOpacity(): `opacity` must be between 0 and 1, not ", opacity,
+         ".", call. = FALSE)
+  }
 
   idx <- which(vapply(myIO$x$config$layers, function(l) l$label, "") == label)
   if (length(idx) == 0) stop("Layer '", label, "' not found", call. = FALSE)

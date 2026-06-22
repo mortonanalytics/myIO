@@ -24,7 +24,7 @@ setColorScheme <- function(myIO, colorScheme = NULL, setCategories = NULL){
   assert_myIO(myIO)
 
   if (is.null(colorScheme)) {
-    stop("'colorScheme' must be provided.", call. = FALSE)
+    stop("setColorScheme(): `colorScheme` must be provided.", call. = FALSE)
   }
 
   final <- list(
