@@ -2,14 +2,21 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <!-- file:// deployment: Chromium blocks ES-module dynamic import() over the
+       file:// protocol (modules require an http(s) origin), so this fixture
+       loads the built IIFE bundle via a CLASSIC <script src> instead. Classic
+       scripts execute under file://, which is exactly how a self-contained
+       htmlwidget saved to disk and opened directly loads myIO. Paths are
+       relative (no server origin under file://). -->
+  <script src="../../../inst/htmlwidgets/lib/d3.min.js"></script>
+  <script src="../../../inst/htmlwidgets/myIO/myIOapi.js"></script>
 </head>
 <body>
   <div id="chart"></div>
-  <script type="module">
+  <script>
     window.__resolvedEngine = "wasm";
-    await import("../../../inst/htmlwidgets/myIO/src/index.js");
 
-    const x = {
+    var x = {
       config: {
         specVersion: 2,
         coordinator_enabled: true,
@@ -18,6 +25,9 @@
     };
 
     if (x.config && x.config.specVersion === 2 && x.config.coordinator_enabled === true) {
+      // Mirror the htmlwidget binding's file-protocol fallback (myIO.js):
+      // degrade to the SVG engine and log a one-shot info, because the WASM
+      // engine's worker/wasm fetches cannot run from origin 'null'.
       if (window.location.protocol === "file:") {
         if (!window._myIO_fileProtoWarned) {
           console.info(
