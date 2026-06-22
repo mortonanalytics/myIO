@@ -42,3 +42,6 @@
 ^inst/htmlwidgets/myIO/src/coordinator/__tests__$
 ^inst/htmlwidgets/lib/duckdb-wasm-cache$
 ^duckdb-fixture$
+^test-results$
+^playwright-report$
+^playwright\.config\.ts$

@@ -1,10 +1,50 @@
 import { test, expect } from "@playwright/test";
+import { createServer, type Server } from "node:http";
+import { readFile } from "node:fs/promises";
+import { extname, join, normalize } from "node:path";
 
 // AC-8 + AC-9: crosstalk threshold transition
 // Below threshold: myIO brush broadcasts row-keys; sibling plotly reacts.
 // Above threshold: no broadcast; one-shot console info; badge reads
 // "linked: predicate-only"; sibling plotly does not react; myIO->myIO
 // linking still works via predicate.
+//
+// Self-contained: serves the repo over http so the fixtures' relative
+// `../../../inst/.../src` ES-module imports resolve. No external web server.
+
+let server: Server;
+let baseUrl: string;
+
+const MIME: Record<string, string> = {
+  ".js": "text/javascript",
+  ".mjs": "text/javascript",
+  ".wasm": "application/wasm",
+  ".json": "application/json",
+  ".html": "text/html",
+};
+
+test.beforeAll(async () => {
+  server = createServer(async (req, res) => {
+    const pathname = decodeURIComponent(new URL(req.url || "/", "http://localhost").pathname);
+    const relative = normalize(pathname).replace(/^(\.\.[/\\])+/, "").replace(/^[/\\]/, "");
+    try {
+      const body = await readFile(join(process.cwd(), relative));
+      res.writeHead(200, { "content-type": MIME[extname(relative)] || "text/html" });
+      res.end(body);
+    } catch (_) {
+      res.writeHead(404);
+      res.end("not found");
+    }
+  });
+  await new Promise<void>((resolve) => server.listen(0, resolve));
+  const address = server.address();
+  if (!address || typeof address === "string") throw new Error("test server did not bind");
+  baseUrl = `http://127.0.0.1:${address.port}`;
+});
+
+test.afterAll(async () => {
+  await new Promise<void>((resolve) => server.close(() => resolve()));
+});
 
 test("below threshold: row-key broadcast reaches sibling htmlwidget", async ({ page }) => {
   const consoleInfos: string[] = [];
@@ -12,7 +52,7 @@ test("below threshold: row-key broadcast reaches sibling htmlwidget", async ({ p
     if (msg.type() === "info") consoleInfos.push(msg.text());
   });
 
-  await page.goto("/fixtures/crosstalk-below-threshold.html");
+  await page.goto(`${baseUrl}/tests/playwright/fixtures/crosstalk-below-threshold.html`);
   await page.waitForFunction(() => (window as any).__myioTestReady === true,
     null, { timeout: 10000 });
 
@@ -35,7 +75,7 @@ test("above threshold: broadcast suppressed + badge + one-shot info", async ({ p
     if (msg.type() === "info") consoleInfos.push(msg.text());
   });
 
-  await page.goto("/fixtures/crosstalk-above-threshold.html");
+  await page.goto(`${baseUrl}/tests/playwright/fixtures/crosstalk-above-threshold.html`);
   await page.waitForFunction(() => (window as any).__myioTestReady === true,
     null, { timeout: 10000 });
 
