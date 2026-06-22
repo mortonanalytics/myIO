@@ -1440,6 +1440,12 @@
       "myIO",
       "suppressY"
     ],
+    "setTransition": [
+      "myIO",
+      "duration",
+      "easing",
+      "stagger"
+    ],
     "setTransitionSpeed": [
       "myIO",
       "speed"

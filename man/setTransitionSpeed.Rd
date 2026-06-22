@@ -26,3 +26,6 @@ myIO() |> setTransitionSpeed(speed = 500)
 myIO() |> setTransitionSpeed(speed = 0)
 
 }
+\seealso{
+\code{\link{setTransition}} to also configure easing and stagger.
+}

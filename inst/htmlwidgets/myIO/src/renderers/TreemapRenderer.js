@@ -1,3 +1,4 @@
+import { easingFor } from "../transitions/easing.js";
 import { syncOrdinalLegendData } from "../layout/legend.js";
 import { getChartHeight } from "../layout/scaffold.js";
 import { isColorSchemeActive, tagName } from "../utils/responsive.js";
@@ -63,12 +64,12 @@ export class TreemapRenderer {
     var merged = newCell.merge(cell);
 
     merged
-      .transition().duration(transitionSpeed).ease(d3.easeQuad)
+      .transition().duration(transitionSpeed).ease(easingFor(chart, d3.easeQuad))
       .style("opacity", 1)
       .attr("transform", function(d) { return "translate(" + d.x0 + "," + d.y0 + ")"; });
 
     merged.select("rect")
-      .transition().duration(transitionSpeed).ease(d3.easeQuad)
+      .transition().duration(transitionSpeed).ease(easingFor(chart, d3.easeQuad))
       .attr("width", function(d) { return d.x1 - d.x0; })
       .attr("height", function(d) { return d.y1 - d.y0; })
       .attr("fill", function(d) { while (d.depth > 1) d = d.parent; return chart.colorDiscrete(d.data.id); });

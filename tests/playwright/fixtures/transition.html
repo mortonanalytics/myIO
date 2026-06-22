@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <!-- Classic <script src> loading of the built IIFE bundle (no ES modules),
+       so this fixture works identically over http(s) and file://. -->
+  <script src="/inst/htmlwidgets/lib/d3.min.js"></script>
+  <script src="/inst/htmlwidgets/myIO/myIOapi.js"></script>
+</head>
+<body>
+  <div id="chart"></div>
+  <script>
+    function makeConfig(layers, transitions) {
+      return {
+        specVersion: 1,
+        layers: layers,
+        layout: { margin: { top: 30, bottom: 60, left: 50, right: 5 }, suppressLegend: false, suppressAxis: { xAxis: false, yAxis: false } },
+        scales: { xlim: { min: 0, max: 10 }, ylim: { min: 0, max: 100 }, categoricalScale: { xAxis: false, yAxis: false }, flipAxis: false, colorScheme: { colors: ["#E69F00"], domain: ["none"], enabled: false } },
+        axes: { xAxisFormat: "s", yAxisFormat: "s", xAxisLabel: null, yAxisLabel: null, toolTipFormat: "s" },
+        interactions: { dragPoints: false, toggleY: { variable: null, format: null }, toolTipOptions: { suppressY: false } },
+        theme: {},
+        transitions: transitions,
+        referenceLines: { x: null, y: null }
+      };
+    }
+
+    function pointLayer(data) {
+      return {
+        id: "layer_001", type: "point", label: "L", data: data,
+        mapping: { x_var: "x", y_var: "y" }, options: { barSize: "large" },
+        transform: "identity", transformMeta: {}, encoding: {}, sourceKey: "_source_key",
+        derivedFrom: null, order: 1, visibility: true, color: "#4E79A7"
+      };
+    }
+
+    // Two points; index 1 is the one we move on update.
+    var START = [{ x: 2, y: 10 }, { x: 8, y: 10 }];
+    var END   = [{ x: 2, y: 10 }, { x: 8, y: 90 }];
+
+    window.__mount = function (transitions) {
+      d3.select("#chart").selectAll("*").remove();
+      window.__chart = new myIOchart({
+        element: document.getElementById("chart"),
+        config: makeConfig([pointLayer(START.map(function (d) { return Object.assign({}, d); }))], transitions),
+        width: 600, height: 400
+      });
+    };
+
+    window.__update = function () {
+      var cfg = makeConfig([pointLayer(END.map(function (d) { return Object.assign({}, d); }))], window.__chart.config.transitions);
+      window.__chart.updateChart(cfg);
+    };
+
+    // cy of the moving point (the one with the larger cy travel).
+    window.__movingCy = function () {
+      var circles = Array.prototype.slice.call(document.querySelectorAll("circle[class^='tag-point']"));
+      return circles.map(function (c) { return +c.getAttribute("cy"); });
+    };
+
+    // Grouped/stacked bar path: guards that transitionGrouped/transitionStacked
+    // (groupedBarHelpers.js) resolve their easingFor/staggerDelay imports — a
+    // missing import there throws only when toggleGroupedLayout fires, which the
+    // jsdom unit suite cannot exercise (jsdom lacks SVG transform.baseVal).
+    function barLayer(label, color, data) {
+      return {
+        id: "layer_" + label, type: "bar", label: label, data: data,
+        mapping: { x_var: "cat", y_var: "val" }, options: { barSize: "large" },
+        transform: "identity", transformMeta: {}, encoding: {}, sourceKey: "_source_key",
+        derivedFrom: null, order: 1, visibility: true, color: color
+      };
+    }
+
+    window.__mountGrouped = function (transitions) {
+      d3.select("#chart").selectAll("*").remove();
+      var layers = [
+        barLayer("A", "#4E79A7", [{ cat: "x", val: 3 }, { cat: "y", val: 5 }, { cat: "z", val: 2 }]),
+        barLayer("B", "#E69F00", [{ cat: "x", val: 4 }, { cat: "y", val: 1 }, { cat: "z", val: 6 }])
+      ];
+      var cfg = makeConfig(layers, transitions);
+      cfg.scales.xlim = { min: null, max: null };
+      cfg.scales.ylim = { min: null, max: null };
+      cfg.scales.categoricalScale = { xAxis: true, yAxis: false };
+      cfg.scales.colorScheme = { colors: ["#4E79A7", "#E69F00"], domain: ["A", "B"], enabled: true };
+      window.__chart = new myIOchart({
+        element: document.getElementById("chart"), config: cfg, width: 640, height: 400
+      });
+    };
+
+    window.__toggleLayout = function () {
+      window.__chart.toggleGroupedLayout(window.__chart.config.layers);
+    };
+
+    window.__myioTestReady = true;
+  </script>
+</body>
+</html>

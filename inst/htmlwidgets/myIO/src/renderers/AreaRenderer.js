@@ -1,3 +1,4 @@
+import { easingFor, staggerDelay } from "../transitions/easing.js";
 import { resolveColor, tagName } from "../utils/responsive.js";
 
 export class AreaRenderer {
@@ -49,7 +50,7 @@ export class AreaRenderer {
     linePath.merge(newLinePath)
       .attr("clip-path", "url(#" + chart.element.id + "clip)")
       .transition()
-      .ease(d3.easeQuad)
+      .ease(easingFor(chart, d3.easeQuad))
       .duration(transitionSpeed)
       .attr("d", valueArea)
       .style("stroke", boundaryStroke ? layer.color : "none")
