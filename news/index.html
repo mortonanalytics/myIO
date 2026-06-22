@@ -43,6 +43,7 @@
 <h3 id="performance-and-tooling-development-version">Performance and tooling<a class="anchor" aria-label="anchor" href="#performance-and-tooling-development-version"></a></h3>
 <ul><li>The production JavaScript bundle is now minified. The shipped <code>inst/htmlwidgets/myIO/myIOapi.js</code> drops from 2.32 MB to 1.20 MB raw (398,650 to 298,757 bytes gzipped, -25%) with no behavior change; the development <code>watch</code> build stays unminified for debugging.</li>
 <li>End-to-end tests now run from a committed <code>playwright.config.ts</code> and a new <code>e2e</code> CI workflow. The suite builds and loads the minified <code>myIOapi.js</code>, guarding the production bundle that source-importing unit tests cannot catch.</li>
+<li>Touch interaction is now verified end-to-end: a touch-emulation Playwright spec on iOS- and Android-class viewports confirms a <code>touchstart</code> on a bar surfaces the tooltip with the datum’s content and <code>touchend</code> dismisses it, guarding the mobile hover path against the production bundle.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="improved-error-messages-and-api-ergonomics-development-version">Improved error messages and API ergonomics<a class="anchor" aria-label="anchor" href="#improved-error-messages-and-api-ergonomics-development-version"></a></h3>

@@ -29,6 +29,11 @@
   new `e2e` CI workflow. The suite builds and loads the minified
   `myIOapi.js`, guarding the production bundle that source-importing
   unit tests cannot catch.
+- Touch interaction is now verified end-to-end: a touch-emulation
+  Playwright spec on iOS- and Android-class viewports confirms a
+  `touchstart` on a bar surfaces the tooltip with the datum’s content
+  and `touchend` dismisses it, guarding the mobile hover path against
+  the production bundle.
 
 ### Improved error messages and API ergonomics
 
