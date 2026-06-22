@@ -64,13 +64,12 @@ test("http-served HTML: coordinator boots, no file-protocol override", async ({ 
   expect(consoleInfos.some((m) => m.includes("file://"))).toBe(false);
 });
 
-// FIXME: the deployment-file.html fixture loads myIO via `<script type="module">`
-// + dynamic `import()`, which Chromium refuses to execute over the file://
-// protocol (ES modules require an http(s) origin; classic scripts do not).
-// Re-author the fixture to load the built IIFE bundle (myIOapi.js) via a
-// classic <script src> so the file-protocol override can be exercised under
-// file://. Tracked in md/intake/phase4-coordinated-update-recommendations.md.
-test.fixme("file:// protocol: override forces svg engine + one-shot info", async ({ page }) => {
+// The deployment-file.html fixture loads the built IIFE bundle (myIOapi.js) via
+// a classic <script src>, which executes under the file:// protocol (unlike ES
+// modules, which Chromium refuses from origin 'null'). This is how a
+// self-contained htmlwidget opened directly from disk loads myIO, so the
+// file-protocol override path can be exercised for real here.
+test("file:// protocol: override forces svg engine + one-shot info", async ({ page }) => {
   const consoleInfos: string[] = [];
   page.on("console", (msg) => {
     if (msg.type() === "info") consoleInfos.push(msg.text());
