@@ -25,6 +25,12 @@ mixed_frame <- function(n) {
   )
 }
 
+list_col_frame <- function(n) {
+  d <- data.frame(num = as.numeric(seq_len(n)), stringsAsFactors = FALSE)
+  d$lst <- lapply(seq_len(n), function(i) list(a = i, b = letters[i]))
+  d
+}
+
 test_that("output is identical to the prior implementation across column types", {
   for (n in c(1L, 2L, 5L, 50L)) {
     d <- mixed_frame(n)
@@ -38,6 +44,13 @@ test_that("serialized JSON is identical to the prior implementation", {
     jsonlite::toJSON(x, auto_unbox = TRUE, digits = NA, na = "null", POSIXt = "ISO8601")
   }
   expect_identical(to_json(as_layer_rows(d)), to_json(old_as_layer_rows(d)))
+})
+
+test_that("list-columns are indexed by row, identical to the prior implementation", {
+  for (n in c(1L, 3L, 10L)) {
+    d <- list_col_frame(n)
+    expect_identical(as_layer_rows(d), old_as_layer_rows(d))
+  }
 })
 
 test_that("single-column frame keeps the named-list-of-scalars shape", {

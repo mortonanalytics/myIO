@@ -160,6 +160,12 @@ as_layer_rows <- function(data) {
   # O(ncol) overhead on every row (~5x faster at 100k rows). `lapply` over the
   # named column list preserves the column names, so each row is the same named
   # list of scalars as before -> byte-identical serialized JSON.
+  #
+  # Assumes atomic or list columns (numeric, integer, character, logical,
+  # factor, Date, POSIXct, list) -- which is all the transforms ever produce.
+  # A data.frame-valued column (an I-frame) would index by column here vs by
+  # row in the old form; the package never builds those and could not serialize
+  # them anyway.
   cols <- as.list(data)
   lapply(seq_len(n), function(i) {
     lapply(cols, function(col) col[[i]])
