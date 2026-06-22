@@ -44,6 +44,31 @@ test_that("setTheme rejects invalid mode", {
   expect_error(setTheme(myIO(), mode = "neon"), "mode")
 })
 
+test_that("setTheme mode error is fn-prefixed and lists valid choices", {
+  expect_error(setTheme(myIO(), mode = "neon"),
+               'setTheme\\(\\): `mode` must be "light", "dark", "auto"')
+})
+
+# --- E5: warn on unknown (non `--`) dots, with did-you-mean ---
+
+test_that("setTheme warns on a typo'd theme arg instead of silently dropping it", {
+  expect_warning(setTheme(myIO(), text_colour = "#222"),
+                 "ignoring unknown argument")
+  expect_warning(setTheme(myIO(), text_colour = "#222"),
+                 "Did you mean `text_color`")
+})
+
+test_that("setTheme does not warn for valid -- prefixed overrides via dots", {
+  expect_warning(setTheme(myIO(), "--chart-ref-line-color" = "yellow"), NA)
+})
+
+test_that("setTheme still applies valid -- overrides even when an unknown arg is present", {
+  w <- suppressWarnings(
+    setTheme(myIO(), "--chart-ref-line-color" = "yellow", bogus = 1)
+  )
+  expect_equal(w$x$config$theme$values[["--chart-ref-line-color"]], "yellow")
+})
+
 test_that("mode defaults to NULL when not specified", {
   w <- setTheme(myIO(), bg = "#fff")
   expect_null(w$x$config$theme$mode)

@@ -21,6 +21,8 @@
 #'   \code{"y"}, or \code{"xy"}. Only \code{"x"} is active in v1.2.
 #'
 #' @return A modified \code{myIO} htmlwidget with Crosstalk linking.
+#' @seealso \code{\link{linkCharts}} for group-identifier linking that does
+#'   not require Crosstalk (e.g. static R Markdown / Quarto HTML).
 #' @examples
 #' if (interactive() && requireNamespace("crosstalk", quietly = TRUE)) {
 #'   shared <- crosstalk::SharedData$new(mtcars, key = ~rownames(mtcars))

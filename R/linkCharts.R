@@ -15,6 +15,8 @@
 #'   \code{"y"}, or \code{"xy"}. Only \code{"x"} is active in v1.2; other
 #'   values are accepted but not yet rendered.
 #' @return A list of modified myIO widgets with matching link config.
+#' @seealso \code{\link{setLinked}} for Crosstalk \code{SharedData}-based
+#'   linking (use that path inside Shiny or with reactive filters).
 #' @examples
 #' \donttest{
 #' w1 <- myIO() |>

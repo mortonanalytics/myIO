@@ -24,6 +24,16 @@ test_that("setLayerOpacity rejects invalid values", {
   expect_error(setLayerOpacity(p, "pts", "half"))
 })
 
+test_that("setLayerOpacity emits fn-prefixed range/type messages", {
+  p <- myIO(iris) |>
+    addIoLayer("point", label = "pts",
+               mapping = list(x_var = "Sepal.Length", y_var = "Sepal.Width"))
+  expect_error(setLayerOpacity(p, "pts", 1.5),
+               "setLayerOpacity\\(\\): `opacity` must be between 0 and 1")
+  expect_error(setLayerOpacity(p, "pts", "half"),
+               "setLayerOpacity\\(\\): `opacity` must be a single number")
+})
+
 test_that("setLayerOpacity errors on unknown layer", {
   p <- myIO(iris) |>
     addIoLayer("point", label = "pts",

@@ -30,14 +30,20 @@
 setFacet <- function(myIO, var, ncol = NULL, min_width = 200,
                      scales = "fixed", label_position = "top") {
   assert_myIO(myIO)
-  stopifnot(is.character(var), length(var) == 1)
+  check_string(var, "var", "setFacet")
   if (!is.null(ncol)) {
-    stopifnot(is.numeric(ncol), ncol >= 1)
+    check_number(ncol, "ncol", "setFacet")
+    if (ncol < 1) {
+      stop("setFacet(): `ncol` must be >= 1, not ", ncol, ".", call. = FALSE)
+    }
     ncol <- as.integer(ncol)
   }
-  stopifnot(is.numeric(min_width), min_width > 0)
-  stopifnot(scales %in% c("fixed", "free_x", "free_y", "free"))
-  stopifnot(label_position %in% c("top", "bottom"))
+  check_number(min_width, "min_width", "setFacet")
+  if (min_width <= 0) {
+    stop("setFacet(): `min_width` must be > 0, not ", min_width, ".", call. = FALSE)
+  }
+  check_choice(scales, c("fixed", "free_x", "free_y", "free"), "scales", "setFacet")
+  check_choice(label_position, c("top", "bottom"), "label_position", "setFacet")
 
   myIO$x$config$facet <- list(
     enabled = TRUE,

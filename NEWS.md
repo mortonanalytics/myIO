@@ -10,6 +10,25 @@
   `e2e` CI workflow. The suite builds and loads the minified `myIOapi.js`,
   guarding the production bundle that source-importing unit tests cannot catch.
 
+## Improved error messages and API ergonomics
+
+* `setFacet()`, `setLayerOpacity()`, and `setTheme(mode = )` now report invalid
+  arguments with consistent, actionable messages (e.g.
+  `setFacet(): \`scales\` must be "fixed", "free_x", "free_y", "free", not "x".`)
+  instead of bare `stopifnot()` failures. `setColorScheme()` errors are likewise
+  function-prefixed. No change to which inputs are accepted.
+* `setTheme()` now warns when passed an unknown argument that lacks the required
+  `--` prefix (e.g. a misspelled `text_colour`) and suggests the intended
+  argument, instead of silently dropping it. Valid `--`-prefixed CSS overrides
+  are unaffected.
+* `setTheme()` documents the named `preset` values (`"midnight"`, `"ocean"`,
+  `"forest"`, `"sunset"`, `"monochrome"`, `"neon"`, `"corporate"`, `"academic"`,
+  `"nature"`, `"minimal"`, `"retro"`, `"warm"`, plus `"light"`/`"dark"`); the
+  `preset` argument was already functional.
+* `setLinked()` and `linkCharts()` now cross-reference each other in their
+  documentation to clarify when to use the Crosstalk path versus the
+  group-identifier path.
+
 # myIO 1.2.0
 
 ## LLM tool-calling schema

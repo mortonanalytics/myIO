@@ -30,13 +30,18 @@ setTheme(
 \item{mode}{Character or NULL. Theme mode: "light", "dark", or "auto".
 Default NULL (no mode, manual CSS vars only).}
 
-\item{preset}{Character or NULL. Named preset (reserved for future use).
-Default NULL.}
+\item{preset}{Character or NULL. Named theme preset applied as a complete
+palette. One of \code{"light"}, \code{"dark"}, \code{"midnight"},
+\code{"ocean"}, \code{"forest"}, \code{"sunset"}, \code{"monochrome"},
+\code{"neon"}, \code{"corporate"}, \code{"academic"}, \code{"nature"},
+\code{"minimal"}, \code{"retro"}, or \code{"warm"}. Unrecognized values are
+ignored. Default NULL.}
 
 \item{overrides}{Named list of CSS custom property overrides
 (e.g., \code{list("--chart-tooltip-bg" = "#222")}).}
 
-\item{...}{additional CSS custom property overrides with `--` prefix}
+\item{...}{additional CSS custom property overrides; only names with a
+\code{--} prefix are applied. Other names are ignored with a warning.}
 }
 \value{
 A modified \code{myIO} htmlwidget object with updated theme

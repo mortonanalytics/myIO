@@ -59,3 +59,7 @@ if (interactive() && requireNamespace("crosstalk", quietly = TRUE)) {
 }
 
 }
+\seealso{
+\code{\link{linkCharts}} for group-identifier linking that does
+  not require Crosstalk (e.g. static R Markdown / Quarto HTML).
+}
