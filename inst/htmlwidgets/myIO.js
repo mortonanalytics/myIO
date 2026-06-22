@@ -26,6 +26,9 @@ HTMLWidgets.widget({
           var coordinatorQueryTemplate = "";
           if (this.myIOchart) {
             // Destroy and recreate to handle layer count/type changes cleanly
+            if (window.myIO && typeof window.myIO.unregisterInstance === "function") {
+              window.myIO.unregisterInstance(el.id);
+            }
             this.myIOchart.destroy();
             d3.select(el).selectAll("*").remove();
             this.myIOchart = null;
@@ -138,6 +141,12 @@ HTMLWidgets.widget({
               this.myIOchart.on("annotated", function(e) {
                 Shiny.onInputChange("myIO-" + id + "-annotated", JSON.stringify(e));
               });
+              // Register this chart for myIOProxy() partial updates and ensure
+              // the (idempotent) proxy message handler is installed.
+              if (window.myIO && typeof window.myIO.registerInstance === "function") {
+                window.myIO.registerInstance(id, this.myIOchart);
+                window.myIO.installProxyHandler();
+              }
             }
           }
           if (coord && registerCoordinatorChart && this._myIO_chartId && this.myIOchart) {

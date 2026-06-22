@@ -19,6 +19,12 @@
   `addIoLayer(type = "line", transform = "lttb", options = list(threshold = 1000))`.
   Off by default (`identity`); runs on the in-memory/SVG path and is independent
   of the DuckDB-WASM engine's own SQL-side LTTB, so it never double-downsamples.
+* New `myIOProxy()` + `updateMyIOData()` update a rendered chart's layer data in
+  place from the Shiny server without re-running `renderMyIO()`. Layers are
+  matched by label and swapped through the existing data-join path, so only the
+  changed marks transition and brush/zoom/toggle state is preserved (the full
+  re-render destroyed and recreated the chart, flickering and dropping state):
+  `myIOProxy("chart") |> updateMyIOData(series = new_df)`.
 
 ## Performance and tooling
 
