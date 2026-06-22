@@ -35,6 +35,14 @@
   `academic`, `nature`, `minimal`, `retro`, `warm`, plus `light`/`dark`) as
   live, side-by-side previews, and shows how to layer custom CSS overrides on
   top of a preset.
+## Performance and reliability
+
+* Inline Arrow IPC payloads now decode via the native `Uint8Array.fromBase64`
+  when the browser provides it (falling back to the previous `atob` loop),
+  avoiding a per-character JavaScript callback over large payloads in the
+  in-memory and DuckDB-WASM engines.
+* Added a regression test confirming charts that already render an inline
+  legend are not given a duplicated legend on image/SVG export (GH #64).
 
 # myIO 1.2.0
 

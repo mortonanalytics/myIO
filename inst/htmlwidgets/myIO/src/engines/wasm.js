@@ -7,6 +7,8 @@
 // Contract: md/design/large-dataset-virtualization-contract.md
 //   Symbols (WasmEngineAdapter), JS engine adapter interface.
 
+import { b64ToBytes } from "../utils/b64-to-bytes.js";
+
 export class WasmEngineAdapter {
   constructor(config = {}) {
     this.config = config;
@@ -64,7 +66,7 @@ export class WasmEngineAdapter {
     if (!this._duckdb) return;
     const DataProtocol = this._duckdb.DuckDBDataProtocol;
     if (src.mode === "inline_ipc" && src.ipcB64) {
-      const bytes = Uint8Array.from(atob(src.ipcB64), c => c.charCodeAt(0));
+      const bytes = b64ToBytes(src.ipcB64);
       const virtualName = src.sourceId + ".arrow";
       await this.db.registerFileBuffer(virtualName, bytes);
       await this.conn.query(
