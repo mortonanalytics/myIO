@@ -94,7 +94,7 @@ GROUP_MATRIX <- list(
 )
 
 VALID_COMBINATIONS <- list(
-  line = c("identity", "lm", "loess", "polynomial", "smooth"),
+  line = c("identity", "lm", "loess", "polynomial", "smooth", "lttb"),
   point = c("identity", "mean", "summary", "residuals"),
   area = c("identity", "ci"),
   bar = c("identity", "mean", "summary"),
