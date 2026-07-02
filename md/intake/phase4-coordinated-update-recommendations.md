@@ -60,6 +60,13 @@ All merged to `main`, each green on full CI + `R CMD check --as-cran` (0/0/0), c
 
 ## DEFERRED — design-heavy / feature-sized
 
+### UI-1 legend/button streamlining (#84) — DEFERRED
+- **Ask:** legend/button UI needs a design pass — streamlined, adaptive layout; clear visual
+  separation between legends and buttons; popover UI must not render a duplicate legend when the
+  chart already shows one in the regular plot area. Distinct from #64 (fixed: double legend entry
+  on image *export*) — this is in-app popover-vs-plot-area duplication.
+- **Re-entry gate:** approved 2026-07-02, no further gate — ready for `/design`.
+
 ### P4-1 `addKeyframe()` keyframe sequencing — DEFERRED
 - **Why not now:** No scaffold exists (`grep keyframe|stagger` → 0 hits in src). This is a net-new
   sequencing subsystem (ordered data states, labels, play/step controls), not a wiring change. The
