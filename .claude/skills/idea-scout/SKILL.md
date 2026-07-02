@@ -45,17 +45,25 @@ looks plausible enough to need an effort estimate). Invoke `/feature-request` di
 candidate when there are few; inline the same agent calls as one batch when triaging many at
 once is cheaper. Get one decision per candidate: **Build now / Build after X / Defer / Decline**.
 
-## Step 4 — Write disposition to the ledger
+## Step 4 — Write disposition
 
 Every candidate gets one of the three intake dispositions (per the multi-item work intake
-protocol) written into `md/intake/*-recommendations.md` — no silent drops:
+protocol) — no silent drops. Prefer GitHub issues as the record; the ledger is only for items
+that need gate-tracking:
 
-- **Build now** → new `## DEFERRED` entry with re-entry gate "approved via idea-scout {date}, no
-  further gate" — already satisfied, so `/backlog-pipeline next` can pick it up on its next run.
-- **Build after X** → new `## DEFERRED` entry with the real re-entry gate (the "X" from triage).
-- **Decline** → `## OUT-OF-SCOPE` entry with the one-sentence reason. If the idea touches share,
-  export, demo, or collaboration, write the reason it's not MVP explicitly (per intake protocol
-  rule 5) rather than defaulting to decline.
+- **Build now** → for a competitive/ecosystem-sourced idea (no existing issue), `gh issue create`
+  with label `enhancement`. For an inbound issue, use it directly. Either way,
+  `gh issue edit {n} --add-label backlog-ready` — that label is the approval signal
+  `/backlog-pipeline next` scans for; no ledger entry needed.
+- **Build after X** → create (or use) the GitHub issue with label `enhancement`, but do *not*
+  apply `backlog-ready` yet — the "X" is a real unmet condition. Instead add a new `## DEFERRED`
+  entry in `md/intake/*-recommendations.md` referencing the issue number, with the re-entry gate
+  being the "X" from triage. Once that gate clears on a future scout pass, apply `backlog-ready`
+  to the issue and remove the ledger entry (mirrors `backlog-pipeline`'s own source split).
+- **Decline** → no issue for a self-sourced idea with no prior record. For an inbound issue,
+  comment with the decline rationale and label `wontfix` rather than closing silently. If the
+  idea touches share, export, demo, or collaboration, write the reason it's not MVP explicitly
+  (per intake protocol rule 5) rather than defaulting to decline.
 
 ## Step 5 — Stop
 
@@ -79,9 +87,9 @@ build pipeline — that boundary belongs to `backlog-pipeline`.
 |---|---|---|---|
 | ... | competitive / inbound | Build now / Build after X / Decline | ... |
 
-### Ledger updated
-{N new entries added to md/intake/*-recommendations.md}
+### Issues / ledger updated
+{N issues created or labeled backlog-ready, N ledger entries added for Build-after-X items}
 
 ### Next
-`/backlog-pipeline next` picks up any "Build now" item on its next run.
+`/backlog-pipeline next` picks up any `backlog-ready`-labeled issue on its next run.
 ```
