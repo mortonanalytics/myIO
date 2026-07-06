@@ -1,5 +1,16 @@
 import { BUTTON_LABELS, handleAction, iconDownload, iconImage, iconLayers, iconLegend, iconPercent, iconPDF, iconClipboard } from "./buttons.js";
 import { buildLegendData } from "../layout/legend-data.js";
+import {
+  legendAvailableWidth,
+  legendItemLabel,
+  resolveLegendPlacement,
+  uniqueLegendItems
+} from "../layout/legend-placement.js";
+import {
+  resetLegendVisibility as resetLegendVisibilityShared,
+  toggleLayerVisibility,
+  toggleOrdinalSegment
+} from "./legend-toggles.js";
 import { isMobile } from "../utils/responsive.js";
 
 const PANEL_OPEN_CLASS = "myIO-panel--open";
@@ -105,7 +116,7 @@ export function openPanel(chart) {
   chart.dom.sheetLegendBody = null;
   chart.dom.sheetActionsBody = null;
 
-  if (!chart.options || chart.options.suppressLegend !== true) {
+  if (sheetLegendPlacement(chart).panel) {
     var legendSection = panel.append("div")
       .attr("class", "myIO-sheet-legend-section")
       .attr("data-sheet-section", "legend");
@@ -224,7 +235,7 @@ export function renderSheetLegend(chart) {
     legendSection.selectAll(".myIO-sheet-legend-reset").remove();
   }
 
-  if (!legendData || !legendData.type) {
+  if (!sheetLegendPlacement(chart).panel) {
     if (legendSection) {
       legendSection.style("display", "none");
     }
@@ -287,7 +298,7 @@ function renderSheetActions(chart) {
 }
 
 function renderLayerLegend(chart, container, legendData) {
-  var useGrid = isMobile(chart) && legendData.items.length > 4;
+  var useGrid = legendData.items.length > 4;
   container.classed("myIO-sheet-legend--grid", useGrid);
 
   legendData.items.forEach(function(item) {
@@ -320,7 +331,7 @@ function renderLayerLegend(chart, container, legendData) {
 }
 
 function renderOrdinalLegend(chart, container, legendData) {
-  var useGrid = isMobile(chart) && legendData.items.length > 4;
+  var useGrid = legendData.items.length > 4;
   container.classed("myIO-sheet-legend--grid", useGrid);
 
   legendData.items.forEach(function(item) {
@@ -331,12 +342,12 @@ function renderOrdinalLegend(chart, container, legendData) {
       .attr("aria-checked", item.visible ? "true" : "false")
       .attr("data-key", item.key)
       .on("click", function() {
-        toggleOrdinalSegment(chart, item);
+        toggleOrdinalSegment(chart, item, renderSheetLegend);
       })
       .on("keydown", function(event) {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
-          toggleOrdinalSegment(chart, item);
+          toggleOrdinalSegment(chart, item, renderSheetLegend);
         }
       });
 
@@ -412,54 +423,6 @@ function buildActionData(chart) {
   return data;
 }
 
-function toggleLayerVisibility(chart, item) {
-  if (!chart.runtime) {
-    chart.runtime = {};
-  }
-
-  var hiddenKeys = Array.isArray(chart.runtime._hiddenLayerKeys) ? chart.runtime._hiddenLayerKeys.slice() : [];
-  var index = hiddenKeys.indexOf(item.key);
-  if (index === -1) {
-    hiddenKeys.push(item.key);
-  } else {
-    hiddenKeys.splice(index, 1);
-  }
-
-  chart.runtime._hiddenLayerKeys = hiddenKeys;
-  chart.derived = chart.derived || {};
-  chart.derived.currentLayers = (chart.plotLayers || []).filter(function(layer) {
-    return hiddenKeys.indexOf(layer._composite || layer.label) === -1;
-  });
-  chart.syncLegacyAliases();
-  chart.renderCurrentLayers();
-}
-
-function toggleOrdinalSegment(chart, item) {
-  if (!chart.runtime) {
-    chart.runtime = {};
-  }
-
-  if (!Array.isArray(chart.runtime._hiddenOrdinalSegments)) {
-    chart.runtime._hiddenOrdinalSegments = [];
-  }
-
-  var hidden = chart.runtime._hiddenOrdinalSegments;
-  var index = hidden.indexOf(item.key);
-  if (index === -1) {
-    hidden.push(item.key);
-  } else {
-    hidden.splice(index, 1);
-  }
-
-  chart.runtime._suppressOrdinalLegendRebuild = true;
-  try {
-    chart.routeLayers(chart.currentLayers || (chart.derived && chart.derived.currentLayers) || []);
-  } finally {
-    chart.runtime._suppressOrdinalLegendRebuild = false;
-  }
-  renderSheetLegend(chart);
-}
-
 function appendShowAllButton(chart, legendData) {
   var hasHidden = legendData.items.some(function(item) { return !item.visible; });
   if (hasHidden && chart.dom.sheetLegendSection) {
@@ -475,23 +438,19 @@ function appendShowAllButton(chart, legendData) {
 }
 
 export function resetLegendVisibility(chart, type) {
-  chart.runtime = chart.runtime || {};
-  if (type === "ordinal") {
-    chart.runtime._hiddenOrdinalSegments = [];
-    chart.runtime._suppressOrdinalLegendRebuild = true;
-    try {
-      chart.routeLayers(chart.currentLayers || (chart.derived && chart.derived.currentLayers) || []);
-    } finally {
-      chart.runtime._suppressOrdinalLegendRebuild = false;
-    }
-    renderSheetLegend(chart);
-  } else {
-    chart.runtime._hiddenLayerKeys = [];
-    chart.derived = chart.derived || {};
-    chart.derived.currentLayers = (chart.plotLayers || []).slice();
-    chart.syncLegacyAliases();
-    chart.renderCurrentLayers();
-  }
+  resetLegendVisibilityShared(chart, type, renderSheetLegend);
+}
+
+function sheetLegendPlacement(chart) {
+  var legendData = getLegendData(chart);
+  var items = legendData && Array.isArray(legendData.items) ? uniqueLegendItems(legendData.items) : [];
+
+  return resolveLegendPlacement({
+    type: legendData && legendData.type,
+    labels: items.map(legendItemLabel),
+    suppressLegend: !!(chart.options && chart.options.suppressLegend === true),
+    availableWidth: legendAvailableWidth(chart)
+  });
 }
 
 function attachSwipeDismiss(chart) {

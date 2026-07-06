@@ -2,6 +2,24 @@
 
 ## New features
 
+* Legend/button UI streamlining (#84): charts now show exactly one legend
+  surface at a time. When a discrete chart's compact in-plot legend is showing,
+  the chart-controls panel no longer repeats the same legend and becomes
+  actions-only (this supersedes the 1.2.0 note that kept the action-sheet
+  legend alongside the new inline one). The in-plot legend is now interactive —
+  click or keyboard (Enter/Space) toggles a series on/off, with `role="switch"`
+  semantics matching the panel legend. Charts with more than 10 series, or
+  containers too narrow to fit the strip legibly, move the full legend to the
+  panel instead of truncating (previously the strip silently cut off at 10
+  items). Inline legend rows now wrap by measured width rather than item count.
+  No R API changes; `suppressLegend()` behaves exactly as before.
+* Responsive chart-controls behavior now keys off the widget's own container
+  width everywhere, instead of a mix of container width (panel docking) and
+  browser viewport width (button position, sheet drag handle). A narrow widget
+  embedded in a wide page — dashboard grids, side-by-side layouts — gets a
+  coherent narrow-tier UI. The panel legend's two-column grid is now driven by
+  item count on all sizes, not just narrow containers.
+
 * New `setTransition(duration, easing, stagger)` configures chart animations:
   `duration` in milliseconds, `easing` (one of `"linear"`, `"quad"`, `"cubic"`,
   `"sin"`, `"exp"`, `"circle"`, `"back"`, `"bounce"`, `"elastic"`, mapped to the
