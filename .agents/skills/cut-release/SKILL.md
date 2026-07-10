@@ -1,8 +1,6 @@
 ---
 name: cut-release
 description: Bump version (semver-computed from what's actually merged), finalize NEWS.md, run the full CRAN-readiness gate, build the tarball, tag and create the GitHub Release. Stops before the actual CRAN upload/email confirmation — that step needs the maintainer. Designed for scheduled one-time invocation.
-argument-hint: "(no arguments — always re-derives scope from git state at run time)"
-allowed-tools: Read, Grep, Glob, Bash, Edit, Write
 ---
 
 # Cut Release
