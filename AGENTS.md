@@ -92,3 +92,11 @@ submodule bump. A GitHub Action auto-opens a tracking issue in pymyIO on
 merge to `main` when `inst/htmlwidgets/myIO/**` is touched — use PR
 labels `engine-breaking` or `engine-additive` to pre-fill the checklist.
 See `../pymyIO/AGENTS.md` for the mirror-image rules on that side.
+
+## Scheduled backlog boundary
+
+Automation may process one issue only when `backlog-ready` was applied
+by Ryan, `main` is not red, no `automation-pr` is open, and the work
+occurs in an isolated worktree. It may open one verified PR and must
+stop before version bump, release, publication, or CRAN submission.
+Scouts create `research-candidate` issues only.

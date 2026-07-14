@@ -86,6 +86,10 @@
 <p>Any open issues there are prior myIO engine changes that pymyIO hasn’t picked up yet. Not your job to fix from this repo, but worth knowing: if the user asks you to ship another engine change, those pending bumps will stack up on the pymyIO side.</p>
 <p>Before any change to <code>inst/htmlwidgets/myIO/</code>, answer in one sentence: <strong>“Is this change visible to a Python consumer?”</strong> If yes, flag it in the PR description so the pymyIO side can pick it up on the next submodule bump. A GitHub Action auto-opens a tracking issue in pymyIO on merge to <code>main</code> when <code>inst/htmlwidgets/myIO/**</code> is touched — use PR labels <code>engine-breaking</code> or <code>engine-additive</code> to pre-fill the checklist. See <code>../pymyIO/AGENTS.md</code> for the mirror-image rules on that side.</p>
 </div>
+<div class="section level2">
+<h2 id="scheduled-backlog-boundary">Scheduled backlog boundary<a class="anchor" aria-label="anchor" href="#scheduled-backlog-boundary"></a></h2>
+<p>Automation may process one issue only when <code>backlog-ready</code> was applied by Ryan, <code>main</code> is not red, no <code>automation-pr</code> is open, and the work occurs in an isolated worktree. It may open one verified PR and must stop before version bump, release, publication, or CRAN submission. Scouts create <code>research-candidate</code> issues only.</p>
+</div>
 </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

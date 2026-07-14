@@ -15,9 +15,11 @@ var GRADIENT_WIDTH = 180;
  * that restores the original state.
  */
 export function injectExportLegend(chart) {
-  // Grouped/discrete charts already render an inline legend inside the SVG, which is
+  // Charts with an active inline legend already carry it inside the SVG, which is
   // serialized with the chart on export. Injecting another legend here would duplicate
-  // it (GH #64). When an inline legend is present, leave the export to show that one.
+  // it (GH #64). Export dedup keys off actual DOM presence, not the placement
+  // resolver: the export serializes what is really in the SVG, and a chart whose
+  // inline legend didn't render (whatever the resolver predicts) still needs one.
   var existingSvg = chart.svg && chart.svg.node ? chart.svg.node() : null;
   if (existingSvg && existingSvg.querySelector && existingSvg.querySelector(".myIO-inline-legend")) {
     return { extraHeight: 0, cleanup: function() {} };

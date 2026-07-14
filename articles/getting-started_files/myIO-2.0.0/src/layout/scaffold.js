@@ -1,4 +1,4 @@
-import { responsiveValue } from "../utils/responsive.js";
+import { isMobile, responsiveValue } from "../utils/responsive.js";
 
 export function getChartHeight(chart) {
   return chart.height;
@@ -7,6 +7,7 @@ export function getChartHeight(chart) {
 export function initializeScaffold(chart) {
   d3.select(chart.element).selectAll(".myIO-svg, .toolTip, .myIO-fab, .myIO-panel, .myIO-sheet-backdrop").remove();
   d3.select(chart.element).classed("myIO-container", true).style("position", "relative");
+  applyWidthTier(chart);
 
   chart.svg = d3.select(chart.element)
     .append("svg")
@@ -47,7 +48,15 @@ function buildAriaLabel(chart) {
   return chartType.charAt(0).toUpperCase() + chartType.slice(1) + " chart showing " + yLabel + " by " + xLabel;
 }
 
+// Width tier keys off the widget's own container width (same signal as the
+// panel's bottom-sheet/side-panel split), never the browser viewport.
+export function applyWidthTier(chart) {
+  d3.select(chart.element).classed("myIO-container--narrow", isMobile(chart));
+}
+
 export function updateScaffoldLayout(chart) {
+  applyWidthTier(chart);
+
   chart.svg
     .attr("width", chart.totalWidth)
     .attr("height", chart.height)

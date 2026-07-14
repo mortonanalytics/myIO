@@ -107,8 +107,15 @@
   font-weight: 700;
 }
 
-.myIO-inline-legend {
-  pointer-events: none;
+.myIO-inline-legend-item {
+  cursor: pointer;
+  outline: none;
+}
+
+.myIO-inline-legend-item:focus-visible .myIO-inline-legend-hit {
+  stroke: var(--chart-sheet-accent, #2563eb);
+  stroke-width: 2px;
+  rx: 3px;
 }
 
 .myIO-inline-legend-label {
@@ -231,11 +238,11 @@
   pointer-events: none;
 }
 
-@media (min-width: 601px) {
-  .myIO-fab {
-    bottom: auto;
-    top: 8px;
-  }
+/* Tier class is applied by JS from the widget's own container width, so a
+   narrow widget in a wide viewport gets consistent narrow-tier treatment. */
+.myIO-container:not(.myIO-container--narrow) .myIO-fab {
+  bottom: auto;
+  top: 8px;
 }
 
 .myIO-sheet-header {
@@ -459,28 +466,25 @@
   box-shadow: var(--chart-focus-ring);
 }
 
-@media (max-width: 600px) {
-  .myIO-sheet-handle {
-    display: block;
-  }
-
-  .myIO-sheet-legend--grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4px 8px;
-  }
-
-  .myIO-sheet-legend--grid .myIO-sheet-legend-label {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+.myIO-container--narrow .myIO-sheet-handle {
+  display: block;
 }
 
-@media (min-width: 601px) {
-  .myIO-panel--side {
-    max-height: none;
-  }
+/* Grid mode is item-count-driven (set in JS), not tier-driven. */
+.myIO-sheet-legend--grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 8px;
+}
+
+.myIO-sheet-legend--grid .myIO-sheet-legend-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.myIO-panel--side {
+  max-height: none;
 }
 
 .myIO-sheet-actions {
