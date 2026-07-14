@@ -110,8 +110,10 @@ describe("bottom sheet", function() {
     setMatchMedia(false);
   });
 
-  test("addFAB opens a panel with actions and legend items", async function() {
+  test("addFAB opens a panel with actions and legend items when the panel owns the legend", async function() {
     const chart = buildChart();
+    // Too narrow for the inline legend, so the panel is the sole legend surface.
+    chart.runtime.totalWidth = 60;
     addFAB(chart);
 
     expect(chart.element.querySelector(".myIO-fab")).toBeTruthy();
@@ -128,8 +130,84 @@ describe("bottom sheet", function() {
     expect(chart.element.querySelector(".myIO-sheet-divider")).toBeTruthy();
   });
 
+  test("panel is actions-only when the inline legend is active (GH #84 dedup)", async function() {
+    const chart = buildChart();
+    // 2 discrete series in an 800px container: inline legend is the active surface.
+    addFAB(chart);
+    openPanel(chart);
+    await flush();
+
+    expect(chart.element.querySelector("[data-sheet-section='legend']")).toBeFalsy();
+    expect(chart.element.querySelector(".myIO-sheet-divider")).toBeFalsy();
+    expect(chart.element.querySelectorAll(".myIO-sheet-action").length).toBeGreaterThan(0);
+  });
+
+  test("panel keeps the full legend when the chart has more than 10 series", async function() {
+    const chart = buildChart();
+    const layers = Array.from({ length: 12 }, function(_, i) {
+      return { label: "series " + i, type: "line", color: "#56B4E9", mapping: { y_var: "value" }, data: [{ value: i }] };
+    });
+    chart.plotLayers = layers;
+    chart.currentLayers = layers;
+    chart.derived.currentLayers = layers;
+
+    addFAB(chart);
+    openPanel(chart);
+    await flush();
+
+    expect(chart.element.querySelectorAll(".myIO-sheet-legend-item")).toHaveLength(12);
+  });
+
+  test("grid mode is item-count-driven, including at desktop width", async function() {
+    const chart = buildChart();
+    const layers = Array.from({ length: 12 }, function(_, i) {
+      return { label: "series " + i, type: "line", color: "#56B4E9", mapping: { y_var: "value" }, data: [{ value: i }] };
+    });
+    chart.plotLayers = layers;
+    chart.currentLayers = layers;
+    chart.derived.currentLayers = layers;
+
+    addFAB(chart);
+    openPanel(chart);
+    await flush();
+
+    // 800px container (desktop tier) with 12 items still uses the grid.
+    expect(chart.element.querySelector(".myIO-sheet-legend--grid")).toBeTruthy();
+  });
+
+  test("single-series chart keeps the panel legend as sole legend", async function() {
+    const chart = buildChart();
+    chart.plotLayers = chart.plotLayers.slice(0, 1);
+    chart.currentLayers = chart.currentLayers.slice(0, 1);
+    chart.derived.currentLayers = chart.derived.currentLayers.slice(0, 1);
+
+    addFAB(chart);
+    openPanel(chart);
+    await flush();
+
+    expect(chart.element.querySelectorAll(".myIO-sheet-legend-item")).toHaveLength(1);
+  });
+
+  test("continuous legend renders in the panel unchanged", async function() {
+    const chart = buildChart();
+    chart.runtime._legendData = {
+      type: "continuous",
+      items: [],
+      colorScale: d3.scaleLinear().domain([0, 10]).range(["#ffffff", "#000000"]),
+      domain: [0, 10]
+    };
+
+    addFAB(chart);
+    openPanel(chart);
+    await flush();
+
+    expect(chart.element.querySelector(".myIO-sheet-gradient")).toBeTruthy();
+    expect(chart.element.querySelector("[data-sheet-section='legend']")).toBeTruthy();
+  });
+
   test("renderSheetLegend refreshes the open panel in place", async function() {
     const chart = buildChart();
+    chart.runtime.totalWidth = 60;
     addFAB(chart);
     openPanel(chart);
     await flush();
@@ -205,6 +283,7 @@ describe("bottom sheet", function() {
 
   test("Show All resets hidden layers", async function() {
     const chart = buildChart();
+    chart.runtime.totalWidth = 60;
     chart.runtime._hiddenLayerKeys = ["alpha"];
     chart.derived.currentLayers = chart.plotLayers.filter(function(l) {
       return l.label !== "alpha";
@@ -227,19 +306,24 @@ describe("bottom sheet", function() {
 
   test("Show All button is absent when all items are visible", async function() {
     const chart = buildChart();
+    // Narrow container so the panel actually owns the legend.
+    chart.runtime.totalWidth = 60;
     addFAB(chart);
     openPanel(chart);
     await flush();
 
+    expect(chart.element.querySelectorAll(".myIO-sheet-legend-item").length).toBeGreaterThan(0);
     expect(chart.element.querySelector(".myIO-sheet-legend-reset")).toBeFalsy();
   });
 
   test("legend items have no On/Off state text", async function() {
     const chart = buildChart();
+    chart.runtime.totalWidth = 60;
     addFAB(chart);
     openPanel(chart);
     await flush();
 
+    expect(chart.element.querySelectorAll(".myIO-sheet-legend-item").length).toBeGreaterThan(0);
     expect(chart.element.querySelector(".myIO-sheet-legend-state")).toBeFalsy();
   });
 

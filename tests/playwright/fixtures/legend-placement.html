@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Classic <script src> loading of the built IIFE bundle (works over file://). -->
+  <script src="/inst/htmlwidgets/lib/d3.min.js"></script>
+  <script src="/inst/htmlwidgets/myIO/myIOapi.js"></script>
+  <!-- Delivered by the htmlwidgets dependency YAML in a real deployment. -->
+  <link rel="stylesheet" href="/inst/htmlwidgets/myIO/style.css">
+</head>
+<body style="margin:0">
+  <div id="chart"></div>
+  <script>
+    window.HTMLWidgets = window.HTMLWidgets || { shinyMode: false };
+
+    function makeConfig(layers) {
+      return {
+        specVersion: 1,
+        layers: layers,
+        layout: { margin: { top: 30, bottom: 60, left: 50, right: 5 }, suppressLegend: false, suppressAxis: { xAxis: false, yAxis: false } },
+        scales: { xlim: { min: null, max: null }, ylim: { min: null, max: null }, categoricalScale: { xAxis: true, yAxis: false }, flipAxis: false, colorScheme: { colors: ["#4E79A7", "#F28E2B"], domain: ["alpha", "beta"], enabled: false } },
+        axes: { xAxisFormat: "s", yAxisFormat: "s", xAxisLabel: null, yAxisLabel: null, toolTipFormat: "s" },
+        interactions: { dragPoints: false, toggleY: { variable: null, format: null }, toolTipOptions: { suppressY: false } },
+        theme: {},
+        transitions: { speed: 0 },
+        referenceLines: { x: null, y: null }
+      };
+    }
+
+    function barLayer(id, label, color, order, data) {
+      return {
+        id: id, type: "bar", label: label, data: data,
+        mapping: { x_var: "cat", y_var: "val" }, options: { barSize: "large" },
+        transform: "identity", transformMeta: {}, encoding: {}, sourceKey: "_source_key",
+        derivedFrom: null, order: order, visibility: true, color: color
+      };
+    }
+
+    window.__mount = function (width) {
+      d3.select("#chart").selectAll("*").remove();
+      window.__chart = new myIOchart({
+        element: document.getElementById("chart"),
+        config: makeConfig([
+          barLayer("layer_alpha", "alpha", "#4E79A7", 1, [
+            { cat: "one", val: 30 }, { cat: "two", val: 55 }, { cat: "three", val: 18 }
+          ]),
+          barLayer("layer_beta", "beta", "#F28E2B", 2, [
+            { cat: "one", val: 22 }, { cat: "two", val: 41 }, { cat: "three", val: 35 }
+          ])
+        ]),
+        width: width, height: 300
+      });
+    };
+
+    window.__mount(800);
+    window.__myioTestReady = true;
+  </script>
+</body>
+</html>
