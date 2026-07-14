@@ -1,5 +1,5 @@
 pandoc: 3.8.3
-pkgdown: 2.2.0
+pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   chart-types: chart-types.html
@@ -16,7 +16,7 @@ articles:
   transforms-and-theming: transforms-and-theming.html
   articles/troubleshooting: troubleshooting.html
   why-myio: why-myio.html
-last_built: 2026-07-02T18:23Z
+last_built: 2026-07-14T22:17Z
 urls:
   reference: https://mortonanalytics.github.io/myIO/reference
   article: https://mortonanalytics.github.io/myIO/articles
