@@ -12,6 +12,16 @@
 
 ## Bug fixes
 
+* Faceted charts now size each panel's left margin to fit its y tick labels.
+  Panels never ran the margin fit that ordinary charts run, so a facet grid with
+  a wide y format -- currency, or any large number -- drew its tick labels
+  through the rotated axis title and off the left edge of the panel, where the
+  same chart unfaceted laid out correctly. Blast radius: a faceted, axes-based
+  chart whose y labels are wider than its left margin now gains left margin and
+  loses the same amount of plot width; with `facet(scales = "fixed")` all
+  panels share one domain and so shift together, and panels that call
+  `setMargin()` are unchanged.
+
 * Grouped bar charts no longer let their y tick labels run through the y-axis
   title after switching to the stacked layout. Stacking sums the series, so the
   tick labels gain digits the chart's left margin was never sized for -- a

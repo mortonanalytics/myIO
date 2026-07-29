@@ -112,6 +112,61 @@ describe("facet panels", function() {
     expect(new Set(transforms).size).toBe(1);
   });
 
+  test("a facet panel grows its own left margin for wide y tick labels", function() {
+    var chart = baseChart();
+    chart.config.axes.yAxisFormat = "$,.0f";
+    chart.config.axes.yAxisLabel = "Price";
+    chart.config.layers[0].data.forEach(function(row) { row.y *= 100000; });
+
+    var controller = new FacetController(chart);
+    controller.initialize();
+    var panel = controller.panels.get("a");
+
+    expect(panel.panelChart.config.layout.margin.left).toBeGreaterThan(50);
+    // config.layout.margin and chart.margin must be one object, the invariant
+    // fitLeftMargin and derive/scales.js both rely on.
+    expect(panel.panelChart.margin).toBe(panel.panelChart.config.layout.margin);
+  });
+
+  test("a panel's margin fit does not leak into the parent chart or its siblings", function() {
+    var chart = baseChart();
+    chart.config.axes.yAxisFormat = "$,.0f";
+    chart.config.axes.yAxisLabel = "Price";
+    // Free scales so each panel measures its own labels: group "a" gets the
+    // wide ones, group "b" keeps narrow ones.
+    chart.config.facet.scales = "free";
+    chart.config.layers[0].data = [
+      { x: 1, y: 200000, g: "a" },
+      { x: 2, y: 400000, g: "a" },
+      { x: 3, y: 2, g: "b" },
+      { x: 4, y: 4, g: "b" }
+    ];
+
+    var controller = new FacetController(chart);
+    controller.initialize();
+    var wide = controller.panels.get("a").panelChart;
+    var narrow = controller.panels.get("b").panelChart;
+
+    expect(chart.config.layout.margin.left).toBe(50);
+    expect(wide.config.layout.margin.left).toBeGreaterThan(50);
+    expect(narrow.config.layout.margin.left).toBe(50);
+    expect(wide.margin).not.toBe(narrow.margin);
+    expect(wide.margin).not.toBe(chart.config.layout.margin);
+  });
+
+  test("an explicit setMargin() suppresses the panel fit", function() {
+    var chart = baseChart();
+    chart.config.axes.yAxisFormat = "$,.0f";
+    chart.config.axes.yAxisLabel = "Price";
+    chart.config.layout.marginSet = true;
+    chart.config.layers[0].data.forEach(function(row) { row.y *= 100000; });
+
+    var controller = new FacetController(chart);
+    controller.initialize();
+
+    expect(controller.panels.get("a").panelChart.config.layout.margin.left).toBe(50);
+  });
+
   test("re-initializing and destroying leaves no orphan title", function() {
     var chart = baseChart();
     var controller = new FacetController(chart);

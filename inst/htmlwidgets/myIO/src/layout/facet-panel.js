@@ -1,8 +1,8 @@
 import { deriveChartRender, applyDerivedScales } from "../derive/chart-render.js";
 import { getRendererForLayer } from "../registry.js";
-import { syncAxes } from "./axes.js";
+import { syncAxes, fitLeftMargin } from "./axes.js";
 import { syncReferenceLines } from "./reference-lines.js";
-import { initializeScaffold } from "./scaffold.js";
+import { initializeScaffold, updateScaffoldLayout } from "./scaffold.js";
 
 var FACET_PANEL_HEIGHT = 200;
 
@@ -74,6 +74,15 @@ export class FacetPanel {
     if (renderState.axesChart && this.requiresClipPath(renderState.type)) {
       this.setClipPath(panelChart);
       syncAxes(panelChart, renderState, { isInitialRender: true });
+      // Panels never reach Chart.renderCurrentLayers, so they have to run the
+      // same left-margin fit themselves or a wide y tick label (a currency
+      // format, say) runs straight through the rotated axis title.
+      if (fitLeftMargin(panelChart, renderState)) {
+        updateScaffoldLayout(panelChart);
+        applyDerivedScales(panelChart, renderState);
+        this.applySharedDomains(panelChart);
+        syncAxes(panelChart, renderState, { isInitialRender: true });
+      }
       syncReferenceLines(panelChart, renderState, { isInitialRender: true });
     }
 
@@ -87,7 +96,12 @@ export class FacetPanel {
     var margin = this.buildMargin();
     var panelConfig = Object.assign({}, parentChart.config, {
       layers: this.layers,
-      title: null
+      title: null,
+      // Own layout object: fitLeftMargin writes config.layout.margin.left, and
+      // the parent's layout must not be reachable from a panel. `margin` is the
+      // same instance as panelChart.margin / options.margin, which is the
+      // one-object invariant Chart.js and derive/scales.js both assume.
+      layout: Object.assign({}, parentChart.config.layout, { margin: margin })
     });
     var options = {
       margin: margin,
