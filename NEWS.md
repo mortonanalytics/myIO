@@ -155,6 +155,19 @@
   `addKeyframe()` -- and any CSS or test selector pinned to a grouped layer's
   generated class name must use the new labels.
 
+* `type = "ridgeline"` now stacks its groups in a deterministic order instead of
+  the order the group values happen to appear in the data. If the group column
+  is a factor, its level order is used; otherwise groups sort ascending
+  (character columns sort in the C locale so the result is identical on every
+  machine). Ascending order reads bottom-to-top, matching a discrete y axis in
+  ggplot2. **This changes the rendering of any existing ridgeline whose group
+  column was not already sorted**: the ridges move, the y tick labels move with
+  them, and because the `color` vector is applied by group position, the colours
+  re-map too. For example, a ridgeline over `mtcars` with `cyl` as a character
+  column previously stacked 6, 4, 8 from the bottom and now stacks 4, 6, 8. To
+  keep a specific non-alphabetical order, make the group column a factor with
+  the levels in the order you want.
+
 # myIO 1.3.0
 
 ## New features

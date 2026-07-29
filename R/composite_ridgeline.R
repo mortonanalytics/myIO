@@ -4,7 +4,19 @@
 composite_ridgeline <- function(data, mapping, label, color, options) {
   overlap <- if (is.null(options$overlap)) 0.4 else as.numeric(options$overlap)
   bandwidth <- options$bandwidth
+  # Ridges stack upward from baseline 1, so the first group renders at the
+  # bottom. Order groups the way ggplot orders a discrete axis: a factor's
+  # level order is the user's explicit statement of intent and wins; anything
+  # else sorts ascending. Character sorting is forced into the C locale so the
+  # result does not vary with the machine's collation.
   group_values <- unique(data[[mapping$group]])
+  group_values <- if (is.factor(group_values)) {
+    group_values[order(as.integer(group_values), na.last = TRUE)]
+  } else if (is.character(group_values)) {
+    group_values[order(group_values, na.last = TRUE, method = "radix")]
+  } else {
+    group_values[order(group_values, na.last = TRUE)]
+  }
   group_labels <- as.character(group_values)
   n_groups <- length(group_labels)
   group_colors <- if (is.null(color)) rep_len(OKABE_ITO_PALETTE, n_groups) else rep_len(color, n_groups)
