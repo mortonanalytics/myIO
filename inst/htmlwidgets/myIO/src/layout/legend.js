@@ -6,6 +6,7 @@ import {
   estimateItemWidth,
   estimateTitleWidth,
   legendAvailableWidth,
+  legendFirstRowWidth,
   legendItemLabel,
   legendTitleText,
   resolveLegendPlacement,
@@ -56,6 +57,7 @@ function renderInlineLegend(chart, legendData) {
   var items = legendData && Array.isArray(legendData.items) ? uniqueLegendItems(legendData.items) : [];
   var labels = items.map(legendItemLabel);
   var availableWidth = legendAvailableWidth(chart);
+  var firstRowWidth = legendFirstRowWidth(chart);
   var titleText = legendTitleText(resolveLegendTitle(chart, legendData));
   var titleWidth = estimateTitleWidth(titleText);
   var placement = resolveLegendPlacement({
@@ -63,14 +65,15 @@ function renderInlineLegend(chart, legendData) {
     labels: labels,
     suppressLegend: !!(chart.options && chart.options.suppressLegend === true),
     availableWidth: availableWidth,
-    titleWidth: titleWidth
+    titleWidth: titleWidth,
+    firstRowWidth: firstRowWidth
   });
 
   if (!placement.inline) {
     return;
   }
 
-  var layout = computeInlineRows(labels, availableWidth, titleWidth);
+  var layout = computeInlineRows(labels, availableWidth, titleWidth, firstRowWidth);
 
   // Reserve vertical space for one or two rows. Second-row items render at row * 16
   // below the baseline, so the baseline must clear that or labels clip below the SVG.

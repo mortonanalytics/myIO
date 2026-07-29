@@ -6,6 +6,7 @@ import {
   estimateItemWidth,
   estimateTitleWidth,
   legendAvailableWidth,
+  legendFirstRowWidth,
   legendItemLabel,
   legendTitleText,
   resolveLegendPlacement,
@@ -196,5 +197,68 @@ describe("legend title measurement", function() {
       type: "layer", labels: labels(5), suppressLegend: false,
       availableWidth: 350, titleWidth: 50
     })).toEqual({ inline: true, panel: false, reason: "inline-active" });
+  });
+});
+
+describe("legendFirstRowWidth", function() {
+  function chartWith(xAxisLabel, extraOptions) {
+    return {
+      width: 500,
+      margin: { left: 50, right: 5 },
+      options: Object.assign({ xAxisLabel: xAxisLabel }, extraOptions || {})
+    };
+  }
+
+  test("charts without an x-axis title keep the full plot width", function() {
+    expect(legendFirstRowWidth(chartWith(null))).toBe(legendAvailableWidth(chartWith(null)));
+  });
+
+  test("a suppressed x axis frees the whole first row", function() {
+    var chart = chartWith("Horsepower", { suppressAxis: { xAxis: true } });
+    expect(legendFirstRowWidth(chart)).toBe(legendAvailableWidth(chart));
+  });
+
+  // The title is centred, so the legend — which starts at the plot's left edge
+  // — can only run as far as the title's left edge, less a gap.
+  test("stops the first row short of the centred x-axis title", function() {
+    // plot width 445, "Horsepower" estimated at 75 -> 445/2 - 75/2 - 12 = 173
+    expect(legendFirstRowWidth(chartWith("Horsepower"))).toBe(173);
+  });
+
+  test("a short title leaves more room than a long one", function() {
+    expect(legendFirstRowWidth(chartWith("Day"))).toBeGreaterThan(
+      legendFirstRowWidth(chartWith("Horsepower"))
+    );
+  });
+});
+
+describe("computeInlineRows with a narrowed first row", function() {
+  test("wraps to the second row at the x-axis title instead of overlapping it", function() {
+    var layout = computeInlineRows(["a", "b", "c"], 300, 0, 120);
+    expect(layout.rowCount).toBe(2);
+    // 53px items: two fit inside 120, the third wraps rather than running on.
+    expect(layout.positions.map(function(p) { return p.row; })).toEqual([0, 0, 1]);
+    expect(layout.positions[2].x).toBe(0);
+  });
+
+  test("wrapped rows still get the full width", function() {
+    var layout = computeInlineRows(["a", "b", "c", "d"], 300, 0, 60);
+    expect(layout.positions.map(function(p) { return p.row; })).toEqual([0, 1, 1, 1]);
+  });
+
+  test("a legend title and a narrowed first row compose", function() {
+    var layout = computeInlineRows(["a", "b"], 300, 50, 120);
+    expect(layout.positions[0]).toEqual({ row: 0, x: 50 });
+    expect(layout.positions[1]).toEqual({ row: 1, x: 0 });
+  });
+
+  test("a title wider than the narrowed first row yields no inline layout", function() {
+    expect(computeInlineRows(["a", "b"], 300, 130, 120)).toBe(null);
+  });
+
+  test("omitting the first-row width leaves the old behaviour unchanged", function() {
+    expect(computeInlineRows(["a", "b", "c"], 300, 0)).toEqual(
+      computeInlineRows(["a", "b", "c"], 300, 0, 300)
+    );
   });
 });

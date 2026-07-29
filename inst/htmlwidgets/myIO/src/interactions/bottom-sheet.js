@@ -3,6 +3,7 @@ import { buildLegendData, resolveLegendTitle } from "../layout/legend-data.js";
 import {
   estimateTitleWidth,
   legendAvailableWidth,
+  legendFirstRowWidth,
   legendItemLabel,
   legendTitleText,
   resolveLegendPlacement,
@@ -461,6 +462,7 @@ function sheetLegendPlacement(chart) {
     labels: items.map(legendItemLabel),
     suppressLegend: !!(chart.options && chart.options.suppressLegend === true),
     availableWidth: legendAvailableWidth(chart),
+    firstRowWidth: legendFirstRowWidth(chart),
     titleWidth: estimateTitleWidth(resolveLegendTitle(chart, legendData))
   });
 }

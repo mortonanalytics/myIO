@@ -12,6 +12,11 @@
 
 ## Bug fixes
 
+* The compact in-plot legend no longer runs underneath the x-axis title on
+  narrow charts. Its first row shares a baseline band with the centred axis
+  title, so that row now stops short of it and wraps instead; the second row
+  sits below the title and keeps the full width.
+
 * Treemap cells no longer render underneath the floating action button in the
   chart's top-right corner. The tiling now reserves the same button-width band
   that funnel and Sankey charts already reserve, so the corner cell and its
