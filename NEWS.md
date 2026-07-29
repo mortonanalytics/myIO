@@ -2,6 +2,11 @@
 
 ## Bug fixes
 
+* Clearing a brush -- by clicking outside it, pressing Escape, or using the
+  status bar's "Clear" button -- no longer overflows the call stack. The
+  overflow left the chart's stored selection in place and skipped the cleared
+  event, so linked target charts stayed dimmed until the page was reloaded.
+
 * Charts no longer pad the y axis down into negative territory for data that
   never goes negative. Y-axis padding is now 5% of the data range per side,
   matching the x axis, and the padded lower bound stops at zero when the data
