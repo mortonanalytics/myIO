@@ -18,6 +18,17 @@ describe("generated myIO schema", function() {
     expect(committed).toEqual(generated);
   });
 
+  test("the inst and mcp schema copies are byte-identical", function() {
+    // tools/build-myio-schema.mjs writeSchemas() writes one JSON string to both
+    // paths. mcp/lib/validate.mjs loads the mcp copy at runtime, so a hand-edit
+    // or a partial regen would leave the MCP validator running an older
+    // contract with every other test still green. The freshness test above
+    // cannot catch it: it reads only inst/, and it skips whenever the runner
+    // has no Rscript -- which is every CI runner we have.
+    expect(fs.readFileSync("mcp/myio-schema.json", "utf8"))
+      .toBe(fs.readFileSync("inst/myio-schema.json", "utf8"));
+  });
+
   test("schema sets have no missing or orphan contract entries", function() {
     const schema = JSON.parse(fs.readFileSync("inst/myio-schema.json", "utf8"));
     const typeKeys = Object.keys(schema.types);
