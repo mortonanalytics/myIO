@@ -45,3 +45,30 @@ test_that("violin can include jittered raw points", {
   layers <- w$x$config$layers
   expect_true(any(vapply(layers, function(layer) layer$`_compositeRole` == "points", logical(1))))
 })
+
+test_that("violin median layer carries the range mapping the median marker needs", {
+  df <- data.frame(
+    group = c("A", "A", "A", "B", "B", "B"),
+    value = c(1, 2, 3, 10, 11, 12),
+    stringsAsFactors = FALSE
+  )
+
+  w <- myIO::addIoLayer(
+    myIO::myIO(),
+    type = "violin",
+    label = "vio",
+    data = df,
+    mapping = list(x_var = "group", y_var = "value"),
+    options = list(showBox = TRUE, showMedian = TRUE, showPoints = FALSE)
+  )
+
+  median_layer <- Filter(
+    function(layer) identical(layer$`_compositeRole`, "median"),
+    w$x$config$layers
+  )[[1]]
+
+  expect_equal(median_layer$mapping$low_y, "low_y")
+  expect_equal(median_layer$mapping$high_y, "high_y")
+  expect_equal(median_layer$data[[1]]$low_y, median_layer$data[[1]]$y_var)
+  expect_equal(median_layer$data[[1]]$high_y, median_layer$data[[1]]$y_var)
+})

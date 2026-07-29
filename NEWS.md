@@ -54,6 +54,11 @@
   `setAxisLimits()` is no longer silently discarded -- it was treated as "not
   set" on every chart type, so `ylim = list(min = 0)` had no effect at all.
 
+* Violin charts now draw the median marker inside the interquartile box. The
+  median sub-layer rendered nothing at all, so the box showed the IQR span with
+  no indication of where the median sat within it. It now draws the same white
+  rule that boxplot charts use, matched to the box width.
+
 # myIO 1.3.0
 
 ## New features

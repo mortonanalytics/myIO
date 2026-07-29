@@ -96,6 +96,8 @@ composite_violin <- function(data, mapping, label, color, options) {
     median_points <- data.frame(
       x_var = unname(position_lookup[median_groups]),
       y_var = median_df[[mapping$y_var]],
+      low_y = median_df[[mapping$y_var]],
+      high_y = median_df[[mapping$y_var]],
       group = median_groups,
       stringsAsFactors = FALSE,
       check.names = FALSE
@@ -104,7 +106,7 @@ composite_violin <- function(data, mapping, label, color, options) {
     layers[[length(layers) + 1L]] <- list(
       type = "point",
       data = median_points,
-      mapping = list(x_var = "x_var", y_var = "y_var", group = "group"),
+      mapping = list(x_var = "x_var", y_var = "y_var", low_y = "low_y", high_y = "high_y", group = "group"),
       transform = "identity",
       label = paste0(label, " - median"),
       color = group_colors[[1]],
