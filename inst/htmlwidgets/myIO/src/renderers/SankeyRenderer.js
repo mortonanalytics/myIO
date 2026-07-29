@@ -175,7 +175,55 @@ export class SankeyRenderer {
       .attr("y", labelY)
       .attr("text-anchor", labelAnchor);
 
-    // Flow magnitudes — suppressed on ribbons too thin or too short to hold the text.
+    // Flow magnitudes are drawn on the ribbon only where they are legible: the
+    // ribbon must be at least FLOW_LABEL_MIN_WIDTH px thick and the gap between
+    // the two columns wider than the text. Those two rules are per-link, so two
+    // links crossing inside one column gap can still compute the same midpoint
+    // and stack. Decide visibility in a single greedy pass over the links in
+    // data order -- first one placed wins, later ones that would intersect it
+    // are dropped. d3-sankey preserves the input link order, so this is
+    // deterministic and stable across re-renders regardless of DOM enter/update
+    // order: no jitter, no layout solver. A suppressed value is never lost --
+    // it stays on the link's tooltip and in the data-table fallback.
+    var FLOW_LABEL_MIN_WIDTH = 11;
+    var FLOW_LABEL_HALF_HEIGHT = 7;   // 11px text on a 0.35em dy
+    var FLOW_LABEL_X_PAD = 2;
+    var flowProbe = chart.chart.append("text")
+      .attr("class", "myIO-label-probe")
+      .attr("font-size", "11px")
+      .style("visibility", "hidden");
+    var placedFlows = [];
+    var flowShown = new Map();
+    graph.links.forEach(function(l) {
+      var key = l.source.name + ">" + l.target.name;
+      var text = valueFormat(l.value);
+      flowProbe.text(text);
+      var w = textWidth(flowProbe.node(), text);
+      var span = (l.target.x0 - l.source.x1) - 8;
+      if (!(l.width >= FLOW_LABEL_MIN_WIDTH && w <= span)) {
+        flowShown.set(key, false);
+        return;
+      }
+      var cx = (l.source.x1 + l.target.x0) / 2;
+      var cy = (l.y0 + l.y1) / 2;
+      var box = {
+        x0: cx - w / 2 - FLOW_LABEL_X_PAD,
+        x1: cx + w / 2 + FLOW_LABEL_X_PAD,
+        y0: cy - FLOW_LABEL_HALF_HEIGHT,
+        y1: cy + FLOW_LABEL_HALF_HEIGHT
+      };
+      var clash = placedFlows.some(function(p) {
+        return box.x0 < p.x1 && box.x1 > p.x0 && box.y0 < p.y1 && box.y1 > p.y0;
+      });
+      if (clash) {
+        flowShown.set(key, false);
+        return;
+      }
+      placedFlows.push(box);
+      flowShown.set(key, true);
+    });
+    flowProbe.remove();
+
     var flowClass = tagName("sankey-flow", chart.element.id, layer.label);
     var flowSelection = chart.chart.selectAll("." + flowClass)
       .data(showValues ? graph.links : [], function(d) { return d.source.name + ">" + d.target.name; });
@@ -201,8 +249,7 @@ export class SankeyRenderer {
       })
       .text(function(d) { return valueFormat(d.value); })
       .attr("fill-opacity", function(d) {
-        var span = (d.target.x0 - d.source.x1) - 8;
-        return (d.width >= 11 && textWidth(this, valueFormat(d.value)) <= span) ? 1 : 0;
+        return flowShown.get(d.source.name + ">" + d.target.name) ? 1 : 0;
       })
       .transition().duration(chart.options.transition.speed)
       .style("opacity", 1);

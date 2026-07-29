@@ -223,6 +223,14 @@
   reported itself expanded, and two charts could hold competing keyboard focus
   traps at once.
 
+* Sankey flow values no longer stack on top of each other. Two links that cross
+  inside the same column gap can compute the same label position, and each
+  label's visibility was decided without reference to any other, so both were
+  painted on the same pixel. A label that would land on one already drawn is now
+  dropped, deterministically and in the links' own data order, so the same label
+  wins on every re-render. The suppressed value is still on the link's tooltip
+  and in the chart's data table.
+
 * Short funnels no longer drop their values with no trace. Value placement now
   degrades in three steps instead of two: a stage band at least 34px tall keeps
   the value on a second line under the stage name, a band between 18px and 34px

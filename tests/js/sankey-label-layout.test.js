@@ -100,3 +100,78 @@ describe("Sankey terminal-node gutter", function() {
     });
   });
 });
+
+// A->Y and B->X cross inside the single column gap, so both compute the same
+// midpoint. Every one of the four passes the thickness and span gates, so
+// nothing but a collision rule can separate them.
+function crossingLayer() {
+  return {
+    label: "flow",
+    color: ["#ff0000", "#00ff00", "#0000ff", "#ffff00"],
+    mapping: { source: "source", target: "target", value: "value" },
+    data: [
+      { source: "A", target: "X", value: 50 },
+      { source: "A", target: "Y", value: 14 },
+      { source: "B", target: "X", value: 18 },
+      { source: "B", target: "Y", value: 50 }
+    ]
+  };
+}
+
+function flowNodes() {
+  return Array.from(document.querySelectorAll("text.tag-sankey-flow-chart-flow"));
+}
+
+describe("Sankey flow-label collisions", function() {
+  beforeEach(function() {
+    registerBuiltInRenderers();
+  });
+
+  test("two flow labels landing on the same point keep only the first", function() {
+    var chart = makeChart();
+    getRenderer("sankey").render(chart, crossingLayer());
+
+    var nodes = flowNodes();
+    expect(nodes.map(function(n) { return n.textContent; })).toEqual(["50", "14", "18", "50"]);
+    expect(nodes.map(function(n) { return n.getAttribute("fill-opacity"); }))
+      .toEqual(["1", "1", "0", "1"]);
+  });
+
+  test("the dropped label is the same one on every re-render", function() {
+    var chart = makeChart();
+    getRenderer("sankey").render(chart, crossingLayer());
+    var first = flowNodes().map(function(n) { return n.getAttribute("fill-opacity"); });
+
+    // Re-render into the same chart: the DOM now takes the update path rather
+    // than enter, which must not change which label wins.
+    getRenderer("sankey").render(chart, crossingLayer());
+    var second = flowNodes().map(function(n) { return n.getAttribute("fill-opacity"); });
+
+    expect(second).toEqual(first);
+    expect(second).toEqual(["1", "1", "0", "1"]);
+
+    // And from a completely fresh DOM.
+    var fresh = makeChart();
+    getRenderer("sankey").render(fresh, crossingLayer());
+    expect(flowNodes().map(function(n) { return n.getAttribute("fill-opacity"); }))
+      .toEqual(["1", "1", "0", "1"]);
+  });
+
+  test("well-separated flow labels are all kept", function() {
+    var chart = makeChart();
+    getRenderer("sankey").render(chart, makeLayer());
+
+    var nodes = flowNodes();
+    expect(nodes.length).toBe(2);
+    nodes.forEach(function(node) {
+      expect(node.getAttribute("fill-opacity")).toBe("1");
+    });
+  });
+
+  test("the measuring probe does not leak into the rendered output", function() {
+    var chart = makeChart();
+    getRenderer("sankey").render(chart, crossingLayer());
+
+    expect(document.querySelectorAll(".myIO-label-probe").length).toBe(0);
+  });
+});
