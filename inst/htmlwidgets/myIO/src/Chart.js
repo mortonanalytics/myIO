@@ -490,10 +490,12 @@ export class myIOchart {
     const byLabel = Object.create(null);
     this.config.layers.forEach(function(layer) { byLabel[layer.label] = layer; });
     updates.forEach(function(update) {
-      if (update &&
-          Object.prototype.hasOwnProperty.call(byLabel, update.label) &&
-          Array.isArray(update.data)) {
-        byLabel[update.label].data = update.data;
+      if (update && Object.prototype.hasOwnProperty.call(byLabel, update.label)) {
+        const layer = byLabel[update.label];
+        const validData = Array.isArray(update.data) ||
+          (layer.type === "treemap" && update.data !== null &&
+            typeof update.data === "object" && !Array.isArray(update.data));
+        if (validData) layer.data = update.data;
       }
     });
     // Mutating the shared layer objects updates whatever subset is currently

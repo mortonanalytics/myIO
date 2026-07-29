@@ -42,6 +42,22 @@ test_that("multi-layer keyframes materialize complete snapshots", {
   expect_equal(frame$layers[[2]]$data, chart$x$config$layers[[2]]$data)
 })
 
+test_that("treemap keyframes retain their object-shaped serialization", {
+  initial <- data.frame(
+    group = c("A", "A", "B"), item = c("one", "two", "three"),
+    value = c(2, 3, 4)
+  )
+  changed <- transform(initial, value = value * 2)
+  chart <- myIO(initial) |>
+    addIoLayer("treemap", label = "tree",
+      mapping = list(level_1 = "group", level_2 = "item", y_var = "value")) |>
+    addKeyframe(changed, "Changed")
+
+  expect_type(chart$x$config$keyframes[[1]]$layers[[1]]$data, "list")
+  expect_named(chart$x$config$keyframes[[1]]$layers[[1]]$data,
+    c("name", "children"))
+})
+
 test_that("addKeyframe rejects ambiguous and malformed inputs", {
   empty <- myIO()
   expect_error(addKeyframe(empty, data.frame(x = 1), "frame"), "at least one layer")

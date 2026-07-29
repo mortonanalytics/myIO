@@ -20,9 +20,12 @@ function applyWithoutRender(chart, frame) {
   const byLabel = Object.create(null);
   chart.config.layers.forEach(function(layer) { byLabel[layer.label] = layer; });
   frame.layers.forEach(function(update) {
-    if (update && Array.isArray(update.data) &&
-        Object.prototype.hasOwnProperty.call(byLabel, update.label)) {
-      byLabel[update.label].data = update.data;
+    if (update && Object.prototype.hasOwnProperty.call(byLabel, update.label)) {
+      const layer = byLabel[update.label];
+      const validData = Array.isArray(update.data) ||
+        (layer.type === "treemap" && update.data !== null &&
+          typeof update.data === "object" && !Array.isArray(update.data));
+      if (validData) layer.data = update.data;
     }
   });
 }

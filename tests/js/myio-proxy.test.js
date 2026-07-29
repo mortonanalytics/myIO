@@ -57,6 +57,18 @@ describe("Chart.updateData (myIOProxy partial update)", () => {
     expect(chart.config.layers[0].data.length).toBe(1);
   });
 
+  test("accepts object-shaped data only for treemap layers", () => {
+    const chart = makeChart([{ x: 1, y: 10 }]);
+    chart.renderCurrentLayers = vi.fn();
+    chart.updateData([{ label: "pts", data: { name: "not point data" } }]);
+    expect(chart.config.layers[0].data).toEqual([{ x: 1, y: 10 }]);
+
+    chart.config.layers[0].type = "treemap";
+    const tree = { name: "root", children: [{ name: "A", value: 1 }] };
+    chart.updateData([{ label: "pts", data: tree }]);
+    expect(chart.config.layers[0].data).toEqual(tree);
+  });
+
   test("does not reset visibility (preserves legend-toggled subset)", () => {
     const chart = makeChart([{ x: 1, y: 10 }]);
     chart.renderCurrentLayers = vi.fn();

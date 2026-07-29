@@ -51,6 +51,20 @@ describe("keyframe controller", () => {
       .toBe("Keyframe playback controls");
   });
 
+  test("initializes object-shaped treemap frame data", () => {
+    const chart = chartWithFrames();
+    chart.config.layers = [{ label: "tree", type: "treemap", data: { name: "old" } }];
+    chart.config.keyframes = [{
+      label: "Tree",
+      layers: [{ label: "tree", data: { name: "root", children: [{ name: "A" }] } }]
+    }];
+    initializeKeyframes(chart);
+
+    expect(chart.config.layers[0].data).toEqual({
+      name: "root", children: [{ name: "A" }]
+    });
+  });
+
   test("selects by label or one-based index and clamps steps", () => {
     const chart = chartWithFrames();
     initializeKeyframes(chart);
