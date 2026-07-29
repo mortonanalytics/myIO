@@ -1,32 +1,18 @@
-## Resubmission
+## Update
 
-This is a resubmission addressing the review by Beni Altmann (2026-06-05):
-
-- Added `\value` documentation. Non-exported `composite_*` and `transform_*`
-  helpers are now `@noRd` (they are internal and were never intended as user
-  API); the one exported function that lacked it, `stop_duckdb_wasm_missing`,
-  now documents its `@return`.
-- Replaced `\dontrun{}` with `\donttest{}` where the example is genuinely
-  executable (`setBigData`), and made that example self-contained.
-- Two examples retain `\dontrun{}` by design and are noted here:
-  - `install_duckdb_wasm()` downloads ~22 MB from a network mirror, which is
-    not permitted in executed examples.
-  - `setSlider()` only runs inside a live Shiny server (reactive `output`
-    context) and cannot execute standalone.
-  - `clear_duckdb_wasm_cache()` deletes files from the user cache, which an
-    executed example must not do.
-
-## Submission
-
-This is a new submission. No version of myIO is currently on CRAN.
+This is an update from myIO 1.2.0, the version currently on CRAN. Version 1.3.0
+adds backward-compatible keyframe storytelling APIs, verifies the package's
+WebR 0.6.0 path end to end, and updates documentation and safe dependencies.
 
 ## R CMD check results
 
 0 errors | 0 warnings | 1 note
 
-NOTE: "New submission" — this package is new to CRAN.
+The documented NOTE is produced only by the local macOS check because the
+installed HTML Tidy is older than the version recommended by R. The GitHub
+Actions checks on current R release, devel, and oldrel-1 do not report it.
 
-The package installs to 5.1Mb. The `htmlwidgets/` subdirectory (3.4Mb) holds the
+The package installs to 4.1 MB. The `htmlwidgets/` subdirectory (2.4 MB) holds the
 bundled, minified JavaScript libraries the widgets require at runtime:
 
 - d3.js (Mike Bostock, BSD-3-Clause): core rendering
@@ -39,7 +25,7 @@ full attribution is in inst/COPYRIGHTS.
 
 ## Test environments
 
-- local: macOS 26.5 (R 4.5.0), R CMD check --as-cran
+- local: macOS 26.5.2 (R 4.5.0), R CMD check --as-cran
 - GitHub Actions: ubuntu-latest (devel, release, oldrel-1), windows-latest
   (release), macos-latest (release) — all R CMD check --as-cran: OK
 
