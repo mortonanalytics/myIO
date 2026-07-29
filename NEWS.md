@@ -45,6 +45,15 @@
   without any value reference. The rings can be turned off or re-levelled per
   layer with `options = list(grid = FALSE)` and `options = list(gridLevels = 6)`.
 
+* Bar, grouped bar and lollipop charts now start their value axis at zero by
+  default, so bar lengths are proportional to the values they encode. The axis
+  previously began at a buffered data minimum (a grouped bar demo spanning
+  56-97 started at 50) while the bars themselves were still drawn from zero and
+  clipped, so the axis and the geometry disagreed. An explicit `setAxisLimits()`
+  still wins on either bound. Relatedly, a limit of exactly `0` passed to
+  `setAxisLimits()` is no longer silently discarded -- it was treated as "not
+  set" on every chart type, so `ylim = list(min = 0)` had no effect at all.
+
 # myIO 1.3.0
 
 ## New features
