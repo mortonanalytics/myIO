@@ -21,6 +21,10 @@
   lists one entry per category, in data order, with swatches that match the cell
   colours.
 
+* Bump charts now draw each series in its own colour, matching the legend
+  swatches. Every series previously rendered in the same blue, making the
+  legend useless and the ranking lines impossible to tell apart.
+
 # myIO 1.3.0
 
 ## New features

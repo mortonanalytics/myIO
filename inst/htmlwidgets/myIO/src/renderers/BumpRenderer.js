@@ -1,3 +1,5 @@
+import { resolveColor } from "../utils/responsive.js";
+
 export class BumpRenderer {
   static type = "bump";
   static traits = {
@@ -46,7 +48,8 @@ export class BumpRenderer {
 
     var groupIndex = 0;
     groups.forEach(function(data, name) {
-      var color = colorScale(name);
+      var layerColor = Array.isArray(layer.color) ? layer.color[groupIndex % layer.color.length] : layer.color;
+      var color = resolveColor(chart, name, layerColor || colorScale(name));
       var sorted = data.slice().sort(function(a, b) {
         return String(a[xVar]).localeCompare(String(b[xVar]));
       });

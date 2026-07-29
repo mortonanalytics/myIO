@@ -729,6 +729,33 @@ describe("Full chart rendering with layers", function() {
     expect(rects.length).toBeGreaterThan(0);
   });
 
+  function bumpLayer(id, team, ranks, color) {
+    return makeLayer("bump", "Rankings — " + team,
+      [{ q: "Q1", rank: ranks[0], team: team, _source_key: id + "_1" },
+       { q: "Q2", rank: ranks[1], team: team, _source_key: id + "_2" }],
+      { x_var: "q", y_var: "rank", group: "team" },
+      { id: id, color: color });
+  }
+
+  function bumpChart() {
+    return new myIOchart({
+      element: document.getElementById("chart"),
+      width: 400, height: 300,
+      config: makeConfig(
+        [bumpLayer("layer_001", "A", [1, 2], "#E69F00"), bumpLayer("layer_002", "B", [2, 1], "#56B4E9")],
+        { scales: { xlim: { min: null, max: null }, ylim: { min: null, max: null }, categoricalScale: { xAxis: true, yAxis: false }, flipAxis: false, colorScheme: { colors: ["#E69F00"], domain: ["none"], enabled: false } } }
+      )
+    });
+  }
+
+  test("bump layers keep their own color", function() {
+    bumpChart();
+    var strokes = Array.from(document.querySelectorAll("path.bump-line")).map(function(p) { return p.getAttribute("stroke"); }).sort();
+    expect(strokes).toEqual(["#56B4E9", "#E69F00"]);
+    var fills = Array.from(new Set(Array.from(document.querySelectorAll("circle.bump-dot")).map(function(c) { return c.getAttribute("fill"); }))).sort();
+    expect(fills).toEqual(["#56B4E9", "#E69F00"]);
+  });
+
   test("gauge layer renders arcs in DOM", function() {
     var layer = makeLayer("gauge", "meter",
       [{ value: 0.75 }],
