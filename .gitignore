@@ -16,6 +16,7 @@ inst/myIOsticker.png
 /pkgdown
 coverage/
 /.claude
+/.codex/
 .mcp.json
 /.playwright-mcp
 /test-results

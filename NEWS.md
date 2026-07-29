@@ -2,6 +2,19 @@
 
 ## New features
 
+* Keyframe storytelling adds `addKeyframe()` for named, transformed data
+  snapshots and accessible previous/play-pause/next controls. Single-layer
+  charts accept a data frame; multi-layer charts accept a named list keyed by
+  layer label, with omitted layers retaining their prior state. Playback runs
+  once and stops at the final frame, while reduced-motion and zero-duration
+  transitions remain fully step- and play-capable. Shiny applications can use
+  `setKeyframe()` and `stepKeyframe()` through the existing instance registry.
+* WebR 0.6.0 compatibility is now a blocking CI contract: the package and its
+  dependencies are compiled with the official r-wasm action, loaded in WebR,
+  used to create and serialize a real widget, and rendered with the production
+  bundle in Chromium. The verified path does not claim DuckDB-WASM support or
+  universal compatibility across browser hosts.
+
 * Legend/button UI streamlining (#84): charts now show exactly one legend
   surface at a time. When a discrete chart's compact in-plot legend is showing,
   the chart-controls panel no longer repeats the same legend and becomes
@@ -46,6 +59,11 @@
 
 ## Performance and tooling
 
+* Release dependency intake updates the GitHub Actions, browser-test, Arrow,
+  MCP, and JavaScript security transitive dependencies through PRs #91--#100.
+  The MCP server now resolves `@hono/node-server` 2.0.12 and declares Node.js
+  20 or newer as its runtime floor; its conformance, stdio smoke, and audit
+  gates pass with zero known npm vulnerabilities.
 * The production JavaScript bundle is now minified. The shipped
   `inst/htmlwidgets/myIO/myIOapi.js` drops from 2.32 MB to 1.20 MB raw
   (398,650 to 298,757 bytes gzipped, -25%) with no behavior change; the

@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "type": "module",
   "description": "MCP tools for validating myIO chart specs and function calls.",
+  "engines": {
+    "node": ">=20"
+  },
   "bin": {
     "myio-mcp": "./server.mjs"
   },

@@ -57,6 +57,18 @@ describe("Chart.updateData (myIOProxy partial update)", () => {
     expect(chart.config.layers[0].data.length).toBe(1);
   });
 
+  test("accepts object-shaped data only for treemap layers", () => {
+    const chart = makeChart([{ x: 1, y: 10 }]);
+    chart.renderCurrentLayers = vi.fn();
+    chart.updateData([{ label: "pts", data: { name: "not point data" } }]);
+    expect(chart.config.layers[0].data).toEqual([{ x: 1, y: 10 }]);
+
+    chart.config.layers[0].type = "treemap";
+    const tree = { name: "root", children: [{ name: "A", value: 1 }] };
+    chart.updateData([{ label: "pts", data: tree }]);
+    expect(chart.config.layers[0].data).toEqual(tree);
+  });
+
   test("does not reset visibility (preserves legend-toggled subset)", () => {
     const chart = makeChart([{ x: 1, y: 10 }]);
     chart.renderCurrentLayers = vi.fn();
@@ -88,6 +100,7 @@ describe("proxy message handler wiring", () => {
 
     window.myIO.installProxyHandler();
     expect(typeof handlers["myio:proxy-update"]).toBe("function");
+    expect(typeof handlers["myio:keyframe-control"]).toBe("function");
 
     const fakeChart = { config: {}, updateData: vi.fn() };
     window.myIO.registerInstance("chartA", fakeChart);
@@ -95,6 +108,19 @@ describe("proxy message handler wiring", () => {
     const payload = { id: "chartA", layers: [{ label: "pts", data: [{ x: 1, y: 2 }] }] };
     handlers["myio:proxy-update"](payload);
     expect(fakeChart.updateData).toHaveBeenCalledWith(payload.layers);
+
+    fakeChart.config.keyframes = [
+      { label: "Start", layers: payload.layers },
+      { label: "End", layers: payload.layers }
+    ];
+    fakeChart.runtime = {};
+    handlers["myio:keyframe-control"]({
+      id: "chartA", action: "select", frame: "End"
+    });
+    expect(fakeChart.updateData).toHaveBeenLastCalledWith(payload.layers);
+    expect(() => handlers["myio:keyframe-control"](null)).not.toThrow();
+    expect(() => handlers["myio:keyframe-control"]({ id: "missing", action: "step" })).not.toThrow();
+    expect(() => handlers["myio:keyframe-control"]({ id: "chartA", action: "unknown" })).not.toThrow();
 
     // unknown id is a no-op
     expect(() => handlers["myio:proxy-update"]({ id: "missing", layers: [] })).not.toThrow();

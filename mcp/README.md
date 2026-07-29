@@ -4,6 +4,8 @@ This package exposes the generated myIO schema as MCP tools for agents that can 
 
 ## Install
 
+The MCP server requires Node.js 20 or newer.
+
 From the myIO repo:
 
 ```sh

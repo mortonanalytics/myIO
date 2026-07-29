@@ -12,6 +12,10 @@ confirmation link, so full automation stops one step short of that by constructi
 
 ## Step 1 — Re-derive scope (don't trust a stale snapshot)
 
+- Hard preflight: require `git status --porcelain` to be empty, require the current branch to be
+  `main`, fetch `origin`, and require `main`, its upstream, and `origin/main` to resolve to the same
+  commit. If any condition fails, stop before changing release metadata. Never release from a dirty,
+  detached, ahead, or behind worktree.
 - `git tag --sort=-v:refname | head -1` — last released tag (e.g. `v1.2.0`).
 - `git log {last_tag}..HEAD --oneline --no-merges` — everything merged since, including anything
   `backlog-pipeline`/`idea-scout` landed after this skill was written. Read every commit.
@@ -58,8 +62,10 @@ package differentiation, final checks. Get a verdict.
 
 1. `R CMD build . --no-manual` then `R CMD check --as-cran` on the resulting tarball — confirm
    0 errors / 0 warnings, and every NOTE is one already documented in `cran-comments.md`.
-2. Commit `DESCRIPTION` + `NEWS.md` directly to `main` (not a feature branch — this is a release
-   commit, matching how prior releases in this repo were tagged directly on main).
+2. Review `git status --short` and commit every release-metadata file changed by the workflow,
+   including `DESCRIPTION`, `NEWS.md`, `cran-comments.md`, generated documentation, schemas, and
+   checksums where applicable. Do not tag with any workflow-generated metadata left uncommitted.
+   The release commit is made directly on `main`, matching how prior releases were tagged.
 3. `git tag -a v{version} -m "Release v{version}"` and `git push origin main --tags`.
 4. `gh release create v{version}` with notes drawn from the finalized NEWS.md section (customer-
    facing summary), following the format `/release` already uses.

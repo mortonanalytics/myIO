@@ -1,13 +1,14 @@
 [![R-CMD-check](https://github.com/mortonanalytics/myIO/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/mortonanalytics/myIO/actions/workflows/R-CMD-check.yaml)
+[![WebR compatibility](https://github.com/mortonanalytics/myIO/actions/workflows/webr.yaml/badge.svg)](https://github.com/mortonanalytics/myIO/actions/workflows/webr.yaml)
 ![R coverage](man/figures/coverage-badge.svg)
 ![JS coverage](man/figures/js-coverage-badge.svg)
 [![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-![version](https://img.shields.io/badge/version-1.0.0-blue)
+![version](https://img.shields.io/badge/version-1.3.0-blue)
 
 # myIO
 
-An R package for creating interactive `d3.js` visualizations using `htmlwidgets`. Supports 17 chart types including scatter plots, line charts, bar charts, treemaps, and more — all composable through a piped API.
+An R package for creating interactive `d3.js` visualizations using `htmlwidgets`. Supports 36 chart types including scatter plots, line charts, uncertainty views, statistical composites, and more — all composable through a piped API.
 
 [Live Demo](https://mortonanalytics.github.io/myIO/)
 
@@ -84,6 +85,19 @@ myIO charts are bidirectional — user actions flow back as structured data:
 - `setAnnotation()` — Click to label data points; export annotations as CSV
 - `setLinked()` — Crosstalk linked brushing across multiple charts
 - `setSlider()` — Parameter sliders that trigger Shiny recomputation
+- `addKeyframe()` — Register complete data snapshots for sequential storytelling
+- `setKeyframe()` / `stepKeyframe()` — Select or step keyframes through a Shiny proxy
+
+## Runtime Compatibility
+
+| Runtime | Supported path |
+|---------|----------------|
+| RStudio, R Markdown, and Quarto | Standard `htmlwidgets` rendering |
+| Shiny | Widget rendering, reactive inputs, proxy data updates, and keyframe control |
+| WebR 0.6.0 | Precompiled Wasm package, R payload creation, and production-bundle rendering in Chromium |
+
+The WebR claim is intentionally bounded to the pinned end-to-end CI path; it
+does not imply that DuckDB-WASM or every browser host has been validated.
 
 ## Customization
 
@@ -96,6 +110,7 @@ Customize plots by chaining additional functions:
 - `setColorScheme()` — Apply a custom color palette
 - `setTheme()` — Set theme tokens (colors, font, background)
 - `setTransitionSpeed()` — Control animation duration
+- `setTransition()` — Configure duration, easing, and stagger
 - `setToolTipOptions()` — Configure tooltip behavior
 - `setToggle()` — Enable layer toggle controls
 - `flipAxis()` — Swap x and y axes
@@ -104,4 +119,4 @@ Customize plots by chaining additional functions:
 - `dragPoints()` — Enable draggable points
 - `setReferenceLines()` — Add reference lines
 
-See the [Getting Started](https://mortonanalytics.github.io/myIO/articles/getting-started.html), [Chart Types](https://mortonanalytics.github.io/myIO/articles/chart-types.html), [Shiny Integration](https://mortonanalytics.github.io/myIO/articles/shiny-integration.html), and [Transforms & Theming](https://mortonanalytics.github.io/myIO/articles/transforms-and-theming.html) vignettes for full examples.
+See the [Getting Started](https://mortonanalytics.github.io/myIO/articles/getting-started.html), [Chart Types](https://mortonanalytics.github.io/myIO/articles/chart-types.html), [Sequential Storytelling](https://mortonanalytics.github.io/myIO/articles/sequential-storytelling.html), [Shiny Integration](https://mortonanalytics.github.io/myIO/articles/shiny-integration.html), and [Transforms & Theming](https://mortonanalytics.github.io/myIO/articles/transforms-and-theming.html) articles for full examples.

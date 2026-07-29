@@ -53,11 +53,13 @@ articles:
     contents:
       - shiny-integration
       - articles/shiny-interactions
+      - articles/sequential-storytelling
   - title: Big-data & Linking
     contents:
       - large-data-linking
       - articles/crosstalk-linking
       - sparklines
+      - articles/webr-quarto-live
   - title: Migration
     contents:
       - plotly-migration
@@ -78,6 +80,7 @@ reference:
     contents:
       - myIO
       - addIoLayer
+      - addKeyframe
   - title: Axes & Scales
     desc: Control axis formatting, limits, and orientation
     contents:
@@ -127,6 +130,8 @@ reference:
     contents:
       - starts_with("myIO-shiny")
       - myIOProxy
+      - setKeyframe
+      - stepKeyframe
   - title: LLM Tool Calling
     desc: Machine-readable schema and validators for agent-built chart specs
     contents:
