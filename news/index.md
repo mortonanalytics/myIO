@@ -1,6 +1,6 @@
 # Changelog
 
-## myIO (development version)
+## myIO 1.3.0
 
 ### New features
 

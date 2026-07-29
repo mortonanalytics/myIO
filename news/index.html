@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">myIO</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,9 +34,9 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="development version" id="myio-development-version">myIO (development version)<a class="anchor" aria-label="anchor" href="#myio-development-version"></a></h2>
+<h2 class="pkg-version" data-toc-text="1.3.0" id="myio-130">myIO 1.3.0<a class="anchor" aria-label="anchor" href="#myio-130"></a></h2>
 <div class="section level3">
-<h3 id="new-features-development-version">New features<a class="anchor" aria-label="anchor" href="#new-features-development-version"></a></h3>
+<h3 id="new-features-1-3-0">New features<a class="anchor" aria-label="anchor" href="#new-features-1-3-0"></a></h3>
 <ul><li><p>Keyframe storytelling adds <code><a href="../reference/addKeyframe.html">addKeyframe()</a></code> for named, transformed data snapshots and accessible previous/play-pause/next controls. Single-layer charts accept a data frame; multi-layer charts accept a named list keyed by layer label, with omitted layers retaining their prior state. Playback runs once and stops at the final frame, while reduced-motion and zero-duration transitions remain fully step- and play-capable. Shiny applications can use <code><a href="../reference/setKeyframe.html">setKeyframe()</a></code> and <code><a href="../reference/setKeyframe.html">stepKeyframe()</a></code> through the existing instance registry.</p></li>
 <li><p>WebR 0.6.0 compatibility is now a blocking CI contract: the package and its dependencies are compiled with the official r-wasm action, loaded in WebR, used to create and serialize a real widget, and rendered with the production bundle in Chromium. The verified path does not claim DuckDB-WASM support or universal compatibility across browser hosts.</p></li>
 <li><p>Legend/button UI streamlining (<a href="https://github.com/mortonanalytics/myIO/issues/84" class="external-link">#84</a>): charts now show exactly one legend surface at a time. When a discrete chart’s compact in-plot legend is showing, the chart-controls panel no longer repeats the same legend and becomes actions-only (this supersedes the 1.2.0 note that kept the action-sheet legend alongside the new inline one). The in-plot legend is now interactive — click or keyboard (Enter/Space) toggles a series on/off, with <code>role="switch"</code> semantics matching the panel legend. Charts with more than 10 series, or containers too narrow to fit the strip legibly, move the full legend to the panel instead of truncating (previously the strip silently cut off at 10 items). Inline legend rows now wrap by measured width rather than item count. No R API changes; <code><a href="../reference/suppressLegend.html">suppressLegend()</a></code> behaves exactly as before.</p></li>
@@ -46,7 +46,7 @@
 <li><p>New <code><a href="../reference/myIOProxy.html">myIOProxy()</a></code> + <code><a href="../reference/myIOProxy.html">updateMyIOData()</a></code> update a rendered chart’s layer data in place from the Shiny server without re-running <code><a href="../reference/myIO-shiny.html">renderMyIO()</a></code>. Layers are matched by label and swapped through the existing data-join path, so only the changed marks transition and brush/zoom/toggle state is preserved (the full re-render destroyed and recreated the chart, flickering and dropping state): <code>myIOProxy("chart") |&gt; updateMyIOData(series = new_df)</code>.</p></li>
 </ul></div>
 <div class="section level3">
-<h3 id="performance-and-tooling-development-version">Performance and tooling<a class="anchor" aria-label="anchor" href="#performance-and-tooling-development-version"></a></h3>
+<h3 id="performance-and-tooling-1-3-0">Performance and tooling<a class="anchor" aria-label="anchor" href="#performance-and-tooling-1-3-0"></a></h3>
 <ul><li>Release dependency intake updates the GitHub Actions, browser-test, Arrow, MCP, and JavaScript security transitive dependencies through PRs <a href="https://github.com/mortonanalytics/myIO/issues/91" class="external-link">#91</a>–#100. The MCP server now resolves <code>@hono/node-server</code> 2.0.12 and declares Node.js 20 or newer as its runtime floor; its conformance, stdio smoke, and audit gates pass with zero known npm vulnerabilities.</li>
 <li>The production JavaScript bundle is now minified. The shipped <code>inst/htmlwidgets/myIO/myIOapi.js</code> drops from 2.32 MB to 1.20 MB raw (398,650 to 298,757 bytes gzipped, -25%) with no behavior change; the development <code>watch</code> build stays unminified for debugging.</li>
 <li>End-to-end tests now run from a committed <code>playwright.config.ts</code> and a new <code>e2e</code> CI workflow. The suite builds and loads the minified <code>myIOapi.js</code>, guarding the production bundle that source-importing unit tests cannot catch.</li>
@@ -54,7 +54,7 @@
 <li>The <code>file://</code> deployment e2e (self-contained widget opened directly from disk) is now exercised for real: its fixture loads the IIFE bundle via a classic <code>&lt;script src&gt;</code> rather than an ES module, so the file-protocol → SVG-engine fallback is verified under <code>file://</code> instead of skipped.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="improved-error-messages-and-api-ergonomics-development-version">Improved error messages and API ergonomics<a class="anchor" aria-label="anchor" href="#improved-error-messages-and-api-ergonomics-development-version"></a></h3>
+<h3 id="improved-error-messages-and-api-ergonomics-1-3-0">Improved error messages and API ergonomics<a class="anchor" aria-label="anchor" href="#improved-error-messages-and-api-ergonomics-1-3-0"></a></h3>
 <ul><li><p>Argument names are now consistently camelCase across setters. <code>setBrush(onSelect)</code>, <code>setFacet(minWidth, labelPosition)</code>, <code>setTheme(textColor, gridColor)</code>, and <code>setBigData(rowkeyCol)</code> are the canonical forms (matching <code>colorScheme</code>, <code>xAxis</code>, etc.). The previous snake_case names (<code>on_select</code>, <code>min_width</code>, <code>label_position</code>, <code>text_color</code>, <code>grid_color</code>, <code>rowkey_col</code>) keep working as deprecated aliases that emit a one-line warning; existing code is unaffected aside from the warning. When both forms are supplied the camelCase value wins.</p></li>
 <li><p><code><a href="../reference/setFacet.html">setFacet()</a></code>, <code><a href="../reference/setLayerOpacity.html">setLayerOpacity()</a></code>, and <code>setTheme(mode = )</code> now report invalid arguments with consistent, actionable messages (e.g. <code>setFacet(): \</code>scales` must be “fixed”, “free_x”, “free_y”, “free”, not “x”.<code>) instead of bare</code>stopifnot()<code>failures.</code>setColorScheme()` errors are likewise function-prefixed. No change to which inputs are accepted.</p></li>
 <li><p><code><a href="../reference/setTheme.html">setTheme()</a></code> now warns when passed an unknown argument that lacks the required <code>--</code> prefix (e.g. a misspelled <code>text_colour</code>) and suggests the intended argument, instead of silently dropping it. Valid <code>--</code>-prefixed CSS overrides are unaffected.</p></li>
