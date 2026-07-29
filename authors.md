@@ -17,7 +17,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/mortonanalytics/myIO/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/mortonanalytics/myIO/blob/v1.3.0/DESCRIPTION)
 
 Morton R (2026). *myIO: Interactive Data Visualizations Using 'd3.js'*.
 R package version 1.3.0, <https://mortonanalytics.github.io/myIO/>.
