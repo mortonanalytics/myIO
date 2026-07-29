@@ -183,6 +183,21 @@
   keep a specific non-alphabetical order, make the group column a factor with
   the levels in the order you want.
 
+* `type = "boxplot"`, `type = "violin"` and `type = "comparison"` now place
+  their groups along the x axis by the same deterministic rule ridgeline
+  already uses, instead of by the order the group values happen to appear in
+  the data: a factor's level order wins, anything else sorts ascending, and
+  character columns sort in the C locale so the result is identical on every
+  machine. **This changes the rendering of any existing boxplot, violin or
+  comparison chart whose group column was not already sorted** -- the boxes
+  move, the x tick labels move with them, and on a violin passed a vector of
+  colours the hues re-map, because `color` is applied by group position. Every
+  statistic stays with its own group: each box, whisker, median and outlier is
+  now looked up by group name rather than by position. Charts whose groups
+  already appear in sorted order -- including every factor whose rows follow
+  its levels -- render exactly as before. To keep a specific non-alphabetical
+  order, make the group column a factor with the levels in the order you want.
+
 * Charts left on the default left margin now widen it automatically when the y
   tick labels would run into the rotated y-axis title. Previously a currency or
   large-number y format -- `setAxisFormat(yAxis = "$,.0f")` on three-digit data,

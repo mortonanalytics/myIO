@@ -38,3 +38,16 @@ test_that("transform_quantiles preserves x_var column name and handles single-ro
   expect_equal(result$data$whisker_low, c(5, 9))
   expect_equal(result$data$whisker_high, c(5, 9))
 })
+
+test_that("transform_quantiles keeps data-encounter row order with source keys still paired", {
+  df <- data.frame(
+    group = c("B", "B", "A", "A"), value = c(10, 20, 1, 2),
+    `_source_key` = paste0("row_", 1:4),
+    stringsAsFactors = FALSE, check.names = FALSE
+  )
+  r <- myIO:::transform_quantiles(df, list(x_var = "group", y_var = "value"))
+  expect_equal(r$data$group, c("B", "A"))
+  expect_equal(r$data$median, c(15, 1.5))
+  expect_equal(r$meta$sourceKeys[[1]], c("row_1", "row_2"))
+  expect_equal(r$meta$sourceKeys[[2]], c("row_3", "row_4"))
+})

@@ -7,7 +7,7 @@ composite_violin <- function(data, mapping, label, color, options) {
   show_points <- isTRUE(options$showPoints)
   bandwidth <- options$bandwidth
   box_half_width <- if (is.null(options$boxWidth)) 0.35 else as.numeric(options$boxWidth) / 2
-  group_values <- unique(data[[mapping$x_var]])
+  group_values <- order_group_values(unique(data[[mapping$x_var]]))
   group_labels <- as.character(group_values)
   positions <- seq_along(group_labels)
   position_lookup <- stats::setNames(positions, group_labels)
