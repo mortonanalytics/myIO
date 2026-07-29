@@ -12,17 +12,6 @@ The documented NOTE is produced only by the local macOS check because the
 installed HTML Tidy is older than the version recommended by R. The GitHub
 Actions checks on current R release, devel, and oldrel-1 do not report it.
 
-The package installs to 4.1 MB. The `htmlwidgets/` subdirectory (2.4 MB) holds the
-bundled, minified JavaScript libraries the widgets require at runtime:
-
-- d3.js (Mike Bostock, BSD-3-Clause): core rendering
-- d3-hexbin, d3-sankey (Mike Bostock, BSD-3-Clause): chart layouts
-- jsPDF (James Hall, yWorks GmbH; MIT): PDF export
-
-These libraries are essential and cannot be reduced without removing
-functionality. Their copyright holders are listed in Authors@R with role 'cph';
-full attribution is in inst/COPYRIGHTS.
-
 ## Test environments
 
 - local: macOS 26.5.2 (R 4.5.0), R CMD check --as-cran
@@ -37,6 +26,17 @@ intervals, regression fits, pairwise significance tests, uncertainty
 visualizations) in R and rendering them as composable D3.js layers. It also
 ships a machine-readable chart specification schema and validators so that
 large language model agents can author and verify charts.
+
+The package installs to 4.1 MB. The `htmlwidgets/` subdirectory (2.4 MB) holds the
+bundled, minified JavaScript libraries the widgets require at runtime:
+
+- d3.js 7.9.0 (Mike Bostock, ISC): core rendering
+- d3-hexbin 0.2.2, d3-sankey 0.12.3 (Mike Bostock, BSD-3-Clause): chart layouts
+- jsPDF 2.5.2 (James Hall, yWorks GmbH; MIT): PDF export
+
+These libraries are essential and cannot be reduced without removing
+functionality. Their copyright holders are listed in Authors@R with role 'cph';
+full attribution is in inst/COPYRIGHTS.
 
 An optional in-browser DuckDB-WASM engine (~22Mb) is **not** bundled; users opt
 in via install_duckdb_wasm(), which downloads and sha256-verifies the binary
