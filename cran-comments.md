@@ -42,7 +42,7 @@ visualizations) in R and rendering them as composable D3.js layers. It also
 ships a machine-readable chart specification schema and validators so that
 large language model agents can author and verify charts.
 
-The package installs to 4.1 MB. The `htmlwidgets/` subdirectory (2.4 MB) holds the
+The package installs to 4.2 MB. The `htmlwidgets/` subdirectory (2.5 MB) holds the
 bundled, minified JavaScript libraries the widgets require at runtime:
 
 - d3.js 7.9.0 (Mike Bostock, ISC): core rendering
