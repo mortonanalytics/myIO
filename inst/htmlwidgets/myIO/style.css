@@ -239,7 +239,7 @@
 .myIO-fab {
   position: absolute;
   right: 12px;
-  bottom: 12px;
+  top: 8px;
   z-index: 21;
   width: 40px;
   height: 40px;
@@ -270,13 +270,6 @@
   height: 18px;
   fill: currentColor;
   pointer-events: none;
-}
-
-/* Tier class is applied by JS from the widget's own container width, so a
-   narrow widget in a wide viewport gets consistent narrow-tier treatment. */
-.myIO-container:not(.myIO-container--narrow) .myIO-fab {
-  bottom: auto;
-  top: 8px;
 }
 
 .myIO-sheet-header {

@@ -223,6 +223,18 @@
   reported itself expanded, and two charts could hold competing keyboard focus
   traps at once.
 
+* The legend/actions button now sits in the top-right corner at every container
+  width. On containers narrower than 600px it dropped to the bottom-right, where
+  it covered the right-most x-axis tick label -- the bottom band there is fully
+  occupied by rotated tick labels, the x-axis title and the inline legend, so
+  there was no free space for it. Narrow axes charts that have not called
+  `setMargin()` now reserve a 48px top margin for the button so it never lands
+  on the plot. Blast radius: an axes chart in a container 600px wide or less
+  that has not called `setMargin()` gains 18px of top margin (30 becomes 48) and
+  loses the same amount of plot height. Charts wider than 600px, charts that
+  call `setMargin()`, sparklines, and non-axes charts such as funnel, sankey and
+  treemap are unchanged.
+
 * Sparklines no longer paint a floating action button. The button covered about
   8% of a 60px inline chart and sat on top of its last data points, and it
   intercepted the pointer over that corner so those points had no tooltip.

@@ -5,6 +5,11 @@ import { isMobile, responsiveValue } from "../utils/responsive.js";
 // rect must keep their marks out of this band or the button occludes them.
 export var FAB_GUTTER = 56;
 
+// Vertical extent of the button measured from the container's top edge: 8px
+// inset + 40px tall (style.css .myIO-fab). Axes charts in a narrow container
+// reserve this as top margin so the button never lands on the plot.
+export var FAB_BAND_BOTTOM = 48;
+
 export function getChartHeight(chart) {
   return chart.height;
 }

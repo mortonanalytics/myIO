@@ -1,5 +1,6 @@
-import { getChartHeight } from "./scaffold.js";
+import { FAB_BAND_BOTTOM, getChartHeight } from "./scaffold.js";
 import { measureLabelWidth, textWidth } from "../utils/text-metrics.js";
+import { isMobile } from "../utils/responsive.js";
 
 // A -90deg rotated <text> grows from its anchor toward SMALLER x by roughly the
 // font ascent (~12px at the 13px .myIO-axis-title size), and the SVG root clips
@@ -213,6 +214,32 @@ export function fitLeftMargin(chart, state) {
     return false;
   }
   chart.config.layout.margin.left = target;
+  return true;
+}
+
+// The floating action button is an overlay pinned to the container's top-right
+// corner and is the only route to the legend on panel-legend charts, so it
+// cannot be moved out of the plot's way -- a narrow plot gives up the band
+// instead. Wide containers keep their configured top margin. Never applies once
+// the user has called setMargin(), and the target is absolute rather than
+// grow-only so widening the container puts the margin back.
+export function fitTopMargin(chart, state) {
+  if (!state || !state.axesChart || !chart.plot || chart.config.sparkline) {
+    return false;
+  }
+  if (chart.config.layout.marginSet) {
+    return false;
+  }
+  if (chart.runtime.baseMarginTop == null) {
+    chart.runtime.baseMarginTop = chart.config.layout.margin.top;
+  }
+  var target = isMobile(chart)
+    ? Math.max(chart.runtime.baseMarginTop, FAB_BAND_BOTTOM)
+    : chart.runtime.baseMarginTop;
+  if (target === chart.config.layout.margin.top) {
+    return false;
+  }
+  chart.config.layout.margin.top = target;
   return true;
 }
 
