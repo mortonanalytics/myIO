@@ -18,7 +18,7 @@
     "regl-scatterplot": "^1.16.0"
   },
   "overrides": {
-    "shell-quote": "^1.8.4"
+    "shell-quote": "^1.10.0"
   },
   "devDependencies": {
     "@duckdb/duckdb-wasm": "^1.28.0",
