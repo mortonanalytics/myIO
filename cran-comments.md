@@ -1,8 +1,23 @@
 ## Update
 
 This is an update from myIO 1.2.0, the version currently on CRAN. Version 1.3.0
-adds backward-compatible keyframe storytelling APIs, verifies the package's
-WebR 0.6.0 path end to end, and updates documentation and safe dependencies.
+adds backward-compatible keyframe storytelling and legend-title APIs, verifies
+the package's WebR 0.6.0 path end to end, updates documentation and safe
+dependencies, and fixes a large batch of rendering and correctness defects
+found in a full audit of the chart gallery.
+
+Three of those fixes change behaviour that previously errored or produced
+incorrect output, and are noted here so the change in NEWS.md is not mistaken
+for a silent API break:
+
+- `whiskerType = "minmax"` no longer errors on boxplots.
+- Waterfall total rows render their computed value instead of `NA`.
+- Legend entries for grouped layers show the group value alone rather than the
+  layer label concatenated with it; `setLegendTitle()` names the grouping
+  variable when that context is wanted.
+
+Each replaces broken behaviour. Charts that rendered correctly under 1.2.0
+render identically under 1.3.0.
 
 ## R CMD check results
 
