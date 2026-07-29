@@ -38,14 +38,17 @@ export function bindLinked(chart) {
     chart.on("brushed", chart.runtime._linkedBrushHandler);
   }
 
-  // INBOUND
+  // INBOUND — Crosstalk's Events emitter keys subscriptions by the exact event
+  // type string (no jQuery-style namespaces), and only ever triggers "change",
+  // so a namespaced type would never be dispatched. Cleanup is handled by
+  // handle.close(), which removes all listeners.
   if (cfg.mode === "target" || cfg.mode === "both") {
-    sel.on("change.myIO", function(e) {
+    sel.on("change", function(e) {
       applySelection(chart, e.value);
     });
 
     if (fil) {
-      fil.on("change.myIO", function(e) {
+      fil.on("change", function(e) {
         applyFilter(chart, e.value);
       });
     }

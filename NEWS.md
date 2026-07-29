@@ -2,6 +2,13 @@
 
 ## Bug fixes
 
+* Linked brushing set up with `setLinked()` now actually propagates: brushing a
+  chart configured as a Crosstalk source dims the non-selected points on every
+  target chart in the same group, and clearing the brush restores them. Target
+  charts previously stayed inert because the inbound Crosstalk subscription was
+  registered under an event name Crosstalk never emits. The `filter = TRUE`
+  variant, which hides rather than dims non-selected marks, is fixed likewise.
+
 * The demo screenshot script (`scripts/screenshot-all.js`) now enumerates the
   navbar and any nested tabsets from the live DOM instead of a hard-coded tab
   list, so it covers all 41 demo charts and no longer fails on tabs that are
