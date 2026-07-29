@@ -48,6 +48,8 @@ export function buildOrdinalLegendData(chart, layer) {
     keys = layer.data.map(function(d) {
       return d[layer.mapping.stage];
     });
+  } else if (layer.type === "waffle" && Array.isArray(layer.data)) {
+    keys = Array.from(new Set(layer.data.map(function(d) { return d[layer.mapping.category]; })));
   } else if (layer.type === "radar" && Array.isArray(layer.data)) {
     keys = layer.mapping.group
       ? Array.from(new Set(layer.data.map(function(d) { return d[layer.mapping.group]; })))

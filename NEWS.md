@@ -15,6 +15,12 @@
   plain top-level entries rather than dropdown menus. It also records console
   errors and warnings per chart in `report.json`.
 
+* Waffle charts now show a legend. Previously no legend appeared at all --
+  neither the in-plot strip nor the bottom-sheet panel listed a single category,
+  so there was no way to tell which colour meant which category. The legend now
+  lists one entry per category, in data order, with swatches that match the cell
+  colours.
+
 # myIO 1.3.0
 
 ## New features

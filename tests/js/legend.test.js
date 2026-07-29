@@ -247,6 +247,46 @@ describe("inline legend (GH #84)", function() {
       .getAttribute("aria-checked")).toBe("false");
   });
 
+  test("waffle renders one inline legend switch per category", function() {
+    document.body.innerHTML = "<div id='inline-waffle'></div>";
+    const element = document.getElementById("inline-waffle");
+    const svg = d3.select(element).append("svg");
+    const waffleLayer = {
+      label: "Energy Mix",
+      type: "waffle",
+      mapping: { category: "cat", value: "val" },
+      data: [
+        { cat: "Renewable", val: 22 },
+        { cat: "Natural Gas", val: 38 },
+        { cat: "Coal", val: 20 },
+        { cat: "Nuclear", val: 12 },
+        { cat: "Other", val: 8 }
+      ]
+    };
+    const chart = {
+      element,
+      svg,
+      options: { suppressLegend: false },
+      runtime: { totalWidth: 800 },
+      margin: { left: 30, right: 20 },
+      height: 300,
+      colorDiscrete: d3.scaleOrdinal(d3.schemeCategory10)
+        .domain(["Renewable", "Natural Gas", "Coal", "Nuclear", "Other"]),
+      plotLayers: [waffleLayer],
+      currentLayers: [waffleLayer],
+      derived: { currentLayers: [waffleLayer] },
+      routeLayers: vi.fn()
+    };
+
+    syncLegend(chart, { ordinalLegend: true });
+
+    const items = element.querySelectorAll(".myIO-inline-legend-item");
+    expect(items).toHaveLength(5);
+    expect(items[0].getAttribute("data-key")).toBe("Renewable");
+    expect(items[0].querySelector("rect:not(.myIO-inline-legend-hit)").getAttribute("fill")).toBe("#1f77b4");
+    expect(chart.runtime._legendData.items).toHaveLength(5);
+  });
+
   test("off items render dimmed with aria-checked false", function() {
     const chart = buildInlineChart(3);
     chart.runtime._hiddenLayerKeys = ["series 2"];

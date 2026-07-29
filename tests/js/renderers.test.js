@@ -228,6 +228,34 @@ describe("Renderer formatTooltip methods", function() {
     expect(document.querySelectorAll("rect." + "tag-heatmap-chart-cells").length).toBe(2);
   });
 
+  test("WaffleRenderer.render publishes the ordinal color scale", function() {
+    var renderer = getRenderer("waffle");
+    document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
+    var el = document.getElementById("chart");
+    var chart = {
+      element: el,
+      dom: { chartArea: d3.select(el).select(".myIO-chart-area") },
+      derived: {},
+      runtime: { width: 600, height: 400 },
+      config: { layout: { margin: { top: 30, bottom: 60, left: 50, right: 5 } } },
+      options: { transition: { speed: 0 } }
+    };
+    var layer = {
+      id: "layer_001",
+      label: "Energy Mix",
+      mapping: { category: "cat", value: "val" },
+      data: [{ cat: "A", val: 60 }, { cat: "B", val: 40 }]
+    };
+
+    renderer.render(chart, layer);
+
+    expect(typeof chart.colorDiscrete).toBe("function");
+    expect(chart.derived.colorDiscrete).toBe(chart.colorDiscrete);
+    expect(chart.colorDiscrete.domain()).toEqual(["A", "B"]);
+    expect(chart.colorDiscrete("A")).toBe(
+      document.querySelector(".waffle-cell").getAttribute("fill"));
+  });
+
   test("CandlestickRenderer.render creates wick and body elements", function() {
     var renderer = getRenderer("candlestick");
     document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
