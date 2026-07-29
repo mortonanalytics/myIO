@@ -4,7 +4,10 @@
 #'
 #' @param myIO an htmlwidget object created by the \code{myIO()} function
 #' @param type chart type
-#' @param color optional CSS color string or vector for grouped layers
+#' @param color optional CSS color string or vector for grouped layers. For
+#'   \code{type = "regression"} the first element colors the raw scatter and the
+#'   optional second element colors the fitted line and confidence band; supply
+#'   the same color twice to render data and model in a single hue.
 #' @param label unique layer label
 #' @param data data frame backing the layer
 #' @param mapping named aesthetic mapping list

@@ -1,7 +1,7 @@
 import { getChartHeight } from "../layout/scaffold.js";
 
 const X_DOMAIN_BUFFER = 0.05;
-const Y_DOMAIN_BUFFER = 0.15;
+const Y_DOMAIN_BUFFER = 0.05;
 
 export function createBins(chart, lys) {
   var m = chart.margin;
@@ -145,8 +145,10 @@ export function processScales(chart, lys, semantics) {
   }
 
   var y_buffer = Math.abs(y_max - y_min) * Y_DOMAIN_BUFFER;
+  // Padding must not manufacture a negative axis for data that never goes negative.
+  var y_lower = y_min >= 0 ? Math.max(0, y_min - y_buffer) : y_min - y_buffer;
   var yExtent = [
-    hasLimit(chart.config.scales.ylim.min) ? +chart.config.scales.ylim.min : (zeroBaseline && y_min === 0 ? 0 : y_min - y_buffer),
+    hasLimit(chart.config.scales.ylim.min) ? +chart.config.scales.ylim.min : (zeroBaseline && y_min === 0 ? 0 : y_lower),
     hasLimit(chart.config.scales.ylim.max) ? +chart.config.scales.ylim.max : (zeroBaseline && y_max === 0 ? 0 : y_max + y_buffer)
   ];
 

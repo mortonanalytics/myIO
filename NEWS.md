@@ -2,6 +2,22 @@
 
 ## Bug fixes
 
+* Charts no longer pad the y axis down into negative territory for data that
+  never goes negative. Y-axis padding is now 5% of the data range per side,
+  matching the x axis, and the padded lower bound stops at zero when the data
+  minimum is at or above zero -- a yield series bottoming out near 0 no longer
+  renders a `-5` tick. Limits set explicitly with `setAxisLimits()` are
+  unaffected.
+
+* `type = "regression"` now draws the raw scatter, the fitted line and the
+  confidence band in visually separable treatments. Previously all three shared
+  a single hue, so the fit and its uncertainty band were hard to distinguish
+  from the data. The scatter keeps the layer colour, the fit line and band take
+  a second contrasting hue from the Okabe-Ito palette, and the band renders at a
+  lighter fill opacity. Pass a two-element `color` vector to set both
+  explicitly (`color = c("#333", "#333")` restores the previous single-hue
+  look), or set `options$areaOpacity` to control the band opacity.
+
 * Linked brushing set up with `setLinked()` now actually propagates: brushing a
   chart configured as a Crosstalk source dims the non-selected points on every
   target chart in the same group, and clearing the brush restores them. Target

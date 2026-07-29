@@ -108,3 +108,47 @@ test_that("annotation sublayer contains R-squared text", {
   expect_true(grepl("R\u00B2", annotation$data$text[1]))
   expect_true(grepl("y =", annotation$data$text[2]))
 })
+
+test_that("regression separates data, model and band colors", {
+  df <- data.frame(
+    x = 1:20, y = 2 * (1:20),
+    `_source_key` = paste0("row_", 1:20),
+    stringsAsFactors = FALSE, check.names = FALSE
+  )
+  sl <- myIO:::composite_regression(
+    df, list(x_var = "x", y_var = "y"), "test", "#333",
+    options = list(showStats = FALSE)
+  )
+  expect_equal(sl[[1]]$color, "#333")
+  expect_false(identical(sl[[2]]$color, sl[[1]]$color))
+  expect_equal(sl[[3]]$color, sl[[2]]$color)
+  expect_true(sl[[2]]$color %in% myIO:::OKABE_ITO_PALETTE)
+  expect_equal(sl[[3]]$options$areaOpacity, 0.18)
+})
+
+test_that("an explicit two-element color controls data and model separately", {
+  df <- data.frame(
+    x = 1:20, y = 2 * (1:20),
+    `_source_key` = paste0("row_", 1:20),
+    stringsAsFactors = FALSE, check.names = FALSE
+  )
+  sl <- myIO:::composite_regression(
+    df, list(x_var = "x", y_var = "y"), "test", c("#111111", "#111111"),
+    options = list(showStats = FALSE)
+  )
+  expect_equal(sl[[1]]$color, "#111111")
+  expect_equal(sl[[2]]$color, "#111111")
+})
+
+test_that("an explicit areaOpacity option still wins for the CI band", {
+  df <- data.frame(
+    x = 1:20, y = 2 * (1:20),
+    `_source_key` = paste0("row_", 1:20),
+    stringsAsFactors = FALSE, check.names = FALSE
+  )
+  sl <- myIO:::composite_regression(
+    df, list(x_var = "x", y_var = "y"), "test", "#333",
+    options = list(showStats = FALSE, areaOpacity = 0.5)
+  )
+  expect_equal(sl[[3]]$options$areaOpacity, 0.5)
+})
