@@ -1,6 +1,5 @@
 import { FAB_BAND_BOTTOM, getChartHeight } from "./scaffold.js";
 import { measureLabelWidth, textWidth } from "../utils/text-metrics.js";
-import { isMobile } from "../utils/responsive.js";
 
 // A -90deg rotated <text> grows from its anchor toward SMALLER x by roughly the
 // font ascent (~12px at the 13px .myIO-axis-title size), and the SVG root clips
@@ -233,9 +232,11 @@ export function fitTopMargin(chart, state) {
   if (chart.runtime.baseMarginTop == null) {
     chart.runtime.baseMarginTop = chart.config.layout.margin.top;
   }
-  var target = isMobile(chart)
-    ? Math.max(chart.runtime.baseMarginTop, FAB_BAND_BOTTOM)
-    : chart.runtime.baseMarginTop;
+  // The button is permanent chrome pinned to the same top-right band on both
+  // tiers, so the band is reserved on both. Leaving the wide tier unreserved
+  // left whichever mark happened to land in the corner sitting under the
+  // button, which is a data-dependent defect rather than a layout choice.
+  var target = Math.max(chart.runtime.baseMarginTop, FAB_BAND_BOTTOM);
   if (target === chart.config.layout.margin.top) {
     return false;
   }

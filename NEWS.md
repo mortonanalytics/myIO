@@ -12,6 +12,12 @@
 
 ## Bug fixes
 
+* The legend button no longer sits on top of plotted data. Charts already
+  reserved the button's corner band on narrow layouts; wide layouts now do
+  the same, so a mark that lands in the top-right corner is never hidden
+  underneath it. An explicit `setMargin()` still wins, and sparklines and
+  non-axis charts are unaffected.
+
 * Waterfall charts no longer log a browser console warning about null values,
   and the total bar's tooltip no longer reads `Delta: null`. A total row is
   declared by putting `NA` in the value column, and that `NA` was travelling all

@@ -32,6 +32,24 @@ describe("Floating action button top-margin reservation", function() {
     expect(chart.config.layout.margin.top).toBe(48);
   });
 
+  // The button is pinned to the same corner on both tiers, so a wide chart is
+  // just as capable of drawing a mark underneath it.
+  test("a wide axes chart reserves the same band", function() {
+    var chart = makeChart(900);
+
+    expect(fitTopMargin(chart, AXES)).toBe(true);
+    expect(chart.config.layout.margin.top).toBe(48);
+  });
+
+  test("the reservation does not depend on the width tier", function() {
+    var narrow = makeChart(420);
+    var wide = makeChart(1600);
+    fitTopMargin(narrow, AXES);
+    fitTopMargin(wide, AXES);
+
+    expect(wide.config.layout.margin.top).toBe(narrow.config.layout.margin.top);
+  });
+
   test("the fit is idempotent", function() {
     var chart = makeChart(420);
     fitTopMargin(chart, AXES);
@@ -40,20 +58,13 @@ describe("Floating action button top-margin reservation", function() {
     expect(chart.config.layout.margin.top).toBe(48);
   });
 
-  test("a wide chart keeps its configured top margin", function() {
-    var chart = makeChart(900);
-
-    expect(fitTopMargin(chart, AXES)).toBe(false);
-    expect(chart.config.layout.margin.top).toBe(30);
-  });
-
-  test("widening the container puts the margin back", function() {
+  test("resizing the container does not re-fit an already reserved band", function() {
     var chart = makeChart(420);
     fitTopMargin(chart, AXES);
     chart.runtime.totalWidth = 900;
 
-    expect(fitTopMargin(chart, AXES)).toBe(true);
-    expect(chart.config.layout.margin.top).toBe(30);
+    expect(fitTopMargin(chart, AXES)).toBe(false);
+    expect(chart.config.layout.margin.top).toBe(48);
   });
 
   test("a top margin already larger than the band is left alone", function() {
@@ -138,7 +149,7 @@ describe("Floating action button reservation through the render path", function(
     expect(chart.config.layout.margin.top).toBe(48);
   });
 
-  test("a wide chart is byte-identical to before", function() {
+  test("a wide chart lands its plot below the button too", function() {
     var chart = new myIOchart({
       element: document.getElementById("chart"),
       width: 900,
@@ -146,7 +157,7 @@ describe("Floating action button reservation through the render path", function(
       config: renderConfig()
     });
 
-    expect(chart.config.layout.margin.top).toBe(30);
+    expect(chart.config.layout.margin.top).toBe(48);
   });
 
   test("a narrow chart that called setMargin() is untouched", function() {
