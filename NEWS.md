@@ -59,6 +59,11 @@
 
 ## Performance and tooling
 
+* Release dependency intake updates the GitHub Actions, browser-test, Arrow,
+  MCP, and JavaScript security transitive dependencies through PRs #91--#100.
+  The MCP server now resolves `@hono/node-server` 2.0.12 and declares Node.js
+  20 or newer as its runtime floor; its conformance, stdio smoke, and audit
+  gates pass with zero known npm vulnerabilities.
 * The production JavaScript bundle is now minified. The shipped
   `inst/htmlwidgets/myIO/myIOapi.js` drops from 2.32 MB to 1.20 MB raw
   (398,650 to 298,757 bytes gzipped, -25%) with no behavior change; the
