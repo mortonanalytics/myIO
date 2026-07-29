@@ -98,6 +98,22 @@ describe("keyframe controller", () => {
     expect(chart.runtime.keyframeTimer).toBeNull();
   });
 
+  test("reinitializing clears playback and preserves unrelated runtime state", () => {
+    const chart = chartWithFrames();
+    chart.runtime.brushState = { active: true };
+    chart.runtime.zoomState = { k: 2 };
+    initializeKeyframes(chart);
+    toggleKeyframePlayback(chart);
+    initializeKeyframes(chart);
+    vi.advanceTimersByTime(5000);
+
+    expect(chart.runtime.keyframePlaying).toBe(false);
+    expect(chart.runtime.keyframeTimer).toBeNull();
+    expect(chart.runtime.keyframeIndex).toBe(0);
+    expect(chart.runtime.brushState).toEqual({ active: true });
+    expect(chart.runtime.zoomState).toEqual({ k: 2 });
+  });
+
   test("does nothing for zero or one frame", () => {
     const chart = chartWithFrames();
     chart.config.keyframes = [];
@@ -107,5 +123,16 @@ describe("keyframe controller", () => {
     chart.config.keyframes = [{ label: "Only", layers: [] }];
     initializeKeyframes(chart);
     expect(document.querySelector(".myIO-keyframe-controls")).toBeNull();
+  });
+
+  test("malformed selections and steps are safe no-ops", () => {
+    const chart = chartWithFrames();
+    initializeKeyframes(chart);
+
+    expect(selectKeyframe(chart, null)).toBe(false);
+    expect(selectKeyframe(chart, 0)).toBe(false);
+    expect(selectKeyframe(chart, 1.5)).toBe(false);
+    expect(stepKeyframe(chart, "sideways")).toBe(false);
+    expect(chart.runtime.keyframeIndex).toBe(0);
   });
 });

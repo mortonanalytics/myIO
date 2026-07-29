@@ -123,7 +123,8 @@ setKeyframe <- function(proxy, frame) {
   valid_character <- is.character(frame) && length(frame) == 1L &&
     !is.na(frame) && nzchar(trimws(frame))
   valid_numeric <- is.numeric(frame) && length(frame) == 1L && !is.na(frame) &&
-    is.finite(frame) && frame >= 1 && frame == floor(frame)
+    is.finite(frame) && frame >= 1 && frame <= .Machine$integer.max &&
+    frame == floor(frame)
   if (!valid_character && !valid_numeric) {
     if (is.numeric(frame) && length(frame) == 1L && !is.na(frame) && frame < 1) {
       stop("setKeyframe(): numeric frame must be a positive one-based index.",

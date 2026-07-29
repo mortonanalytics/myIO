@@ -106,6 +106,9 @@ describe("proxy message handler wiring", () => {
       id: "chartA", action: "select", frame: "End"
     });
     expect(fakeChart.updateData).toHaveBeenLastCalledWith(payload.layers);
+    expect(() => handlers["myio:keyframe-control"](null)).not.toThrow();
+    expect(() => handlers["myio:keyframe-control"]({ id: "missing", action: "step" })).not.toThrow();
+    expect(() => handlers["myio:keyframe-control"]({ id: "chartA", action: "unknown" })).not.toThrow();
 
     // unknown id is a no-op
     expect(() => handlers["myio:proxy-update"]({ id: "missing", layers: [] })).not.toThrow();

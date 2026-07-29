@@ -88,6 +88,7 @@ test_that("keyframe proxy helpers emit stable Shiny message payloads", {
 
   expect_error(setKeyframe(list(), "After"), "myIOProxy")
   expect_error(setKeyframe(proxy, 0), "positive")
+  expect_error(setKeyframe(proxy, .Machine$integer.max + 1), "positive")
   expect_error(setKeyframe(proxy, c("a", "b")), "single")
   expect_error(stepKeyframe(proxy, "sideways"), "arg")
 })

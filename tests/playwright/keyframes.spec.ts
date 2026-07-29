@@ -75,3 +75,16 @@ test("reduced motion keeps playback functional with zero-duration updates", asyn
   await expect(page.locator("circle[class^='tag-point']")).toHaveCount(3);
   expect(await page.evaluate(() => (window as any).__chart.config.transitions.speed)).toBe(0);
 });
+
+test("controls remain accessible and contained on narrow and print layouts", async ({ page }) => {
+  await page.setViewportSize({ width: 280, height: 620 });
+  await ready(page);
+  const controls = page.locator(".myIO-keyframe-controls");
+  const next = page.getByRole("button", { name: "Next keyframe" });
+  await next.focus();
+
+  expect(await controls.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
+  expect(await next.evaluate((node) => getComputedStyle(node).boxShadow)).not.toBe("none");
+  await page.emulateMedia({ media: "print" });
+  await expect(controls).toBeHidden();
+});
