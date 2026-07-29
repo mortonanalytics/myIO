@@ -3,20 +3,9 @@ import { describe, expect, test } from "vitest";
 import { initializeScaffold } from "../../inst/htmlwidgets/myIO/src/layout/scaffold.js";
 import { renderAxes, fitLeftMargin, updateYAxis } from "../../inst/htmlwidgets/myIO/src/layout/axes.js";
 import { syncLegend } from "../../inst/htmlwidgets/myIO/src/layout/legend.js";
+import "./support/jsdom-svg-transform.js";
 
 globalThis.d3 = d3;
-
-// jsdom does not implement SVGGraphicsElement.transform, which d3-interpolate
-// reads to tween a "transform" attribute. Without it any transitioned axis
-// throws on the first animation frame. An empty baseVal makes the interpolator
-// fall back to its identity start, which is all these tests need.
-if (typeof SVGElement !== "undefined" && !("transform" in SVGElement.prototype)) {
-  Object.defineProperty(SVGElement.prototype, "transform", {
-    get: function() {
-      return { baseVal: { consolidate: function() { return null; } } };
-    }
-  });
-}
 
 function baseChart() {
   document.body.innerHTML = "<div id='chart'></div>";

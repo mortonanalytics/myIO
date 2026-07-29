@@ -1,5 +1,6 @@
 import * as d3 from "d3";
 import * as d3Sankey from "d3-sankey";
+import fs from "node:fs";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { myIOchart } from "../../inst/htmlwidgets/myIO/src/Chart.js";
 import { registerBuiltInRenderers, getRenderer } from "../../inst/htmlwidgets/myIO/src/registry.js";
@@ -991,5 +992,42 @@ describe("Full chart rendering with layers", function() {
       // Gauge rendered but text element not found - still a valid outcome for non-finite input
       expect(true).toBe(true);
     }
+  });
+});
+
+// Renderers draw with chart.element.id and clean up with chart.dom.element.id.
+// chart.element is a legacy alias re-derived from chart.dom.element on every
+// sync; chart.dom.element is assigned once in the constructor and never
+// reassigned. A remove() that reads the alias instead breaks the moment
+// anything reassigns dom.element without re-running syncLegacyAliases, and it
+// breaks silently -- the selector simply matches nothing.
+function removeBody(source) {
+  var start = source.search(/\n {2}remove\s*\(/);
+  if (start === -1) {
+    return null;
+  }
+  var open = source.indexOf("{", start);
+  var depth = 0;
+  for (var i = open; i < source.length; i += 1) {
+    if (source[i] === "{") { depth += 1; }
+    if (source[i] === "}") {
+      depth -= 1;
+      if (depth === 0) { return source.slice(open, i + 1); }
+    }
+  }
+  return null;
+}
+
+describe("renderer remove() id convention", function() {
+  test("no remove() resolves its mark class through the chart.element alias", function() {
+    var dir = "inst/htmlwidgets/myIO/src/renderers";
+    var offenders = fs.readdirSync(dir)
+      .filter(function(name) { return name.endsWith(".js"); })
+      .filter(function(name) {
+        var body = removeBody(fs.readFileSync(dir + "/" + name, "utf8"));
+        return body !== null && body.indexOf("chart.element.id") !== -1;
+      });
+
+    expect(offenders).toEqual([]);
   });
 });

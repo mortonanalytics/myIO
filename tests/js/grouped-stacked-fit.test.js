@@ -2,21 +2,10 @@ import * as d3 from "d3";
 import { beforeEach, describe, expect, test } from "vitest";
 import { myIOchart } from "../../inst/htmlwidgets/myIO/src/Chart.js";
 import { registerBuiltInRenderers } from "../../inst/htmlwidgets/myIO/src/registry.js";
+import "./support/jsdom-svg-transform.js";
 
 globalThis.d3 = d3;
 globalThis.HTMLWidgets = { shinyMode: false };
-
-// jsdom does not implement SVGGraphicsElement.transform, which d3-interpolate
-// reads to tween a "transform" attribute. Without it any transitioned axis
-// throws on the first animation frame. An empty baseVal makes the interpolator
-// fall back to its identity start, which is all these tests need.
-if (typeof SVGElement !== "undefined" && !("transform" in SVGElement.prototype)) {
-  Object.defineProperty(SVGElement.prototype, "transform", {
-    get: function() {
-      return { baseVal: { consolidate: function() { return null; } } };
-    }
-  });
-}
 
 function groupedLayer(id, label, color, order) {
   return {
