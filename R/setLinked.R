@@ -20,6 +20,17 @@
 #' @param cursorAxis Character. Which axis to sync: \code{"x"} (default),
 #'   \code{"y"}, or \code{"xy"}. Only \code{"x"} is active in v1.2.
 #'
+#' @details
+#' Selections travel on the Crosstalk key space, so a myIO chart matches
+#' rows against sibling widgets (\pkg{DT}, \pkg{plotly}, \pkg{leaflet}) by
+#' the same keys they use. The keys are matched to the chart's rows by
+#' position, which requires the data passed to \code{addIoLayer()} to be
+#' \code{shared_data$data()} in its original row order. If a layer's row
+#' count does not match the number of keys -- for example after re-filtering
+#' the frame, or after \code{updateMyIOData()} replaced the rows -- the
+#' chart falls back to matching within its own widget only, rather than
+#' pairing keys with the wrong rows.
+#'
 #' @return A modified \code{myIO} htmlwidget with Crosstalk linking.
 #' @seealso \code{\link{linkCharts}} for group-identifier linking that does
 #'   not require Crosstalk (e.g. static R Markdown / Quarto HTML).

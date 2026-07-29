@@ -12,6 +12,23 @@
 
 ## Bug fixes
 
+* `setLinked()` charts now cross-select against non-myIO widgets. A myIO chart
+  in a Crosstalk group used to broadcast and match on its own internal row
+  numbers rather than the keys the `SharedData` object was built with, so
+  brushing it selected nothing in a linked `DT` table, `plotly` figure or
+  `leaflet` map, and a selection made in any of those lit nothing in the myIO
+  chart. Selections now travel on the Crosstalk keys, so all four coordinate.
+  Two myIO charts linked to each other behaved consistently before and still
+  do, and widgets saved by earlier versions of myIO keep working. Blast radius:
+  the keys that reach the Crosstalk group change from myIO's private `row_1`,
+  `row_2`, ... to the real keys, so any custom JavaScript listening on the
+  group now sees the same keys every other widget uses. One limit is
+  unchanged: keys are paired with rows by position, so a chart built from a
+  frame that was re-sorted or re-filtered after `shared$data()` cannot be
+  matched. Where the row count no longer matches, the chart now falls back to
+  matching within itself rather than pairing keys with the wrong rows. See
+  `?setLinked`.
+
 * `type = "boxplot"` with `options = list(whiskerType = "minmax")` no longer
   fails with `$ operator is invalid for atomic vectors`. The documented
   `"minmax"` whisker style errored on every call; whiskers now render at each

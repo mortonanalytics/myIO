@@ -47,6 +47,17 @@ A modified \code{myIO} htmlwidget with Crosstalk linking.
 Connects the chart to a Crosstalk SharedData object so that brush
 selections propagate to other linked widgets.
 }
+\details{
+Selections travel on the Crosstalk key space, so a myIO chart matches
+rows against sibling widgets (\pkg{DT}, \pkg{plotly}, \pkg{leaflet}) by
+the same keys they use. The keys are matched to the chart's rows by
+position, which requires the data passed to \code{addIoLayer()} to be
+\code{shared_data$data()} in its original row order. If a layer's row
+count does not match the number of keys -- for example after re-filtering
+the frame, or after \code{updateMyIOData()} replaced the rows -- the
+chart falls back to matching within its own widget only, rather than
+pairing keys with the wrong rows.
+}
 \examples{
 if (interactive() && requireNamespace("crosstalk", quietly = TRUE)) {
   shared <- crosstalk::SharedData$new(mtcars, key = ~rownames(mtcars))

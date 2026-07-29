@@ -57,23 +57,66 @@ LocalSelectionHandle.prototype._broadcast = function(keys) {
 };
 
 // linkCharts(on = "col") matches rows across charts by a shared data column.
-// setLinked() has no keyColumn and keeps matching on the per-widget row key,
-// which R/util.R ensure_source_key() fills positionally and which is therefore
-// only meaningful when both charts were built from the same rows.
-function linkKeys(cfg, e) {
-  if (!cfg || !cfg.keyColumn) return e.keys || [];
-  var keys = [];
-  (e.data || []).forEach(function(d) {
-    var value = d[cfg.keyColumn];
-    if (value === undefined || value === null) return;
-    value = String(value);
-    if (keys.indexOf(value) === -1) keys.push(value);
+// setLinked() has no keyColumn: it matches on the per-widget row key, which
+// R/util.R ensure_source_key() fills positionally as "row_<i>". Crosstalk's own
+// key space is whatever SharedData$key() returned (row names, an id column, ...),
+// and R/setLinked.R ships it as cfg.key in the row order of the data frame handed
+// to addIoLayer(). buildKeyMap() turns that parallel vector into a
+// row_<i> -> real-key lookup so a myIO chart puts crosstalk's keys on the wire
+// instead of its private positional ones -- without which a sibling DT / plotly /
+// leaflet in the same group matches nothing.
+function buildKeyMap(chart, cfg) {
+  if (!cfg || cfg.keyColumn) return null;
+  var keys = cfg.key;
+  if (!Array.isArray(keys) || keys.length === 0) return null;
+  var layers = (chart.config.layers || chart.derived.currentLayers || [])
+    .filter(function(l) { return LINKABLE_TYPES.indexOf(l.type) > -1; });
+  if (layers.length === 0) return null;
+  // cfg.key indexes the SharedData rows. A linkable layer with a different row
+  // count was built from other rows (a filtered frame, a transform output), so
+  // its row_<i> ids do not index cfg.key and translating them would silently
+  // mislabel marks. One such layer disables translation for the whole chart and
+  // the row_<i> space stays in use, exactly as before this change.
+  for (var i = 0; i < layers.length; i++) {
+    if (!Array.isArray(layers[i].data) || layers[i].data.length !== keys.length) {
+      return null;
+    }
+  }
+  var map = Object.create(null);
+  layers.forEach(function(layer) {
+    layer.data.forEach(function(d, i) {
+      if (d && d._source_key != null) map[d._source_key] = String(keys[i]);
+    });
   });
-  return keys;
+  return map;
 }
 
-function matchKey(cfg, d) {
-  return (cfg && cfg.keyColumn) ? String(d[cfg.keyColumn]) : d._source_key;
+function linkKeys(cfg, e, keyMap) {
+  if (cfg && cfg.keyColumn) {
+    var cols = [];
+    (e.data || []).forEach(function(d) {
+      var value = d[cfg.keyColumn];
+      if (value === undefined || value === null) return;
+      value = String(value);
+      if (cols.indexOf(value) === -1) cols.push(value);
+    });
+    return cols;
+  }
+  var raw = e.keys || [];
+  if (!keyMap) return raw;
+  var out = [];
+  raw.forEach(function(k) {
+    var mapped = keyMap[k] !== undefined ? keyMap[k] : k;
+    if (out.indexOf(mapped) === -1) out.push(mapped);
+  });
+  return out;
+}
+
+function matchKey(cfg, d, keyMap) {
+  if (cfg && cfg.keyColumn) return String(d[cfg.keyColumn]);
+  var sk = d._source_key;
+  if (keyMap && sk != null && keyMap[sk] !== undefined) return keyMap[sk];
+  return sk;
 }
 
 export function bindLinked(chart) {
@@ -89,6 +132,9 @@ export function bindLinked(chart) {
 
   cleanupLinked(chart);
 
+  var keyMap = buildKeyMap(chart, cfg);
+  chart.runtime._linkedKeyMap = keyMap;
+
   var sel = hasCrosstalk
     ? new crosstalk.SelectionHandle(cfg.group)
     : new LocalSelectionHandle(cfg.group);
@@ -100,7 +146,7 @@ export function bindLinked(chart) {
   // OUTBOUND — store handler ref for cleanup (EventEmitter has no namespace support)
   if (mode === "source" || mode === "both") {
     chart.runtime._linkedBrushHandler = function(e) {
-      var keys = linkKeys(cfg, e);
+      var keys = linkKeys(cfg, e, keyMap);
       if (keys && keys.length > 0) {
         sel.set(keys);
       } else {
@@ -116,18 +162,18 @@ export function bindLinked(chart) {
   // handle.close(), which removes all listeners.
   if (mode === "target" || mode === "both") {
     sel.on("change", function(e) {
-      applySelection(chart, e.value, cfg);
+      applySelection(chart, e.value, cfg, keyMap);
     });
 
     if (fil) {
       fil.on("change", function(e) {
-        applyFilter(chart, e.value, cfg);
+        applyFilter(chart, e.value, cfg, keyMap);
       });
     }
   }
 }
 
-function applySelection(chart, selectedKeys, cfg) {
+function applySelection(chart, selectedKeys, cfg, keyMap) {
   var layers = (chart.derived.currentLayers || []).filter(function(l) {
     return LINKABLE_TYPES.indexOf(l.type) > -1;
   });
@@ -138,14 +184,14 @@ function applySelection(chart, selectedKeys, cfg) {
       if (!selectedKeys) {
         d3.select(this).style("opacity", 1.0);
       } else {
-        var inside = selectedKeys.indexOf(matchKey(cfg, d)) > -1;
+        var inside = selectedKeys.indexOf(matchKey(cfg, d, keyMap)) > -1;
         d3.select(this).style("opacity", inside ? 1.0 : "var(--chart-brush-dim-opacity)");
       }
     });
   });
 }
 
-function applyFilter(chart, filteredKeys, cfg) {
+function applyFilter(chart, filteredKeys, cfg, keyMap) {
   var layers = (chart.derived.currentLayers || []).filter(function(l) {
     return LINKABLE_TYPES.indexOf(l.type) > -1;
   });
@@ -156,7 +202,7 @@ function applyFilter(chart, filteredKeys, cfg) {
       if (!filteredKeys) {
         d3.select(this).style("display", null);
       } else {
-        var visible = filteredKeys.indexOf(matchKey(cfg, d)) > -1;
+        var visible = filteredKeys.indexOf(matchKey(cfg, d, keyMap)) > -1;
         d3.select(this).style("display", visible ? null : "none");
       }
     });
@@ -176,5 +222,6 @@ export function cleanupLinked(chart) {
     chart.runtime._crosstalkFil.close();
     chart.runtime._crosstalkFil = null;
   }
+  chart.runtime._linkedKeyMap = null;
   unregisterLinkedCursor(chart);
 }

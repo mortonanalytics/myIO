@@ -136,7 +136,9 @@ describe("linked brushing propagation", function() {
     function makeKeyedChart(id, rows) {
       var handlers = {};
       return {
-        config: { interactions: { linked: { enabled: true, group: "gk", mode: "bidirectional", keyColumn: "cyl" } } },
+        // A stale/wrong-length cfg.key must not displace keyColumn: linkCharts()
+        // matching wins over the setLinked() crosstalk key space.
+        config: { interactions: { linked: { enabled: true, group: "gk", mode: "bidirectional", keyColumn: "cyl", key: ["a", "b", "c", "d", "e"] } } },
         derived: { currentLayers: [{ type: "point", label: "pts", data: rows }] },
         dom: {
           element: { id: id },
