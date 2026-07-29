@@ -1,6 +1,61 @@
-# myIO (development version)
+# myIO 1.3.0
 
 ## New features
+
+* Keyframe storytelling adds `addKeyframe()` for named, transformed data
+  snapshots and accessible previous/play-pause/next controls. Single-layer
+  charts accept a data frame; multi-layer charts accept a named list keyed by
+  layer label, with omitted layers retaining their prior state. Playback runs
+  once and stops at the final frame, while reduced-motion and zero-duration
+  transitions remain fully step- and play-capable. Shiny applications can use
+  `setKeyframe()` and `stepKeyframe()` through the existing instance registry.
+* WebR 0.6.0 compatibility is now a blocking CI contract: the package and its
+  dependencies are compiled with the official r-wasm action, loaded in WebR,
+  used to create and serialize a real widget, and rendered with the production
+  bundle in Chromium. The verified path does not claim DuckDB-WASM support or
+  universal compatibility across browser hosts.
+
+* Legend/button UI streamlining (#84): charts now show exactly one legend
+  surface at a time. When a discrete chart's compact in-plot legend is showing,
+  the chart-controls panel no longer repeats the same legend and becomes
+  actions-only (this supersedes the 1.2.0 note that kept the action-sheet
+  legend alongside the new inline one). The in-plot legend is now interactive —
+  click or keyboard (Enter/Space) toggles a series on/off, with `role="switch"`
+  semantics matching the panel legend. Charts with more than 10 series, or
+  containers too narrow to fit the strip legibly, move the full legend to the
+  panel instead of truncating (previously the strip silently cut off at 10
+  items). Inline legend rows now wrap by measured width rather than item count.
+  No R API changes; `suppressLegend()` behaves exactly as before.
+* Responsive chart-controls behavior now keys off the widget's own container
+  width everywhere, instead of a mix of container width (panel docking) and
+  browser viewport width (button position, sheet drag handle). A narrow widget
+  embedded in a wide page — dashboard grids, side-by-side layouts — gets a
+  coherent narrow-tier UI. The panel legend's two-column grid is now driven by
+  item count on all sizes, not just narrow containers.
+
+* New `setTransition(duration, easing, stagger)` configures chart animations:
+  `duration` in milliseconds, `easing` (one of `"linear"`, `"quad"`, `"cubic"`,
+  `"sin"`, `"exp"`, `"circle"`, `"back"`, `"bounce"`, `"elastic"`, mapped to the
+  corresponding d3 easing), and `stagger` (per-element cascade delay in ms).
+  All arguments are optional and additive; unset values keep each renderer's
+  existing defaults, so the change is fully backward compatible.
+  `setTransitionSpeed()` is now a thin wrapper over `setTransition(duration = )`.
+  Animation stays fully opt-out-able: `duration = 0` disables it, and easing and
+  stagger automatically no-op when the effective duration is 0, including under
+  the viewer's `prefers-reduced-motion: reduce` system setting. A Playwright e2e
+  spec verifies animate-when-on, still-when-off, and still-under-reduced-motion.
+* New opt-in `"lttb"` transform for `line` layers downsamples a large series
+  with Largest-Triangle-Three-Buckets, shipping at most `options$threshold`
+  points (default 2000) while preserving the visual shape:
+  `addIoLayer(type = "line", transform = "lttb", options = list(threshold = 1000))`.
+  Off by default (`identity`); runs on the in-memory/SVG path and is independent
+  of the DuckDB-WASM engine's own SQL-side LTTB, so it never double-downsamples.
+* New `myIOProxy()` + `updateMyIOData()` update a rendered chart's layer data in
+  place from the Shiny server without re-running `renderMyIO()`. Layers are
+  matched by label and swapped through the existing data-join path, so only the
+  changed marks transition and brush/zoom/toggle state is preserved (the full
+  re-render destroyed and recreated the chart, flickering and dropping state):
+  `myIOProxy("chart") |> updateMyIOData(series = new_df)`.
 
 * `setLegendTitle()` puts a title on the legend naming the variable its entries
   come from, so a grouped chart whose series are labelled `5 6 7 8 9` can say
@@ -340,65 +395,6 @@
   earlier version of myIO has no record of whether `setMargin()` was called, so
   re-rendering it against this version may widen a too-narrow left margin.
 
-# myIO 1.3.0
-
-## New features
-
-* Keyframe storytelling adds `addKeyframe()` for named, transformed data
-  snapshots and accessible previous/play-pause/next controls. Single-layer
-  charts accept a data frame; multi-layer charts accept a named list keyed by
-  layer label, with omitted layers retaining their prior state. Playback runs
-  once and stops at the final frame, while reduced-motion and zero-duration
-  transitions remain fully step- and play-capable. Shiny applications can use
-  `setKeyframe()` and `stepKeyframe()` through the existing instance registry.
-* WebR 0.6.0 compatibility is now a blocking CI contract: the package and its
-  dependencies are compiled with the official r-wasm action, loaded in WebR,
-  used to create and serialize a real widget, and rendered with the production
-  bundle in Chromium. The verified path does not claim DuckDB-WASM support or
-  universal compatibility across browser hosts.
-
-* Legend/button UI streamlining (#84): charts now show exactly one legend
-  surface at a time. When a discrete chart's compact in-plot legend is showing,
-  the chart-controls panel no longer repeats the same legend and becomes
-  actions-only (this supersedes the 1.2.0 note that kept the action-sheet
-  legend alongside the new inline one). The in-plot legend is now interactive —
-  click or keyboard (Enter/Space) toggles a series on/off, with `role="switch"`
-  semantics matching the panel legend. Charts with more than 10 series, or
-  containers too narrow to fit the strip legibly, move the full legend to the
-  panel instead of truncating (previously the strip silently cut off at 10
-  items). Inline legend rows now wrap by measured width rather than item count.
-  No R API changes; `suppressLegend()` behaves exactly as before.
-* Responsive chart-controls behavior now keys off the widget's own container
-  width everywhere, instead of a mix of container width (panel docking) and
-  browser viewport width (button position, sheet drag handle). A narrow widget
-  embedded in a wide page — dashboard grids, side-by-side layouts — gets a
-  coherent narrow-tier UI. The panel legend's two-column grid is now driven by
-  item count on all sizes, not just narrow containers.
-
-* New `setTransition(duration, easing, stagger)` configures chart animations:
-  `duration` in milliseconds, `easing` (one of `"linear"`, `"quad"`, `"cubic"`,
-  `"sin"`, `"exp"`, `"circle"`, `"back"`, `"bounce"`, `"elastic"`, mapped to the
-  corresponding d3 easing), and `stagger` (per-element cascade delay in ms).
-  All arguments are optional and additive; unset values keep each renderer's
-  existing defaults, so the change is fully backward compatible.
-  `setTransitionSpeed()` is now a thin wrapper over `setTransition(duration = )`.
-  Animation stays fully opt-out-able: `duration = 0` disables it, and easing and
-  stagger automatically no-op when the effective duration is 0, including under
-  the viewer's `prefers-reduced-motion: reduce` system setting. A Playwright e2e
-  spec verifies animate-when-on, still-when-off, and still-under-reduced-motion.
-* New opt-in `"lttb"` transform for `line` layers downsamples a large series
-  with Largest-Triangle-Three-Buckets, shipping at most `options$threshold`
-  points (default 2000) while preserving the visual shape:
-  `addIoLayer(type = "line", transform = "lttb", options = list(threshold = 1000))`.
-  Off by default (`identity`); runs on the in-memory/SVG path and is independent
-  of the DuckDB-WASM engine's own SQL-side LTTB, so it never double-downsamples.
-* New `myIOProxy()` + `updateMyIOData()` update a rendered chart's layer data in
-  place from the Shiny server without re-running `renderMyIO()`. Layers are
-  matched by label and swapped through the existing data-join path, so only the
-  changed marks transition and brush/zoom/toggle state is preserved (the full
-  re-render destroyed and recreated the chart, flickering and dropping state):
-  `myIOProxy("chart") |> updateMyIOData(series = new_df)`.
-
 ## Performance and tooling
 
 * Release dependency intake updates the GitHub Actions, browser-test, Arrow,
@@ -447,6 +443,7 @@
 * `setLinked()` and `linkCharts()` now cross-reference each other in their
   documentation to clarify when to use the Crosstalk path versus the
   group-identifier path.
+
 ## Documentation
 
 * New "Theme Gallery" article renders the same chart under all named presets
@@ -454,6 +451,7 @@
   `academic`, `nature`, `minimal`, `retro`, `warm`, plus `light`/`dark`) as
   live, side-by-side previews, and shows how to layer custom CSS overrides on
   top of a preset.
+
 ## Performance and reliability
 
 * Inline Arrow IPC payloads now decode via the native `Uint8Array.fromBase64`
