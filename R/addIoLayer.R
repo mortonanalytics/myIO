@@ -457,8 +457,13 @@ build_grouped_layers <- function(data, mapping, type, label, color, transform_fn
 
   for (index in seq_along(group_list)) {
     group_value <- group_list[[index]]
-    layer_label <- paste0(label, " \u2014 ", as.character(group_value))
+    layer_label <- as.character(group_value)
     all_labels <- c(existing_labels, vapply(layers, function(layer) layer$label, character(1)))
+    if (layer_label %in% all_labels) {
+      # Fall back to the legacy "<label> - <group>" form when the bare group
+      # value would collide with a layer already on the chart.
+      layer_label <- paste0(label, " \u2014 ", as.character(group_value))
+    }
     if (layer_label %in% all_labels) {
       stop("addIoLayer(): Layer label '", layer_label, "' already exists.", call. = FALSE)
     }

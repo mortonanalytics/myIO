@@ -97,6 +97,20 @@
   high-contrast ink with a background-coloured halo, so they stay legible where
   they cross a ribbon; on a dark chart background the ink flips to white.
 
+## User-visible changes
+
+* Legend entries for grouped layers now show the group value on its own instead
+  of concatenating the layer label with the group value -- `"Core"` rather than
+  `"Rankings — Core"`. The chart title and axis labels already carry that
+  context. This affects `addIoLayer(mapping = list(group = ...))`, grouped data
+  frames from `dplyr::group_by()`, and the `regression`, `qq` and `survfit`
+  composites. Labels set explicitly on ungrouped layers are unchanged. When a
+  bare group value would collide with a layer already on the chart, the previous
+  `"<label> — <group>"` form is used automatically, so multi-layer charts keep
+  unique labels. Code that targets grouped layers by label -- `updateMyIOData()`,
+  `addKeyframe()` -- and any CSS or test selector pinned to a grouped layer's
+  generated class name must use the new labels.
+
 # myIO 1.3.0
 
 ## New features

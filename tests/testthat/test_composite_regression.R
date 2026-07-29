@@ -152,3 +152,20 @@ test_that("an explicit areaOpacity option still wins for the CI band", {
   )
   expect_equal(sl[[3]]$options$areaOpacity, 0.5)
 })
+
+test_that("grouped regression sublayer labels use the group value alone", {
+  df <- data.frame(
+    x = rep(1:10, 2), y = c(1:10, 2 * (1:10)),
+    grp = rep(c("A", "B"), each = 10),
+    `_source_key` = paste0("row_", 1:20),
+    stringsAsFactors = FALSE, check.names = FALSE
+  )
+  sl <- myIO:::composite_regression(
+    df, list(x_var = "x", y_var = "y", group = "grp"), "test", "#333",
+    options = list(showStats = FALSE)
+  )
+  labels <- vapply(sl, function(s) s$label, character(1))
+  expect_equal(labels[1], "A (data)")
+  expect_equal(labels[4], "B (data)")
+  expect_false(any(grepl("—", labels, fixed = TRUE)))
+})

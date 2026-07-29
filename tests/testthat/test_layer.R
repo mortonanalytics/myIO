@@ -107,8 +107,12 @@ test_that("grouped layers with overlapping group values keep unique labels", {
     )
 
   labels <- vapply(widget$x$config$layers, function(layer) layer$label, character(1))
+  months <- unique(df$Month)
   expect_equal(length(labels), length(unique(labels)))
-  expect_true(all(grepl("^Temp .+|^Wind .+", labels)))
+  # First layer takes the bare group values; the second collides on every one of
+  # them and falls back to the qualified "<label> - <group>" form.
+  expect_equal(labels[seq_along(months)], months)
+  expect_equal(labels[-seq_along(months)], paste0("Wind — ", months))
 })
 
 test_that("addIoLayer falls back to widget default data for multiple layers", {
