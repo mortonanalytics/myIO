@@ -59,6 +59,7 @@ articles:
       - large-data-linking
       - articles/crosstalk-linking
       - sparklines
+      - articles/webr-quarto-live
   - title: Migration
     contents:
       - plotly-migration
