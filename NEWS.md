@@ -168,6 +168,18 @@
   keep a specific non-alphabetical order, make the group column a factor with
   the levels in the order you want.
 
+* Charts left on the default left margin now widen it automatically when the y
+  tick labels would run into the rotated y-axis title. Previously a currency or
+  large-number y format -- `setAxisFormat(yAxis = "$,.0f")` on three-digit data,
+  for example -- produced labels wide enough to overlap the title. The engine
+  now measures the rendered tick labels and grows the left margin just enough to
+  clear the title band; it only ever grows, never shrinks below the configured
+  value, and it settles on the first render. A chart that calls `setMargin()`
+  keeps exactly the margins it was given and is never adjusted. Charts whose
+  labels already fit are unchanged. Note that a widget saved as HTML by an
+  earlier version of myIO has no record of whether `setMargin()` was called, so
+  re-rendering it against this version may widen a too-narrow left margin.
+
 # myIO 1.3.0
 
 ## New features

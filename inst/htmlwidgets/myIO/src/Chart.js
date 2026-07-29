@@ -9,7 +9,7 @@ import { bindRollover } from "./interactions/rollover.js";
 import { deriveChartRender, applyDerivedScales } from "./derive/chart-render.js";
 import { validateLayers } from "./derive/validate.js";
 import { transitionGrouped, transitionStacked, getGroupedDataObject } from "./renderers/groupedBarHelpers.js";
-import { syncAxes } from "./layout/axes.js";
+import { syncAxes, fitLeftMargin } from "./layout/axes.js";
 import { syncLegend, syncOrdinalLegendData } from "./layout/legend.js";
 import { syncReferenceLines } from "./layout/reference-lines.js";
 import { getChartHeight, initializeScaffold, renderChartTitle, updateScaffoldLayout } from "./layout/scaffold.js";
@@ -272,6 +272,12 @@ export class myIOchart {
       addFAB(this);
       this.emit("afterScales", { state });
       syncAxes(this, state, options);
+      if (fitLeftMargin(this, state)) {
+        updateScaffoldLayout(this);
+        applyDerivedScales(this, state);
+        this.syncLegacyAliases();
+        syncAxes(this, state, options);
+      }
       this.routeLayers(this.derived.currentLayers);
       syncReferenceLines(this, state, options);
       syncLegend(this, state);

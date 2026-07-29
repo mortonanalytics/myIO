@@ -1,10 +1,20 @@
 import { getChartHeight } from "./scaffold.js";
+import { textWidth } from "../utils/text-metrics.js";
 
 // A -90deg rotated <text> grows from its anchor toward SMALLER x by roughly the
 // font ascent (~12px at the 13px .myIO-axis-title size), and the SVG root clips
 // at x = 0 (overflow: hidden). The anchor must therefore sit at least one ascent
 // inside the left edge.
 var Y_AXIS_TITLE_INSET = 14;
+// d3.axisLeft puts the tick <text> at x = -tickPadding (3) because the tick size
+// is negative (grid lines), and updateYAxis nudges it a further .25em (3.25px at
+// the 13px .y-label size). The labels' right edge therefore sits
+// margin.left - 6.25 from the SVG's left edge.
+var Y_TICK_LABEL_GUTTER = 6.25;
+// The rotated title's bounding box ends Y_AXIS_TITLE_INSET + the font descent to
+// the right of the SVG edge; keep a visible gap between that and the labels.
+var Y_TITLE_DESCENT = 3;
+var Y_TITLE_CLEARANCE = 4;
 
 export function syncAxes(chart, state, options) {
   if (!state.axesChart) {
@@ -132,6 +142,46 @@ export function updateYAxis(chart, yScale, yAxisSelection, options) {
     .attr("dx", "-.25em");
 
   applyAxisStyles(chart.plot.selectAll(".y-axis"), "y");
+}
+
+// The rotated y-axis title owns a fixed band at the SVG's left edge. When the
+// widest y tick label is wider than what is left of margin.left after that band,
+// the two collide (a "$,.0f" format on 3-digit data does it at the 50px default).
+// Grow the left margin to fit. Never below the configured value, never at all
+// once the user has called setMargin(), and grow-only relative to a stashed
+// baseline so repeated renders converge instead of ratcheting.
+export function fitLeftMargin(chart, state) {
+  if (!state || !state.axesChart || !chart.plot || chart.config.sparkline) {
+    return false;
+  }
+  if (chart.config.layout.marginSet) {
+    return false;
+  }
+  if (chart.runtime.baseMarginLeft == null) {
+    chart.runtime.baseMarginLeft = chart.config.layout.margin.left;
+  }
+  var widest = 0;
+  chart.plot.selectAll(".y-axis .tick text").each(function() {
+    var w = textWidth(this, this.textContent);
+    if (w > widest) {
+      widest = w;
+    }
+  });
+  if (widest <= 0) {
+    return false;
+  }
+  var titleBand = chart.options.yAxisLabel
+    ? Y_AXIS_TITLE_INSET + Y_TITLE_DESCENT + Y_TITLE_CLEARANCE
+    : Y_TITLE_CLEARANCE;
+  var target = Math.max(
+    chart.runtime.baseMarginLeft,
+    Math.ceil(widest + Y_TICK_LABEL_GUTTER + titleBand)
+  );
+  if (target === chart.config.layout.margin.left) {
+    return false;
+  }
+  chart.config.layout.margin.left = target;
+  return true;
 }
 
 function normalizeTickLabels(labels) {

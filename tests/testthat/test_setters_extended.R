@@ -79,6 +79,12 @@ test_that("setMargin uses function defaults for unspecified margins", {
   expect_equal(w$x$config$layout$margin$bottom, 40)
 })
 
+test_that("setMargin records that margins were set explicitly", {
+  expect_null(myIO::myIO()$x$config$layout$marginSet)
+  w <- myIO::setMargin(myIO::myIO(), left = 30)
+  expect_true(w$x$config$layout$marginSet)
+})
+
 # --- setAxisFormat ---
 
 test_that("setAxisFormat sets labels", {

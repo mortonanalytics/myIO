@@ -1,7 +1,7 @@
 import * as d3 from "d3";
 import { describe, expect, test } from "vitest";
 import { initializeScaffold } from "../../inst/htmlwidgets/myIO/src/layout/scaffold.js";
-import { renderAxes } from "../../inst/htmlwidgets/myIO/src/layout/axes.js";
+import { renderAxes, fitLeftMargin } from "../../inst/htmlwidgets/myIO/src/layout/axes.js";
 import { syncLegend } from "../../inst/htmlwidgets/myIO/src/layout/legend.js";
 
 globalThis.d3 = d3;
@@ -81,6 +81,60 @@ describe("chart context layout", function() {
     var title = chart.element.querySelector(".myIO-axis-title-y");
     var tx = Number(/translate\(([-\d.]+),/.exec(title.getAttribute("transform"))[1]);
     expect(chart.margin.left + tx).toBeLessThanOrEqual(chart.margin.left);
+  });
+
+  test("left margin grows so currency y tick labels clear the rotated title", function() {
+    var chart = baseChart();
+    chart.config.layout.margin = { top: 30, bottom: 60, left: 50, right: 5 };
+    chart.margin = chart.config.layout.margin;   // Chart.js shares one object
+    chart.options.margin = chart.config.layout.margin;
+    chart.options.categoricalScale = { xAxis: false, yAxis: false };
+    chart.options.yAxisFormat = "$,.0f";
+    chart.options.yAxisLabel = "Price";
+    chart.xScale = d3.scaleLinear().domain([0, 30]).range([0, 544]);
+    chart.yScale = d3.scaleLinear().domain([98, 122]).range([240, 0]);
+    initializeScaffold(chart);
+    renderAxes(chart, { isInitialRender: true });
+
+    expect(fitLeftMargin(chart, { axesChart: true })).toBe(true);
+    expect(chart.config.layout.margin.left).toBe(54);
+    // grow-only and idempotent: a second pass over the same labels is a no-op
+    expect(fitLeftMargin(chart, { axesChart: true })).toBe(false);
+  });
+
+  test("an explicit setMargin() suppresses the left-margin fit", function() {
+    var chart = baseChart();
+    chart.config.layout.margin = { top: 30, bottom: 60, left: 50, right: 5 };
+    chart.config.layout.marginSet = true;
+    chart.margin = chart.config.layout.margin;
+    chart.options.margin = chart.config.layout.margin;
+    chart.options.categoricalScale = { xAxis: false, yAxis: false };
+    chart.options.yAxisFormat = "$,.0f";
+    chart.options.yAxisLabel = "Price";
+    chart.xScale = d3.scaleLinear().domain([0, 30]).range([0, 544]);
+    chart.yScale = d3.scaleLinear().domain([98, 122]).range([240, 0]);
+    initializeScaffold(chart);
+    renderAxes(chart, { isInitialRender: true });
+
+    expect(fitLeftMargin(chart, { axesChart: true })).toBe(false);
+    expect(chart.config.layout.margin.left).toBe(50);
+  });
+
+  test("narrow y tick labels leave the configured left margin alone", function() {
+    var chart = baseChart();
+    chart.config.layout.margin = { top: 30, bottom: 60, left: 50, right: 5 };
+    chart.margin = chart.config.layout.margin;
+    chart.options.margin = chart.config.layout.margin;
+    chart.options.categoricalScale = { xAxis: false, yAxis: false };
+    chart.options.yAxisFormat = "";
+    chart.options.yAxisLabel = "Count";
+    chart.xScale = d3.scaleLinear().domain([0, 30]).range([0, 544]);
+    chart.yScale = d3.scaleLinear().domain([0, 1]).range([240, 0]);
+    initializeScaffold(chart);
+    renderAxes(chart, { isInitialRender: true });
+
+    expect(fitLeftMargin(chart, { axesChart: true })).toBe(false);
+    expect(chart.config.layout.margin.left).toBe(50);
   });
 
   test("band-scale y axis renders without ticks function", function() {
