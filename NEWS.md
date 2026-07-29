@@ -193,7 +193,9 @@
   move, the x tick labels move with them, and on a violin passed a vector of
   colours the hues re-map, because `color` is applied by group position. Every
   statistic stays with its own group: each box, whisker, median and outlier is
-  now looked up by group name rather than by position. Charts whose groups
+  now looked up by group name rather than by position, and the significance
+  brackets on a comparison chart are positioned by the same rule, so they keep
+  spanning the pairs they are labelled with. Charts whose groups
   already appear in sorted order -- including every factor whose rows follow
   its levels -- render exactly as before. To keep a specific non-alphabetical
   order, make the group column a factor with the levels in the order you want.

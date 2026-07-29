@@ -57,3 +57,28 @@ test_that("comparison works with 3 groups", {
   # Bracket layer data should have 3 comparisons (transformed via pairwise_test)
   expect_equal(length(bracket$data), 3)
 })
+
+test_that("comparison brackets span the same positions the boxes are drawn at", {
+  set.seed(11)
+  df <- data.frame(
+    group = c(rep("C", 8), rep("A", 8), rep("B", 8)),
+    value = c(rnorm(8, 1000), rnorm(8, 1), rnorm(8, 100)),
+    stringsAsFactors = FALSE
+  )
+  w <- myIO::addIoLayer(
+    myIO::myIO(), type = "comparison", label = "cmp", data = df,
+    mapping = list(x_var = "group", y_var = "value"),
+    options = list(showOutliers = FALSE)
+  )
+
+  expect_equal(w$x$config$axes$xTickLabels, list(`1` = "A", `2` = "B", `3` = "C"))
+
+  # every bracket endpoint must land on the tick that carries its own group name
+  ticks <- w$x$config$axes$xTickLabels
+  bracket <- Filter(function(l) identical(l$type, "bracket"), w$x$config$layers)[[1]]
+  expect_length(bracket$data, 3)
+  for (row in bracket$data) {
+    expect_equal(ticks[[as.character(row$x1)]], row$group1)
+    expect_equal(ticks[[as.character(row$x2)]], row$group2)
+  }
+})

@@ -16,7 +16,10 @@ transform_pairwise_test <- function(data, mapping, options = list()) {
     stop("transform_pairwise_test requires numeric y_var.", call. = FALSE)
   }
 
-  groups    <- unique(as.character(x_values))
+  # Positions must match the ones composite_boxplot() hands out, or the
+  # significance brackets span the wrong pair of boxes. unique() before
+  # as.character() so a factor's level order survives.
+  groups    <- as.character(order_group_values(unique(x_values)))
   positions <- seq_along(groups)
   pos_lookup <- stats::setNames(positions, groups)
 
