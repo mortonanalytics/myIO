@@ -20,12 +20,6 @@ export class SankeyRenderer {
       (layer.options && layer.options.valueFormat) ||
       (chart.options && chart.options.yAxisFormat) || ","
     );
-    var sankey = d3.sankey()
-      .nodeId(function(d) { return d.name; })
-      .nodeWidth(nodeWidth)
-      .nodePadding(12)
-      .extent([[0, 0], [width, height]]);
-
     var nodesByName = new Map();
     var links = layer.data.map(function(d) {
       var source = d[layer.mapping.source];
@@ -46,6 +40,33 @@ export class SankeyRenderer {
     function nodeLabelText(name, value) {
       return showValues ? String(name) + " " + valueFormat(value) : String(name);
     }
+
+    // Terminal nodes (never a source) carry their label to the right of the node,
+    // so the layout has to give up that much horizontal room.
+    var sourceNames = new Set();
+    var incomingTotals = new Map();
+    links.forEach(function(link) {
+      sourceNames.add(link.source);
+      incomingTotals.set(link.target, (incomingTotals.get(link.target) || 0) + link.value);
+    });
+
+    var terminalLabels = [];
+    nodesByName.forEach(function(node, name) {
+      if (!sourceNames.has(name)) {
+        terminalLabels.push(nodeLabelText(name, incomingTotals.get(name) || 0));
+      }
+    });
+
+    var labelGutter = terminalLabels.length > 0
+      ? Math.min(measureLabelWidth(chart.chart, terminalLabels, "12px") + 10, Math.max(0, width * 0.3))
+      : 0;
+    var layoutWidth = Math.max(nodeWidth * 2, width - labelGutter);
+
+    var sankey = d3.sankey()
+      .nodeId(function(d) { return d.name; })
+      .nodeWidth(nodeWidth)
+      .nodePadding(12)
+      .extent([[0, 0], [layoutWidth, height]]);
 
     var graph = sankey({
       nodes: Array.from(nodesByName.values()),
@@ -110,7 +131,16 @@ export class SankeyRenderer {
       .attr("fill", function(d) { return chart.colorDiscrete(d.name); });
 
     // Node labels — data-joined so updates animate and no flash from clear-redraw
+    var bgColor = chartBackgroundColor(chart);
+    var labelInk = readableTextColor(bgColor);
     var labelClass = tagName("sankey-label", chart.element.id, layer.label);
+
+    function anchorsStart(d) { return d.x0 < layoutWidth / 2 || d.x1 >= layoutWidth - 0.5; }
+    function labelX(d) { return anchorsStart(d) ? d.x1 + 6 : d.x0 - 6; }
+    function labelY(d) { return (d.y0 + d.y1) / 2; }
+    function labelAnchor(d) { return anchorsStart(d) ? "start" : "end"; }
+    function labelText(d) { return nodeLabelText(d.name, d.value); }
+
     var labelSelection = chart.chart.selectAll("." + labelClass)
       .data(graph.nodes, function(d) { return d.name; });
 
@@ -121,25 +151,29 @@ export class SankeyRenderer {
 
     var labelEnter = labelSelection.enter().append("text")
       .attr("class", labelClass)
-      .attr("x", function(d) { return d.x0 < width / 2 ? d.x1 + 6 : d.x0 - 6; })
-      .attr("y", function(d) { return (d.y0 + d.y1) / 2; })
+      .attr("x", labelX)
+      .attr("y", labelY)
       .attr("dy", "0.35em")
-      .attr("text-anchor", function(d) { return d.x0 < width / 2 ? "start" : "end"; })
-      .style("font-size", "12px")
-      .style("fill", "var(--chart-text-color, #333)")
+      .attr("text-anchor", labelAnchor)
+      .attr("font-size", "12px")
+      .attr("pointer-events", "none")
       .style("opacity", 0)
-      .text(function(d) { return nodeLabelText(d.name, d.value); });
+      .text(labelText);
 
     labelEnter.merge(labelSelection)
-      .text(function(d) { return nodeLabelText(d.name, d.value); })
+      .attr("fill", labelInk)
+      .attr("stroke", bgColor)
+      .attr("stroke-width", 3)
+      .attr("stroke-linejoin", "round")
+      .attr("paint-order", "stroke")
+      .text(labelText)
       .transition().duration(chart.options.transition.speed)
       .style("opacity", 1)
-      .attr("x", function(d) { return d.x0 < width / 2 ? d.x1 + 6 : d.x0 - 6; })
-      .attr("y", function(d) { return (d.y0 + d.y1) / 2; })
-      .attr("text-anchor", function(d) { return d.x0 < width / 2 ? "start" : "end"; });
+      .attr("x", labelX)
+      .attr("y", labelY)
+      .attr("text-anchor", labelAnchor);
 
     // Flow magnitudes — suppressed on ribbons too thin or too short to hold the text.
-    var bgColor = chartBackgroundColor(chart);
     var flowClass = tagName("sankey-flow", chart.element.id, layer.label);
     var flowSelection = chart.chart.selectAll("." + flowClass)
       .data(showValues ? graph.links : [], function(d) { return d.source.name + ">" + d.target.name; });

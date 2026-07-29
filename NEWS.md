@@ -74,6 +74,13 @@
   overlapped where the shape is too small. Pass `showValues = FALSE` to
   `addIoLayer()` to restore the previous names-only labelling.
 
+* Sankey charts no longer push their terminal nodes against the right edge of
+  the plot. The layout now reserves room for the right-hand node labels, so the
+  last column and its labels sit inside the plot area instead of being clipped
+  and drawn back on top of the flow ribbons. Node labels are also drawn in a
+  high-contrast ink with a background-coloured halo, so they stay legible where
+  they cross a ribbon; on a dark chart background the ink flips to white.
+
 # myIO 1.3.0
 
 ## New features
