@@ -184,7 +184,8 @@ as_json(spec)
 
 To give the six tools to an MCP-aware assistant (Claude Desktop, Claude Code,
 Cursor), run the bundled Node server. It is deliberately separate from the R
-package so installing myIO never pulls in Node dependencies.
+package so installing myIO never pulls in Node dependencies. The MCP server
+requires Node.js 20 or newer.
 
 ```{sh, eval=FALSE}
 cd mcp
