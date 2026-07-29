@@ -9,6 +9,7 @@
 ^inst/appTester/e2e_output$
 ^docs$
 ^\.github$
+^\.git$
 ^_pkgdown\.yml$
 ^pkgdown$
 ^LICENSE\.md$
