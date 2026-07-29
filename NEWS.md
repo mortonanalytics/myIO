@@ -12,6 +12,17 @@
 
 ## Bug fixes
 
+* Waterfall charts no longer log a browser console warning about null values,
+  and the total bar's tooltip no longer reads `Delta: null`. A total row is
+  declared by putting `NA` in the value column, and that `NA` was travelling all
+  the way to the browser even though the transform had already worked out what
+  the bar's height should be. The total row now carries its own magnitude -- the
+  running total the bar spans -- so the chart reports a real number everywhere.
+  Blast radius: the value column in exported CSV changes for waterfall charts.
+  A total row's cell now holds the total instead of being blank, and a
+  non-total row written as `NA` now reads `0`, which is the height that row has
+  always been drawn at. Nothing about how the chart renders changes.
+
 * Faceted charts now size each panel's left margin to fit its y tick labels.
   Panels never ran the margin fit that ordinary charts run, so a facet grid with
   a wide y format -- currency, or any large number -- drew its tick labels
