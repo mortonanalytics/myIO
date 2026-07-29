@@ -97,6 +97,13 @@
   high-contrast ink with a background-coloured halo, so they stay legible where
   they cross a ribbon; on a dark chart background the ink flips to white.
 
+* Rotated y-axis titles set with `setAxisLabels(yAxis = )` are no longer shaved
+  off at the left edge of the chart. The title was anchored 6px from the SVG
+  border, but a `-90` degree rotation grows the glyphs leftward from that
+  anchor, so the tops of every letter were clipped on every chart with a y-axis
+  title. The anchor now sits far enough inside the border for the full glyph
+  height to fit.
+
 ## User-visible changes
 
 * Legend entries for grouped layers now show the group value on its own instead

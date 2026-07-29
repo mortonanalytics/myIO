@@ -59,6 +59,30 @@ describe("chart context layout", function() {
     expect(chart.element.querySelector(".myIO-axis-title-y").textContent).toBe("Tier");
   });
 
+  test("rotated y-axis title clears the SVG left edge", function() {
+    var chart = baseChart();
+    initializeScaffold(chart);
+    renderAxes(chart, { isInitialRender: true });
+
+    var title = chart.element.querySelector(".myIO-axis-title-y");
+    var tx = Number(/translate\(([-\d.]+),/.exec(title.getAttribute("transform"))[1]);
+    // The plot <g> is translated by margin.left, so this is the anchor's distance
+    // from the SVG's left edge. Rotated -90deg the glyphs extend ~12px to its left.
+    expect(chart.margin.left + tx).toBeGreaterThanOrEqual(14);
+  });
+
+  test("small left margin keeps the y-axis title inside the margin band", function() {
+    var chart = baseChart();
+    chart.margin.left = 10;
+    chart.config.layout.margin.left = 10;
+    initializeScaffold(chart);
+    renderAxes(chart, { isInitialRender: true });
+
+    var title = chart.element.querySelector(".myIO-axis-title-y");
+    var tx = Number(/translate\(([-\d.]+),/.exec(title.getAttribute("transform"))[1]);
+    expect(chart.margin.left + tx).toBeLessThanOrEqual(chart.margin.left);
+  });
+
   test("band-scale y axis renders without ticks function", function() {
     var chart = baseChart();
     initializeScaffold(chart);

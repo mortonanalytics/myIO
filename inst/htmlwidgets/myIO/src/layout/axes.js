@@ -1,5 +1,11 @@
 import { getChartHeight } from "./scaffold.js";
 
+// A -90deg rotated <text> grows from its anchor toward SMALLER x by roughly the
+// font ascent (~12px at the 13px .myIO-axis-title size), and the SVG root clips
+// at x = 0 (overflow: hidden). The anchor must therefore sit at least one ascent
+// inside the left edge.
+var Y_AXIS_TITLE_INSET = 14;
+
 export function syncAxes(chart, state, options) {
   if (!state.axesChart) {
     return;
@@ -159,6 +165,10 @@ function renderAxisTitles(chart) {
 
   var plotWidth = chart.width - (chart.margin.left + chart.margin.right);
   var plotHeight = getChartHeight(chart) - (chart.margin.top + chart.margin.bottom);
+  // Clamp so charts with an unusually small left margin are not pushed past
+  // their own y tick labels (behaviour there is unchanged from the old 6px).
+  var yTitleInset = Math.max(6, Math.min(Y_AXIS_TITLE_INSET, chart.margin.left - 6));
+  var yTitleTransform = "translate(" + (-chart.margin.left + yTitleInset) + "," + (plotHeight / 2) + ") rotate(-90)";
   var xTitleData = chart.options.xAxisLabel && !(chart.options.suppressAxis && chart.options.suppressAxis.xAxis === true)
     ? [chart.options.xAxisLabel]
     : [];
@@ -193,12 +203,12 @@ function renderAxisTitles(chart) {
         return enter.append("text")
           .attr("class", "myIO-axis-title myIO-axis-title-y")
           .attr("text-anchor", "middle")
-          .attr("transform", "translate(" + (-chart.margin.left + 6) + "," + (plotHeight / 2) + ") rotate(-90)")
+          .attr("transform", yTitleTransform)
           .text(function(d) { return d; });
       },
       function(update) {
         return update
-          .attr("transform", "translate(" + (-chart.margin.left + 6) + "," + (plotHeight / 2) + ") rotate(-90)")
+          .attr("transform", yTitleTransform)
           .text(function(d) { return d; });
       },
       function(exit) { return exit.remove(); }
