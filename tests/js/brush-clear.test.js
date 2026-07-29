@@ -94,6 +94,30 @@ describe("clearing a brush", function() {
     expect(opacities).toEqual(["1", "1", "1"]);
   });
 
+  // A brush rectangle that contains no points and a brush that has been removed
+  // both emit keys: []. Linked charts have to tell them apart -- the first is a
+  // selection of nothing (dim everything), the second is no selection at all
+  // (restore everything) -- so the payload carries the distinction explicitly.
+  test("flags an active brush that selected nothing", function() {
+    // ROWS sit at (1,1), (2,2) and (8,8) on 0-10 domains over a 200px range,
+    // so this rectangle contains none of them.
+    moveBrush(chart, [[150, 0], [200, 20]]);
+
+    var last = brushedEvents(chart).pop();
+    expect(last.payload.keys).toEqual([]);
+    expect(last.payload.active).toBe(true);
+    expect(last.payload.extent).not.toBe(null);
+  });
+
+  test("flags a removed brush as inactive", function() {
+    moveBrush(chart, [[0, 100], [100, 200]]);
+    moveBrush(chart, null);
+
+    var last = brushedEvents(chart).pop();
+    expect(last.payload.active).toBe(false);
+    expect(last.payload.extent).toBe(null);
+  });
+
   test("emits exactly one clear event per clear", function() {
     moveBrush(chart, [[0, 100], [100, 200]]);
     var before = brushedEvents(chart).length;

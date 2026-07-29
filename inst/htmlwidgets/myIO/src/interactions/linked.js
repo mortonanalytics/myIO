@@ -149,6 +149,15 @@ export function bindLinked(chart) {
       var keys = linkKeys(cfg, e, keyMap);
       if (keys && keys.length > 0) {
         sel.set(keys);
+      } else if (e && e.active === true) {
+        // A brush over empty space IS a selection -- of nothing. Sending clear()
+        // here made the target restore full opacity while the source stayed
+        // dimmed from onBrush(), so two linked charts disagreed about the same
+        // state. Broadcasting an empty key array keeps them in step:
+        // applySelection() already dims every mark for a present-but-empty
+        // array. Only an actually-removed brush (clearBrush -> active:false)
+        // clears, which is the path 34eb990/85bfb4b restored.
+        sel.set([]);
       } else {
         sel.clear();
       }

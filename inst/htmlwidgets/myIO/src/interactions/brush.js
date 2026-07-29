@@ -92,6 +92,11 @@ function onBrushEnd(chart, event, layers, cfg) {
     data: selected,
     extent: extent,
     keys: keys,
+    // true while a brush rectangle exists on screen, even if it covers no
+    // points. clearBrush() emits active:false. Linked charts need the
+    // difference: an empty brush is a selection of nothing (dim everything),
+    // a removed brush is no selection at all (restore everything).
+    active: true,
     layerLabel: layers.length === 1 ? layers[0].label : null
   });
 }
@@ -117,7 +122,7 @@ function clearBrush(chart) {
     }
     chart.runtime._brushed = null;
     removeStatusBar(chart);
-    chart.emit("brushed", { data: [], extent: null, keys: [], layerLabel: null });
+    chart.emit("brushed", { data: [], extent: null, keys: [], active: false, layerLabel: null });
   } finally {
     chart.runtime._brushClearing = false;
   }

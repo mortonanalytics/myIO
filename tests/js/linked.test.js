@@ -117,6 +117,36 @@ describe("linked brushing propagation", function() {
     expect(tgtNodes.map(function(n) { return n.style.opacity; })).toEqual([1.0, 1.0]);
   });
 
+  it("an empty but active brush dims every mark on the target", function() {
+    var tgtNodes = [{ key: "row_1" }, { key: "row_2" }, { key: "row_3" }];
+    var src = makeChart("A", "source", [{ key: "row_1" }, { key: "row_2" }, { key: "row_3" }]);
+    var tgt = makeChart("B", "target", tgtNodes);
+    bindLinked(src);
+    bindLinked(tgt);
+
+    // A brush rectangle over empty space. The source is already fully dimmed by
+    // onBrush(); the target has to agree rather than resetting to full opacity.
+    src.emit("brushed", { keys: [], data: [], extent: { x: [9, 10], y: [9, 10] }, active: true });
+
+    var dim = "var(--chart-brush-dim-opacity)";
+    expect(tgtNodes.map(function(n) { return (n.style || {}).opacity; }))
+      .toEqual([dim, dim, dim]);
+  });
+
+  it("clearing the brush restores every mark on the target", function() {
+    var tgtNodes = [{ key: "row_1" }, { key: "row_2" }, { key: "row_3" }];
+    var src = makeChart("A", "source", [{ key: "row_1" }, { key: "row_2" }, { key: "row_3" }]);
+    var tgt = makeChart("B", "target", tgtNodes);
+    bindLinked(src);
+    bindLinked(tgt);
+
+    src.emit("brushed", { keys: [], data: [], extent: { x: [9, 10], y: [9, 10] }, active: true });
+    src.emit("brushed", { keys: [], data: [], extent: null, active: false });
+
+    expect(tgtNodes.map(function(n) { return (n.style || {}).opacity; }))
+      .toEqual([1.0, 1.0, 1.0]);
+  });
+
   it("accepts the legacy \"bidirectional\" mode written by linkCharts()", function() {
     var tgtNodes = [{ key: "row_1" }, { key: "row_2" }, { key: "row_3" }];
     var src = makeChart("A", "bidirectional", [{ key: "row_1" }, { key: "row_2" }, { key: "row_3" }]);

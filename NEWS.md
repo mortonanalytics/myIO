@@ -12,6 +12,19 @@
 
 ## Bug fixes
 
+* Linked charts no longer disagree when a brush covers empty space. Dragging a
+  brush over a region containing no points left the brushed chart with all its
+  marks dimmed while every linked chart snapped back to full opacity, so the
+  two showed opposite states for the same selection. An empty brush is now
+  treated as what it is -- a selection of nothing -- and dims the marks on the
+  linked charts too. Removing the brush entirely still restores everything
+  everywhere, unchanged. Blast radius: any existing `setLinked()` or
+  `linkCharts()` page will now dim its linked charts while a brush sits over
+  empty space, where before they stayed bright. The `myIO-{id}-brushed` Shiny
+  input gains an `active` field carrying the distinction (`TRUE` while a brush
+  rectangle is on screen, `FALSE` once it is removed); existing code reading
+  `keys`, `extent` or `data` is unaffected.
+
 * `setLinked()` charts now cross-select against non-myIO widgets. A myIO chart
   in a Crosstalk group used to broadcast and match on its own internal row
   numbers rather than the keys the `SharedData` object was built with, so
