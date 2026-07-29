@@ -25,6 +25,10 @@
   swatches. Every series previously rendered in the same blue, making the
   legend useless and the ranking lines impossible to tell apart.
 
+* Bump chart points and lines now line up with their x-axis ticks. On a
+  categorical x axis the marks were drawn half a category width to the left of
+  the tick they belonged to.
+
 # myIO 1.3.0
 
 ## New features

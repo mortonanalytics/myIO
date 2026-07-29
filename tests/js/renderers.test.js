@@ -756,6 +756,13 @@ describe("Full chart rendering with layers", function() {
     expect(fills).toEqual(["#56B4E9", "#E69F00"]);
   });
 
+  test("bump marks sit at band centers", function() {
+    var chart = bumpChart();
+    var xScale = chart.derived.xScale;
+    var cx = +document.querySelector("circle.bump-dot").getAttribute("cx");
+    expect(cx).toBeCloseTo(xScale("Q1") + xScale.bandwidth() / 2, 6);
+  });
+
   test("gauge layer renders arcs in DOM", function() {
     var layer = makeLayer("gauge", "meter",
       [{ value: 0.75 }],
