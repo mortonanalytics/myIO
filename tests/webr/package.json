@@ -1,0 +1,9 @@
+{
+  "name": "myio-webr-gate",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "playwright": "1.62.0",
+    "webr": "0.6.0"
+  }
+}

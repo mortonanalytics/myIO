@@ -14,6 +14,8 @@
 ^LICENSE\.md$
 ^cran-comments\.md$
 ^\.claude$
+^\.agents$
+^\.codex$
 ^\.do$
 ^app$
 ^coverage$
@@ -38,6 +40,7 @@
 ^tests/prototypes/shiny-transport$
 ^tests/prototypes$
 ^tests/playwright$
+^tests/webr$
 ^playwright\.config\.ts$
 ^inst/htmlwidgets/myIO/src/.*\.test\.js$
 ^inst/htmlwidgets/myIO/src/coordinator/__tests__$

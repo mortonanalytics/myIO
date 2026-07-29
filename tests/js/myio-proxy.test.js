@@ -88,6 +88,7 @@ describe("proxy message handler wiring", () => {
 
     window.myIO.installProxyHandler();
     expect(typeof handlers["myio:proxy-update"]).toBe("function");
+    expect(typeof handlers["myio:keyframe-control"]).toBe("function");
 
     const fakeChart = { config: {}, updateData: vi.fn() };
     window.myIO.registerInstance("chartA", fakeChart);
@@ -95,6 +96,16 @@ describe("proxy message handler wiring", () => {
     const payload = { id: "chartA", layers: [{ label: "pts", data: [{ x: 1, y: 2 }] }] };
     handlers["myio:proxy-update"](payload);
     expect(fakeChart.updateData).toHaveBeenCalledWith(payload.layers);
+
+    fakeChart.config.keyframes = [
+      { label: "Start", layers: payload.layers },
+      { label: "End", layers: payload.layers }
+    ];
+    fakeChart.runtime = {};
+    handlers["myio:keyframe-control"]({
+      id: "chartA", action: "select", frame: "End"
+    });
+    expect(fakeChart.updateData).toHaveBeenLastCalledWith(payload.layers);
 
     // unknown id is a no-op
     expect(() => handlers["myio:proxy-update"]({ id: "missing", layers: [] })).not.toThrow();

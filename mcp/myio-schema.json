@@ -1250,6 +1250,11 @@
       "transform",
       "options"
     ],
+    "addKeyframe": [
+      "myIO",
+      "data",
+      "label"
+    ],
     "clear_duckdb_wasm_cache": [
       "version"
     ],
@@ -1382,6 +1387,10 @@
       "labelPosition",
       "..."
     ],
+    "setKeyframe": [
+      "proxy",
+      "frame"
+    ],
     "setLayerOpacity": [
       "myIO",
       "label",
@@ -1457,6 +1466,10 @@
     "setTransitionSpeed": [
       "myIO",
       "speed"
+    ],
+    "stepKeyframe": [
+      "proxy",
+      "direction"
     ],
     "stop_duckdb_wasm_missing": [],
     "suppressAxis": [

@@ -1,0 +1,43 @@
+name: WebR compatibility
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  webr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Pin WebR 0.6.0 builder with the upstream resolver patch
+        run: docker build tests/webr -t myio-webr-builder:v0.6.0
+
+      - name: Build myIO and dependencies for WebAssembly
+        uses: r-wasm/actions/build-rwasm@v3
+        with:
+          packages: "local::."
+          repo-path: _webr-repo
+          image-path: _webr-image
+          webr-image: myio-webr-builder:v0.6.0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: tests/webr/package-lock.json
+
+      - name: Install WebR harness dependencies
+        run: npm ci --prefix tests/webr
+
+      - name: Install Chromium
+        run: npx --prefix tests/webr playwright install --with-deps chromium
+
+      - name: Verify R to browser rendering
+        run: node tests/webr/verify.mjs _webr-repo
