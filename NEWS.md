@@ -2,6 +2,11 @@
 
 ## Bug fixes
 
+* Treemap cells no longer render underneath the floating action button in the
+  chart's top-right corner. The tiling now reserves the same button-width band
+  that funnel and Sankey charts already reserve, so the corner cell and its
+  label stay fully visible and clickable.
+
 * Clearing a brush -- by clicking outside it, pressing Escape, or using the
   status bar's "Clear" button -- no longer overflows the call stack. The
   overflow left the chart's stored selection in place and skipped the cleared
