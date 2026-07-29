@@ -223,6 +223,15 @@
   reported itself expanded, and two charts could hold competing keyboard focus
   traps at once.
 
+* Sparklines no longer paint a floating action button. The button covered about
+  8% of a 60px inline chart and sat on top of its last data points, and it
+  intercepted the pointer over that corner so those points had no tooltip.
+  Sparkline mode already strips axes, legend, reference lines and interactions,
+  and now strips the button too. Blast radius: the export menu (CSV, PNG, SVG,
+  PDF, clipboard) is no longer reachable from a sparkline; export the same data
+  from a full-size chart. The panel's legend was already suppressed in sparkline
+  mode, so no legend is lost.
+
 ## User-visible changes
 
 * Legend entries for grouped layers now show the group value on its own instead

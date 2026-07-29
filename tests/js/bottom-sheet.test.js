@@ -438,4 +438,19 @@ describe("bottom sheet", function() {
     expect(chart.element.querySelector(".myIO-sheet-divider")).toBeFalsy();
     expect(chart.element.querySelectorAll(".myIO-sheet-action").length).toBeGreaterThan(0);
   });
+
+  test("a sparkline renders no floating action button", function() {
+    const chart = buildChart();
+    chart.config.sparkline = true;
+
+    expect(addFAB(chart)).toBeNull();
+    expect(chart.element.querySelector(".myIO-fab")).toBeFalsy();
+  });
+
+  test("a non-sparkline chart still gets the button", function() {
+    const chart = buildChart();
+
+    expect(addFAB(chart)).toBeTruthy();
+    expect(chart.element.querySelector(".myIO-fab")).toBeTruthy();
+  });
 });

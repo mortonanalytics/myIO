@@ -28,7 +28,8 @@ myIO(
 \item{title}{Optional chart title rendered inside the widget SVG.}
 
 \item{sparkline}{Logical. If TRUE, renders a compact sparkline suitable for
-embedding in table cells. Strips axes, legend, and interactions.
+embedding in table cells. Strips axes, legend, interactions, and the
+floating action button.
 Only "line", "bar", and "area" layer types are supported. Default FALSE.}
 
 \item{engine}{one of \code{"auto"} (default), \code{"server"}, \code{"wasm"}, or

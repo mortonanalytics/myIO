@@ -28,6 +28,14 @@ export function addFAB(chart) {
 
   d3.select(chart.element).select(".myIO-fab").remove();
 
+  // A sparkline is a 20-60px inline mark with no axes and no legend (see
+  // applySparklineOverrides): a 40px overlay button would cover ~8% of it and
+  // sit on top of the last data points. Guarding here rather than at the call
+  // sites covers renderCurrentLayers(), addButtons() and any future caller.
+  if (chart.config && chart.config.sparkline) {
+    return null;
+  }
+
   if (isEmptyChart(chart)) {
     return null;
   }

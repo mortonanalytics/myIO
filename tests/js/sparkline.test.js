@@ -115,4 +115,44 @@ describe("Sparkline mode", function() {
     expect(chart.config.interactions.linked.enabled).toBe(false);
     expect(chart.config.interactions.sliders).toEqual([]);
   });
+
+  test("sparkline mode paints no floating action button", function() {
+    new myIOchart({
+      element: document.getElementById("chart"),
+      width: 100,
+      height: 20,
+      config: baseConfig({
+        sparkline: true,
+        layers: [{
+          id: "l1",
+          label: "spark",
+          type: "line",
+          color: "#E69F00",
+          mapping: { x_var: "x", y_var: "y" },
+          data: [{ x: 1, y: 2 }, { x: 2, y: 4 }]
+        }]
+      })
+    });
+    expect(document.getElementById("chart").querySelector(".myIO-fab")).toBeNull();
+  });
+
+  test("a full-size chart with the same layer still paints the button", function() {
+    new myIOchart({
+      element: document.getElementById("chart"),
+      width: 640,
+      height: 400,
+      config: baseConfig({
+        sparkline: false,
+        layers: [{
+          id: "l1",
+          label: "spark",
+          type: "line",
+          color: "#E69F00",
+          mapping: { x_var: "x", y_var: "y" },
+          data: [{ x: 1, y: 2 }, { x: 2, y: 4 }]
+        }]
+      })
+    });
+    expect(document.getElementById("chart").querySelector(".myIO-fab")).toBeTruthy();
+  });
 });
