@@ -398,6 +398,11 @@ export class myIOchart {
       updateScaffoldLayout(this);
       applyDerivedScales(this, state);
       this.syncLegacyAliases();
+      // draw() routes to transitionStacked/transitionGrouped, which only touch
+      // the y axis itself -- they never re-place the rotated axis title. Without
+      // syncAxes the plot group moves to the new margin while the title stays at
+      // the old one, which just slides the overlap right instead of clearing it.
+      syncAxes(this, state, { isInitialRender: true });
       draw();
     }
   }

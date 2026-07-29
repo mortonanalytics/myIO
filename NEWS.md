@@ -12,6 +12,15 @@
 
 ## Bug fixes
 
+* A chart title too long for its container is now trimmed with an ellipsis
+  instead of running underneath the legend button in the top-right corner.
+  The untrimmed title is kept as the element's accessible name.
+
+* Toggling a grouped bar chart to its stacked layout no longer leaves the
+  rotated y-axis title behind when the wider stacked tick labels grow the
+  left margin. The title moved with the plot on a normal redraw but not on
+  the layout toggle, so the labels still ran through it.
+
 * The legend button no longer sits on top of plotted data. Charts already
   reserved the button's corner band on narrow layouts; wide layouts now do
   the same, so a mark that lands in the top-right corner is never hidden

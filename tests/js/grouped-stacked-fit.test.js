@@ -70,6 +70,24 @@ describe("grouped/stacked layout left-margin fit", function() {
     expect(chart.config.layout.margin.left).toBeGreaterThan(grouped);
   });
 
+  // The re-fit moves the plot group; the rotated axis title is placed by
+  // renderAxisTitles, which the stacked transition never calls on its own. If
+  // the title is left behind, the overlap the fit exists to clear just slides
+  // right by the same amount.
+  test("the rotated y-axis title moves with the re-fitted margin", function() {
+    var chart = buildChart();
+
+    chart.toggleGroupedLayout(chart.derived.currentLayers);
+
+    var title = chart.element.querySelector(".myIO-axis-title-y");
+    var tx = Number(/translate\(([-\d.]+),/.exec(title.getAttribute("transform"))[1]);
+    // renderAxisTitles anchors the title at -margin.left + inset, so the anchor
+    // sits a FIXED distance from the SVG's left edge whatever the margin is. A
+    // title left at the pre-toggle margin reads margin.left + tx = inset + the
+    // margin growth instead, i.e. the overlap moved rather than cleared.
+    expect(chart.config.layout.margin.left + tx).toBe(14);
+  });
+
   test("toggling back and forth converges instead of ratcheting", function() {
     var chart = buildChart();
     var grouped = chart.config.layout.margin.left;
