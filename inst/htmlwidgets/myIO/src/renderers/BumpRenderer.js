@@ -1,3 +1,5 @@
+import { resolveColor } from "../utils/responsive.js";
+
 export class BumpRenderer {
   static type = "bump";
   static traits = {
@@ -29,6 +31,7 @@ export class BumpRenderer {
     var groupVar = layer.mapping.group;
     var dotRadius = (layer.options && layer.options.dotRadius) || 5;
     var colorScale = chart.derived.colorDiscrete || d3.scaleOrdinal(d3.schemeCategory10);
+    var bandOffset = xScale.bandwidth ? xScale.bandwidth() / 2 : 0;
 
     var groups = d3.group(layer.data, function(d) { return d[groupVar]; });
 
@@ -36,7 +39,7 @@ export class BumpRenderer {
       .data([null]).join("g").attr("class", "tag-bump-" + layer.id);
 
     var line = d3.line()
-      .x(function(d) { return xScale(d[xVar]); })
+      .x(function(d) { return xScale(d[xVar]) + bandOffset; })
       .y(function(d) { return yScale(d[yVar]); })
       .curve(d3.curveBumpX);
 
@@ -46,7 +49,8 @@ export class BumpRenderer {
 
     var groupIndex = 0;
     groups.forEach(function(data, name) {
-      var color = colorScale(name);
+      var layerColor = Array.isArray(layer.color) ? layer.color[groupIndex % layer.color.length] : layer.color;
+      var color = resolveColor(chart, name, layerColor || colorScale(name));
       var sorted = data.slice().sort(function(a, b) {
         return String(a[xVar]).localeCompare(String(b[xVar]));
       });
@@ -76,7 +80,7 @@ export class BumpRenderer {
 
       var dotsEnter = dots.enter().append("circle")
         .attr("class", "bump-dot bump-dot-" + groupIndex)
-        .attr("cx", function(d) { return xScale(d[xVar]); })
+        .attr("cx", function(d) { return xScale(d[xVar]) + bandOffset; })
         .attr("cy", function(d) { return yScale(d[yVar]); })
         .attr("r", dotRadius)
         .attr("fill", color)
@@ -87,7 +91,7 @@ export class BumpRenderer {
       dotsEnter.merge(dots)
         .transition().duration(transitionSpeed)
         .style("opacity", 1)
-        .attr("cx", function(d) { return xScale(d[xVar]); })
+        .attr("cx", function(d) { return xScale(d[xVar]) + bandOffset; })
         .attr("cy", function(d) { return yScale(d[yVar]); })
         .attr("r", dotRadius)
         .attr("fill", color);

@@ -9,8 +9,27 @@ test_that("linkCharts sets matching config on both widgets", {
   expect_length(linked, 2)
   expect_true(linked[[1]]$x$config$interactions$linked$enabled)
   expect_true(linked[[2]]$x$config$interactions$linked$enabled)
-  expect_equal(linked[[1]]$x$config$interactions$linked$mode, "bidirectional")
-  expect_equal(linked[[2]]$x$config$interactions$linked$mode, "bidirectional")
+  expect_equal(linked[[1]]$x$config$interactions$linked$mode, "both")
+  expect_equal(linked[[2]]$x$config$interactions$linked$mode, "both")
+})
+
+test_that("linkCharts writes a mode that linked.js actually binds", {
+  linked <- linkCharts(myIO(), myIO(), on = "cyl")
+  mode <- linked[[1]]$x$config$interactions$linked$mode
+  expect_equal(mode, "both")
+  # linked.js gates its handlers on exactly this vocabulary; keep the two R
+  # entry points (linkCharts + setLinked) writing the same tokens.
+  expect_true(mode %in% c("source", "target", "both"))
+  expect_equal(linked[[2]]$x$config$interactions$linked$mode, "both")
+})
+
+test_that("linkCharts still adds no crosstalk dependency", {
+  # The crosstalk-free path is the documented differentiator vs setLinked();
+  # if this ever starts failing, the docs on R/linkCharts.R:5 must change too.
+  linked <- linkCharts(myIO(), myIO(), on = "cyl")
+  deps <- linked[[1]]$dependencies
+  has_crosstalk <- any(vapply(deps, function(d) identical(d$name, "crosstalk"), logical(1)))
+  expect_false(has_crosstalk)
 })
 
 test_that("group ID is consistent across linked widgets", {

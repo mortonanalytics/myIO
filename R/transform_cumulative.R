@@ -39,7 +39,19 @@ transform_cumulative <- function(data, mapping, options = list()) {
     }
   }
 
+  # A total row carries no delta of its own -- its bar spans 0 to the running
+  # total, and an NA there is the documented way to say so. The NA has to stay
+  # NA on input: cumsum above counts the row, and it only lands on the right
+  # answer because y_values zeroed it. Materialise the magnitude the renderer
+  # actually draws so the payload ships a number rather than a JSON null, which
+  # the browser-side layer validator flags and the waterfall tooltip prints raw.
+  resolved_y <- y_values
+  if (any(is_total)) {
+    resolved_y[is_total] <- cumulative_y[is_total] - base_y[is_total]
+  }
+
   transformed <- data
+  transformed[[mapping$y_var]] <- resolved_y
   transformed[["_base_y"]] <- base_y
   transformed[["_cumulative_y"]] <- cumulative_y
   transformed[["_is_total"]] <- is_total

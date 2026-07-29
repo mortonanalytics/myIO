@@ -322,7 +322,7 @@ All myIO Shiny inputs follow the pattern `myIO-{outputId}-{event}`:
 
 | Input key | Trigger | Payload |
 |-----------|---------|---------|
-| `myIO-{id}-brushed` | Brush end or clear | `{ data, extent, keys, layerLabel }` |
+| `myIO-{id}-brushed` | Brush end or clear | `{ data, extent, keys, active, layerLabel }` |
 | `myIO-{id}-annotated` | Annotation add/remove/clear | `{ annotations, action, latest }` |
 | `myIO-{id}-slider-{param}` | Slider drag (debounced) | Numeric value |
 | `myIO-{id}-rollover` | Hover on element | JSON data point |

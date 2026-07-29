@@ -123,6 +123,7 @@
         "yExtentFields": [
           "y_var"
         ],
+        "yZeroBaseline": true,
         "domainMerge": "union"
       }
     },
@@ -305,6 +306,7 @@
         "yExtentFields": [
           "y_var"
         ],
+        "yZeroBaseline": true,
         "domainMerge": "union"
       }
     },
@@ -726,6 +728,7 @@
         "yExtentFields": [
           "y_var"
         ],
+        "yZeroBaseline": true,
         "domainMerge": "union"
       }
     },
@@ -1395,6 +1398,10 @@
       "myIO",
       "label",
       "opacity"
+    ],
+    "setLegendTitle": [
+      "myIO",
+      "title"
     ],
     "setLinked": [
       "myIO",

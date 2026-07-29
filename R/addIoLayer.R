@@ -4,7 +4,10 @@
 #'
 #' @param myIO an htmlwidget object created by the \code{myIO()} function
 #' @param type chart type
-#' @param color optional CSS color string or vector for grouped layers
+#' @param color optional CSS color string or vector for grouped layers. For
+#'   \code{type = "regression"} the first element colors the raw scatter and the
+#'   optional second element colors the fitted line and confidence band; supply
+#'   the same color twice to render data and model in a single hue.
 #' @param label unique layer label
 #' @param data data frame backing the layer
 #' @param mapping named aesthetic mapping list
@@ -93,6 +96,13 @@ addIoLayer <- function(myIO,
     if (!is.null(tick_labels)) {
       myIO$x$config$axes$xTickLabels <- tick_labels
     }
+    y_tick_labels <- derive_positional_y_tick_labels(type, sub_layers)
+    if (!is.null(y_tick_labels)) {
+      myIO$x$config$axes$yTickLabels <- y_tick_labels
+      if (is.null(myIO$x$config$axes$yAxisLabel) && !is.null(mapping$group)) {
+        myIO$x$config$axes$yAxisLabel <- mapping$group
+      }
+    }
     for (i in seq_along(sub_layers)) {
       sl <- sub_layers[[i]]
       sl_mapping <- inject_transform_mapping(sl$transform, sl$mapping)
@@ -160,7 +170,7 @@ addIoLayer <- function(myIO,
 build_layer <- function(layer_type, layer_label, layer_data, layer_mapping, layer_color,
                         layer_transform_meta, options, transform, layer_id, order,
                         derived_from = NULL, composite = NULL, composite_role = NULL,
-                        scale_hints = NULL) {
+                        scale_hints = NULL, group_var = NULL) {
   layer <- list(
     id = if (order == 1L) layer_id else sprintf("%s_sub_%02d", layer_id, order),
     type = layer_type,
@@ -183,6 +193,12 @@ build_layer <- function(layer_type, layer_label, layer_data, layer_mapping, laye
   }
   if (!is.null(scale_hints)) {
     layer$scaleHints <- scale_hints
+  }
+  # Marks a layer whose label IS a value of `group_var`. Composite sub-layers
+  # carry mapping$group too but their labels are not bare group values, so they
+  # deliberately never get this field.
+  if (!is.null(group_var)) {
+    layer$groupVar <- group_var
   }
   layer
 }
@@ -211,6 +227,48 @@ derive_positional_x_tick_labels <- function(type, sub_layers) {
       next
     }
     positions <- c(positions, as.character(numeric_x[keep]))
+    labels <- c(labels, as.character(group_values[keep]))
+  }
+
+  if (length(positions) == 0L) {
+    return(NULL)
+  }
+
+  first_seen <- !duplicated(positions)
+  positions <- positions[first_seen]
+  labels <- labels[first_seen]
+  numeric_positions <- suppressWarnings(as.numeric(positions))
+  if (all(!is.na(numeric_positions))) {
+    order_idx <- order(numeric_positions)
+    positions <- positions[order_idx]
+    labels <- labels[order_idx]
+  }
+  stats::setNames(as.list(labels), positions)
+}
+
+derive_positional_y_tick_labels <- function(type, sub_layers) {
+  if (!identical(type, "ridgeline")) {
+    return(NULL)
+  }
+
+  positions <- character()
+  labels <- character()
+  for (sl in sub_layers) {
+    if (is.null(sl$data) || is.null(sl$mapping$low_y) || is.null(sl$mapping$group)) {
+      next
+    }
+    y_col <- sl$mapping$low_y
+    group_col <- sl$mapping$group
+    if (!(y_col %in% names(sl$data)) || !(group_col %in% names(sl$data))) {
+      next
+    }
+    y_values <- suppressWarnings(as.numeric(sl$data[[y_col]]))
+    group_values <- sl$data[[group_col]]
+    keep <- !is.na(y_values) & abs(y_values - round(y_values)) < 1e-9 & !is.na(group_values)
+    if (!any(keep)) {
+      next
+    }
+    positions <- c(positions, as.character(y_values[keep]))
     labels <- c(labels, as.character(group_values[keep]))
   }
 
@@ -405,8 +463,13 @@ build_grouped_layers <- function(data, mapping, type, label, color, transform_fn
 
   for (index in seq_along(group_list)) {
     group_value <- group_list[[index]]
-    layer_label <- paste0(label, " \u2014 ", as.character(group_value))
+    layer_label <- as.character(group_value)
     all_labels <- c(existing_labels, vapply(layers, function(layer) layer$label, character(1)))
+    if (layer_label %in% all_labels) {
+      # Fall back to the legacy "<label> - <group>" form when the bare group
+      # value would collide with a layer already on the chart.
+      layer_label <- paste0(label, " \u2014 ", as.character(group_value))
+    }
     if (layer_label %in% all_labels) {
       stop("addIoLayer(): Layer label '", layer_label, "' already exists.", call. = FALSE)
     }
@@ -424,7 +487,8 @@ build_grouped_layers <- function(data, mapping, type, label, color, transform_fn
       transform = transform,
       layer_id = layer_id,
       order = index,
-      derived_from = layer_id
+      derived_from = layer_id,
+      group_var = mapping$group
     )
   }
 

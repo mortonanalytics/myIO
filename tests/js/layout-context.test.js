@@ -1,8 +1,9 @@
 import * as d3 from "d3";
 import { describe, expect, test } from "vitest";
 import { initializeScaffold } from "../../inst/htmlwidgets/myIO/src/layout/scaffold.js";
-import { renderAxes } from "../../inst/htmlwidgets/myIO/src/layout/axes.js";
+import { renderAxes, fitLeftMargin, updateYAxis } from "../../inst/htmlwidgets/myIO/src/layout/axes.js";
 import { syncLegend } from "../../inst/htmlwidgets/myIO/src/layout/legend.js";
+import "./support/jsdom-svg-transform.js";
 
 globalThis.d3 = d3;
 
@@ -59,6 +60,156 @@ describe("chart context layout", function() {
     expect(chart.element.querySelector(".myIO-axis-title-y").textContent).toBe("Tier");
   });
 
+  test("rotated y-axis title clears the SVG left edge", function() {
+    var chart = baseChart();
+    initializeScaffold(chart);
+    renderAxes(chart, { isInitialRender: true });
+
+    var title = chart.element.querySelector(".myIO-axis-title-y");
+    var tx = Number(/translate\(([-\d.]+),/.exec(title.getAttribute("transform"))[1]);
+    // The plot <g> is translated by margin.left, so this is the anchor's distance
+    // from the SVG's left edge. Rotated -90deg the glyphs extend ~12px to its left.
+    expect(chart.margin.left + tx).toBeGreaterThanOrEqual(14);
+  });
+
+  test("small left margin keeps the y-axis title inside the margin band", function() {
+    var chart = baseChart();
+    chart.margin.left = 10;
+    chart.config.layout.margin.left = 10;
+    initializeScaffold(chart);
+    renderAxes(chart, { isInitialRender: true });
+
+    var title = chart.element.querySelector(".myIO-axis-title-y");
+    var tx = Number(/translate\(([-\d.]+),/.exec(title.getAttribute("transform"))[1]);
+    expect(chart.margin.left + tx).toBeLessThanOrEqual(chart.margin.left);
+  });
+
+  test("left margin grows so currency y tick labels clear the rotated title", function() {
+    var chart = baseChart();
+    chart.config.layout.margin = { top: 30, bottom: 60, left: 50, right: 5 };
+    chart.margin = chart.config.layout.margin;   // Chart.js shares one object
+    chart.options.margin = chart.config.layout.margin;
+    chart.options.categoricalScale = { xAxis: false, yAxis: false };
+    chart.options.yAxisFormat = "$,.0f";
+    chart.options.yAxisLabel = "Price";
+    chart.xScale = d3.scaleLinear().domain([0, 30]).range([0, 544]);
+    chart.yScale = d3.scaleLinear().domain([98, 122]).range([240, 0]);
+    initializeScaffold(chart);
+    renderAxes(chart, { isInitialRender: true });
+
+    expect(fitLeftMargin(chart, { axesChart: true })).toBe(true);
+    expect(chart.config.layout.margin.left).toBe(54);
+    // grow-only and idempotent: a second pass over the same labels is a no-op
+    expect(fitLeftMargin(chart, { axesChart: true })).toBe(false);
+  });
+
+  test("the y tick label stash tracks the scale updateYAxis was handed", function() {
+    var chart = baseChart();
+    chart.config.layout.margin = { top: 30, bottom: 60, left: 50, right: 5 };
+    chart.margin = chart.config.layout.margin;
+    chart.options.margin = chart.config.layout.margin;
+    chart.options.categoricalScale = { xAxis: false, yAxis: false };
+    chart.options.yAxisFormat = "$,.0f";
+    chart.options.yAxisLabel = "Price";
+    chart.xScale = d3.scaleLinear().domain([0, 30]).range([0, 544]);
+    chart.yScale = d3.scaleLinear().domain([98, 122]).range([240, 0]);
+    initializeScaffold(chart);
+    renderAxes(chart, { isInitialRender: true });
+
+    expect(fitLeftMargin(chart, { axesChart: true })).toBe(true);
+    expect(chart.config.layout.margin.left).toBe(54);
+
+    // A renderer re-formatting the axis through a transition (groupedBar's
+    // stacked layout) leaves the OLD strings in the DOM until the first frame,
+    // so the fit has to measure what the generator is about to draw.
+    updateYAxis(chart, d3.scaleLinear().domain([0, 1600000]).range([240, 0]));
+
+    expect(fitLeftMargin(chart, { axesChart: true })).toBe(true);
+    expect(chart.config.layout.margin.left).toBeGreaterThan(54);
+  });
+
+  test("a suppressed y axis clears the tick-label stash", function() {
+    var chart = baseChart();
+    chart.config.layout.margin = { top: 30, bottom: 60, left: 50, right: 5 };
+    chart.margin = chart.config.layout.margin;
+    chart.options.margin = chart.config.layout.margin;
+    chart.options.categoricalScale = { xAxis: false, yAxis: false };
+    chart.options.yAxisFormat = "$,.0f";
+    chart.options.yAxisLabel = "Price";
+    chart.xScale = d3.scaleLinear().domain([0, 30]).range([0, 544]);
+    chart.yScale = d3.scaleLinear().domain([98, 122]).range([240, 0]);
+    initializeScaffold(chart);
+    renderAxes(chart, { isInitialRender: true });
+
+    chart.options.suppressAxis = { xAxis: false, yAxis: true };
+    renderAxes(chart, { isInitialRender: true });
+
+    expect(chart.runtime.yTickText).toBeNull();
+    expect(fitLeftMargin(chart, { axesChart: true })).toBe(false);
+  });
+
+  test("fitLeftMargin is a pure function of the measured labels, not of the current margin", function() {
+    function fitFrom(startLeft) {
+      var chart = baseChart();
+      chart.config.layout.margin = { top: 30, bottom: 60, left: 50, right: 5 };
+      chart.margin = chart.config.layout.margin;
+      chart.options.margin = chart.config.layout.margin;
+      chart.options.categoricalScale = { xAxis: false, yAxis: false };
+      chart.options.yAxisFormat = "$,.0f";
+      chart.options.yAxisLabel = "Price";
+      chart.xScale = d3.scaleLinear().domain([0, 30]).range([0, 544]);
+      chart.yScale = d3.scaleLinear().domain([98, 122]).range([240, 0]);
+      initializeScaffold(chart);
+      renderAxes(chart, { isInitialRender: true });
+      // Same configured baseline, different current margin. The fit must read
+      // the labels and the baseline only -- no hysteresis, no ratchet, no
+      // dependence on render history, which is what keeps repeated renders
+      // convergent and what the re-fit paths in Chart.js rely on.
+      chart.runtime.baseMarginLeft = 50;
+      chart.config.layout.margin.left = startLeft;
+      fitLeftMargin(chart, { axesChart: true });
+      return chart.config.layout.margin.left;
+    }
+
+    expect(fitFrom(50)).toBe(54);
+    expect(fitFrom(200)).toBe(54);
+  });
+
+  test("an explicit setMargin() suppresses the left-margin fit", function() {
+    var chart = baseChart();
+    chart.config.layout.margin = { top: 30, bottom: 60, left: 50, right: 5 };
+    chart.config.layout.marginSet = true;
+    chart.margin = chart.config.layout.margin;
+    chart.options.margin = chart.config.layout.margin;
+    chart.options.categoricalScale = { xAxis: false, yAxis: false };
+    chart.options.yAxisFormat = "$,.0f";
+    chart.options.yAxisLabel = "Price";
+    chart.xScale = d3.scaleLinear().domain([0, 30]).range([0, 544]);
+    chart.yScale = d3.scaleLinear().domain([98, 122]).range([240, 0]);
+    initializeScaffold(chart);
+    renderAxes(chart, { isInitialRender: true });
+
+    expect(fitLeftMargin(chart, { axesChart: true })).toBe(false);
+    expect(chart.config.layout.margin.left).toBe(50);
+  });
+
+  test("narrow y tick labels leave the configured left margin alone", function() {
+    var chart = baseChart();
+    chart.config.layout.margin = { top: 30, bottom: 60, left: 50, right: 5 };
+    chart.margin = chart.config.layout.margin;
+    chart.options.margin = chart.config.layout.margin;
+    chart.options.categoricalScale = { xAxis: false, yAxis: false };
+    chart.options.yAxisFormat = "";
+    chart.options.yAxisLabel = "Count";
+    chart.xScale = d3.scaleLinear().domain([0, 30]).range([0, 544]);
+    chart.yScale = d3.scaleLinear().domain([0, 1]).range([240, 0]);
+    initializeScaffold(chart);
+    renderAxes(chart, { isInitialRender: true });
+
+    expect(fitLeftMargin(chart, { axesChart: true })).toBe(false);
+    expect(chart.config.layout.margin.left).toBe(50);
+  });
+
   test("band-scale y axis renders without ticks function", function() {
     var chart = baseChart();
     initializeScaffold(chart);
@@ -98,6 +249,47 @@ describe("chart context layout", function() {
     var xLabels = Array.from(chart.element.querySelectorAll(".x-axis .tick text"))
       .map(function(node) { return node.textContent; });
     expect(xLabels).toEqual(["setosa", "versicolor"]);
+  });
+
+  test("linear y axis can render positional category labels", function() {
+    var chart = baseChart();
+    chart.options.categoricalScale = { xAxis: false, yAxis: false };
+    chart.options.yAxisFormat = "";
+    chart.options.yTickLabels = { "1": "6", "2": "4", "3": "8" };
+    chart.xScale = d3.scaleLinear().domain([0, 400]).range([0, 544]);
+    chart.yScale = d3.scaleLinear().domain([0.8, 3.6]).range([240, 0]);
+    initializeScaffold(chart);
+    renderAxes(chart, { isInitialRender: true });
+
+    var yLabels = Array.from(chart.element.querySelectorAll(".y-axis .tick text"))
+      .map(function(node) { return node.textContent; });
+    expect(yLabels).toEqual(["6", "4", "8"]);
+  });
+
+  test("positional y tick labels outside the domain are dropped", function() {
+    var chart = baseChart();
+    chart.options.categoricalScale = { xAxis: false, yAxis: false };
+    chart.options.yAxisFormat = "";
+    chart.options.yTickLabels = { "1": "6", "2": "4", "3": "8" };
+    chart.xScale = d3.scaleLinear().domain([0, 400]).range([0, 544]);
+    chart.yScale = d3.scaleLinear().domain([0.8, 2.4]).range([240, 0]);
+    initializeScaffold(chart);
+    renderAxes(chart, { isInitialRender: true });
+
+    var yLabels = Array.from(chart.element.querySelectorAll(".y-axis .tick text"))
+      .map(function(node) { return node.textContent; });
+    expect(yLabels).toEqual(["6", "4"]);
+  });
+
+  test("band-scale y axis ignores positional tick labels", function() {
+    var chart = baseChart();
+    chart.options.yTickLabels = { "1": "A" };
+    initializeScaffold(chart);
+
+    expect(function() {
+      renderAxes(chart, { isInitialRender: true });
+    }).not.toThrow();
+    expect(chart.element.querySelectorAll(".y-axis .tick").length).toBeGreaterThan(0);
   });
 
   test("inline legend renders below chart title and away from toolbar", function() {

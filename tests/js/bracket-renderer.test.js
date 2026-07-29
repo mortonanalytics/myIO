@@ -74,6 +74,7 @@ describe("BracketRenderer", function() {
     var renderer = getRenderer("bracket");
     var chart = {
       element: el,
+      dom: { element: el },
       chart: d3.select(el).select(".myIO-chart-area"),
       options: { transition: { speed: 0 } },
       xScale: d3.scaleLinear().domain([0, 4]).range([0, 200]),
@@ -87,5 +88,32 @@ describe("BracketRenderer", function() {
 
     var remaining = el.querySelectorAll("line");
     expect(remaining.length).toBe(0);
+  });
+
+  test("remove resolves the mark class through chart.dom.element", function() {
+    document.body.innerHTML =
+      "<div id='live'><svg><g class='myIO-chart-area'></g></svg></div><div id='stale'></div>";
+    var live = document.getElementById("live");
+    var renderer = getRenderer("bracket");
+    var chart = {
+      element: live,
+      dom: { element: live },
+      chart: d3.select(live).select(".myIO-chart-area"),
+      options: { transition: { speed: 0 } },
+      xScale: d3.scaleLinear().domain([0, 4]).range([0, 200]),
+      yScale: d3.scaleLinear().domain([0, 20]).range([200, 0])
+    };
+    var layer = { label: "test-brackets", color: "#333",
+      data: [{ x1: 1, x2: 2, y: 15, label: "p = 0.03 *" }] };
+
+    renderer.render(chart, layer);
+    // chart.element is a legacy alias re-derived from chart.dom.element on
+    // every sync; chart.dom.element is the field that is written once and
+    // never reassigned. Every other renderer's remove() reads dom.element, so
+    // a stale alias must not orphan the marks.
+    chart.element = document.getElementById("stale");
+    renderer.remove(chart, layer);
+
+    expect(live.querySelectorAll("line").length).toBe(0);
   });
 });

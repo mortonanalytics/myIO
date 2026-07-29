@@ -20,7 +20,7 @@ composite_survfit <- function(data, mapping, label, color, options) {
   for (gv in group_vals) {
     if (!is.null(gv)) {
       group_data <- data[data[[mapping$group]] == gv, , drop = FALSE]
-      group_label <- paste0(label, " \u2014 ", as.character(gv))
+      group_label <- as.character(gv)
     } else {
       group_data <- data
       group_label <- label

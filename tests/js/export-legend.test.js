@@ -178,6 +178,41 @@ describe("injectExportLegend", function() {
     cleanup(c.svg);
   });
 
+  test("injects the legend title ahead of the swatches", function() {
+    var c = makeChart({
+      options: { legendTitle: "Month" },
+      plotLayers: [
+        { label: "May", color: "#ff0000", type: "line" },
+        { label: "June", color: "#0000ff", type: "line" }
+      ]
+    });
+    c.chart.currentLayers = c.chart.plotLayers;
+
+    var result = injectExportLegend(c.chart);
+    var texts = c.svg.querySelectorAll(".myIO-export-legend text");
+    expect(texts[0].textContent).toBe("Month");
+    expect(texts[0].getAttribute("font-weight")).toBe("600");
+    expect(texts[1].textContent).toBe("May");
+    expect(parseFloat(texts[1].getAttribute("x")))
+      .toBeGreaterThan(parseFloat(texts[0].getAttribute("x")));
+    expect(result.extraHeight).toBeGreaterThan(0);
+
+    result.cleanup();
+    expect(c.svg.querySelector(".myIO-export-legend")).toBeNull();
+    expect(c.svg.getAttribute("height")).toBe("300");
+    cleanup(c.svg);
+  });
+
+  test("a suppressed legend injects no title", function() {
+    var c = makeChart({
+      options: { suppressLegend: true, legendTitle: "Month" },
+      plotLayers: [{ label: "May", color: "#ff0000", type: "line" }]
+    });
+    expect(injectExportLegend(c.chart).extraHeight).toBe(0);
+    expect(c.svg.querySelector(".myIO-export-legend")).toBeNull();
+    cleanup(c.svg);
+  });
+
   // GH #64 regression: grouped/discrete charts that already serialize an
   // inline legend (.myIO-inline-legend) inside the SVG must NOT get a second
   // injected legend on export.

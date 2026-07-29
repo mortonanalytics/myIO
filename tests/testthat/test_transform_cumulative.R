@@ -24,3 +24,28 @@ test_that("transform_cumulative marks total rows and anchors them at zero", {
   expect_equal(result$data[["_base_y"]], c(0, 10, 0))
   expect_equal(result$data[["_is_total"]], c(FALSE, FALSE, TRUE))
 })
+
+test_that("transform_cumulative materialises the total row's own magnitude", {
+  df <- data.frame(
+    step = c("A", "B", "Total"),
+    value = c(10, 2, NA),
+    total = c(FALSE, FALSE, TRUE),
+    stringsAsFactors = FALSE
+  )
+
+  result <- myIO:::transform_cumulative(df, list(x_var = "step", y_var = "value", total = "total"))
+
+  # The NA placeholder is how a total row is declared, but shipping it to the
+  # browser produces a null the layer validator warns about and the waterfall
+  # tooltip prints verbatim. The bar spans 0 to 12, so its magnitude is 12.
+  expect_equal(result$data[["value"]], c(10, 2, 12))
+  expect_false(anyNA(result$data[["value"]]))
+})
+
+test_that("transform_cumulative leaves non-total values untouched", {
+  df <- data.frame(step = c("A", "B"), value = c(0.1, 0.2), stringsAsFactors = FALSE)
+
+  result <- myIO:::transform_cumulative(df, list(x_var = "step", y_var = "value"))
+
+  expect_identical(result$data[["value"]], c(0.1, 0.2))
+})

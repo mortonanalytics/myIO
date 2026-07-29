@@ -12,7 +12,7 @@ composite_qq <- function(data, mapping, label, color, options) {
     sublayers <- list()
     for (idx in seq_along(group_vals)) {
       group_data <- data[data[[mapping$group]] == group_vals[idx], , drop = FALSE]
-      group_label <- paste0(label, " \u2014 ", as.character(group_vals[idx]))
+      group_label <- as.character(group_vals[idx])
       sublayers <- c(sublayers,
         build_qq_sublayers(group_data, mapping, group_label, colors[idx], options, show_envelope))
     }

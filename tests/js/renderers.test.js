@@ -1,5 +1,6 @@
 import * as d3 from "d3";
 import * as d3Sankey from "d3-sankey";
+import fs from "node:fs";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { myIOchart } from "../../inst/htmlwidgets/myIO/src/Chart.js";
 import { registerBuiltInRenderers, getRenderer } from "../../inst/htmlwidgets/myIO/src/registry.js";
@@ -228,6 +229,34 @@ describe("Renderer formatTooltip methods", function() {
     expect(document.querySelectorAll("rect." + "tag-heatmap-chart-cells").length).toBe(2);
   });
 
+  test("WaffleRenderer.render publishes the ordinal color scale", function() {
+    var renderer = getRenderer("waffle");
+    document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
+    var el = document.getElementById("chart");
+    var chart = {
+      element: el,
+      dom: { chartArea: d3.select(el).select(".myIO-chart-area") },
+      derived: {},
+      runtime: { width: 600, height: 400 },
+      config: { layout: { margin: { top: 30, bottom: 60, left: 50, right: 5 } } },
+      options: { transition: { speed: 0 } }
+    };
+    var layer = {
+      id: "layer_001",
+      label: "Energy Mix",
+      mapping: { category: "cat", value: "val" },
+      data: [{ cat: "A", val: 60 }, { cat: "B", val: 40 }]
+    };
+
+    renderer.render(chart, layer);
+
+    expect(typeof chart.colorDiscrete).toBe("function");
+    expect(chart.derived.colorDiscrete).toBe(chart.colorDiscrete);
+    expect(chart.colorDiscrete.domain()).toEqual(["A", "B"]);
+    expect(chart.colorDiscrete("A")).toBe(
+      document.querySelector(".waffle-cell").getAttribute("fill"));
+  });
+
   test("CandlestickRenderer.render creates wick and body elements", function() {
     var renderer = getRenderer("candlestick");
     document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
@@ -403,6 +432,44 @@ describe("Renderer formatTooltip methods", function() {
     expect(document.querySelectorAll("path." + "tag-sankey-chart-flow").length).toBeGreaterThan(0);
   });
 
+  test("SankeyRenderer reserves the FAB gutter on the right", function() {
+    var renderer = getRenderer("sankey");
+    document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
+    var el = document.getElementById("chart");
+    var chart = {
+      element: el,
+      chart: d3.select(el).select(".myIO-chart-area"),
+      derived: {},
+      options: { transition: { speed: 0 } },
+      margin: { top: 30, bottom: 60, left: 50, right: 5 },
+      width: 400,
+      height: 300,
+      colorDiscrete: null
+    };
+    var layer = {
+      label: "flow",
+      color: ["#ff0000", "#00ff00", "#0000ff"],
+      mapping: { source: "source", target: "target", value: "value" },
+      data: [
+        { source: "A", target: "B", value: 2 },
+        { source: "B", target: "C", value: 3 }
+      ]
+    };
+
+    renderer.render(chart, layer);
+
+    var rightEdge = Math.max.apply(null, Array.from(
+      document.querySelectorAll("rect.tag-sankey-node-chart-flow")
+    ).map(function(node) {
+      return Number(node.getAttribute("x")) + Number(node.getAttribute("width"));
+    }));
+
+    // Plot width is 345; the FAB band claims 56 - 5 = 51 of it, so nothing may
+    // be drawn beyond x = 294. The terminal-label gutter eats a further 29.5.
+    expect(rightEdge).toBeLessThanOrEqual(294);
+    expect(rightEdge).toBeCloseTo(264.5, 1);
+  });
+
   test("RadarRenderer.render creates axes and group polygons", function() {
     var renderer = getRenderer("radar");
     document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
@@ -434,6 +501,78 @@ describe("Renderer formatTooltip methods", function() {
     expect(document.querySelectorAll(".tag-radar-radar_1 .radar-polygon").length).toBe(2);
   });
 
+  test("RadarRenderer.render draws concentric grid rings with value labels", function() {
+    var renderer = getRenderer("radar");
+    document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
+    var el = document.getElementById("chart");
+    var chart = {
+      dom: { chartArea: d3.select(el).select(".myIO-chart-area") },
+      derived: {},
+      margin: { top: 30, bottom: 30, left: 30, right: 30 },
+      width: 320,
+      height: 320
+    };
+    var layer = {
+      id: "radar_2",
+      label: "skills",
+      mapping: { axis: "axis", value: "value" },
+      data: [
+        { axis: "A", value: 20 },
+        { axis: "B", value: 60 },
+        { axis: "C", value: 80 }
+      ]
+    };
+
+    renderer.render(chart, layer);
+
+    var rings = document.querySelectorAll(".tag-radar-radar_2 .radar-grid-ring");
+    expect(rings.length).toBe(4);
+    expect(rings[0].getAttribute("stroke")).toBe("var(--chart-grid, #cbd5e1)");
+    expect(rings[0].getAttribute("fill")).toBe("none");
+    expect(Array.from(document.querySelectorAll(".tag-radar-radar_2 .radar-grid-label")).map(function(node) {
+      return node.textContent;
+    })).toEqual(["20", "40", "60", "80"]);
+  });
+
+  test("RadarRenderer grid can be disabled via layer options", function() {
+    var renderer = getRenderer("radar");
+    document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
+    var el = document.getElementById("chart");
+    var chart = {
+      dom: { chartArea: d3.select(el).select(".myIO-chart-area") },
+      derived: {},
+      margin: { top: 30, bottom: 30, left: 30, right: 30 },
+      width: 320,
+      height: 320
+    };
+    var data = [
+      { axis: "A", value: 20 },
+      { axis: "B", value: 60 },
+      { axis: "C", value: 80 }
+    ];
+
+    renderer.render(chart, {
+      id: "radar_3",
+      label: "skills",
+      mapping: { axis: "axis", value: "value" },
+      data: data,
+      options: { grid: false }
+    });
+
+    expect(document.querySelectorAll(".tag-radar-radar_3 .radar-grid-ring").length).toBe(0);
+    expect(document.querySelectorAll(".tag-radar-radar_3 .radar-polygon").length).toBe(1);
+
+    renderer.render(chart, {
+      id: "radar_4",
+      label: "skills",
+      mapping: { axis: "axis", value: "value" },
+      data: data,
+      options: { gridLevels: 6 }
+    });
+
+    expect(document.querySelectorAll(".tag-radar-radar_4 .radar-grid-ring").length).toBe(6);
+  });
+
   test("FunnelRenderer.render creates trapezoid stages", function() {
     var renderer = getRenderer("funnel");
     document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
@@ -460,6 +599,37 @@ describe("Renderer formatTooltip methods", function() {
 
     expect(document.querySelectorAll(".tag-funnel-funnel_1 .funnel-stage").length).toBe(3);
     expect(document.querySelectorAll(".tag-funnel-funnel_1 .funnel-label").length).toBe(3);
+  });
+
+  test("FunnelRenderer caps stage width to clear the FAB", function() {
+    var renderer = getRenderer("funnel");
+    document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
+    var el = document.getElementById("chart");
+    var chart = {
+      dom: { chartArea: d3.select(el).select(".myIO-chart-area") },
+      derived: {},
+      margin: { top: 20, bottom: 20, left: 20, right: 20 },
+      width: 360,
+      height: 260
+    };
+    var layer = {
+      id: "funnel_1",
+      label: "pipeline",
+      mapping: { stage: "stage", value: "value" },
+      data: [
+        { stage: "Visit", value: 100 },
+        { stage: "Lead", value: 60 },
+        { stage: "Won", value: 20 }
+      ]
+    };
+
+    renderer.render(chart, layer);
+    d3.timerFlush();
+
+    var widest = document.querySelector(".tag-funnel-funnel_1 .funnel-stage");
+    var xs = widest.getAttribute("d").match(/[-\d.]+(?=,)/g).map(Number);
+    // Plot width 320, FAB band 56 - 20 = 36 reserved symmetrically, centre 160.
+    expect(Math.max.apply(null, xs)).toBeCloseTo(284, 0);
   });
 
   test("ParallelRenderer.render creates axes and polylines", function() {
@@ -701,6 +871,40 @@ describe("Full chart rendering with layers", function() {
     expect(rects.length).toBeGreaterThan(0);
   });
 
+  function bumpLayer(id, team, ranks, color) {
+    return makeLayer("bump", "Rankings — " + team,
+      [{ q: "Q1", rank: ranks[0], team: team, _source_key: id + "_1" },
+       { q: "Q2", rank: ranks[1], team: team, _source_key: id + "_2" }],
+      { x_var: "q", y_var: "rank", group: "team" },
+      { id: id, color: color });
+  }
+
+  function bumpChart() {
+    return new myIOchart({
+      element: document.getElementById("chart"),
+      width: 400, height: 300,
+      config: makeConfig(
+        [bumpLayer("layer_001", "A", [1, 2], "#E69F00"), bumpLayer("layer_002", "B", [2, 1], "#56B4E9")],
+        { scales: { xlim: { min: null, max: null }, ylim: { min: null, max: null }, categoricalScale: { xAxis: true, yAxis: false }, flipAxis: false, colorScheme: { colors: ["#E69F00"], domain: ["none"], enabled: false } } }
+      )
+    });
+  }
+
+  test("bump layers keep their own color", function() {
+    bumpChart();
+    var strokes = Array.from(document.querySelectorAll("path.bump-line")).map(function(p) { return p.getAttribute("stroke"); }).sort();
+    expect(strokes).toEqual(["#56B4E9", "#E69F00"]);
+    var fills = Array.from(new Set(Array.from(document.querySelectorAll("circle.bump-dot")).map(function(c) { return c.getAttribute("fill"); }))).sort();
+    expect(fills).toEqual(["#56B4E9", "#E69F00"]);
+  });
+
+  test("bump marks sit at band centers", function() {
+    var chart = bumpChart();
+    var xScale = chart.derived.xScale;
+    var cx = +document.querySelector("circle.bump-dot").getAttribute("cx");
+    expect(cx).toBeCloseTo(xScale("Q1") + xScale.bandwidth() / 2, 6);
+  });
+
   test("gauge layer renders arcs in DOM", function() {
     var layer = makeLayer("gauge", "meter",
       [{ value: 0.75 }],
@@ -788,5 +992,42 @@ describe("Full chart rendering with layers", function() {
       // Gauge rendered but text element not found - still a valid outcome for non-finite input
       expect(true).toBe(true);
     }
+  });
+});
+
+// Renderers draw with chart.element.id and clean up with chart.dom.element.id.
+// chart.element is a legacy alias re-derived from chart.dom.element on every
+// sync; chart.dom.element is assigned once in the constructor and never
+// reassigned. A remove() that reads the alias instead breaks the moment
+// anything reassigns dom.element without re-running syncLegacyAliases, and it
+// breaks silently -- the selector simply matches nothing.
+function removeBody(source) {
+  var start = source.search(/\n {2}remove\s*\(/);
+  if (start === -1) {
+    return null;
+  }
+  var open = source.indexOf("{", start);
+  var depth = 0;
+  for (var i = open; i < source.length; i += 1) {
+    if (source[i] === "{") { depth += 1; }
+    if (source[i] === "}") {
+      depth -= 1;
+      if (depth === 0) { return source.slice(open, i + 1); }
+    }
+  }
+  return null;
+}
+
+describe("renderer remove() id convention", function() {
+  test("no remove() resolves its mark class through the chart.element alias", function() {
+    var dir = "inst/htmlwidgets/myIO/src/renderers";
+    var offenders = fs.readdirSync(dir)
+      .filter(function(name) { return name.endsWith(".js"); })
+      .filter(function(name) {
+        var body = removeBody(fs.readFileSync(dir + "/" + name, "utf8"));
+        return body !== null && body.indexOf("chart.element.id") !== -1;
+      });
+
+    expect(offenders).toEqual([]);
   });
 });

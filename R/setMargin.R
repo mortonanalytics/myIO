@@ -24,6 +24,8 @@ setMargin <- function(myIO, top = 20, bottom = 40, left = 50, right = 50){
   myIO$x$config$layout$margin$bottom <- bottom
   myIO$x$config$layout$margin$left <- left
   myIO$x$config$layout$margin$right <- right
+  # Explicit margins opt the chart out of the engine's left-margin auto-fit.
+  myIO$x$config$layout$marginSet <- TRUE
 
   return(myIO)
 }

@@ -36,4 +36,8 @@ test_that("waterfall total rows render from zero", {
   expect_equal(total_row[["_base_y"]], 0)
   expect_equal(total_row[["_cumulative_y"]], 15)
   expect_true(total_row[["_is_total"]])
+  # The serialised payload must carry a number, not a JSON null: the browser
+  # validator warns on nulls and the waterfall tooltip prints the value raw.
+  expect_equal(total_row[["value"]], 15)
+  expect_false(is.na(total_row[["value"]]))
 })

@@ -408,7 +408,7 @@ All myIO Shiny inputs follow the naming pattern `myIO-{outputId}-{event}`:
 |-----------|-------|---------|
 | `myIO-{id}-rollover` | Hover on data element | JSON data point |
 | `myIO-{id}-dragEnd` | Point drag completed | JSON `{ point, layerLabel }` |
-| `myIO-{id}-brushed` | Brush selection | JSON `{ data, extent, keys }` |
+| `myIO-{id}-brushed` | Brush selection | JSON `{ data, extent, keys, active }` |
 | `myIO-{id}-annotated` | Annotation added/removed | JSON `{ annotations, action }` |
 | `myIO-{id}-slider-{param}` | Slider value changed | Numeric value |
 | `myIO-{id}-error` | Render error | Error message string |

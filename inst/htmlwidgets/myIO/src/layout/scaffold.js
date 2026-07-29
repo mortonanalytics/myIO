@@ -1,4 +1,15 @@
 import { isMobile, responsiveValue } from "../utils/responsive.js";
+import { textWidth } from "../utils/text-metrics.js";
+
+// .myIO-fab is 40px wide and offset 12px from the container's right edge
+// (style.css .myIO-fab), plus 4px clearance. Renderers that fill the whole plot
+// rect must keep their marks out of this band or the button occludes them.
+export var FAB_GUTTER = 56;
+
+// Vertical extent of the button measured from the container's top edge: 8px
+// inset + 40px tall (style.css .myIO-fab). Axes charts in a narrow container
+// reserve this as top margin so the button never lands on the plot.
+export var FAB_BAND_BOTTOM = 48;
 
 export function getChartHeight(chart) {
   return chart.height;
@@ -82,24 +93,51 @@ export function renderChartTitle(chart) {
 
   var title = chart.config && chart.config.title;
   var titleData = title ? [title] : [];
-  chart.svg.selectAll(".myIO-chart-title")
+  var selection = chart.svg.selectAll(".myIO-chart-title")
     .data(titleData)
     .join(
       function(enter) {
         return enter.append("text")
           .attr("class", "myIO-chart-title")
           .attr("x", chart.margin.left)
-          .attr("y", 19)
-          .text(function(d) { return d; });
+          .attr("y", 19);
       },
       function(update) {
         return update
           .attr("x", chart.margin.left)
-          .attr("y", 19)
-          .text(function(d) { return d; });
+          .attr("y", 19);
       },
       function(exit) { return exit.remove(); }
     );
+
+  selection.each(function(d) {
+    fitTitleText(chart, d3.select(this), d);
+  });
+}
+
+// The title's baseline sits inside the floating action button's band, and the
+// button owns the container's top-right corner, so a title long enough to reach
+// it would be drawn underneath. Trim to the room actually available and carry
+// the full string on aria-label. A nested <title> would read better on hover but
+// would also land inside the element's textContent, which export and test code
+// reads to recover the rendered string.
+function fitTitleText(chart, node, text) {
+  var available = chart.width - chart.margin.left - FAB_GUTTER;
+  var element = node.node();
+
+  node.text(text);
+  if (available <= 0 || textWidth(element, text) <= available) {
+    node.attr("aria-label", null);
+    return;
+  }
+
+  var trimmed = text;
+  while (trimmed.length > 1 && textWidth(element, trimmed + "…") > available) {
+    trimmed = trimmed.slice(0, -1);
+    node.text(trimmed + "…");
+  }
+  node.text(trimmed + "…");
+  node.attr("aria-label", text);
 }
 
 function applyPlotTransform(chart) {

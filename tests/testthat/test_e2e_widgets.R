@@ -434,7 +434,7 @@ test_that("Ridgeline widget expands to one density area per group", {
       mapping = list(x_var = "value", y_var = "aux", group = "group"),
       options = list(overlap = 0.5)
     ) |>
-    setAxisFormat(xLabel = "Value", yLabel = "Density")
+    setAxisFormat(xLabel = "Value", yLabel = "Group")
 
   layers <- w$x$config$layers
   expect_length(layers, 2)

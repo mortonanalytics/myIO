@@ -26,7 +26,8 @@ sizingPolicy_myIO <- function() {
 #' @param elementId a unique id for the htmlwidget object
 #' @param title Optional chart title rendered inside the widget SVG.
 #' @param sparkline Logical. If TRUE, renders a compact sparkline suitable for
-#'   embedding in table cells. Strips axes, legend, and interactions.
+#'   embedding in table cells. Strips axes, legend, interactions, and the
+#'   floating action button.
 #'   Only "line", "bar", and "area" layer types are supported. Default FALSE.
 #' @param engine one of \code{"auto"} (default), \code{"server"}, \code{"wasm"}, or
 #'   \code{"svg"}. Only consulted when big-data features are attached via
@@ -97,7 +98,8 @@ myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL
         xAxisLabel = NULL,
         yAxisLabel = NULL,
         toolTipFormat = "",
-        xTickLabels = NULL
+        xTickLabels = NULL,
+        yTickLabels = NULL
       ),
       interactions = list(
         dragPoints = FALSE,

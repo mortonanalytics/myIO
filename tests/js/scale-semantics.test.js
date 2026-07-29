@@ -2,6 +2,10 @@ import * as d3 from "d3";
 import { describe, expect, test } from "vitest";
 import { resolveScaleSemantics } from "../../inst/htmlwidgets/myIO/src/derive/scale-semantics.js";
 import { processScales } from "../../inst/htmlwidgets/myIO/src/derive/scales.js";
+import { BarRenderer } from "../../inst/htmlwidgets/myIO/src/renderers/BarRenderer.js";
+import { GroupedBarRenderer } from "../../inst/htmlwidgets/myIO/src/renderers/GroupedBarRenderer.js";
+import { LollipopRenderer } from "../../inst/htmlwidgets/myIO/src/renderers/LollipopRenderer.js";
+import { CandlestickRenderer } from "../../inst/htmlwidgets/myIO/src/renderers/CandlestickRenderer.js";
 
 globalThis.d3 = d3;
 
@@ -142,6 +146,93 @@ describe("scale semantics", function() {
 
     expect(semantics.xScaleType).toBe("linear");
     expect(semantics.yScaleType).toBe("band");
+  });
+
+  test("explicit ylim of zero wins over the computed data buffer", function() {
+    var layer = {
+      type: "groupedBar",
+      label: "temps",
+      mapping: { x_var: "day", y_var: "temp", group: "month" },
+      data: [
+        { day: "1", temp: 56, month: "5" },
+        { day: "2", temp: 97, month: "6" }
+      ],
+      scaleHints: {
+        xScaleType: "band",
+        yScaleType: "linear",
+        yExtentFields: ["y_var"],
+        domainMerge: "union"
+      }
+    };
+    var chart = makeChart();
+    chart.config.scales.ylim = { min: 0, max: null };
+    var semantics = resolveScaleSemantics(chart, [layer]);
+
+    processScales(chart, [layer], semantics);
+
+    expect(chart.derived.yScale.domain()[0]).toBe(0);
+  });
+
+  test("grouped bar y domain starts at zero by default", function() {
+    var layer = {
+      type: "groupedBar",
+      label: "temps",
+      mapping: { x_var: "day", y_var: "temp", group: "month" },
+      data: [
+        { day: "1", temp: 56, month: "5" },
+        { day: "2", temp: 97, month: "6" }
+      ],
+      scaleHints: {
+        xScaleType: "band",
+        yScaleType: "linear",
+        yExtentFields: ["y_var"],
+        yZeroBaseline: true,
+        domainMerge: "union"
+      }
+    };
+    var chart = makeChart();
+    var semantics = resolveScaleSemantics(chart, [layer]);
+
+    expect(semantics.yZeroBaseline).toBe(true);
+
+    processScales(chart, [layer], semantics);
+    var domain = chart.derived.yScale.domain();
+
+    expect(domain[0]).toBe(0);
+    expect(domain[1]).toBeGreaterThanOrEqual(97);
+  });
+
+  test("user-set ylim still wins over the zero baseline", function() {
+    var layer = {
+      type: "groupedBar",
+      label: "temps",
+      mapping: { x_var: "day", y_var: "temp", group: "month" },
+      data: [
+        { day: "1", temp: 56, month: "5" },
+        { day: "2", temp: 97, month: "6" }
+      ],
+      scaleHints: {
+        xScaleType: "band",
+        yScaleType: "linear",
+        yExtentFields: ["y_var"],
+        yZeroBaseline: true,
+        domainMerge: "union"
+      }
+    };
+    var chart = makeChart();
+    chart.config.scales.ylim = { min: 50, max: 100 };
+    var semantics = resolveScaleSemantics(chart, [layer]);
+
+    processScales(chart, [layer], semantics);
+
+    expect(chart.derived.yScale.domain()).toEqual([50, 100]);
+  });
+
+  test("bar-family renderers declare a zero baseline", function() {
+    expect(BarRenderer.scaleHints.yZeroBaseline).toBe(true);
+    expect(GroupedBarRenderer.scaleHints.yZeroBaseline).toBe(true);
+    expect(LollipopRenderer.scaleHints.yZeroBaseline).toBe(true);
+    expect(CandlestickRenderer.scaleHints.yZeroBaseline).toBeUndefined();
   });
 
   test("mismatched scale types across layers throw a validation error", function() {

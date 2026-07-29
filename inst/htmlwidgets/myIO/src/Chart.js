@@ -9,7 +9,7 @@ import { bindRollover } from "./interactions/rollover.js";
 import { deriveChartRender, applyDerivedScales } from "./derive/chart-render.js";
 import { validateLayers } from "./derive/validate.js";
 import { transitionGrouped, transitionStacked, getGroupedDataObject } from "./renderers/groupedBarHelpers.js";
-import { syncAxes } from "./layout/axes.js";
+import { syncAxes, fitLeftMargin, fitTopMargin } from "./layout/axes.js";
 import { syncLegend, syncOrdinalLegendData } from "./layout/legend.js";
 import { syncReferenceLines } from "./layout/reference-lines.js";
 import { getChartHeight, initializeScaffold, renderChartTitle, updateScaffoldLayout } from "./layout/scaffold.js";
@@ -97,6 +97,7 @@ export class myIOchart {
     this.options = this.config ? {
       margin: this.config.layout.margin,
       suppressLegend: this.config.layout.suppressLegend,
+      legendTitle: this.config.layout.legendTitle,
       suppressAxis: this.config.layout.suppressAxis,
       xlim: this.config.scales.xlim,
       ylim: this.config.scales.ylim,
@@ -111,6 +112,7 @@ export class myIOchart {
       yAxisFormat: this.config.axes.yAxisFormat,
       toolTipFormat: this.config.axes.toolTipFormat,
       xTickLabels: this.config.axes.xTickLabels,
+      yTickLabels: this.config.axes.yTickLabels,
       xAxisLabel: this.config.axes.xAxisLabel,
       yAxisLabel: this.config.axes.yAxisLabel,
       dragPoints: this.config.interactions.dragPoints,
@@ -271,7 +273,28 @@ export class myIOchart {
       addFAB(this);
       this.emit("afterScales", { state });
       syncAxes(this, state, options);
+      // Both fits have to run: || would short-circuit the second one away.
+      var refitLeft = fitLeftMargin(this, state);
+      var refitTop = fitTopMargin(this, state);
+      if (refitLeft || refitTop) {
+        updateScaffoldLayout(this);
+        applyDerivedScales(this, state);
+        this.syncLegacyAliases();
+        syncAxes(this, state, options);
+      }
       this.routeLayers(this.derived.currentLayers);
+      // A renderer can re-format the y axis after the fit above (groupedBar's
+      // stacked layout swaps in its own scale, groupedBarHelpers.js), so the
+      // labels can end up wider than fitLeftMargin measured. One bounded
+      // re-fit -- never a loop: the redraw re-runs updateYAxis with the same
+      // scale, so a third pass computes the same target and returns false.
+      if (fitLeftMargin(this, state)) {
+        updateScaffoldLayout(this);
+        applyDerivedScales(this, state);
+        this.syncLegacyAliases();
+        syncAxes(this, state, options);
+        this.routeLayers(this.derived.currentLayers);
+      }
       syncReferenceLines(this, state, options);
       syncLegend(this, state);
       bindRollover(this);
@@ -353,16 +376,35 @@ export class myIOchart {
     var colors = layers.map(function(layer) {
       return layer.color;
     });
-    var bandwidth = ((this.runtime.width - (this.config.layout.margin.right + this.config.layout.margin.left)) / (data[0].length + 1)) / colors.length;
+    var that = this;
+    var draw = function() {
+      var bandwidth = ((that.runtime.width - (that.config.layout.margin.right + that.config.layout.margin.left)) / (data[0].length + 1)) / colors.length;
+      if (that.runtime.layout === "grouped") {
+        transitionGrouped(that, data, colors, bandwidth);
+      } else {
+        transitionStacked(that, data, colors, bandwidth);
+      }
+    };
 
-    if (this.runtime.layout === "stacked") {
-      transitionGrouped(this, data, colors, bandwidth);
-      this.runtime.layout = "grouped";
-    } else {
-      transitionStacked(this, data, colors, bandwidth);
-      this.runtime.layout = "stacked";
-    }
+    this.runtime.layout = this.runtime.layout === "stacked" ? "grouped" : "stacked";
+    draw();
     this.syncLegacyAliases();
+
+    // The stacked scale can format wider tick labels than the last fit saw.
+    // updateYAxis stashed the strings it is rendering, so this measures the NEW
+    // labels even though d3's transition has not written them to the DOM yet.
+    var state = deriveChartRender(this);
+    if (fitLeftMargin(this, state)) {
+      updateScaffoldLayout(this);
+      applyDerivedScales(this, state);
+      this.syncLegacyAliases();
+      // draw() routes to transitionStacked/transitionGrouped, which only touch
+      // the y axis itself -- they never re-place the rotated axis title. Without
+      // syncAxes the plot group moves to the new margin while the title stays at
+      // the old one, which just slides the overlap right instead of clearing it.
+      syncAxes(this, state, { isInitialRender: true });
+      draw();
+    }
   }
 
   setClipPath(type) {

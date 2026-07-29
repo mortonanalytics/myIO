@@ -116,6 +116,7 @@ Customize plots by chaining additional functions:
 - `flipAxis()` — Swap x and y axes
 - `suppressAxis()` — Hide axes
 - `suppressLegend()` — Hide the legend
+- `setLegendTitle()` — Title the legend with the grouping variable
 - `dragPoints()` — Enable draggable points
 - `setReferenceLines()` — Add reference lines
 

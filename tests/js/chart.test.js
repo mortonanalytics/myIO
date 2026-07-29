@@ -2,6 +2,7 @@ import * as d3 from "d3";
 import { beforeEach, describe, expect, test } from "vitest";
 import { myIOchart } from "../../inst/htmlwidgets/myIO/src/Chart.js";
 import { registerBuiltInRenderers } from "../../inst/htmlwidgets/myIO/src/registry.js";
+import "./support/jsdom-svg-transform.js";
 
 globalThis.d3 = d3;
 globalThis.HTMLWidgets = { shinyMode: false };
@@ -132,5 +133,59 @@ describe("Chart", function() {
 
     chart.clearEmptyState();
     expect(chart.element.querySelector(".myIO-fab").style.display).not.toBe("none");
+  });
+
+  test("chart.element and chart.dom.element stay the same node across the render lifecycle", function() {
+    const chart = new myIOchart({
+      element: document.getElementById("chart"),
+      width: 640,
+      height: 400,
+      config: {
+        specVersion: 1,
+        layers: [
+          {
+            id: "layer_001",
+            type: "point",
+            label: "points",
+            data: [{ wt: 1, mpg: 2 }, { wt: 2, mpg: 4 }],
+            mapping: { x_var: "wt", y_var: "mpg" },
+            options: {},
+            transform: "identity",
+            transformMeta: {},
+            encoding: {},
+            sourceKey: "_source_key",
+            derivedFrom: null,
+            order: 1,
+            visibility: true,
+            color: "#E69F00"
+          }
+        ],
+        layout: { margin: { top: 30, bottom: 60, left: 50, right: 5 }, suppressLegend: false, suppressAxis: { xAxis: false, yAxis: false } },
+        scales: { xlim: { min: null, max: null }, ylim: { min: null, max: null }, categoricalScale: { xAxis: false, yAxis: false }, flipAxis: false, colorScheme: { colors: ["#E69F00"], domain: ["none"], enabled: false } },
+        axes: { xAxisFormat: "s", yAxisFormat: "s", xAxisLabel: null, yAxisLabel: null, toolTipFormat: "s" },
+        interactions: { dragPoints: false, toggleY: { variable: null, format: null }, toolTipOptions: { suppressY: false } },
+        theme: {},
+        transitions: { speed: 0 },
+        referenceLines: { x: null, y: null }
+      }
+    });
+
+    // Renderers read chart.element.id when they draw and chart.dom.element.id
+    // when they remove. That asymmetry is only harmless while the two are the
+    // same node; if a future refactor reassigns dom.element without re-running
+    // syncLegacyAliases, every remove() would silently stop matching.
+    expect(chart.element).toBe(chart.dom.element);
+
+    chart.syncLegacyAliases();
+    expect(chart.element).toBe(chart.dom.element);
+
+    chart.captureLegacyAliases();
+    expect(chart.element).toBe(chart.dom.element);
+
+    chart.renderCurrentLayers();
+    expect(chart.element).toBe(chart.dom.element);
+
+    chart.updateData([{ label: "points", data: [{ wt: 3, mpg: 6 }, { wt: 4, mpg: 8 }] }]);
+    expect(chart.element).toBe(chart.dom.element);
   });
 });

@@ -18,12 +18,25 @@ composite_regression <- function(data, mapping, label, color, options) {
     group_vals <- list(NULL)
   }
 
+  # Raw data and fitted model take distinct hues from the package palette so the
+  # scatter, the fit line, and the uncertainty band are visually separable.
+  # A second element in `color` is the explicit model/band color.
+  data_color <- if (is.null(color)) OKABE_ITO_PALETTE[[1L]] else as.character(color)[[1L]]
+  model_color <- if (!is.null(color) && length(color) >= 2L) {
+    as.character(color)[[2L]]
+  } else if (identical(tolower(data_color), tolower(OKABE_ITO_PALETTE[[5L]]))) {
+    OKABE_ITO_PALETTE[[6L]]
+  } else {
+    OKABE_ITO_PALETTE[[5L]]
+  }
+  band_opacity <- if (is.null(options$areaOpacity)) 0.18 else options$areaOpacity
+
   sublayers <- list()
 
   for (gv in group_vals) {
     if (!is.null(gv)) {
       group_data <- data[data[[mapping$group]] == gv, , drop = FALSE]
-      group_label <- paste0(label, " \u2014 ", as.character(gv))
+      group_label <- as.character(gv)
     } else {
       group_data <- data
       group_label <- label
@@ -34,7 +47,7 @@ composite_regression <- function(data, mapping, label, color, options) {
       type = "point", role = "scatter",
       label = paste0(group_label, " (data)"),
       data = group_data, mapping = mapping, transform = "identity",
-      color = color, options = list()
+      color = data_color, options = list()
     )
 
     # 2. Trend line
@@ -42,7 +55,7 @@ composite_regression <- function(data, mapping, label, color, options) {
       type = "line", role = "trend",
       label = paste0(group_label, " (trend)"),
       data = group_data, mapping = mapping, transform = method,
-      color = color, options = options
+      color = model_color, options = options
     )
 
     # 3. CI band
@@ -54,9 +67,10 @@ composite_regression <- function(data, mapping, label, color, options) {
         mapping = list(x_var = mapping$x_var, y_var = mapping$y_var,
                        low_y = "low_y", high_y = "high_y"),
         transform = "ci",
-        color = color,
+        color = model_color,
         options = list(method = method, level = level, interval = interval,
-                       span = options$span, degree = options$degree)
+                       span = options$span, degree = options$degree,
+                       areaOpacity = band_opacity)
       )
     }
 
