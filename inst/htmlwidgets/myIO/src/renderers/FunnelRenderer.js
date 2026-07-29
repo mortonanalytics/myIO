@@ -1,3 +1,6 @@
+import { chartBackgroundColor, readableTextColor } from "../theme/contrast.js";
+import { textWidth } from "../utils/text-metrics.js";
+
 export class FunnelRenderer {
   static type = "funnel";
   static traits = {
@@ -21,6 +24,14 @@ export class FunnelRenderer {
     var stageVar = layer.mapping.stage;
     var valueVar = layer.mapping.value;
     var stageGap = (layer.options && layer.options.stageGap) || 6;
+    var showValues = !(layer.options && layer.options.showValues === false);
+    var valueFormat = d3.format(
+      (layer.options && layer.options.valueFormat) ||
+      (chart.options && chart.options.yAxisFormat) || ","
+    );
+    var percentFormat = d3.format((layer.options && layer.options.percentFormat) || ".1%");
+    var baseValue = layer.data.length > 0 ? (+layer.data[0][valueVar] || 0) : 0;
+    var outsideInk = readableTextColor(chartBackgroundColor(chart));
     var maxValue = d3.max(layer.data, function(d) {
       return +d[valueVar];
     }) || 0;
@@ -56,7 +67,10 @@ export class FunnelRenderer {
           [bottomLeft, y1]
         ],
         labelX: centerX,
-        labelY: (y0 + y1) / 2
+        labelY: (y0 + y1) / 2,
+        conversion: baseValue > 0 ? (+d[valueVar] || 0) / baseValue : 0,
+        innerWidth: Math.min(topWidth, bottomWidth),
+        outsideX: centerX + topWidth / 2 + 6
       };
     });
 
@@ -80,6 +94,32 @@ export class FunnelRenderer {
       var midX = (s.points[0][0] + s.points[1][0]) / 2;
       var midY = (s.points[0][1] + s.points[3][1]) / 2;
       return [[midX, midY], [midX, midY], [midX, midY], [midX, midY]];
+    }
+
+    var twoLine = showValues && (stageHeight - stageGap) >= 34;
+
+    function labelBaseline(s) {
+      return twoLine ? s.labelY - 9 : s.labelY;
+    }
+
+    function valueText(s) {
+      return showValues ? valueFormat(s.value) + " (" + percentFormat(s.conversion) + ")" : "";
+    }
+
+    // Graceful degradation: inside the trapezoid when it fits, otherwise just
+    // outside its right edge, otherwise hidden (tooltip still carries the value).
+    function placeValueLabel(selection) {
+      selection.each(function(s) {
+        var length = textWidth(this, valueText(s));
+        var inside = length <= Math.max(0, s.innerWidth - 8);
+        var outsideFits = s.outsideX + length <= width;
+        d3.select(this)
+          .attr("x", inside ? s.labelX : s.outsideX)
+          .attr("y", inside ? s.labelY + 9 : s.labelY)
+          .attr("text-anchor", inside ? "middle" : "start")
+          .attr("fill", inside ? readableTextColor(s.color) : outsideInk)
+          .attr("fill-opacity", (twoLine && (inside || outsideFits)) ? 1 : 0);
+      });
     }
 
     root = chart.dom.chartArea.selectAll(".tag-funnel-" + layer.id)
@@ -107,10 +147,16 @@ export class FunnelRenderer {
     stageEnter.append("text")
       .attr("class", "funnel-label")
       .attr("x", function(d) { return d.labelX; })
-      .attr("y", function(d) { return d.labelY; })
+      .attr("y", function(d) { return labelBaseline(d); })
       .attr("dy", "0.35em")
       .attr("text-anchor", "middle")
       .text(function(d) { return d.stage; });
+
+    stageEnter.append("text")
+      .attr("class", "funnel-value")
+      .attr("dy", "0.35em")
+      .attr("font-size", "12px")
+      .attr("pointer-events", "none");
 
     var stagesMerged = stageEnter.merge(stageGroups);
 
@@ -125,9 +171,14 @@ export class FunnelRenderer {
 
     stagesMerged.select(".funnel-label")
       .text(function(d) { return d.stage; })
+      .attr("fill", function(d) { return readableTextColor(d.color); })
       .transition().duration(transitionSpeed)
       .attr("x", function(d) { return d.labelX; })
-      .attr("y", function(d) { return d.labelY; });
+      .attr("y", function(d) { return labelBaseline(d); });
+
+    stagesMerged.select(".funnel-value")
+      .text(function(d) { return valueText(d); })
+      .call(placeValueLabel);
   }
 
   getHoverSelector(chart, layer) {

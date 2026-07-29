@@ -65,6 +65,15 @@
   density scale even though the tick positions were group baselines, so the
   numbers were meaningless. An explicit `setAxisFormat(yLabel = )` still wins.
 
+* Funnel and Sankey charts now show their numbers in the plot. Funnel stages
+  print the stage value and its conversion rate against the first stage; Sankey
+  nodes print their total and each flow prints its magnitude. Previously the
+  only text was the stage or node name and the values were reachable only by
+  hovering. Labels honour `setAxisFormat(yAxis = )`, are placed so they stay
+  readable against the mark they sit on, and are suppressed rather than
+  overlapped where the shape is too small. Pass `showValues = FALSE` to
+  `addIoLayer()` to restore the previous names-only labelling.
+
 # myIO 1.3.0
 
 ## New features
