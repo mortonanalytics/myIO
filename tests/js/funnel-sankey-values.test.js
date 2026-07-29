@@ -154,6 +154,67 @@ describe("Funnel value labels", function() {
     expect(first.getAttribute("fill-opacity")).toBe("1");
   });
 
+  function stagesLayer(values) {
+    return {
+      id: "funnel_1",
+      label: "conversion",
+      mapping: { stage: "stage", value: "value" },
+      options: null,
+      data: values.map(function(value, i) {
+        return { stage: "S" + i, value: value };
+      })
+    };
+  }
+
+  function labelNodes() {
+    return Array.from(document.querySelectorAll(".tag-funnel-funnel_1 .funnel-label"));
+  }
+
+  // Six stages over a 220px plot give a 30.67px band -- too short for two
+  // lines, comfortably enough for one.
+  test("a short stage band moves the value onto the name line instead of hiding it", function() {
+    var chart = makeFunnelChart();
+    getRenderer("funnel").render(chart, stagesLayer([100, 70, 50, 35, 20, 10]));
+
+    var values = valueNodes();
+    var labels = labelNodes();
+    expect(values.length).toBe(6);
+
+    var last = values[5];
+    expect(last.getAttribute("fill-opacity")).toBe("1");
+    expect(last.getAttribute("text-anchor")).toBe("start");
+    // One line: the value shares the stage name's baseline.
+    expect(last.getAttribute("y")).toBe(labels[5].getAttribute("y"));
+  });
+
+  test("a stage band too short even for one line shows the name alone", function() {
+    var chart = makeFunnelChart();
+    var values = [];
+    for (var i = 0; i < 13; i++) {
+      values.push(100 - i * 5);
+    }
+    getRenderer("funnel").render(chart, stagesLayer(values));
+
+    valueNodes().forEach(function(node) {
+      expect(node.getAttribute("fill-opacity")).toBe("0");
+    });
+    labelNodes().forEach(function(node, i) {
+      expect(node.textContent).toBe("S" + i);
+    });
+  });
+
+  test("a tall stage band still uses the two-line placement", function() {
+    var chart = makeFunnelChart();
+    getRenderer("funnel").render(chart, funnelLayer());
+
+    var values = valueNodes();
+    var labels = labelNodes();
+    // Name lifted 9px above the band centre, value dropped 9px below it.
+    expect(+values[0].getAttribute("y") - +labels[0].getAttribute("y")).toBe(18);
+    expect(values[0].getAttribute("text-anchor")).toBe("middle");
+    expect(values[0].getAttribute("fill-opacity")).toBe("1");
+  });
+
   test("stage labels use an ink readable against their own fill", function() {
     var chart = makeFunnelChart();
     getRenderer("funnel").render(chart, funnelLayer());

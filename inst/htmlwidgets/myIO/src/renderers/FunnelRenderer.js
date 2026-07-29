@@ -110,10 +110,22 @@ export class FunnelRenderer {
       return [[midX, midY], [midX, midY], [midX, midY], [midX, midY]];
     }
 
-    var twoLine = showValues && (stageHeight - stageGap) >= 34;
+    // Value placement degrades with the height of a stage band:
+    //   >= 34px  two lines -- name above the band's centre, value below it
+    //   >= 18px  one line  -- name centred, value just outside the right edge
+    //   <  18px  name only -- the value stays on the tooltip
+    // 18px is the 12px value type's own extent plus enough clearance that two
+    // adjacent stages' outside values cannot touch (band 18 => stage pitch 24
+    // at the default 6px gap, against ~16.5px of text).
+    var TWO_LINE_MIN_BAND = 34;
+    var ONE_LINE_MIN_BAND = 18;
+    var stageBand = stageHeight - stageGap;
+    var valueLayout = !showValues
+      ? "none"
+      : (stageBand >= TWO_LINE_MIN_BAND ? "two" : (stageBand >= ONE_LINE_MIN_BAND ? "one" : "none"));
 
     function labelBaseline(s) {
-      return twoLine ? s.labelY - 9 : s.labelY;
+      return valueLayout === "two" ? s.labelY - 9 : s.labelY;
     }
 
     function valueText(s) {
@@ -125,15 +137,18 @@ export class FunnelRenderer {
     function placeValueLabel(selection) {
       selection.each(function(s) {
         var length = textWidth(this, valueText(s));
-        var inside = length <= Math.max(0, s.innerWidth - 8);
+        // One-line mode leaves the stage name on the centre line, so the value
+        // can only go outside the trapezoid.
+        var inside = valueLayout === "two" && length <= Math.max(0, s.innerWidth - 8);
         var clearsFab = (s.labelY - VALUE_HALF_HEIGHT) >= fabBandBottom;
         var outsideFits = s.outsideX + length <= (clearsFab ? width : fabLeft);
+        var visible = valueLayout !== "none" && (inside || outsideFits);
         d3.select(this)
           .attr("x", inside ? s.labelX : s.outsideX)
           .attr("y", inside ? s.labelY + 9 : s.labelY)
           .attr("text-anchor", inside ? "middle" : "start")
           .attr("fill", inside ? readableTextColor(s.color) : outsideInk)
-          .attr("fill-opacity", (twoLine && (inside || outsideFits)) ? 1 : 0);
+          .attr("fill-opacity", visible ? 1 : 0);
       });
     }
 

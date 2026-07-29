@@ -223,6 +223,15 @@
   reported itself expanded, and two charts could hold competing keyboard focus
   traps at once.
 
+* Short funnels no longer drop their values with no trace. Value placement now
+  degrades in three steps instead of two: a stage band at least 34px tall keeps
+  the value on a second line under the stage name, a band between 18px and 34px
+  moves it onto the name's own line just outside the trapezoid, and only below
+  18px is the name drawn alone with the value left to the tooltip. Previously
+  anything under 34px hid every value outright, including values that would have
+  fitted perfectly well beside the stage. `options = list(showValues = FALSE)`
+  behaves exactly as before.
+
 * A funnel value label placed outside its trapezoid no longer runs under the
   legend/actions button. The funnel's stages were already kept clear of the
   button, but a label that no longer fits inside a stage is placed against the
