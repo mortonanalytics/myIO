@@ -111,6 +111,7 @@ export class myIOchart {
       yAxisFormat: this.config.axes.yAxisFormat,
       toolTipFormat: this.config.axes.toolTipFormat,
       xTickLabels: this.config.axes.xTickLabels,
+      yTickLabels: this.config.axes.yTickLabels,
       xAxisLabel: this.config.axes.xAxisLabel,
       yAxisLabel: this.config.axes.yAxisLabel,
       dragPoints: this.config.interactions.dragPoints,

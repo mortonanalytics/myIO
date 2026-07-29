@@ -100,7 +100,20 @@ export function updateYAxis(chart, yScale, yAxisSelection, options) {
   }
 
   var yAxisGenerator = d3.axisLeft(yScale).tickSize(-(chart.width - (chart.margin.right + chart.margin.left)));
-  if (typeof yScale.ticks === "function") {
+  var yTickLabels = normalizeTickLabels(chart.options.yTickLabels);
+  if (yTickLabels && typeof yScale.invert === "function") {
+    var yDomain = yScale.domain();
+    var yLow = Math.min(yDomain[0], yDomain[yDomain.length - 1]);
+    var yHigh = Math.max(yDomain[0], yDomain[yDomain.length - 1]);
+    yAxisGenerator
+      .tickValues(Object.keys(yTickLabels)
+        .map(function(value) { return +value; })
+        .filter(function(value) { return value >= yLow && value <= yHigh; }))
+      .tickFormat(function(value) {
+        var label = yTickLabels[String(value)];
+        return label == null ? value : label;
+      });
+  } else if (typeof yScale.ticks === "function") {
     yAxisGenerator.ticks(chartHeight < 450 ? 5 : 10);
     if (currentFormatY) {
       yAxisGenerator.tickFormat(currentFormatY);

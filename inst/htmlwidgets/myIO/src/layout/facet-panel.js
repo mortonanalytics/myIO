@@ -106,6 +106,7 @@ export class FacetPanel {
       yAxisFormat: panelConfig.axes.yAxisFormat,
       toolTipFormat: panelConfig.axes.toolTipFormat,
       xTickLabels: panelConfig.axes.xTickLabels,
+      yTickLabels: panelConfig.axes.yTickLabels,
       xAxisLabel: panelConfig.axes.xAxisLabel,
       yAxisLabel: panelConfig.axes.yAxisLabel,
       dragPoints: false,

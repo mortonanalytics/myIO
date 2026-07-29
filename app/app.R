@@ -665,7 +665,7 @@ server <- function(input, output) {
         label = "Ridgeline",
         data = df, mapping = list(x_var = "hp", y_var = "mpg", group = "cyl"),
         options = list(overlap = 0.5, bandwidth = "nrd0")) %>%
-      setAxisFormat(xLabel = "Horsepower", yLabel = "Density")
+      setAxisFormat(xLabel = "Horsepower", yLabel = "Cylinders")
   })
 
   output$qqPlot <- renderMyIO({

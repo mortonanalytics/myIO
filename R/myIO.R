@@ -97,7 +97,8 @@ myIO <- function(data = NULL, width = "100%", height = "400px", elementId = NULL
         xAxisLabel = NULL,
         yAxisLabel = NULL,
         toolTipFormat = "",
-        xTickLabels = NULL
+        xTickLabels = NULL,
+        yTickLabels = NULL
       ),
       interactions = list(
         dragPoints = FALSE,

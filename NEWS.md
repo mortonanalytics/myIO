@@ -59,6 +59,12 @@
   no indication of where the median sat within it. It now draws the same white
   rule that boxplot charts use, matched to the box width.
 
+* Ridgeline charts now label the y axis with the group each ridge belongs to
+  instead of printing the raw stacking offsets (0.8, 1.0, 1.2, ...), and default
+  the y axis title to the grouping variable. The axis previously read as a
+  density scale even though the tick positions were group baselines, so the
+  numbers were meaningless. An explicit `setAxisFormat(yLabel = )` still wins.
+
 # myIO 1.3.0
 
 ## New features

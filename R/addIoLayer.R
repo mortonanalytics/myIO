@@ -93,6 +93,13 @@ addIoLayer <- function(myIO,
     if (!is.null(tick_labels)) {
       myIO$x$config$axes$xTickLabels <- tick_labels
     }
+    y_tick_labels <- derive_positional_y_tick_labels(type, sub_layers)
+    if (!is.null(y_tick_labels)) {
+      myIO$x$config$axes$yTickLabels <- y_tick_labels
+      if (is.null(myIO$x$config$axes$yAxisLabel) && !is.null(mapping$group)) {
+        myIO$x$config$axes$yAxisLabel <- mapping$group
+      }
+    }
     for (i in seq_along(sub_layers)) {
       sl <- sub_layers[[i]]
       sl_mapping <- inject_transform_mapping(sl$transform, sl$mapping)
@@ -211,6 +218,48 @@ derive_positional_x_tick_labels <- function(type, sub_layers) {
       next
     }
     positions <- c(positions, as.character(numeric_x[keep]))
+    labels <- c(labels, as.character(group_values[keep]))
+  }
+
+  if (length(positions) == 0L) {
+    return(NULL)
+  }
+
+  first_seen <- !duplicated(positions)
+  positions <- positions[first_seen]
+  labels <- labels[first_seen]
+  numeric_positions <- suppressWarnings(as.numeric(positions))
+  if (all(!is.na(numeric_positions))) {
+    order_idx <- order(numeric_positions)
+    positions <- positions[order_idx]
+    labels <- labels[order_idx]
+  }
+  stats::setNames(as.list(labels), positions)
+}
+
+derive_positional_y_tick_labels <- function(type, sub_layers) {
+  if (!identical(type, "ridgeline")) {
+    return(NULL)
+  }
+
+  positions <- character()
+  labels <- character()
+  for (sl in sub_layers) {
+    if (is.null(sl$data) || is.null(sl$mapping$low_y) || is.null(sl$mapping$group)) {
+      next
+    }
+    y_col <- sl$mapping$low_y
+    group_col <- sl$mapping$group
+    if (!(y_col %in% names(sl$data)) || !(group_col %in% names(sl$data))) {
+      next
+    }
+    y_values <- suppressWarnings(as.numeric(sl$data[[y_col]]))
+    group_values <- sl$data[[group_col]]
+    keep <- !is.na(y_values) & abs(y_values - round(y_values)) < 1e-9 & !is.na(group_values)
+    if (!any(keep)) {
+      next
+    }
+    positions <- c(positions, as.character(y_values[keep]))
     labels <- c(labels, as.character(group_values[keep]))
   }
 

@@ -100,6 +100,47 @@ describe("chart context layout", function() {
     expect(xLabels).toEqual(["setosa", "versicolor"]);
   });
 
+  test("linear y axis can render positional category labels", function() {
+    var chart = baseChart();
+    chart.options.categoricalScale = { xAxis: false, yAxis: false };
+    chart.options.yAxisFormat = "";
+    chart.options.yTickLabels = { "1": "6", "2": "4", "3": "8" };
+    chart.xScale = d3.scaleLinear().domain([0, 400]).range([0, 544]);
+    chart.yScale = d3.scaleLinear().domain([0.8, 3.6]).range([240, 0]);
+    initializeScaffold(chart);
+    renderAxes(chart, { isInitialRender: true });
+
+    var yLabels = Array.from(chart.element.querySelectorAll(".y-axis .tick text"))
+      .map(function(node) { return node.textContent; });
+    expect(yLabels).toEqual(["6", "4", "8"]);
+  });
+
+  test("positional y tick labels outside the domain are dropped", function() {
+    var chart = baseChart();
+    chart.options.categoricalScale = { xAxis: false, yAxis: false };
+    chart.options.yAxisFormat = "";
+    chart.options.yTickLabels = { "1": "6", "2": "4", "3": "8" };
+    chart.xScale = d3.scaleLinear().domain([0, 400]).range([0, 544]);
+    chart.yScale = d3.scaleLinear().domain([0.8, 2.4]).range([240, 0]);
+    initializeScaffold(chart);
+    renderAxes(chart, { isInitialRender: true });
+
+    var yLabels = Array.from(chart.element.querySelectorAll(".y-axis .tick text"))
+      .map(function(node) { return node.textContent; });
+    expect(yLabels).toEqual(["6", "4"]);
+  });
+
+  test("band-scale y axis ignores positional tick labels", function() {
+    var chart = baseChart();
+    chart.options.yTickLabels = { "1": "A" };
+    initializeScaffold(chart);
+
+    expect(function() {
+      renderAxes(chart, { isInitialRender: true });
+    }).not.toThrow();
+    expect(chart.element.querySelectorAll(".y-axis .tick").length).toBeGreaterThan(0);
+  });
+
   test("inline legend renders below chart title and away from toolbar", function() {
     var chart = baseChart();
     initializeScaffold(chart);
