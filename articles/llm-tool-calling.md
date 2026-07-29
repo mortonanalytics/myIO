@@ -130,7 +130,7 @@ matter:
   length(myio_list_chart_types())   # chart types
   #> [1] 36
   length(myio_list_functions())     # exported function signatures
-  #> [1] 44
+  #> [1] 47
   ```
 
 - **Stable, machine-readable errors.** Every result is
@@ -278,6 +278,7 @@ as_json(spec)
 To give the six tools to an MCP-aware assistant (Claude Desktop, Claude
 Code, Cursor), run the bundled Node server. It is deliberately separate
 from the R package so installing myIO never pulls in Node dependencies.
+The MCP server requires Node.js 20 or newer.
 
 ``` sh
 cd mcp

@@ -17,6 +17,8 @@
   Integration](https://mortonanalytics.github.io/myIO/articles/shiny-integration.md):
 - [Interactive I/O in
   Shiny](https://mortonanalytics.github.io/myIO/articles/shiny-interactions.md):
+- [Sequential Storytelling with
+  Keyframes](https://mortonanalytics.github.io/myIO/articles/sequential-storytelling.md):
 
 ### Big-data & Linking
 
@@ -26,6 +28,8 @@
   Crosstalk](https://mortonanalytics.github.io/myIO/articles/crosstalk-linking.md):
 - [Sparklines in
   Tables](https://mortonanalytics.github.io/myIO/articles/sparklines.md):
+- [WebR 0.6.0 and Quarto
+  Live](https://mortonanalytics.github.io/myIO/articles/webr-quarto-live.md):
 
 ### Migration
 

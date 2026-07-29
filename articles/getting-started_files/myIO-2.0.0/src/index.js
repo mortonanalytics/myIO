@@ -16,6 +16,7 @@ import {
   WebGLLine,
   WebGLArea
 } from "./renderers/webgl/index.js";
+import { selectKeyframe, stepKeyframe } from "./interactions/keyframes.js";
 
 // Expose on the global namespace that the htmlwidget entry (myIO.js) consults.
 if (typeof window !== "undefined") {
@@ -60,6 +61,13 @@ if (typeof window !== "undefined") {
       if (typeof chart.updateData === "function") {
         chart.updateData(msg.layers || []);
       }
+    });
+    window.Shiny.addCustomMessageHandler("myio:keyframe-control", function(msg) {
+      if (!msg || !msg.id) return;
+      var chart = window.myIO._instances[msg.id];
+      if (!chart || !chart.config) return;
+      if (msg.action === "select") selectKeyframe(chart, msg.frame);
+      if (msg.action === "step") stepKeyframe(chart, msg.direction);
     });
     window.myIO._proxyHandlerInstalled = true;
   };

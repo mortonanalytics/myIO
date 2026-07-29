@@ -9,14 +9,16 @@ articles:
   large-data-linking: large-data-linking.html
   llm-tool-calling: llm-tool-calling.html
   plotly-migration: plotly-migration.html
+  articles/sequential-storytelling: sequential-storytelling.html
   shiny-integration: shiny-integration.html
   articles/shiny-interactions: shiny-interactions.html
   sparklines: sparklines.html
   articles/theme-gallery: theme-gallery.html
   transforms-and-theming: transforms-and-theming.html
   articles/troubleshooting: troubleshooting.html
+  articles/webr-quarto-live: webr-quarto-live.html
   why-myio: why-myio.html
-last_built: 2026-07-29T01:28Z
+last_built: 2026-07-29T01:38Z
 urls:
   reference: https://mortonanalytics.github.io/myIO/reference
   article: https://mortonanalytics.github.io/myIO/articles

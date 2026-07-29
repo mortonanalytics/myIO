@@ -656,6 +656,51 @@
   box-shadow: var(--chart-focus-ring);
 }
 
+.myIO-keyframe-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--chart-spacing-sm);
+  padding: var(--chart-spacing-sm) var(--chart-spacing-md);
+  border-top: 1px solid var(--chart-sheet-border);
+  background: var(--chart-status-bar-bg);
+  color: var(--chart-status-bar-color);
+  font-family: var(--chart-font);
+  font-size: 12px;
+}
+
+.myIO-keyframe-button {
+  min-height: 30px;
+  padding: 4px 10px;
+  border: 1px solid var(--chart-sheet-border);
+  border-radius: var(--chart-radius-sm);
+  background: var(--chart-sheet-bg);
+  color: var(--chart-status-bar-color);
+  font: inherit;
+  cursor: pointer;
+}
+
+.myIO-keyframe-button:hover:not(:disabled) {
+  background: var(--chart-button-hover-bg);
+}
+
+.myIO-keyframe-button:focus-visible {
+  outline: none;
+  box-shadow: var(--chart-focus-ring);
+}
+
+.myIO-keyframe-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.myIO-keyframe-label {
+  min-width: 8ch;
+  font-weight: 600;
+  text-align: center;
+}
+
 /* Annotation marks */
 .myIO-annotation-label {
   font-family: var(--chart-font);
@@ -892,6 +937,7 @@
   .myIO-sheet-backdrop { display: none !important; }
   .toolTip { display: none !important; }
   .myIO-status-bar { display: none !important; }
+  .myIO-keyframe-controls { display: none !important; }
   .myIO-popover { display: none !important; }
   .myIO-slider-wrapper { display: none !important; }
 }

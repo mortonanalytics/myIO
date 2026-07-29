@@ -57,7 +57,7 @@
 <img src="logo.png" class="logo" alt=""><h1 id="myio">myIO<a class="anchor" aria-label="anchor" href="#myio"></a>
 </h1>
 </div>
-<p>An R package for creating interactive <code>d3.js</code> visualizations using <code>htmlwidgets</code>. Supports 17 chart types including scatter plots, line charts, bar charts, treemaps, and more — all composable through a piped API.</p>
+<p>An R package for creating interactive <code>d3.js</code> visualizations using <code>htmlwidgets</code>. Supports 36 chart types including scatter plots, line charts, uncertainty views, statistical composites, and more — all composable through a piped API.</p>
 <p><a href="https://mortonanalytics.github.io/myIO/">Live Demo</a></p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -227,7 +227,40 @@
 <code><a href="reference/setLinked.html">setLinked()</a></code> — Crosstalk linked brushing across multiple charts</li>
 <li>
 <code><a href="reference/setSlider.html">setSlider()</a></code> — Parameter sliders that trigger Shiny recomputation</li>
+<li>
+<code><a href="reference/addKeyframe.html">addKeyframe()</a></code> — Register complete data snapshots for sequential storytelling</li>
+<li>
+<code><a href="reference/setKeyframe.html">setKeyframe()</a></code> / <code><a href="reference/setKeyframe.html">stepKeyframe()</a></code> — Select or step keyframes through a Shiny proxy</li>
 </ul>
+</div>
+<div class="section level2">
+<h2 id="runtime-compatibility">Runtime Compatibility<a class="anchor" aria-label="anchor" href="#runtime-compatibility"></a>
+</h2>
+<table class="table">
+<colgroup>
+<col width="36%">
+<col width="64%">
+</colgroup>
+<thead><tr>
+<th>Runtime</th>
+<th>Supported path</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>RStudio, R Markdown, and Quarto</td>
+<td>Standard <code>htmlwidgets</code> rendering</td>
+</tr>
+<tr>
+<td>Shiny</td>
+<td>Widget rendering, reactive inputs, proxy data updates, and keyframe control</td>
+</tr>
+<tr>
+<td>WebR 0.6.0</td>
+<td>Precompiled Wasm package, R payload creation, and production-bundle rendering in Chromium</td>
+</tr>
+</tbody>
+</table>
+<p>The WebR claim is intentionally bounded to the pinned end-to-end CI path; it does not imply that DuckDB-WASM or every browser host has been validated.</p>
 </div>
 <div class="section level2">
 <h2 id="customization">Customization<a class="anchor" aria-label="anchor" href="#customization"></a>
@@ -249,6 +282,8 @@
 <li>
 <code><a href="reference/setTransitionSpeed.html">setTransitionSpeed()</a></code> — Control animation duration</li>
 <li>
+<code><a href="reference/setTransition.html">setTransition()</a></code> — Configure duration, easing, and stagger</li>
+<li>
 <code><a href="reference/setToolTipOptions.html">setToolTipOptions()</a></code> — Configure tooltip behavior</li>
 <li>
 <code><a href="reference/setToggle.html">setToggle()</a></code> — Enable layer toggle controls</li>
@@ -263,7 +298,7 @@
 <li>
 <code><a href="reference/setReferenceLines.html">setReferenceLines()</a></code> — Add reference lines</li>
 </ul>
-<p>See the <a href="https://mortonanalytics.github.io/myIO/articles/getting-started.html">Getting Started</a>, <a href="https://mortonanalytics.github.io/myIO/articles/chart-types.html">Chart Types</a>, <a href="https://mortonanalytics.github.io/myIO/articles/shiny-integration.html">Shiny Integration</a>, and <a href="https://mortonanalytics.github.io/myIO/articles/transforms-and-theming.html">Transforms &amp; Theming</a> vignettes for full examples.</p>
+<p>See the <a href="https://mortonanalytics.github.io/myIO/articles/getting-started.html">Getting Started</a>, <a href="https://mortonanalytics.github.io/myIO/articles/chart-types.html">Chart Types</a>, <a href="https://mortonanalytics.github.io/myIO/articles/sequential-storytelling.html">Sequential Storytelling</a>, <a href="https://mortonanalytics.github.io/myIO/articles/shiny-integration.html">Shiny Integration</a>, and <a href="https://mortonanalytics.github.io/myIO/articles/transforms-and-theming.html">Transforms &amp; Theming</a> articles for full examples.</p>
 </div>
 </div>
 

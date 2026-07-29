@@ -16,7 +16,7 @@ A character vector of exported myIO function names.
 
 ``` r
 head(myio_list_functions())
-#> [1] "addIoLayer"              "clear_duckdb_wasm_cache"
-#> [3] "defineCategoricalAxis"   "dragPoints"             
-#> [5] "duckdb_wasm_status"      "flipAxis"               
+#> [1] "addIoLayer"              "addKeyframe"            
+#> [3] "clear_duckdb_wasm_cache" "defineCategoricalAxis"  
+#> [5] "dragPoints"              "duckdb_wasm_status"     
 ```

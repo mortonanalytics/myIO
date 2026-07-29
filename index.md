@@ -1,9 +1,9 @@
 # myIO
 
 An R package for creating interactive `d3.js` visualizations using
-`htmlwidgets`. Supports 17 chart types including scatter plots, line
-charts, bar charts, treemaps, and more — all composable through a piped
-API.
+`htmlwidgets`. Supports 36 chart types including scatter plots, line
+charts, uncertainty views, statistical composites, and more — all
+composable through a piped API.
 
 [Live Demo](https://mortonanalytics.github.io/myIO/)
 
@@ -89,6 +89,24 @@ data:
   — Crosstalk linked brushing across multiple charts
 - [`setSlider()`](https://mortonanalytics.github.io/myIO/reference/setSlider.md)
   — Parameter sliders that trigger Shiny recomputation
+- [`addKeyframe()`](https://mortonanalytics.github.io/myIO/reference/addKeyframe.md)
+  — Register complete data snapshots for sequential storytelling
+- [`setKeyframe()`](https://mortonanalytics.github.io/myIO/reference/setKeyframe.md)
+  /
+  [`stepKeyframe()`](https://mortonanalytics.github.io/myIO/reference/setKeyframe.md)
+  — Select or step keyframes through a Shiny proxy
+
+## Runtime Compatibility
+
+| Runtime | Supported path |
+|----|----|
+| RStudio, R Markdown, and Quarto | Standard `htmlwidgets` rendering |
+| Shiny | Widget rendering, reactive inputs, proxy data updates, and keyframe control |
+| WebR 0.6.0 | Precompiled Wasm package, R payload creation, and production-bundle rendering in Chromium |
+
+The WebR claim is intentionally bounded to the pinned end-to-end CI
+path; it does not imply that DuckDB-WASM or every browser host has been
+validated.
 
 ## Customization
 
@@ -108,6 +126,8 @@ Customize plots by chaining additional functions:
   — Set theme tokens (colors, font, background)
 - [`setTransitionSpeed()`](https://mortonanalytics.github.io/myIO/reference/setTransitionSpeed.md)
   — Control animation duration
+- [`setTransition()`](https://mortonanalytics.github.io/myIO/reference/setTransition.md)
+  — Configure duration, easing, and stagger
 - [`setToolTipOptions()`](https://mortonanalytics.github.io/myIO/reference/setToolTipOptions.md)
   — Configure tooltip behavior
 - [`setToggle()`](https://mortonanalytics.github.io/myIO/reference/setToggle.md)
@@ -127,8 +147,10 @@ See the [Getting
 Started](https://mortonanalytics.github.io/myIO/articles/getting-started.html),
 [Chart
 Types](https://mortonanalytics.github.io/myIO/articles/chart-types.html),
+[Sequential
+Storytelling](https://mortonanalytics.github.io/myIO/articles/sequential-storytelling.html),
 [Shiny
 Integration](https://mortonanalytics.github.io/myIO/articles/shiny-integration.html),
 and [Transforms &
 Theming](https://mortonanalytics.github.io/myIO/articles/transforms-and-theming.html)
-vignettes for full examples.
+articles for full examples.

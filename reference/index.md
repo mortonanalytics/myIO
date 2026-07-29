@@ -8,6 +8,8 @@ Create widgets and add visualization layers
   Create a myIO Chart Widget
 - [`addIoLayer()`](https://mortonanalytics.github.io/myIO/reference/addIoLayer.md)
   : Add a Layer to a myIO Chart
+- [`addKeyframe()`](https://mortonanalytics.github.io/myIO/reference/addKeyframe.md)
+  : Add a Named Data Keyframe
 
 ## Axes & Scales
 
@@ -102,6 +104,9 @@ Use myIO widgets in Shiny applications
 - [`myIOProxy()`](https://mortonanalytics.github.io/myIO/reference/myIOProxy.md)
   [`updateMyIOData()`](https://mortonanalytics.github.io/myIO/reference/myIOProxy.md)
   : Update a myIO chart in place from the Shiny server
+- [`setKeyframe()`](https://mortonanalytics.github.io/myIO/reference/setKeyframe.md)
+  [`stepKeyframe()`](https://mortonanalytics.github.io/myIO/reference/setKeyframe.md)
+  : Control Keyframes in Shiny
 
 ## LLM Tool Calling
 
