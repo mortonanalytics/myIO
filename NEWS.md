@@ -1,5 +1,15 @@
 # myIO (development version)
 
+## New features
+
+* `setLegendTitle()` puts a title on the legend naming the variable its entries
+  come from, so a grouped chart whose series are labelled `5 6 7 8 9` can say
+  those are months. The title renders on whichever legend surface is active --
+  the compact in-plot strip or the panel behind the legend button -- and on
+  exported SVG, PNG and PDF. Pass a string, or `TRUE` to derive the title from
+  the grouping column supplied to `addIoLayer(mapping = list(group = ...))`.
+  Charts render exactly as before until the function is called.
+
 ## Bug fixes
 
 * Treemap cells no longer render underneath the floating action button in the

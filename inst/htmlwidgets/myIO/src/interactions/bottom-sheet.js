@@ -1,8 +1,10 @@
 import { BUTTON_LABELS, handleAction, iconDownload, iconImage, iconLayers, iconLegend, iconPercent, iconPDF, iconClipboard } from "./buttons.js";
-import { buildLegendData } from "../layout/legend-data.js";
+import { buildLegendData, resolveLegendTitle } from "../layout/legend-data.js";
 import {
+  estimateTitleWidth,
   legendAvailableWidth,
   legendItemLabel,
+  legendTitleText,
   resolveLegendPlacement,
   uniqueLegendItems
 } from "../layout/legend-placement.js";
@@ -251,6 +253,13 @@ export function renderSheetLegend(chart) {
     legendSection.style("display", null);
   }
 
+  var titleText = legendTitleText(resolveLegendTitle(chart, legendData));
+  if (titleText) {
+    legendBody.append("div")
+      .attr("class", "myIO-sheet-legend-title")
+      .text(titleText);
+  }
+
   if (legendData.type === "continuous") {
     renderContinuousLegend(chart, legendBody, legendData);
   } else if (legendData.type === "ordinal") {
@@ -451,7 +460,8 @@ function sheetLegendPlacement(chart) {
     type: legendData && legendData.type,
     labels: items.map(legendItemLabel),
     suppressLegend: !!(chart.options && chart.options.suppressLegend === true),
-    availableWidth: legendAvailableWidth(chart)
+    availableWidth: legendAvailableWidth(chart),
+    titleWidth: estimateTitleWidth(resolveLegendTitle(chart, legendData))
   });
 }
 

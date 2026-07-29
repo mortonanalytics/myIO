@@ -1,6 +1,8 @@
-import { buildLegendData } from "../layout/legend-data.js";
+import { buildLegendData, resolveLegendTitle } from "../layout/legend-data.js";
+import { legendTitleText } from "../layout/legend-placement.js";
 
 var LEGEND_PADDING = 16;
+var TITLE_GAP = 12;
 var SWATCH_SIZE = 12;
 var SWATCH_GAP = 6;
 var ITEM_GAP = 18;
@@ -51,10 +53,12 @@ export function injectExportLegend(chart) {
 
   var extraHeight;
 
+  var titleText = legendTitleText(resolveLegendTitle(chart, legendData));
+
   if (legendData.type === "continuous") {
-    extraHeight = buildContinuousLegendSVG(g, legendData, svgWidth, textColor);
+    extraHeight = buildContinuousLegendSVG(g, legendData, svgWidth, textColor, titleText);
   } else {
-    extraHeight = buildDiscreteLegendSVG(g, visibleItems, svgWidth, textColor);
+    extraHeight = buildDiscreteLegendSVG(g, visibleItems, svgWidth, textColor, titleText);
   }
 
   // Position the legend below the chart
@@ -75,11 +79,24 @@ export function injectExportLegend(chart) {
   };
 }
 
-function buildDiscreteLegendSVG(g, items, svgWidth, textColor) {
+function buildDiscreteLegendSVG(g, items, svgWidth, textColor, title) {
   var usableWidth = svgWidth - LEGEND_PADDING * 2;
   var x = LEGEND_PADDING;
   var y = LEGEND_PADDING;
   var rowHeight = Math.max(SWATCH_SIZE, FONT_SIZE);
+
+  if (title) {
+    var titleNode = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    titleNode.setAttribute("x", x);
+    titleNode.setAttribute("y", y + SWATCH_SIZE - 1);
+    titleNode.setAttribute("font-family", "Roboto, Arial, sans-serif");
+    titleNode.setAttribute("font-size", FONT_SIZE);
+    titleNode.setAttribute("font-weight", "600");
+    titleNode.setAttribute("fill", textColor);
+    titleNode.textContent = title;
+    g.appendChild(titleNode);
+    x += estimateTextWidth(title, FONT_SIZE) + TITLE_GAP;
+  }
 
   items.forEach(function(item) {
     var labelWidth = estimateTextWidth(item.label, FONT_SIZE);
@@ -117,7 +134,7 @@ function buildDiscreteLegendSVG(g, items, svgWidth, textColor) {
   return y + rowHeight + LEGEND_PADDING;
 }
 
-function buildContinuousLegendSVG(g, legendData, svgWidth, textColor) {
+function buildContinuousLegendSVG(g, legendData, svgWidth, textColor, title) {
   var scale = legendData.colorScale;
   if (!scale) {
     return 0;
@@ -126,6 +143,20 @@ function buildContinuousLegendSVG(g, legendData, svgWidth, textColor) {
   var domain = legendData.domain || scale.domain();
   var y = LEGEND_PADDING;
   var gradientX = (svgWidth - GRADIENT_WIDTH) / 2;
+
+  if (title) {
+    var titleNode = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    titleNode.setAttribute("x", svgWidth / 2);
+    titleNode.setAttribute("y", y + FONT_SIZE);
+    titleNode.setAttribute("text-anchor", "middle");
+    titleNode.setAttribute("font-family", "Roboto, Arial, sans-serif");
+    titleNode.setAttribute("font-size", FONT_SIZE);
+    titleNode.setAttribute("font-weight", "600");
+    titleNode.setAttribute("fill", textColor);
+    titleNode.textContent = title;
+    g.appendChild(titleNode);
+    y += FONT_SIZE + 6;
+  }
 
   // Build gradient stops
   var defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");

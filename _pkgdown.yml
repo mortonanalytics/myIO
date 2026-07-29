@@ -99,6 +99,7 @@ reference:
       - setTransition
       - setTransitionSpeed
       - suppressLegend
+      - setLegendTitle
   - title: Interactions
     desc: Add interactive behaviors like brushing, annotation, and linked views
     contents:

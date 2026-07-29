@@ -464,7 +464,8 @@ server <- function(input, output) {
         label = "Temperature by Month",
         data = df, mapping = list(x_var = "Day", y_var = "Temp", group = "Month")) %>%
       setAxisLimits(ylim = list(min = 0)) %>%
-      setAxisFormat(xAxis = ".0f", yAxis = ".0f", xLabel = "Day", yLabel = "Temperature (F)")
+      setAxisFormat(xAxis = ".0f", yAxis = ".0f", xLabel = "Day", yLabel = "Temperature (F)") %>%
+      setLegendTitle("Month")
   })
 
   output$hbarPlot <- renderMyIO({
@@ -488,7 +489,8 @@ server <- function(input, output) {
         color = c("#4E79A7", "#F28E2B", "#E15759", "#76B7B2", "#59A14F"),
         label = "Temp",
         data = df, mapping = list(x_var = "Day", y_var = "Temp", group = "Month")) %>%
-      setAxisFormat(xAxis = ".0f", yAxis = ".0f", xLabel = "Day", yLabel = "Temperature (F)")
+      setAxisFormat(xAxis = ".0f", yAxis = ".0f", xLabel = "Day", yLabel = "Temperature (F)") %>%
+      setLegendTitle("Month")
   })
 
   output$areaPlot <- renderMyIO({
@@ -502,7 +504,8 @@ server <- function(input, output) {
     myIO(title = "Revenue Forecast Bands") %>%
       addIoLayer(type = "area", color = c("#4E79A7", "#F28E2B"), label = "Forecast",
         data = df, mapping = list(x_var = "month", low_y = "low", high_y = "high", group = "band")) %>%
-      setAxisFormat(xAxis = ".0f", yAxis = "$,.0f", xLabel = "Month", yLabel = "Revenue")
+      setAxisFormat(xAxis = ".0f", yAxis = "$,.0f", xLabel = "Month", yLabel = "Revenue") %>%
+      setLegendTitle("Scenario")
   })
 
   output$pointPlot <- renderMyIO({
@@ -912,7 +915,8 @@ server <- function(input, output) {
       addIoLayer("bump", label = "Rankings",
         data = df, mapping = list(x_var = "quarter", y_var = "rank", group = "team")) |>
       defineCategoricalAxis(xAxis = TRUE) |>
-      setAxisFormat(xLabel = "Quarter", yLabel = "Rank")
+      setAxisFormat(xLabel = "Quarter", yLabel = "Rank") |>
+      setLegendTitle("Team")
   })
 
   output$radarPlot <- renderMyIO({
@@ -1066,7 +1070,8 @@ server <- function(input, output) {
         data = df, mapping = list(x_var = "hp", y_var = "mpg", group = "cyl")) %>%
       setTheme(preset = input$theme_preset) %>%
       setAxisFormat(xLabel = "Horsepower", yLabel = "MPG") %>%
-      setReferenceLines(yRef = mean(df$mpg))
+      setReferenceLines(yRef = mean(df$mpg)) %>%
+      setLegendTitle("Cylinders")
   })
 
   # -- Export Demo --
@@ -1083,6 +1088,7 @@ server <- function(input, output) {
       setTheme(preset = input$exp_theme) %>%
       setAxisFormat(xAxis = ".1f", yAxis = ".0f",
         xLabel = "Weight (1000 lbs)", yLabel = "Miles per Gallon") %>%
+      setLegendTitle("Cylinders") %>%
       setExportOptions(
         png = input$exp_png,
         svg = input$exp_svg,

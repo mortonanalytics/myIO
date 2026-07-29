@@ -214,3 +214,4 @@ appropriate transforms (density, quantiles, etc.).
 | `flipAxis()` | Swap x and y axes |
 | `suppressAxis()` | Hide x and/or y axes |
 | `suppressLegend()` | Hide the legend |
+| `setLegendTitle()` | Title the legend with the grouping variable |

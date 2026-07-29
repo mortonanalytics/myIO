@@ -39,6 +39,8 @@ expand_grouped_df <- function(myIO, type, color, label, data, mapping, transform
 
   existing_labels <- vapply(myIO$x$config$layers, function(layer) layer$label, character(1))
 
+  n_before <- length(myIO$x$config$layers)
+
   for (i in seq_len(n_groups)) {
     key_row <- group_keys[i, , drop = FALSE]
     group_label_parts <- vapply(group_vars, function(v) as.character(key_row[[v]]), character(1))
@@ -66,6 +68,16 @@ expand_grouped_df <- function(myIO, type, color, label, data, mapping, transform
       transform = transform,
       options = options
     )
+  }
+
+  # One added layer per group means every new label is a bare group value, so
+  # the grouping variable names them all. Composite types expand to several
+  # layers per group; their labels are not group values, so they are skipped.
+  if (n_groups > 0L && length(myIO$x$config$layers) - n_before == n_groups) {
+    group_var <- paste(group_vars, collapse = " / ")
+    for (j in seq_len(n_groups)) {
+      myIO$x$config$layers[[n_before + j]]$groupVar <- group_var
+    }
   }
 
   myIO

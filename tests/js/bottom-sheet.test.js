@@ -225,6 +225,31 @@ describe("bottom sheet", function() {
     expect(chart.element.querySelector(".myIO-sheet-legend-label").textContent).toBe("alpha");
   });
 
+  test("panel legend renders the title as the first element of the legend body", async function() {
+    const chart = buildChart();
+    chart.runtime.totalWidth = 60;
+    chart.options.legendTitle = "Month";
+    addFAB(chart);
+    openPanel(chart);
+    await flush();
+
+    const body = chart.element.querySelector(".myIO-sheet-legend");
+    expect(body.firstElementChild.className).toBe("myIO-sheet-legend-title");
+    expect(body.firstElementChild.textContent).toBe("Month");
+    // The title is not a toggle and does not disturb the item count.
+    expect(chart.element.querySelectorAll(".myIO-sheet-legend-item")).toHaveLength(2);
+  });
+
+  test("exactly one legend surface still carries the title (GH #84)", async function() {
+    const chart = buildChart();          // 800px -> inline owns the legend
+    chart.options.legendTitle = "Month";
+    addFAB(chart);
+    openPanel(chart);
+    await flush();
+    expect(chart.element.querySelector("[data-sheet-section='legend']")).toBeFalsy();
+    expect(chart.element.querySelector(".myIO-sheet-legend-title")).toBeFalsy();
+  });
+
   test("closePanel clears the panel and restores the FAB state", async function() {
     const chart = buildChart();
     addFAB(chart);

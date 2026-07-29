@@ -97,6 +97,7 @@ export class myIOchart {
     this.options = this.config ? {
       margin: this.config.layout.margin,
       suppressLegend: this.config.layout.suppressLegend,
+      legendTitle: this.config.layout.legendTitle,
       suppressAxis: this.config.layout.suppressAxis,
       xlim: this.config.scales.xlim,
       ylim: this.config.scales.ylim,

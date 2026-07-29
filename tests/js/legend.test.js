@@ -189,6 +189,56 @@ describe("inline legend (GH #84)", function() {
     expect(chart.element.querySelector(".myIO-inline-legend")).toBeFalsy();
   });
 
+  test("renders the configured legend title ahead of the first item", function() {
+    const chart = buildInlineChart(3);
+    chart.options.legendTitle = "Month";
+    syncLegend(chart, { axesChart: true });
+
+    const title = chart.element.querySelector(".myIO-inline-legend-title");
+    expect(title).toBeTruthy();
+    expect(title.textContent).toBe("Month");
+    // estimateTitleWidth("Month") = ceil(5 * 7.5) + 12 = 50
+    expect(chart.element.querySelector(".myIO-inline-legend-item")
+      .getAttribute("transform")).toBe("translate(50,0)");
+  });
+
+  test("a derived title needs every series to share one grouping column", function() {
+    const chart = buildInlineChart(3);
+    chart.options.legendTitle = true;
+    chart.plotLayers.forEach(function(l) { l.groupVar = "Month"; });
+    syncLegend(chart, { axesChart: true });
+    expect(chart.element.querySelector(".myIO-inline-legend-title").textContent).toBe("Month");
+
+    // Mixed legend (grouped series + a standalone fit line): no single variable.
+    const mixed = buildInlineChart(3);
+    mixed.options.legendTitle = true;
+    mixed.plotLayers[0].groupVar = "Month";
+    syncLegend(mixed, { axesChart: true });
+    expect(mixed.element.querySelector(".myIO-inline-legend-title")).toBeFalsy();
+  });
+
+  test("suppressLegend hides the title with the rest of the legend", function() {
+    const chart = buildInlineChart(3);
+    chart.options.suppressLegend = true;
+    chart.options.legendTitle = "Month";
+    syncLegend(chart, { axesChart: true });
+    expect(chart.element.querySelector(".myIO-inline-legend-title")).toBeFalsy();
+    expect(chart.element.querySelector(".myIO-inline-legend")).toBeFalsy();
+  });
+
+  test("a title that will not fit moves the legend to the panel instead of clipping", function() {
+    // Control: 5 items x 102px in 350px available packs onto 2 rows -> inline.
+    const control = buildInlineChart(5, 400);
+    syncLegend(control, { axesChart: true });
+    expect(control.element.querySelector(".myIO-inline-legend")).toBeTruthy();
+
+    // Same chart with a 192px title needs a third row -> no inline surface.
+    const titled = buildInlineChart(5, 400);
+    titled.options.legendTitle = "Measurement month of observation";
+    syncLegend(titled, { axesChart: true });
+    expect(titled.element.querySelector(".myIO-inline-legend")).toBeFalsy();
+  });
+
   test("hidden state survives the flip from inline to panel-only", function() {
     const chart = buildInlineChart(3);
     syncLegend(chart, { axesChart: true });

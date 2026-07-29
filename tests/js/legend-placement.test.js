@@ -4,8 +4,10 @@ import {
   MAX_INLINE_ROWS,
   computeInlineRows,
   estimateItemWidth,
+  estimateTitleWidth,
   legendAvailableWidth,
   legendItemLabel,
+  legendTitleText,
   resolveLegendPlacement,
   uniqueLegendItems
 } from "../../inst/htmlwidgets/myIO/src/layout/legend-placement.js";
@@ -145,5 +147,54 @@ describe("estimateItemWidth / legendAvailableWidth", function() {
     expect(legendAvailableWidth({
       runtime: { totalWidth: 500 }, totalWidth: 800, margin: { left: 50, right: 0 }
     })).toBe(450);
+  });
+});
+
+describe("legend title measurement", function() {
+  test("estimateTitleWidth measures the truncated title plus the gap", function() {
+    expect(estimateTitleWidth("")).toBe(0);
+    expect(estimateTitleWidth(null)).toBe(0);
+    expect(estimateTitleWidth("Month")).toBe(50);
+    expect(legendTitleText("x".repeat(40))).toHaveLength(24);
+    expect(estimateTitleWidth("x".repeat(40))).toBe(192);
+  });
+
+  test("computeInlineRows offsets only the first row by the title width", function() {
+    const layout = computeInlineRows(["aa", "bb"], 800, 50);
+    expect(layout.positions[0].x).toBe(50);
+    expect(layout.positions[1].x).toBe(50 + estimateItemWidth("aa"));
+
+    // 3 items of 53px in 150px with a 50px title: the title pushes row 0 down to
+    // a single item and the wrapped row restarts at x = 0.
+    const wrapped = computeInlineRows(["a", "b", "c"], 150, 50);
+    expect(wrapped.positions.map(function(p) { return p.row; })).toEqual([0, 1, 1]);
+    expect(wrapped.positions[0].x).toBe(50);
+    expect(wrapped.positions[1].x).toBe(0);
+
+    // Without the title two of the three items fit on row 0 and row 0 starts at 0.
+    const untitled = computeInlineRows(["a", "b", "c"], 150, 0);
+    expect(untitled.positions.map(function(p) { return p.row; })).toEqual([0, 0, 1]);
+    expect(untitled.positions[0].x).toBe(0);
+  });
+
+  test("a title wider than the container yields no inline layout", function() {
+    expect(computeInlineRows(["aa", "bb"], 100, 120)).toBe(null);
+  });
+
+  test("titleWidth flows through resolveLegendPlacement", function() {
+    // 5 items of 102px pack onto 2 rows in 350px, so the legend is inline.
+    expect(resolveLegendPlacement({
+      type: "layer", labels: labels(5), suppressLegend: false, availableWidth: 350
+    })).toEqual({ inline: true, panel: false, reason: "inline-active" });
+    // A 192px title costs row 0 two of its three slots, forcing a third row.
+    expect(resolveLegendPlacement({
+      type: "layer", labels: labels(5), suppressLegend: false,
+      availableWidth: 350, titleWidth: 192
+    })).toEqual({ inline: false, panel: true, reason: "too-narrow" });
+    // A title the layout can absorb leaves the legend inline.
+    expect(resolveLegendPlacement({
+      type: "layer", labels: labels(5), suppressLegend: false,
+      availableWidth: 350, titleWidth: 50
+    })).toEqual({ inline: true, panel: false, reason: "inline-active" });
   });
 });

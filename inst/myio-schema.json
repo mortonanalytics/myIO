@@ -1399,6 +1399,10 @@
       "label",
       "opacity"
     ],
+    "setLegendTitle": [
+      "myIO",
+      "title"
+    ],
     "setLinked": [
       "myIO",
       "shared_data",

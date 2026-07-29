@@ -170,7 +170,7 @@ addIoLayer <- function(myIO,
 build_layer <- function(layer_type, layer_label, layer_data, layer_mapping, layer_color,
                         layer_transform_meta, options, transform, layer_id, order,
                         derived_from = NULL, composite = NULL, composite_role = NULL,
-                        scale_hints = NULL) {
+                        scale_hints = NULL, group_var = NULL) {
   layer <- list(
     id = if (order == 1L) layer_id else sprintf("%s_sub_%02d", layer_id, order),
     type = layer_type,
@@ -193,6 +193,12 @@ build_layer <- function(layer_type, layer_label, layer_data, layer_mapping, laye
   }
   if (!is.null(scale_hints)) {
     layer$scaleHints <- scale_hints
+  }
+  # Marks a layer whose label IS a value of `group_var`. Composite sub-layers
+  # carry mapping$group too but their labels are not bare group values, so they
+  # deliberately never get this field.
+  if (!is.null(group_var)) {
+    layer$groupVar <- group_var
   }
   layer
 }
@@ -481,7 +487,8 @@ build_grouped_layers <- function(data, mapping, type, label, color, transform_fn
       transform = transform,
       layer_id = layer_id,
       order = index,
-      derived_from = layer_id
+      derived_from = layer_id,
+      group_var = mapping$group
     )
   }
 
