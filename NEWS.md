@@ -7,6 +7,21 @@
   that funnel and Sankey charts already reserve, so the corner cell and its
   label stay fully visible and clickable.
 
+* `linkCharts()` now actually links charts. Brushing one chart in a
+  `linkCharts()` group dims the non-matching marks on every other chart in the
+  group; previously nothing happened at all, in any environment. Three things
+  were wrong: the link mode written by `linkCharts()` was a value the
+  browser-side code did not recognise, so neither the outgoing nor the incoming
+  handler was ever connected; the cross-selection machinery required Crosstalk
+  to be loaded even though `linkCharts()` is documented as not needing it, so it
+  bailed out on a plain R Markdown or Quarto page; and rows were matched between
+  charts by position rather than by the `on` column, which is meaningless for
+  charts built from different data frames. Charts are now matched on the `on`
+  column's values as documented, and coordination works with or without
+  Crosstalk on the page. Charts linked with `setLinked()` are unaffected --
+  they continue to use Crosstalk and to match on the shared row key. Widgets
+  saved by earlier versions of myIO keep working against the new code.
+
 * Clearing a brush -- by clicking outside it, pressing Escape, or using the
   status bar's "Clear" button -- no longer overflows the call stack. The
   overflow left the chart's stored selection in place and skipped the cleared

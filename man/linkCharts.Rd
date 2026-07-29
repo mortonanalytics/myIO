@@ -30,6 +30,12 @@ so that brush selections propagate between them. Unlike \code{\link{setLinked}},
 this does not require Crosstalk --- it uses a shared group identifier and key
 column to coordinate selections across charts rendered in the same page.
 }
+\details{
+Cross-selection is driven by the brush, so at least one linked
+  chart must also call \code{\link{setBrush}}; brushing that chart
+  propagates the selected \code{on} values to every other chart in the
+  group, which dim their non-matching marks.
+}
 \examples{
 \donttest{
 w1 <- myIO() |>

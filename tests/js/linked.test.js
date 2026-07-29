@@ -116,4 +116,77 @@ describe("linked brushing propagation", function() {
     src.emit("brushed", { keys: [] });
     expect(tgtNodes.map(function(n) { return n.style.opacity; })).toEqual([1.0, 1.0]);
   });
+
+  it("accepts the legacy \"bidirectional\" mode written by linkCharts()", function() {
+    var tgtNodes = [{ key: "row_1" }, { key: "row_2" }, { key: "row_3" }];
+    var src = makeChart("A", "bidirectional", [{ key: "row_1" }, { key: "row_2" }, { key: "row_3" }]);
+    var tgt = makeChart("B", "bidirectional", tgtNodes);
+    bindLinked(src);
+    bindLinked(tgt);
+
+    expect(src.runtime._linkedBrushHandler).toBeTruthy();
+
+    src.emit("brushed", { keys: ["row_1", "row_3"] });
+
+    expect(tgtNodes.map(function(n) { return (n.style || {}).opacity; }))
+      .toEqual([1.0, "var(--chart-brush-dim-opacity)", 1.0]);
+  });
+
+  it("matches rows by keyColumn when linkCharts() supplied one", function() {
+    function makeKeyedChart(id, rows) {
+      var handlers = {};
+      return {
+        config: { interactions: { linked: { enabled: true, group: "gk", mode: "bidirectional", keyColumn: "cyl" } } },
+        derived: { currentLayers: [{ type: "point", label: "pts", data: rows }] },
+        dom: {
+          element: { id: id },
+          chartArea: { selectAll: function() { return { each: function(fn) { rows.forEach(function(r) { fn.call(r, r); }); } }; } }
+        },
+        runtime: {},
+        on: function(e, f) { (handlers[e] = handlers[e] || []).push(f); },
+        off: function(e, f) { handlers[e] = (handlers[e] || []).filter(function(h) { return h !== f; }); },
+        emit: function(e, p) { (handlers[e] || []).forEach(function(f) { f(p); }); }
+      };
+    }
+
+    var tgtRows = [{ _source_key: "row_1", cyl: 4 }, { _source_key: "row_2", cyl: 6 }, { _source_key: "row_3", cyl: 8 }];
+    var src = makeKeyedChart("A", [{ _source_key: "row_9", cyl: 4 }, { _source_key: "row_10", cyl: 8 }]);
+    var tgt = makeKeyedChart("B", tgtRows);
+    bindLinked(src);
+    bindLinked(tgt);
+
+    // brush.js emits both keys (positional) and data (full rows); with keyColumn
+    // set, only the cyl values must travel - the row_9/row_10 keys match nothing.
+    src.emit("brushed", { keys: ["row_9", "row_10"], data: [{ _source_key: "row_9", cyl: 4 }, { _source_key: "row_10", cyl: 8 }] });
+
+    expect(tgtRows.map(function(r) { return (r.style || {}).opacity; }))
+      .toEqual([1.0, "var(--chart-brush-dim-opacity)", 1.0]);
+  });
+});
+
+describe("linked brushing without crosstalk", function() {
+  beforeEach(function() {
+    delete globalThis.crosstalk;
+    globalThis.d3 = {
+      select: function(node) {
+        return {
+          style: function(k, v) { node.style = node.style || {}; node.style[k] = v; return this; }
+        };
+      }
+    };
+  });
+  afterEach(function() { delete globalThis.d3; });
+
+  it("propagates through the in-page group bus when crosstalk is absent", function() {
+    var tgtNodes = [{ key: "row_1" }, { key: "row_2" }, { key: "row_3" }];
+    var src = makeChart("A", "bidirectional", [{ key: "row_1" }, { key: "row_2" }, { key: "row_3" }]);
+    var tgt = makeChart("B", "bidirectional", tgtNodes);
+    bindLinked(src);
+    bindLinked(tgt);
+
+    src.emit("brushed", { keys: ["row_1", "row_3"] });
+
+    expect(tgtNodes.map(function(n) { return (n.style || {}).opacity; }))
+      .toEqual([1.0, "var(--chart-brush-dim-opacity)", 1.0]);
+  });
 });

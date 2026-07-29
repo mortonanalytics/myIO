@@ -5,6 +5,11 @@
 #' this does not require Crosstalk --- it uses a shared group identifier and key
 #' column to coordinate selections across charts rendered in the same page.
 #'
+#' @details Cross-selection is driven by the brush, so at least one linked
+#'   chart must also call \code{\link{setBrush}}; brushing that chart
+#'   propagates the selected \code{on} values to every other chart in the
+#'   group, which dim their non-matching marks.
+#'
 #' @param ... myIO widget objects to link.
 #' @param on Character. Column name to match rows across charts.
 #' @param group Character. Group identifier. Default auto-generated.
@@ -45,7 +50,7 @@ linkCharts <- function(..., on, group = NULL, cursor = FALSE, cursorAxis = "x") 
       enabled = TRUE,
       keyColumn = on,
       group = group,
-      mode = "bidirectional",
+      mode = "both",
       cursor = cursor,
       cursorAxis = cursorAxis
     )
