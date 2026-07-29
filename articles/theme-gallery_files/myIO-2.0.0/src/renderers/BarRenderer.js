@@ -4,7 +4,7 @@ import { resolveColor, tagName } from "../utils/responsive.js";
 export class BarRenderer {
   static type = "bar";
   static traits = { hasAxes: true, referenceLines: true, legendType: "layer", binning: false, rolloverStyle: "element", scaleCapabilities: { invertX: false } };
-  static scaleHints = { xScaleType: "band", yScaleType: "linear", yExtentFields: ["y_var"], domainMerge: "union" };
+  static scaleHints = { xScaleType: "band", yScaleType: "linear", yExtentFields: ["y_var"], yZeroBaseline: true, domainMerge: "union" };
   static dataContract = { x_var: { required: true }, y_var: { required: true, numeric: true } };
 
   render(chart, layer) {

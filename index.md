@@ -138,6 +138,8 @@ Customize plots by chaining additional functions:
   — Hide axes
 - [`suppressLegend()`](https://mortonanalytics.github.io/myIO/reference/suppressLegend.md)
   — Hide the legend
+- [`setLegendTitle()`](https://mortonanalytics.github.io/myIO/reference/setLegendTitle.md)
+  — Title the legend with the grouping variable
 - [`dragPoints()`](https://mortonanalytics.github.io/myIO/reference/dragPoints.md)
   — Enable draggable points
 - [`setReferenceLines()`](https://mortonanalytics.github.io/myIO/reference/setReferenceLines.md)

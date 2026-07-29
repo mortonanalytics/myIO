@@ -40,6 +40,7 @@ export class RadarRenderer {
     var colorScale = chart.derived.colorDiscrete || d3.scaleOrdinal(d3.schemeCategory10);
     var axisCount;
     var root;
+    var gridLayer;
     var axisLayer;
     var polygonLayer;
     var lineGenerator;
@@ -61,6 +62,11 @@ export class RadarRenderer {
       .data([null])
       .join("g")
       .attr("class", "tag-radar-" + layer.id);
+
+    gridLayer = root.selectAll(".radar-grid-layer")
+      .data([null])
+      .join("g")
+      .attr("class", "radar-grid-layer");
 
     axisLayer = root.selectAll(".radar-axis-layer")
       .data([null])
@@ -94,6 +100,66 @@ export class RadarRenderer {
         textAnchor: textAnchor
       };
     }
+
+    var gridEnabled = !(layer.options && layer.options.grid === false);
+    var gridLevels = Math.max(1, Math.round((layer.options && layer.options.gridLevels) || 4));
+    var gridMax = radiusScale.domain()[1];
+    var gridFormat = (chart.options && chart.options.yAxisFormat)
+      ? d3.format(chart.options.yAxisFormat)
+      : d3.format(",.4~g");
+    var gridValues = gridEnabled
+      ? d3.range(1, gridLevels + 1).map(function(step) { return gridMax * step / gridLevels; })
+      : [];
+
+    function ringPath(radius) {
+      var points = [];
+      var i;
+      for (i = 0; i < axisCount; i++) {
+        var ringAngle = 2 * Math.PI * i / axisCount;
+        points.push((centerX + radius * Math.sin(ringAngle)) + "," + (centerY - radius * Math.cos(ringAngle)));
+      }
+      return "M" + points.join("L") + "Z";
+    }
+
+    var rings = gridLayer.selectAll(".radar-grid-ring")
+      .data(gridValues, function(d) { return d; });
+
+    rings.exit().remove();
+
+    rings.enter()
+      .append("path")
+      .attr("class", "radar-grid-ring")
+      .attr("fill", "none")
+      .attr("pointer-events", "none")
+      .attr("stroke-width", 1)
+      .attr("stroke-opacity", 0.6)
+      .attr("d", ringPath(0))
+      .merge(rings)
+      .attr("stroke", "var(--chart-grid, #cbd5e1)")
+      .transition().duration(transitionSpeed)
+      .attr("d", function(d) { return ringPath(radiusScale(d)); });
+
+    var ringLabels = gridLayer.selectAll(".radar-grid-label")
+      .data(gridValues, function(d) { return d; });
+
+    ringLabels.exit().remove();
+
+    ringLabels.enter()
+      .append("text")
+      .attr("class", "radar-grid-label")
+      .attr("pointer-events", "none")
+      .attr("font-size", 10)
+      .attr("text-anchor", "start")
+      .attr("dy", "-0.35em")
+      .attr("x", centerX + 4)
+      .attr("y", centerY)
+      .merge(ringLabels)
+      .attr("fill", "var(--chart-fg, #1f2937)")
+      .attr("fill-opacity", 0.7)
+      .text(function(d) { return gridFormat(d); })
+      .transition().duration(transitionSpeed)
+      .attr("x", centerX + 4)
+      .attr("y", function(d) { return centerY - radiusScale(d); });
 
     var axisSelection = axisLayer.selectAll(".radar-axis")
       .data(axisOrder, function(d) { return d; });

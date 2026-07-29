@@ -87,9 +87,18 @@ export class FacetController {
   }
 
   createGrid(facetValues) {
-    d3.select(this.chart.dom.element).select(".myIO-facet-grid").remove();
+    var root = d3.select(this.chart.dom.element);
+    root.select(".myIO-facet-title").remove();
+    root.select(".myIO-facet-grid").remove();
 
-    this.container = d3.select(this.chart.dom.element)
+    var title = this.chart.config.title;
+    if (title) {
+      root.append("div")
+        .attr("class", "myIO-facet-title")
+        .text(title);
+    }
+
+    this.container = root
       .append("div")
       .attr("class", "myIO-facet-grid")
       .attr("role", "group")
@@ -171,6 +180,7 @@ export class FacetController {
     }
 
     this.panels.clear();
+    d3.select(this.chart.dom.element).select(".myIO-facet-title").remove();
     d3.select(this.chart.dom.element).select(".myIO-facet-grid").remove();
     this.container = null;
     this.globalScaleSnapshot = null;

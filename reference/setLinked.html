@@ -104,6 +104,18 @@ Default <code>FALSE</code>.</p></dd>
     <p>A modified <code>myIO</code> htmlwidget with Crosstalk linking.</p>
     </div>
     <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Selections travel on the Crosstalk key space, so a myIO chart matches
+rows against sibling widgets (<span class="pkg">DT</span>, <span class="pkg">plotly</span>, <span class="pkg">leaflet</span>) by
+the same keys they use. The keys are matched to the chart's rows by
+position, which requires the data passed to <code><a href="addIoLayer.html">addIoLayer()</a></code> to be
+<code>shared_data$data()</code> in its original row order. If a layer's row
+count does not match the number of keys – for example after re-filtering
+the frame, or after <code><a href="myIOProxy.html">updateMyIOData()</a></code> replaced the rows – the
+chart falls back to matching within its own widget only, rather than
+pairing keys with the wrong rows.</p>
+    </div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="linkCharts.html">linkCharts</a></code> for group-identifier linking that does
   not require Crosstalk (e.g. static R Markdown / Quarto HTML).</p></div>

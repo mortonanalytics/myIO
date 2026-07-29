@@ -43,6 +43,14 @@ linkCharts(..., on, group = NULL, cursor = FALSE, cursorAxis = "x")
 
 A list of modified myIO widgets with matching link config.
 
+## Details
+
+Cross-selection is driven by the brush, so at least one linked chart
+must also call
+[`setBrush`](https://mortonanalytics.github.io/myIO/reference/setBrush.md);
+brushing that chart propagates the selected `on` values to every other
+chart in the group, which dim their non-matching marks.
+
 ## See also
 
 [`setLinked`](https://mortonanalytics.github.io/myIO/reference/setLinked.md)

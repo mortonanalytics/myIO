@@ -13,6 +13,7 @@ export class LollipopRenderer {
     yScaleType: "linear",
     xExtentFields: [],
     yExtentFields: ["y_var"],
+    yZeroBaseline: true,
     domainMerge: "union"
   };
   static dataContract = {

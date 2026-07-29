@@ -107,6 +107,31 @@
   font-weight: 700;
 }
 
+.myIO-facet-title {
+  font-family: var(--chart-font);
+  color: var(--chart-sheet-accent);
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 var(--chart-spacing-md, 8px) 0;
+}
+
+.myIO-facet-grid {
+  display: grid;
+  gap: var(--chart-spacing-lg, 16px);
+}
+
+.myIO-facet-panel {
+  min-width: 0;
+}
+
+.myIO-facet-label {
+  font-family: var(--chart-font);
+  color: var(--chart-text-color);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
 .myIO-inline-legend-item {
   cursor: pointer;
   outline: none;
@@ -121,6 +146,15 @@
 .myIO-inline-legend-label {
   font-size: 12px;
   dominant-baseline: middle;
+}
+
+.myIO-inline-legend-title {
+  font-family: var(--chart-font);
+  font-size: 12px;
+  font-weight: 600;
+  dominant-baseline: middle;
+  fill: var(--chart-text-color);
+  pointer-events: none;
 }
 
 .dot {
@@ -205,7 +239,7 @@
 .myIO-fab {
   position: absolute;
   right: 12px;
-  bottom: 12px;
+  top: 8px;
   z-index: 21;
   width: 40px;
   height: 40px;
@@ -236,13 +270,6 @@
   height: 18px;
   fill: currentColor;
   pointer-events: none;
-}
-
-/* Tier class is applied by JS from the widget's own container width, so a
-   narrow widget in a wide viewport gets consistent narrow-tier treatment. */
-.myIO-container:not(.myIO-container--narrow) .myIO-fab {
-  bottom: auto;
-  top: 8px;
 }
 
 .myIO-sheet-header {
@@ -418,6 +445,19 @@
   flex: 1 1 auto;
   font-size: 13px;
   line-height: 1.3;
+}
+
+.myIO-sheet-legend-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--chart-text-color);
+  opacity: 0.85;
+  padding: 0 0 2px 0;
+}
+
+.myIO-sheet-legend--grid .myIO-sheet-legend-title {
+  grid-column: 1 / -1;
 }
 
 .myIO-sheet-gradient {

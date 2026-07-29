@@ -1,8 +1,8 @@
 import { deriveChartRender, applyDerivedScales } from "../derive/chart-render.js";
 import { getRendererForLayer } from "../registry.js";
-import { syncAxes } from "./axes.js";
+import { syncAxes, fitLeftMargin } from "./axes.js";
 import { syncReferenceLines } from "./reference-lines.js";
-import { initializeScaffold } from "./scaffold.js";
+import { initializeScaffold, updateScaffoldLayout } from "./scaffold.js";
 
 var FACET_PANEL_HEIGHT = 200;
 
@@ -15,8 +15,6 @@ export class FacetPanel {
     this.total = total;
     this.layers = [];
     this.panelChart = null;
-    this.suppressX = false;
-    this.suppressY = false;
 
     if (!this.element.id) {
       this.element.id = controller.chart.dom.element.id + "-facet-panel-" + index;
@@ -26,7 +24,6 @@ export class FacetPanel {
   initialize(layers) {
     this.layers = layers || [];
     this.destroy();
-    this.updateGridPosition();
 
     var labelPos = this.controller.config.labelPosition || "top";
     if (labelPos === "top") {
@@ -42,35 +39,6 @@ export class FacetPanel {
     if (labelPos === "bottom") {
       this.addLabel();
     }
-  }
-
-  updateGridPosition() {
-    var ncol = this.getColumnCount();
-    var lastRow = Math.floor((this.total - 1) / ncol);
-    var gridRow = Math.floor(this.index / ncol);
-    var gridCol = this.index % ncol;
-
-    this.suppressX = this.controller.config.scales === "fixed" && gridRow !== lastRow;
-    this.suppressY = this.controller.config.scales === "fixed" && gridCol !== 0;
-  }
-
-  getColumnCount() {
-    var configured = this.controller.config.ncol;
-    if (configured) {
-      return Math.max(configured, 1);
-    }
-
-    var container = this.controller.container && this.controller.container.node ? this.controller.container.node() : null;
-    if (container && window.getComputedStyle) {
-      var template = window.getComputedStyle(container).gridTemplateColumns || "";
-      var parts = template.split(" ").filter(function(part) { return !!part && part !== "none"; });
-      if (parts.length > 0) {
-        return parts.length;
-      }
-    }
-
-    var containerWidth = container ? container.clientWidth : this.controller.chart.runtime.totalWidth;
-    return Math.max(Math.floor(containerWidth / (this.controller.config.minWidth || 200)), 1);
   }
 
   hasPanelData() {
@@ -106,7 +74,15 @@ export class FacetPanel {
     if (renderState.axesChart && this.requiresClipPath(renderState.type)) {
       this.setClipPath(panelChart);
       syncAxes(panelChart, renderState, { isInitialRender: true });
-      this.applyAxisSuppression(panelChart);
+      // Panels never reach Chart.renderCurrentLayers, so they have to run the
+      // same left-margin fit themselves or a wide y tick label (a currency
+      // format, say) runs straight through the rotated axis title.
+      if (fitLeftMargin(panelChart, renderState)) {
+        updateScaffoldLayout(panelChart);
+        applyDerivedScales(panelChart, renderState);
+        this.applySharedDomains(panelChart);
+        syncAxes(panelChart, renderState, { isInitialRender: true });
+      }
       syncReferenceLines(panelChart, renderState, { isInitialRender: true });
     }
 
@@ -119,12 +95,18 @@ export class FacetPanel {
     var width = Math.max(this.element.clientWidth || this.controller.config.minWidth || 200, 1);
     var margin = this.buildMargin();
     var panelConfig = Object.assign({}, parentChart.config, {
-      layers: this.layers
+      layers: this.layers,
+      title: null,
+      // Own layout object: fitLeftMargin writes config.layout.margin.left, and
+      // the parent's layout must not be reachable from a panel. `margin` is the
+      // same instance as panelChart.margin / options.margin, which is the
+      // one-object invariant Chart.js and derive/scales.js both assume.
+      layout: Object.assign({}, parentChart.config.layout, { margin: margin })
     });
     var options = {
       margin: margin,
       suppressLegend: true,
-      suppressAxis: { xAxis: this.suppressX, yAxis: this.suppressY },
+      suppressAxis: parentChart.config.layout.suppressAxis || { xAxis: false, yAxis: false },
       xlim: panelConfig.scales.xlim,
       ylim: panelConfig.scales.ylim,
       categoricalScale: panelConfig.scales.categoricalScale,
@@ -138,6 +120,7 @@ export class FacetPanel {
       yAxisFormat: panelConfig.axes.yAxisFormat,
       toolTipFormat: panelConfig.axes.toolTipFormat,
       xTickLabels: panelConfig.axes.xTickLabels,
+      yTickLabels: panelConfig.axes.yTickLabels,
       xAxisLabel: panelConfig.axes.xAxisLabel,
       yAxisLabel: panelConfig.axes.yAxisLabel,
       dragPoints: false,
@@ -195,13 +178,6 @@ export class FacetPanel {
       left: baseMargin.left != null ? baseMargin.left : 50
     };
 
-    if (this.suppressX) {
-      margin.bottom = Math.min(margin.bottom, 12);
-    }
-    if (this.suppressY) {
-      margin.left = Math.min(margin.left, 12);
-    }
-
     return margin;
   }
 
@@ -251,15 +227,6 @@ export class FacetPanel {
       .attr("height", chartHeight);
     panelChart.dom.chartArea.attr("clip-path", "url(#" + panelChart.dom.element.id + "clip)");
     panelChart.clipPath = panelChart.dom.clipPath;
-  }
-
-  applyAxisSuppression(panelChart) {
-    if (this.suppressX) {
-      panelChart.plot.selectAll(".x-axis").remove();
-    }
-    if (this.suppressY) {
-      panelChart.plot.selectAll(".y-axis").remove();
-    }
   }
 
   renderLayers(panelChart, layers) {

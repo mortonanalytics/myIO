@@ -217,3 +217,4 @@ appropriate transforms (density, quantiles, etc.).
 | [`flipAxis()`](https://mortonanalytics.github.io/myIO/reference/flipAxis.md) | Swap x and y axes |
 | [`suppressAxis()`](https://mortonanalytics.github.io/myIO/reference/suppressAxis.md) | Hide x and/or y axes |
 | [`suppressLegend()`](https://mortonanalytics.github.io/myIO/reference/suppressLegend.md) | Hide the legend |
+| [`setLegendTitle()`](https://mortonanalytics.github.io/myIO/reference/setLegendTitle.md) | Title the legend with the grouping variable |

@@ -85,6 +85,13 @@ values are accepted but not yet rendered.</p></dd>
     <p>A list of modified myIO widgets with matching link config.</p>
     </div>
     <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Cross-selection is driven by the brush, so at least one linked
+  chart must also call <code><a href="setBrush.html">setBrush</a></code>; brushing that chart
+  propagates the selected <code>on</code> values to every other chart in the
+  group, which dim their non-matching marks.</p>
+    </div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="setLinked.html">setLinked</a></code> for Crosstalk <code>SharedData</code>-based
   linking (use that path inside Shiny or with reactive filters).</p></div>

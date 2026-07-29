@@ -1,3 +1,57 @@
+// Column whose values name the entries of an ordinal legend, per layer type.
+var ORDINAL_KEY_FIELDS = {
+  treemap: "level_1",
+  donut: "x_var",
+  funnel: "stage",
+  waffle: "category",
+  radar: "group",
+  parallel: "group"
+};
+
+// Title for the legend as a whole. An explicit string always wins and renders
+// on every legend type. `true` derives the title from the column whose values
+// name the entries, and only when there are at least two entries and they all
+// come from that one column -- a mixed legend (grouped series plus a
+// standalone fit line) has no single grouping variable, so it stays untitled.
+export function resolveLegendTitle(chart, legendData) {
+  var configured = chart && chart.options ? chart.options.legendTitle : null;
+  if (typeof configured === "string" && configured) {
+    return configured;
+  }
+  if (configured !== true || !legendData ||
+      !Array.isArray(legendData.items) || legendData.items.length < 2) {
+    return null;
+  }
+
+  if (legendData.type === "layer") {
+    var layers = chart.plotLayers || [];
+    var name = null;
+    for (var i = 0; i < layers.length; i++) {
+      if (!layers[i].groupVar) {
+        return null;
+      }
+      if (name === null) {
+        name = layers[i].groupVar;
+      } else if (name !== layers[i].groupVar) {
+        return null;
+      }
+    }
+    return name;
+  }
+
+  if (legendData.type === "ordinal") {
+    var layer = (chart.currentLayers ||
+      (chart.derived && chart.derived.currentLayers) || chart.plotLayers || [])[0];
+    if (!layer || !layer.mapping) {
+      return null;
+    }
+    var field = ORDINAL_KEY_FIELDS[layer.type];
+    return (field && layer.mapping[field]) || null;
+  }
+
+  return null;
+}
+
 export function buildLegendData(chart, state) {
   if (!chart || !chart.plotLayers || chart.plotLayers.length === 0) {
     return null;
@@ -48,6 +102,8 @@ export function buildOrdinalLegendData(chart, layer) {
     keys = layer.data.map(function(d) {
       return d[layer.mapping.stage];
     });
+  } else if (layer.type === "waffle" && Array.isArray(layer.data)) {
+    keys = Array.from(new Set(layer.data.map(function(d) { return d[layer.mapping.category]; })));
   } else if (layer.type === "radar" && Array.isArray(layer.data)) {
     keys = layer.mapping.group
       ? Array.from(new Set(layer.data.map(function(d) { return d[layer.mapping.group]; })))

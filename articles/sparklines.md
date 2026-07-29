@@ -34,6 +34,8 @@ myIO(df, sparkline = TRUE) |>
 ## What sparkline mode does
 
 - Strips axes, legend, reference lines, and all interactions
+- Hides the floating action button, so no export/legend panel overlays
+  the mark
 - Sets margins to 1px
 - Defaults height to 20px, width to 100%
 - Only supports `line`, `bar`, and `area` types

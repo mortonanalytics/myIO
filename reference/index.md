@@ -44,6 +44,8 @@ Customize colors, margins, themes, and visual elements
   : Set Transition Speed
 - [`suppressLegend()`](https://mortonanalytics.github.io/myIO/reference/suppressLegend.md)
   : Suppress Legend Display
+- [`setLegendTitle()`](https://mortonanalytics.github.io/myIO/reference/setLegendTitle.md)
+  : Set the Legend Title
 
 ## Interactions
 

@@ -1,6 +1,6 @@
 import { easingFor } from "../transitions/easing.js";
 import { syncOrdinalLegendData } from "../layout/legend.js";
-import { getChartHeight } from "../layout/scaffold.js";
+import { FAB_GUTTER, getChartHeight } from "../layout/scaffold.js";
 import { isColorSchemeActive, tagName } from "../utils/responsive.js";
 
 export class TreemapRenderer {
@@ -11,6 +11,10 @@ export class TreemapRenderer {
 
   render(chart, layer) {
     var m = chart.margin;
+    // Keep the tiling clear of the floating action button in the top-right
+    // corner (style.css .myIO-fab); the treemap otherwise paints the whole
+    // plot rect and its corner leaf lands under the button.
+    var plotWidth = Math.max(1, chart.width - (m.left + m.right) - Math.max(0, FAB_GUTTER - m.right));
     var format = d3.format(",d");
     var key = layer.label;
 
@@ -29,7 +33,7 @@ export class TreemapRenderer {
 
     d3.treemap()
       .tile(d3.treemapResquarify)
-      .size([chart.width - (m.left + m.right), getChartHeight(chart) - (m.top + m.bottom)])
+      .size([plotWidth, getChartHeight(chart) - (m.top + m.bottom)])
       .round(true)
       .paddingInner(1)(root);
 

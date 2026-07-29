@@ -1,4 +1,20 @@
-import { getChartHeight } from "./scaffold.js";
+import { FAB_BAND_BOTTOM, getChartHeight } from "./scaffold.js";
+import { measureLabelWidth, textWidth } from "../utils/text-metrics.js";
+
+// A -90deg rotated <text> grows from its anchor toward SMALLER x by roughly the
+// font ascent (~12px at the 13px .myIO-axis-title size), and the SVG root clips
+// at x = 0 (overflow: hidden). The anchor must therefore sit at least one ascent
+// inside the left edge.
+var Y_AXIS_TITLE_INSET = 14;
+// d3.axisLeft puts the tick <text> at x = -tickPadding (3) because the tick size
+// is negative (grid lines), and updateYAxis nudges it a further .25em (3.25px at
+// the 13px .y-label size). The labels' right edge therefore sits
+// margin.left - 6.25 from the SVG's left edge.
+var Y_TICK_LABEL_GUTTER = 6.25;
+// The rotated title's bounding box ends Y_AXIS_TITLE_INSET + the font descent to
+// the right of the SVG edge; keep a visible gap between that and the labels.
+var Y_TITLE_DESCENT = 3;
+var Y_TITLE_CLEARANCE = 4;
 
 export function syncAxes(chart, state, options) {
   if (!state.axesChart) {
@@ -96,16 +112,37 @@ export function updateYAxis(chart, yScale, yAxisSelection, options) {
 
   if (chart.options.suppressAxis && chart.options.suppressAxis.yAxis === true) {
     yAxis.selectAll("*").remove();
+    chart.runtime = chart.runtime || {};
+    chart.runtime.yTickText = null;
     return;
   }
 
   var yAxisGenerator = d3.axisLeft(yScale).tickSize(-(chart.width - (chart.margin.right + chart.margin.left)));
-  if (typeof yScale.ticks === "function") {
+  var yTickLabels = normalizeTickLabels(chart.options.yTickLabels);
+  if (yTickLabels && typeof yScale.invert === "function") {
+    var yDomain = yScale.domain();
+    var yLow = Math.min(yDomain[0], yDomain[yDomain.length - 1]);
+    var yHigh = Math.max(yDomain[0], yDomain[yDomain.length - 1]);
+    yAxisGenerator
+      .tickValues(Object.keys(yTickLabels)
+        .map(function(value) { return +value; })
+        .filter(function(value) { return value >= yLow && value <= yHigh; }))
+      .tickFormat(function(value) {
+        var label = yTickLabels[String(value)];
+        return label == null ? value : label;
+      });
+  } else if (typeof yScale.ticks === "function") {
     yAxisGenerator.ticks(chartHeight < 450 ? 5 : 10);
     if (currentFormatY) {
       yAxisGenerator.tickFormat(currentFormatY);
     }
   }
+
+  // Stash the strings this generator is about to render. When the axis is drawn
+  // through a transition the text lands on the first animation frame, so the DOM
+  // still holds the previous labels; fitLeftMargin has to measure these instead.
+  chart.runtime = chart.runtime || {};
+  chart.runtime.yTickText = axisTickText(yScale, yAxisGenerator);
 
   axisCall
     .call(yAxisGenerator)
@@ -113,6 +150,98 @@ export function updateYAxis(chart, yScale, yAxisSelection, options) {
     .attr("dx", "-.25em");
 
   applyAxisStyles(chart.plot.selectAll(".y-axis"), "y");
+}
+
+// The tick strings d3-axis would render, resolved the same way d3-axis resolves
+// them: explicit tickValues/tickFormat when configured, otherwise the scale's
+// own ticks()/tickFormat() driven by the generator's tickArguments.
+function axisTickText(scale, axis) {
+  var values = axis.tickValues();
+  if (values == null) {
+    values = typeof scale.ticks === "function"
+      ? scale.ticks.apply(scale, axis.tickArguments())
+      : scale.domain();
+  }
+  var format = axis.tickFormat();
+  if (format == null) {
+    format = typeof scale.tickFormat === "function"
+      ? scale.tickFormat.apply(scale, axis.tickArguments())
+      : function(value) { return String(value); };
+  }
+  return values.map(function(value, i) { return String(format(value, i)); });
+}
+
+// The rotated y-axis title owns a fixed band at the SVG's left edge. When the
+// widest y tick label is wider than what is left of margin.left after that band,
+// the two collide (a "$,.0f" format on 3-digit data does it at the 50px default).
+// Grow the left margin to fit. Never below the configured value, never at all
+// once the user has called setMargin(), and grow-only relative to a stashed
+// baseline so repeated renders converge instead of ratcheting.
+export function fitLeftMargin(chart, state) {
+  if (!state || !state.axesChart || !chart.plot || chart.config.sparkline) {
+    return false;
+  }
+  if (chart.config.layout.marginSet) {
+    return false;
+  }
+  if (chart.runtime.baseMarginLeft == null) {
+    chart.runtime.baseMarginLeft = chart.config.layout.margin.left;
+  }
+  var widest = 0;
+  var stashed = chart.runtime && chart.runtime.yTickText;
+  if (stashed && stashed.length > 0) {
+    widest = measureLabelWidth(chart.plot, stashed, "13px", "y-label");
+  } else {
+    chart.plot.selectAll(".y-axis .tick text").each(function() {
+      var w = textWidth(this, this.textContent);
+      if (w > widest) {
+        widest = w;
+      }
+    });
+  }
+  if (widest <= 0) {
+    return false;
+  }
+  var titleBand = chart.options.yAxisLabel
+    ? Y_AXIS_TITLE_INSET + Y_TITLE_DESCENT + Y_TITLE_CLEARANCE
+    : Y_TITLE_CLEARANCE;
+  var target = Math.max(
+    chart.runtime.baseMarginLeft,
+    Math.ceil(widest + Y_TICK_LABEL_GUTTER + titleBand)
+  );
+  if (target === chart.config.layout.margin.left) {
+    return false;
+  }
+  chart.config.layout.margin.left = target;
+  return true;
+}
+
+// The floating action button is an overlay pinned to the container's top-right
+// corner and is the only route to the legend on panel-legend charts, so it
+// cannot be moved out of the plot's way -- a narrow plot gives up the band
+// instead. Wide containers keep their configured top margin. Never applies once
+// the user has called setMargin(), and the target is absolute rather than
+// grow-only so widening the container puts the margin back.
+export function fitTopMargin(chart, state) {
+  if (!state || !state.axesChart || !chart.plot || chart.config.sparkline) {
+    return false;
+  }
+  if (chart.config.layout.marginSet) {
+    return false;
+  }
+  if (chart.runtime.baseMarginTop == null) {
+    chart.runtime.baseMarginTop = chart.config.layout.margin.top;
+  }
+  // The button is permanent chrome pinned to the same top-right band on both
+  // tiers, so the band is reserved on both. Leaving the wide tier unreserved
+  // left whichever mark happened to land in the corner sitting under the
+  // button, which is a data-dependent defect rather than a layout choice.
+  var target = Math.max(chart.runtime.baseMarginTop, FAB_BAND_BOTTOM);
+  if (target === chart.config.layout.margin.top) {
+    return false;
+  }
+  chart.config.layout.margin.top = target;
+  return true;
 }
 
 function normalizeTickLabels(labels) {
@@ -146,6 +275,10 @@ function renderAxisTitles(chart) {
 
   var plotWidth = chart.width - (chart.margin.left + chart.margin.right);
   var plotHeight = getChartHeight(chart) - (chart.margin.top + chart.margin.bottom);
+  // Clamp so charts with an unusually small left margin are not pushed past
+  // their own y tick labels (behaviour there is unchanged from the old 6px).
+  var yTitleInset = Math.max(6, Math.min(Y_AXIS_TITLE_INSET, chart.margin.left - 6));
+  var yTitleTransform = "translate(" + (-chart.margin.left + yTitleInset) + "," + (plotHeight / 2) + ") rotate(-90)";
   var xTitleData = chart.options.xAxisLabel && !(chart.options.suppressAxis && chart.options.suppressAxis.xAxis === true)
     ? [chart.options.xAxisLabel]
     : [];
@@ -180,12 +313,12 @@ function renderAxisTitles(chart) {
         return enter.append("text")
           .attr("class", "myIO-axis-title myIO-axis-title-y")
           .attr("text-anchor", "middle")
-          .attr("transform", "translate(" + (-chart.margin.left + 6) + "," + (plotHeight / 2) + ") rotate(-90)")
+          .attr("transform", yTitleTransform)
           .text(function(d) { return d; });
       },
       function(update) {
         return update
-          .attr("transform", "translate(" + (-chart.margin.left + 6) + "," + (plotHeight / 2) + ") rotate(-90)")
+          .attr("transform", yTitleTransform)
           .text(function(d) { return d; });
       },
       function(exit) { return exit.remove(); }

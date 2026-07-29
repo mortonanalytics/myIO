@@ -100,7 +100,7 @@ export class BracketRenderer {
   formatTooltip() { return null; }
 
   remove(chart, layer) {
-    var className = tagName("bracket", chart.element.id, layer.label);
+    var className = tagName("bracket", chart.dom.element.id, layer.label);
     chart.chart.selectAll("." + className).remove();
   }
 }

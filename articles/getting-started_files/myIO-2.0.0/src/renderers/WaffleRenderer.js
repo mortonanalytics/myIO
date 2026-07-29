@@ -37,6 +37,9 @@ export class WaffleRenderer {
     var cells = [];
     var cellIndex = 0;
     var colorScale = chart.derived.colorDiscrete || d3.scaleOrdinal(d3.schemeCategory10);
+    colorScale.domain(Array.from(new Set(layer.data.map(function(d) { return d[layer.mapping.category]; }))));
+    chart.derived.colorDiscrete = colorScale;
+    chart.colorDiscrete = colorScale;
 
     for (var i = 0; i < layer.data.length; i++) {
       var d = layer.data[i];

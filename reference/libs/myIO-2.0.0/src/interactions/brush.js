@@ -92,24 +92,40 @@ function onBrushEnd(chart, event, layers, cfg) {
     data: selected,
     extent: extent,
     keys: keys,
+    // true while a brush rectangle exists on screen, even if it covers no
+    // points. clearBrush() emits active:false. Linked charts need the
+    // difference: an empty brush is a selection of nothing (dim everything),
+    // a removed brush is no selection at all (restore everything).
+    active: true,
     layerLabel: layers.length === 1 ? layers[0].label : null
   });
 }
 
 function clearBrush(chart) {
-  (chart.derived.currentLayers || []).forEach(function(layer) {
-    if (BRUSHABLE_TYPES.indexOf(layer.type) > -1) {
-      var selector = getLayerSelector(chart, layer);
-      chart.dom.chartArea.selectAll(selector)
-        .style("opacity", 1.0);
+  // Moving the brush to null re-dispatches d3's "end" event with no selection,
+  // which lands back here through onBrushEnd. Without this guard that recursion
+  // overflows the stack and the unwind skips the reset and the "brushed" emit
+  // below, leaving linked target charts dimmed forever.
+  if (chart.runtime._brushClearing) return;
+  chart.runtime._brushClearing = true;
+
+  try {
+    (chart.derived.currentLayers || []).forEach(function(layer) {
+      if (BRUSHABLE_TYPES.indexOf(layer.type) > -1) {
+        var selector = getLayerSelector(chart, layer);
+        chart.dom.chartArea.selectAll(selector)
+          .style("opacity", 1.0);
+      }
+    });
+    if (chart.runtime._brushFn) {
+      chart.dom.chartArea.select(".myIO-brush").call(chart.runtime._brushFn.move, null);
     }
-  });
-  if (chart.runtime._brushFn) {
-    chart.dom.chartArea.select(".myIO-brush").call(chart.runtime._brushFn.move, null);
+    chart.runtime._brushed = null;
+    removeStatusBar(chart);
+    chart.emit("brushed", { data: [], extent: null, keys: [], active: false, layerLabel: null });
+  } finally {
+    chart.runtime._brushClearing = false;
   }
-  chart.runtime._brushed = null;
-  removeStatusBar(chart);
-  chart.emit("brushed", { data: [], extent: null, keys: [], layerLabel: null });
 }
 
 function isInsideBrush(chart, d, layer, sel, dir) {

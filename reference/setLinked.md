@@ -67,6 +67,20 @@ setLinked(
 
 A modified `myIO` htmlwidget with Crosstalk linking.
 
+## Details
+
+Selections travel on the Crosstalk key space, so a myIO chart matches
+rows against sibling widgets (DT, plotly, leaflet) by the same keys they
+use. The keys are matched to the chart's rows by position, which
+requires the data passed to
+[`addIoLayer()`](https://mortonanalytics.github.io/myIO/reference/addIoLayer.md)
+to be `shared_data$data()` in its original row order. If a layer's row
+count does not match the number of keys – for example after re-filtering
+the frame, or after
+[`updateMyIOData()`](https://mortonanalytics.github.io/myIO/reference/myIOProxy.md)
+replaced the rows – the chart falls back to matching within its own
+widget only, rather than pairing keys with the wrong rows.
+
 ## See also
 
 [`linkCharts`](https://mortonanalytics.github.io/myIO/reference/linkCharts.md)
