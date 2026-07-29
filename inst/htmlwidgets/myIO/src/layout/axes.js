@@ -1,5 +1,5 @@
 import { getChartHeight } from "./scaffold.js";
-import { textWidth } from "../utils/text-metrics.js";
+import { measureLabelWidth, textWidth } from "../utils/text-metrics.js";
 
 // A -90deg rotated <text> grows from its anchor toward SMALLER x by roughly the
 // font ascent (~12px at the 13px .myIO-axis-title size), and the SVG root clips
@@ -112,6 +112,8 @@ export function updateYAxis(chart, yScale, yAxisSelection, options) {
 
   if (chart.options.suppressAxis && chart.options.suppressAxis.yAxis === true) {
     yAxis.selectAll("*").remove();
+    chart.runtime = chart.runtime || {};
+    chart.runtime.yTickText = null;
     return;
   }
 
@@ -136,12 +138,37 @@ export function updateYAxis(chart, yScale, yAxisSelection, options) {
     }
   }
 
+  // Stash the strings this generator is about to render. When the axis is drawn
+  // through a transition the text lands on the first animation frame, so the DOM
+  // still holds the previous labels; fitLeftMargin has to measure these instead.
+  chart.runtime = chart.runtime || {};
+  chart.runtime.yTickText = axisTickText(yScale, yAxisGenerator);
+
   axisCall
     .call(yAxisGenerator)
     .selectAll("text")
     .attr("dx", "-.25em");
 
   applyAxisStyles(chart.plot.selectAll(".y-axis"), "y");
+}
+
+// The tick strings d3-axis would render, resolved the same way d3-axis resolves
+// them: explicit tickValues/tickFormat when configured, otherwise the scale's
+// own ticks()/tickFormat() driven by the generator's tickArguments.
+function axisTickText(scale, axis) {
+  var values = axis.tickValues();
+  if (values == null) {
+    values = typeof scale.ticks === "function"
+      ? scale.ticks.apply(scale, axis.tickArguments())
+      : scale.domain();
+  }
+  var format = axis.tickFormat();
+  if (format == null) {
+    format = typeof scale.tickFormat === "function"
+      ? scale.tickFormat.apply(scale, axis.tickArguments())
+      : function(value) { return String(value); };
+  }
+  return values.map(function(value, i) { return String(format(value, i)); });
 }
 
 // The rotated y-axis title owns a fixed band at the SVG's left edge. When the
@@ -161,12 +188,17 @@ export function fitLeftMargin(chart, state) {
     chart.runtime.baseMarginLeft = chart.config.layout.margin.left;
   }
   var widest = 0;
-  chart.plot.selectAll(".y-axis .tick text").each(function() {
-    var w = textWidth(this, this.textContent);
-    if (w > widest) {
-      widest = w;
-    }
-  });
+  var stashed = chart.runtime && chart.runtime.yTickText;
+  if (stashed && stashed.length > 0) {
+    widest = measureLabelWidth(chart.plot, stashed, "13px", "y-label");
+  } else {
+    chart.plot.selectAll(".y-axis .tick text").each(function() {
+      var w = textWidth(this, this.textContent);
+      if (w > widest) {
+        widest = w;
+      }
+    });
+  }
   if (widest <= 0) {
     return false;
   }

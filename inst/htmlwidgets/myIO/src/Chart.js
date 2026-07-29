@@ -280,6 +280,18 @@ export class myIOchart {
         syncAxes(this, state, options);
       }
       this.routeLayers(this.derived.currentLayers);
+      // A renderer can re-format the y axis after the fit above (groupedBar's
+      // stacked layout swaps in its own scale, groupedBarHelpers.js), so the
+      // labels can end up wider than fitLeftMargin measured. One bounded
+      // re-fit -- never a loop: the redraw re-runs updateYAxis with the same
+      // scale, so a third pass computes the same target and returns false.
+      if (fitLeftMargin(this, state)) {
+        updateScaffoldLayout(this);
+        applyDerivedScales(this, state);
+        this.syncLegacyAliases();
+        syncAxes(this, state, options);
+        this.routeLayers(this.derived.currentLayers);
+      }
       syncReferenceLines(this, state, options);
       syncLegend(this, state);
       bindRollover(this);
@@ -361,16 +373,30 @@ export class myIOchart {
     var colors = layers.map(function(layer) {
       return layer.color;
     });
-    var bandwidth = ((this.runtime.width - (this.config.layout.margin.right + this.config.layout.margin.left)) / (data[0].length + 1)) / colors.length;
+    var that = this;
+    var draw = function() {
+      var bandwidth = ((that.runtime.width - (that.config.layout.margin.right + that.config.layout.margin.left)) / (data[0].length + 1)) / colors.length;
+      if (that.runtime.layout === "grouped") {
+        transitionGrouped(that, data, colors, bandwidth);
+      } else {
+        transitionStacked(that, data, colors, bandwidth);
+      }
+    };
 
-    if (this.runtime.layout === "stacked") {
-      transitionGrouped(this, data, colors, bandwidth);
-      this.runtime.layout = "grouped";
-    } else {
-      transitionStacked(this, data, colors, bandwidth);
-      this.runtime.layout = "stacked";
-    }
+    this.runtime.layout = this.runtime.layout === "stacked" ? "grouped" : "stacked";
+    draw();
     this.syncLegacyAliases();
+
+    // The stacked scale can format wider tick labels than the last fit saw.
+    // updateYAxis stashed the strings it is rendering, so this measures the NEW
+    // labels even though d3's transition has not written them to the DOM yet.
+    var state = deriveChartRender(this);
+    if (fitLeftMargin(this, state)) {
+      updateScaffoldLayout(this);
+      applyDerivedScales(this, state);
+      this.syncLegacyAliases();
+      draw();
+    }
   }
 
   setClipPath(type) {

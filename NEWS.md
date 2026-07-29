@@ -12,6 +12,16 @@
 
 ## Bug fixes
 
+* Grouped bar charts no longer let their y tick labels run through the y-axis
+  title after switching to the stacked layout. Stacking sums the series, so the
+  tick labels gain digits the chart's left margin was never sized for -- a
+  `"$,.0f"` format on data in the hundreds of thousands pushed the labels
+  several pixels past the rotated title. The left margin is now re-measured
+  after the bars are drawn, both when the layout is toggled from the chart's
+  action button and on every redraw of a chart already in stacked mode. Charts
+  that call `setMargin()` keep the margin they were given, and every other
+  chart type is unchanged.
+
 * Linked charts no longer disagree when a brush covers empty space. Dragging a
   brush over a region containing no points left the brushed chart with all its
   marks dimmed while every linked chart snapped back to full opacity, so the

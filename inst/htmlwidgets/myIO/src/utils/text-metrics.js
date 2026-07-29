@@ -8,9 +8,9 @@ export function textWidth(node, fallbackText) {
   return String(fallbackText == null ? "" : fallbackText).length * FALLBACK_CHAR_WIDTH;
 }
 
-export function measureLabelWidth(parent, strings, fontSize) {
+export function measureLabelWidth(parent, strings, fontSize, className) {
   var probe = parent.append("text")
-    .attr("class", "myIO-label-probe")
+    .attr("class", "myIO-label-probe" + (className ? " " + className : ""))
     .style("font-size", fontSize)
     .style("visibility", "hidden");
   var max = 0;
