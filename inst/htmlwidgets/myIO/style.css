@@ -107,6 +107,31 @@
   font-weight: 700;
 }
 
+.myIO-facet-title {
+  font-family: var(--chart-font);
+  color: var(--chart-sheet-accent);
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 var(--chart-spacing-md, 8px) 0;
+}
+
+.myIO-facet-grid {
+  display: grid;
+  gap: var(--chart-spacing-lg, 16px);
+}
+
+.myIO-facet-panel {
+  min-width: 0;
+}
+
+.myIO-facet-label {
+  font-family: var(--chart-font);
+  color: var(--chart-text-color);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
 .myIO-inline-legend-item {
   cursor: pointer;
   outline: none;

@@ -29,6 +29,16 @@
   categorical x axis the marks were drawn half a category width to the left of
   the tick they belonged to.
 
+* Small multiples created with `setFacet()` now show the chart title once, above
+  the grid, instead of repeating it inside every panel, and every panel draws
+  its own x and y axis with identical plot geometry so the panels are readable
+  and directly comparable. Previously only the first panel had a y axis, only
+  the bottom row had an x axis, and the panels that lost an axis were drawn
+  wider than the rest. The facet grid is also styled as a real CSS grid, so
+  `ncol` and `minWidth` take effect and panels sit side by side rather than
+  stacked at full width. An explicit `suppressAxis()` setting is now honoured
+  inside facet panels.
+
 # myIO 1.3.0
 
 ## New features
