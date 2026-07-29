@@ -104,6 +104,12 @@
   title. The anchor now sits far enough inside the border for the full glyph
   height to fit.
 
+* Funnel and Sankey charts no longer draw under the floating action button in
+  the corner of the widget. Both filled their whole plot rectangle, so the
+  widest funnel stage and the right-hand Sankey column and its labels were
+  partly hidden behind the button. Both layouts now reserve that band. Charts
+  that already set `setMargin(right = 56)` or larger are unchanged.
+
 ## User-visible changes
 
 * Legend entries for grouped layers now show the group value on its own instead

@@ -1,5 +1,10 @@
 import { isMobile, responsiveValue } from "../utils/responsive.js";
 
+// .myIO-fab is 40px wide and offset 12px from the container's right edge
+// (style.css .myIO-fab), plus 4px clearance. Renderers that fill the whole plot
+// rect must keep their marks out of this band or the button occludes them.
+export var FAB_GUTTER = 56;
+
 export function getChartHeight(chart) {
   return chart.height;
 }

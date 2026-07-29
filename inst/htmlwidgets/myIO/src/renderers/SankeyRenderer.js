@@ -1,5 +1,5 @@
 import { easingFor } from "../transitions/easing.js";
-import { getChartHeight } from "../layout/scaffold.js";
+import { FAB_GUTTER, getChartHeight } from "../layout/scaffold.js";
 import { tagName } from "../utils/responsive.js";
 import { chartBackgroundColor, readableTextColor } from "../theme/contrast.js";
 import { measureLabelWidth, textWidth } from "../utils/text-metrics.js";
@@ -12,7 +12,9 @@ export class SankeyRenderer {
 
   render(chart, layer) {
     var m = chart.margin;
-    var width = chart.width - (m.left + m.right);
+    // Keep the flow diagram clear of the floating action button, which sits over
+    // the top-right corner of the widget (style.css .myIO-fab).
+    var width = Math.max(1, chart.width - (m.left + m.right) - Math.max(0, FAB_GUTTER - m.right));
     var height = getChartHeight(chart) - (m.top + m.bottom);
     var nodeWidth = 18;
     var showValues = !(layer.options && layer.options.showValues === false);

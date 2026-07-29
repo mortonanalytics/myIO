@@ -6,6 +6,9 @@ import { registerBuiltInRenderers, getRenderer } from "../../inst/htmlwidgets/my
 globalThis.d3 = Object.assign({}, d3, d3Sankey);
 
 var PLOT_WIDTH = 400 - (50 + 5);
+// The layout also gives up the band under the floating action button
+// (FAB_GUTTER 56, minus the 5px right margin already outside the plot).
+var USABLE_WIDTH = PLOT_WIDTH - 51;
 
 function makeChart() {
   document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
@@ -55,8 +58,8 @@ describe("Sankey terminal-node gutter", function() {
     getRenderer("sankey").render(chart, makeLayer());
 
     var maxRight = Math.max.apply(null, nodeRights());
-    expect(maxRight).toBeLessThanOrEqual(PLOT_WIDTH - 20);
-    expect(maxRight).toBeCloseTo(315.5, 6);
+    expect(maxRight).toBeLessThanOrEqual(USABLE_WIDTH - 20);
+    expect(maxRight).toBeCloseTo(264.5, 6);
   });
 
   test("the terminal label sits in the gutter, to the right of its node", function() {
@@ -68,7 +71,7 @@ describe("Sankey terminal-node gutter", function() {
 
     expect(terminal.getAttribute("text-anchor")).toBe("start");
     expect(+terminal.getAttribute("x")).toBeGreaterThan(maxRight);
-    expect(+terminal.getAttribute("x")).toBeLessThan(PLOT_WIDTH);
+    expect(+terminal.getAttribute("x")).toBeLessThan(USABLE_WIDTH);
   });
 
   test("node labels use high-contrast ink with a background halo", function() {

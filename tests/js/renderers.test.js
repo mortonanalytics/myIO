@@ -431,6 +431,44 @@ describe("Renderer formatTooltip methods", function() {
     expect(document.querySelectorAll("path." + "tag-sankey-chart-flow").length).toBeGreaterThan(0);
   });
 
+  test("SankeyRenderer reserves the FAB gutter on the right", function() {
+    var renderer = getRenderer("sankey");
+    document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
+    var el = document.getElementById("chart");
+    var chart = {
+      element: el,
+      chart: d3.select(el).select(".myIO-chart-area"),
+      derived: {},
+      options: { transition: { speed: 0 } },
+      margin: { top: 30, bottom: 60, left: 50, right: 5 },
+      width: 400,
+      height: 300,
+      colorDiscrete: null
+    };
+    var layer = {
+      label: "flow",
+      color: ["#ff0000", "#00ff00", "#0000ff"],
+      mapping: { source: "source", target: "target", value: "value" },
+      data: [
+        { source: "A", target: "B", value: 2 },
+        { source: "B", target: "C", value: 3 }
+      ]
+    };
+
+    renderer.render(chart, layer);
+
+    var rightEdge = Math.max.apply(null, Array.from(
+      document.querySelectorAll("rect.tag-sankey-node-chart-flow")
+    ).map(function(node) {
+      return Number(node.getAttribute("x")) + Number(node.getAttribute("width"));
+    }));
+
+    // Plot width is 345; the FAB band claims 56 - 5 = 51 of it, so nothing may
+    // be drawn beyond x = 294. The terminal-label gutter eats a further 29.5.
+    expect(rightEdge).toBeLessThanOrEqual(294);
+    expect(rightEdge).toBeCloseTo(264.5, 1);
+  });
+
   test("RadarRenderer.render creates axes and group polygons", function() {
     var renderer = getRenderer("radar");
     document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
@@ -560,6 +598,37 @@ describe("Renderer formatTooltip methods", function() {
 
     expect(document.querySelectorAll(".tag-funnel-funnel_1 .funnel-stage").length).toBe(3);
     expect(document.querySelectorAll(".tag-funnel-funnel_1 .funnel-label").length).toBe(3);
+  });
+
+  test("FunnelRenderer caps stage width to clear the FAB", function() {
+    var renderer = getRenderer("funnel");
+    document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
+    var el = document.getElementById("chart");
+    var chart = {
+      dom: { chartArea: d3.select(el).select(".myIO-chart-area") },
+      derived: {},
+      margin: { top: 20, bottom: 20, left: 20, right: 20 },
+      width: 360,
+      height: 260
+    };
+    var layer = {
+      id: "funnel_1",
+      label: "pipeline",
+      mapping: { stage: "stage", value: "value" },
+      data: [
+        { stage: "Visit", value: 100 },
+        { stage: "Lead", value: 60 },
+        { stage: "Won", value: 20 }
+      ]
+    };
+
+    renderer.render(chart, layer);
+    d3.timerFlush();
+
+    var widest = document.querySelector(".tag-funnel-funnel_1 .funnel-stage");
+    var xs = widest.getAttribute("d").match(/[-\d.]+(?=,)/g).map(Number);
+    // Plot width 320, FAB band 56 - 20 = 36 reserved symmetrically, centre 160.
+    expect(Math.max.apply(null, xs)).toBeCloseTo(284, 0);
   });
 
   test("ParallelRenderer.render creates axes and polylines", function() {

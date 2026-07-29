@@ -1,4 +1,5 @@
 import { chartBackgroundColor, readableTextColor } from "../theme/contrast.js";
+import { FAB_GUTTER } from "../layout/scaffold.js";
 import { textWidth } from "../utils/text-metrics.js";
 
 export class FunnelRenderer {
@@ -21,6 +22,10 @@ export class FunnelRenderer {
     var margin = chart.margin || (chart.config && chart.config.layout ? chart.config.layout.margin : { top: 0, right: 0, bottom: 0, left: 0 });
     var width = ((chart.width || (chart.runtime && chart.runtime.width) || 0) - margin.left - margin.right);
     var height = ((chart.height || (chart.runtime && chart.runtime.height) || 0) - margin.top - margin.bottom);
+    // Cap the widest stage so it stays clear of the floating action button in the
+    // top-right corner (style.css .myIO-fab); the funnel itself stays centred.
+    var fabGutter = Math.max(0, FAB_GUTTER - margin.right);
+    var maxStageWidth = Math.max(1, Math.min(width * 0.95, width - 2 * fabGutter));
     var stageVar = layer.mapping.stage;
     var valueVar = layer.mapping.value;
     var stageGap = (layer.options && layer.options.stageGap) || 6;
@@ -37,7 +42,7 @@ export class FunnelRenderer {
     }) || 0;
     var widthScale = d3.scaleLinear()
       .domain([0, maxValue > 0 ? maxValue : 1])
-      .range([0, width * 0.95]);
+      .range([0, maxStageWidth]);
     var colorScale = chart.derived.colorDiscrete || d3.scaleOrdinal(d3.schemeTableau10);
     var stageHeight = layer.data.length > 0 ? height / layer.data.length : 0;
     var stages;
