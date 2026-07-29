@@ -1,3 +1,13 @@
+# myIO (development version)
+
+## Bug fixes
+
+* The demo screenshot script (`scripts/screenshot-all.js`) now enumerates the
+  navbar and any nested tabsets from the live DOM instead of a hard-coded tab
+  list, so it covers all 41 demo charts and no longer fails on tabs that are
+  plain top-level entries rather than dropdown menus. It also records console
+  errors and warnings per chart in `report.json`.
+
 # myIO 1.3.0
 
 ## New features

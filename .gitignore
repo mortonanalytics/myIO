@@ -24,5 +24,6 @@ coverage/
 /screenshots
 /screenshots-review
 review-home.png
-/scripts
+/scripts/*
+!/scripts/screenshot-all.js
 /md
