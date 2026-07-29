@@ -97,3 +97,24 @@ test_that("boxplot honours factor level order over alphabetical order", {
   expect_equal(rows[["mid"]]$y_var, 51.5)
   expect_equal(rows[["high"]]$y_var, 915)
 })
+
+test_that("whiskerType = 'minmax' draws whiskers at each group's own extremes", {
+  df <- data.frame(
+    group = c(rep("C", 4), rep("A", 4)),
+    value = c(1000, 1010, 1020, 5000,  1, 2, 3, 900),
+    stringsAsFactors = FALSE
+  )
+  w <- myIO::addIoLayer(
+    myIO::myIO(), type = "boxplot", label = "bp", data = df,
+    mapping = list(x_var = "group", y_var = "value"),
+    options = list(whiskerType = "minmax", showOutliers = FALSE)
+  )
+  hi <- Filter(function(l) identical(l$`_compositeRole`, "whisker_high"), w$x$config$layers)[[1]]
+  rows <- stats::setNames(hi$data, vapply(hi$data, function(r) r$group, character(1)))
+  expect_equal(rows[["A"]]$y_var, 900)
+  expect_equal(rows[["C"]]$y_var, 5000)
+  lo <- Filter(function(l) identical(l$`_compositeRole`, "whisker_low"), w$x$config$layers)[[1]]
+  lo_rows <- stats::setNames(lo$data, vapply(lo$data, function(r) r$group, character(1)))
+  expect_equal(lo_rows[["A"]]$y_var, 1)
+  expect_equal(lo_rows[["C"]]$y_var, 1000)
+})

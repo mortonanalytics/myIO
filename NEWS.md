@@ -12,6 +12,12 @@
 
 ## Bug fixes
 
+* `type = "boxplot"` with `options = list(whiskerType = "minmax")` no longer
+  fails with `$ operator is invalid for atomic vectors`. The documented
+  `"minmax"` whisker style errored on every call; whiskers now render at each
+  group's own minimum and maximum as documented. The default `"tukey"` whiskers
+  are unaffected.
+
 * The compact in-plot legend no longer runs underneath the x-axis title on
   narrow charts. Its first row shares a baseline band with the centred axis
   title, so that row now stops short of it and wraps instead; the second row

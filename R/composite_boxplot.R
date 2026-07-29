@@ -45,8 +45,8 @@ composite_boxplot <- function(data, mapping, label, color, options) {
 
   whisker_low_data <- data.frame(
     x_var = positions,
-    y_var = whisker_df$whisker_low,
-    low_y = whisker_df$whisker_low,
+    y_var = whisker_df[, "whisker_low"],
+    low_y = whisker_df[, "whisker_low"],
     high_y = quantiles$q1[quantile_idx],
     group = groups,
     stringsAsFactors = FALSE,
@@ -55,9 +55,9 @@ composite_boxplot <- function(data, mapping, label, color, options) {
 
   whisker_high_data <- data.frame(
     x_var = positions,
-    y_var = whisker_df$whisker_high,
+    y_var = whisker_df[, "whisker_high"],
     low_y = quantiles$q3[quantile_idx],
-    high_y = whisker_df$whisker_high,
+    high_y = whisker_df[, "whisker_high"],
     group = groups,
     stringsAsFactors = FALSE,
     check.names = FALSE
