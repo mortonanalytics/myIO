@@ -39,6 +39,12 @@
   stacked at full width. An explicit `suppressAxis()` setting is now honoured
   inside facet panels.
 
+* Radar charts now draw concentric grid rings with radial value labels, so the
+  magnitude of each polygon vertex can actually be read. Previously the chart
+  showed only the radial spokes and their category labels, leaving the plot
+  without any value reference. The rings can be turned off or re-levelled per
+  layer with `options = list(grid = FALSE)` and `options = list(gridLevels = 6)`.
+
 # myIO 1.3.0
 
 ## New features

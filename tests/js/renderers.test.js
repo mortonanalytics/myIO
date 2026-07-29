@@ -462,6 +462,78 @@ describe("Renderer formatTooltip methods", function() {
     expect(document.querySelectorAll(".tag-radar-radar_1 .radar-polygon").length).toBe(2);
   });
 
+  test("RadarRenderer.render draws concentric grid rings with value labels", function() {
+    var renderer = getRenderer("radar");
+    document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
+    var el = document.getElementById("chart");
+    var chart = {
+      dom: { chartArea: d3.select(el).select(".myIO-chart-area") },
+      derived: {},
+      margin: { top: 30, bottom: 30, left: 30, right: 30 },
+      width: 320,
+      height: 320
+    };
+    var layer = {
+      id: "radar_2",
+      label: "skills",
+      mapping: { axis: "axis", value: "value" },
+      data: [
+        { axis: "A", value: 20 },
+        { axis: "B", value: 60 },
+        { axis: "C", value: 80 }
+      ]
+    };
+
+    renderer.render(chart, layer);
+
+    var rings = document.querySelectorAll(".tag-radar-radar_2 .radar-grid-ring");
+    expect(rings.length).toBe(4);
+    expect(rings[0].getAttribute("stroke")).toBe("var(--chart-grid, #cbd5e1)");
+    expect(rings[0].getAttribute("fill")).toBe("none");
+    expect(Array.from(document.querySelectorAll(".tag-radar-radar_2 .radar-grid-label")).map(function(node) {
+      return node.textContent;
+    })).toEqual(["20", "40", "60", "80"]);
+  });
+
+  test("RadarRenderer grid can be disabled via layer options", function() {
+    var renderer = getRenderer("radar");
+    document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
+    var el = document.getElementById("chart");
+    var chart = {
+      dom: { chartArea: d3.select(el).select(".myIO-chart-area") },
+      derived: {},
+      margin: { top: 30, bottom: 30, left: 30, right: 30 },
+      width: 320,
+      height: 320
+    };
+    var data = [
+      { axis: "A", value: 20 },
+      { axis: "B", value: 60 },
+      { axis: "C", value: 80 }
+    ];
+
+    renderer.render(chart, {
+      id: "radar_3",
+      label: "skills",
+      mapping: { axis: "axis", value: "value" },
+      data: data,
+      options: { grid: false }
+    });
+
+    expect(document.querySelectorAll(".tag-radar-radar_3 .radar-grid-ring").length).toBe(0);
+    expect(document.querySelectorAll(".tag-radar-radar_3 .radar-polygon").length).toBe(1);
+
+    renderer.render(chart, {
+      id: "radar_4",
+      label: "skills",
+      mapping: { axis: "axis", value: "value" },
+      data: data,
+      options: { gridLevels: 6 }
+    });
+
+    expect(document.querySelectorAll(".tag-radar-radar_4 .radar-grid-ring").length).toBe(6);
+  });
+
   test("FunnelRenderer.render creates trapezoid stages", function() {
     var renderer = getRenderer("funnel");
     document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
