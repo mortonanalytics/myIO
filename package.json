@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@duckdb/duckdb-wasm": "^1.28.0",
-    "@playwright/test": "^1.61.1",
+    "@playwright/test": "^1.62.0",
     "@vitest/coverage-v8": "^4.1.10",
     "d3": "^7.9.0",
     "d3-sankey": "^0.12.3",
