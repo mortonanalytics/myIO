@@ -241,6 +241,43 @@ describe("bottom sheet", function() {
     expect(chart.element.querySelector(".myIO-fab").getAttribute("aria-expanded")).toBe("false");
   });
 
+  test("panel closes when the widget's tab pane is hidden", async function() {
+    // Reduced motion so closePanel finalizes synchronously.
+    setMatchMedia(true);
+    const chart = buildChart();
+    const observers = [];
+    const original = window.IntersectionObserver;
+    window.IntersectionObserver = function(cb) {
+      this.cb = cb;
+      this.observe = function() {};
+      this.disconnect = function() {};
+      observers.push(this);
+    };
+
+    try {
+      addFAB(chart);
+      openPanel(chart);
+      await flush();
+
+      expect(observers.length).toBe(1);
+      expect(chart.element.querySelectorAll(".myIO-panel").length).toBe(1);
+
+      // Scrolled out of view keeps a non-zero box, so the panel must stay open.
+      observers[0].cb([{ isIntersecting: false, intersectionRatio: 0, boundingClientRect: { width: 800, height: 400 } }]);
+      await flush();
+      expect(chart.runtime._sheetOpen).toBe(true);
+
+      // A display:none ancestor collapses the box to zero area: close.
+      observers[0].cb([{ isIntersecting: false, intersectionRatio: 0, boundingClientRect: { width: 0, height: 0 } }]);
+      await flush();
+      expect(chart.runtime._sheetOpen).toBe(false);
+      expect(chart.element.querySelectorAll(".myIO-panel").length).toBe(0);
+      expect(chart.element.querySelector(".myIO-fab").getAttribute("aria-expanded")).toBe("false");
+    } finally {
+      window.IntersectionObserver = original;
+    }
+  });
+
   test("closePanel allows the sheet to reopen immediately", async function() {
     const chart = buildChart();
     addFAB(chart);

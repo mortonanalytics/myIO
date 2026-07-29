@@ -110,6 +110,12 @@
   partly hidden behind the button. Both layouts now reserve that band. Charts
   that already set `setMargin(right = 56)` or larger are unchanged.
 
+* An open legend/actions panel now closes when its chart's tab is switched
+  away from. Tab frameworks hide the pane rather than destroying the widget, so
+  the panel stayed open -- it was still there on return, its button still
+  reported itself expanded, and two charts could hold competing keyboard focus
+  traps at once.
+
 ## User-visible changes
 
 * Legend entries for grouped layers now show the group value on its own instead
