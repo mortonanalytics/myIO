@@ -223,6 +223,14 @@
   reported itself expanded, and two charts could hold competing keyboard focus
   traps at once.
 
+* A funnel value label placed outside its trapezoid no longer runs under the
+  legend/actions button. The funnel's stages were already kept clear of the
+  button, but a label that no longer fits inside a stage is placed against the
+  full plot width, so on a funnel with a small top margin the first stage's
+  value could be painted beneath it. Only a label whose text actually falls in
+  the button's band is affected -- labels lower down the funnel still use the
+  full width, so nothing that was legible before is suppressed now.
+
 * The legend/actions button now sits in the top-right corner at every container
   width. On containers narrower than 600px it dropped to the bottom-right, where
   it covered the right-most x-axis tick label -- the bottom band there is fully

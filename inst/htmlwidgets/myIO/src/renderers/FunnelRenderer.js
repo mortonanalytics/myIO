@@ -1,5 +1,5 @@
 import { chartBackgroundColor, readableTextColor } from "../theme/contrast.js";
-import { FAB_GUTTER } from "../layout/scaffold.js";
+import { FAB_BAND_BOTTOM, FAB_GUTTER } from "../layout/scaffold.js";
 import { textWidth } from "../utils/text-metrics.js";
 
 export class FunnelRenderer {
@@ -26,6 +26,15 @@ export class FunnelRenderer {
     // top-right corner (style.css .myIO-fab); the funnel itself stays centred.
     var fabGutter = Math.max(0, FAB_GUTTER - margin.right);
     var maxStageWidth = Math.max(1, Math.min(width * 0.95, width - 2 * fabGutter));
+    // The button's rectangle in plot coordinates. The stages were pushed out of
+    // this band, but an outside value label is placed against the full plot
+    // width, so it can still slide under the button. A label whose text box
+    // sits below fabBandBottom may run to the full width; one that does not has
+    // to stop at fabLeft. When margin.top >= 48 the band is above the plot
+    // entirely, fabBandBottom goes negative and nothing is ever capped.
+    var fabLeft = width - fabGutter;
+    var fabBandBottom = FAB_BAND_BOTTOM - margin.top;
+    var VALUE_HALF_HEIGHT = 8;   // 12px text on a 0.35em dy
     var stageVar = layer.mapping.stage;
     var valueVar = layer.mapping.value;
     var stageGap = (layer.options && layer.options.stageGap) || 6;
@@ -117,7 +126,8 @@ export class FunnelRenderer {
       selection.each(function(s) {
         var length = textWidth(this, valueText(s));
         var inside = length <= Math.max(0, s.innerWidth - 8);
-        var outsideFits = s.outsideX + length <= width;
+        var clearsFab = (s.labelY - VALUE_HALF_HEIGHT) >= fabBandBottom;
+        var outsideFits = s.outsideX + length <= (clearsFab ? width : fabLeft);
         d3.select(this)
           .attr("x", inside ? s.labelX : s.outsideX)
           .attr("y", inside ? s.labelY + 9 : s.labelY)

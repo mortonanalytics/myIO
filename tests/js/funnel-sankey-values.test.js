@@ -112,6 +112,48 @@ describe("Funnel value labels", function() {
     });
   });
 
+  // Geometry (jsdom 6.5px/char fallback): plot 320x220, fabGutter 36, so
+  // fabLeft 284 and maxStageWidth 248. Stage A is 50 against a max of 100, so
+  // topWidth 124 but bottomWidth 49.6 -- innerWidth 49.6 leaves 41.6 usable
+  // against a 71.5px label, so the label has to go outside. outsideX is 228,
+  // putting its right edge at 299.5: past fabLeft, still inside the plot.
+  function fabFunnelLayer() {
+    return {
+      id: "funnel_1",
+      label: "conversion",
+      mapping: { stage: "stage", value: "value" },
+      options: null,
+      data: [
+        { stage: "A", value: 50 },
+        { stage: "B", value: 20 },
+        { stage: "C", value: 100 }
+      ]
+    };
+  }
+
+  test("an outside value label that would slide under the button is suppressed", function() {
+    var chart = makeFunnelChart();
+    getRenderer("funnel").render(chart, fabFunnelLayer());
+
+    var first = valueNodes()[0];
+    // The first stage is the only one whose label box can reach the band.
+    expect(first.getAttribute("text-anchor")).toBe("start");
+    expect(first.getAttribute("fill-opacity")).toBe("0");
+  });
+
+  test("the same label is kept when the button band is above the plot", function() {
+    // Only margin.top moves, so the label's x geometry is identical -- the
+    // horizontal test still says "does not fit before fabLeft". A blanket
+    // horizontal cap would wrongly suppress this one too.
+    var chart = makeFunnelChart();
+    chart.margin = { top: 60, right: 20, bottom: 20, left: 20 };
+    getRenderer("funnel").render(chart, fabFunnelLayer());
+
+    var first = valueNodes()[0];
+    expect(first.getAttribute("text-anchor")).toBe("start");
+    expect(first.getAttribute("fill-opacity")).toBe("1");
+  });
+
   test("stage labels use an ink readable against their own fill", function() {
     var chart = makeFunnelChart();
     getRenderer("funnel").render(chart, funnelLayer());
