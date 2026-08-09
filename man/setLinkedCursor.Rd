@@ -13,8 +13,8 @@ setLinkedCursor(myIO, enabled = TRUE, axis = "x")
 \code{FALSE} to turn it off. Default \code{TRUE}.}
 
 \item{axis}{Character. Which axis to sync: \code{"x"} (default),
-\code{"y"}, or \code{"xy"}. Only \code{"x"} is active in v1.2; other
-values are accepted and persisted but not yet rendered.}
+\code{"y"}, or \code{"xy"}. Only \code{"x"} is rendered; the other
+values are accepted and persisted but currently have no visible effect.}
 }
 \value{
 A modified \code{myIO} htmlwidget.
