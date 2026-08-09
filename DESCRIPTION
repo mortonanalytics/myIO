@@ -1,7 +1,7 @@
 Package: myIO
 Type: Package
 Title: Interactive Data Visualizations Using 'd3.js'
-Version: 1.3.0
+Version: 1.4.0
 Authors@R: c(
     person("Ryan", "Morton", email = "morton@myma.us",
            role = c("aut", "cre", "cph")),

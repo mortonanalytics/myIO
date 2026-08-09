@@ -1,4 +1,4 @@
-# myIO (development version)
+# myIO 1.4.0
 
 ## Bug fixes
 
