@@ -6,6 +6,7 @@ import { BarRenderer } from "../../inst/htmlwidgets/myIO/src/renderers/BarRender
 import { GroupedBarRenderer } from "../../inst/htmlwidgets/myIO/src/renderers/GroupedBarRenderer.js";
 import { LollipopRenderer } from "../../inst/htmlwidgets/myIO/src/renderers/LollipopRenderer.js";
 import { CandlestickRenderer } from "../../inst/htmlwidgets/myIO/src/renderers/CandlestickRenderer.js";
+import { BumpRenderer } from "../../inst/htmlwidgets/myIO/src/renderers/BumpRenderer.js";
 
 globalThis.d3 = d3;
 
@@ -255,5 +256,74 @@ describe("scale semantics", function() {
     expect(function() {
       resolveScaleSemantics(chart, [heatmapLayer, lineLayer]);
     }).toThrow(/Mismatched scaleTypes/);
+  });
+
+  // Rank charts read top-down: rank 1 belongs above rank 5, and there is no
+  // such thing as rank 1.5.
+  function bumpLayer() {
+    return {
+      type: "bump",
+      label: "ranks",
+      mapping: { x_var: "period", y_var: "rank", group: "team" },
+      data: [
+        { period: "Q1", rank: 1, team: "a" },
+        { period: "Q1", rank: 5, team: "b" },
+        { period: "Q2", rank: 5, team: "a" },
+        { period: "Q2", rank: 1, team: "b" }
+      ],
+      scaleHints: BumpRenderer.scaleHints
+    };
+  }
+
+  test("bump puts rank 1 above rank 5", function() {
+    var layer = bumpLayer();
+    var chart = makeChart();
+    var semantics = resolveScaleSemantics(chart, [layer]);
+
+    expect(semantics.yReversed).toBe(true);
+
+    processScales(chart, [layer], semantics);
+
+    expect(chart.derived.yScale(1)).toBeLessThan(chart.derived.yScale(5));
+  });
+
+  test("bump asks for whole-number ticks", function() {
+    var layer = bumpLayer();
+    var chart = makeChart();
+    var semantics = resolveScaleSemantics(chart, [layer]);
+
+    expect(semantics.yIntegerTicks).toBe(true);
+
+    processScales(chart, [layer], semantics);
+
+    expect(chart.derived.scaleSemantics.yIntegerTicks).toBe(true);
+  });
+
+  test("a flipped bump chart drops both y-axis hints", function() {
+    var layer = bumpLayer();
+    var chart = makeChart();
+    chart.config.scales.flipAxis = true;
+    var semantics = resolveScaleSemantics(chart, [layer]);
+
+    expect(semantics.yReversed).toBe(false);
+    expect(semantics.yIntegerTicks).toBe(false);
+  });
+
+  test("charts without the hint keep the standard bottom-up y axis", function() {
+    var layer = {
+      type: "line",
+      label: "trend",
+      mapping: { x_var: "x", y_var: "y" },
+      data: [{ x: 1, y: 1 }, { x: 2, y: 5 }],
+      scaleHints: { xScaleType: "linear", yScaleType: "linear", yExtentFields: ["y_var"], domainMerge: "union" }
+    };
+    var chart = makeChart();
+    var semantics = resolveScaleSemantics(chart, [layer]);
+
+    expect(semantics.yReversed).toBe(false);
+
+    processScales(chart, [layer], semantics);
+
+    expect(chart.derived.yScale(1)).toBeGreaterThan(chart.derived.yScale(5));
   });
 });

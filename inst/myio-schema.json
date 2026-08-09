@@ -867,6 +867,8 @@
         "yExtentFields": [
           "y_var"
         ],
+        "yReversed": true,
+        "yIntegerTicks": true,
         "domainMerge": "union"
       }
     },
