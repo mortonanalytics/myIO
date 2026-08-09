@@ -82,7 +82,7 @@ export class SankeyRenderer {
       .selectAll("." + tagName("sankey", chart.element.id, layer.label))
       .data(graph.links);
 
-    link.exit().transition().duration(chart.options.transition.speed).style("opacity", 0).remove();
+    link.exit().transition().ease(easingFor(chart, d3.easeCubic)).duration(chart.options.transition.speed).style("opacity", 0).remove();
 
     var newLink = link.enter()
       .append("path")
@@ -108,7 +108,7 @@ export class SankeyRenderer {
       .selectAll("." + tagName("sankey-node", chart.element.id, layer.label))
       .data(graph.nodes);
 
-    node.exit().transition().duration(chart.options.transition.speed).style("opacity", 0).remove();
+    node.exit().transition().ease(easingFor(chart, d3.easeCubic)).duration(chart.options.transition.speed).style("opacity", 0).remove();
 
     var newNode = node.enter()
       .append("rect")
@@ -147,7 +147,7 @@ export class SankeyRenderer {
       .data(graph.nodes, function(d) { return d.name; });
 
     labelSelection.exit()
-      .transition().duration(chart.options.transition.speed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(chart.options.transition.speed)
       .style("opacity", 0)
       .remove();
 
@@ -169,7 +169,7 @@ export class SankeyRenderer {
       .attr("stroke-linejoin", "round")
       .attr("paint-order", "stroke")
       .text(labelText)
-      .transition().duration(chart.options.transition.speed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(chart.options.transition.speed)
       .style("opacity", 1)
       .attr("x", labelX)
       .attr("y", labelY)
@@ -229,7 +229,7 @@ export class SankeyRenderer {
       .data(showValues ? graph.links : [], function(d) { return d.source.name + ">" + d.target.name; });
 
     flowSelection.exit()
-      .transition().duration(chart.options.transition.speed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(chart.options.transition.speed)
       .style("opacity", 0)
       .remove();
 
@@ -251,7 +251,7 @@ export class SankeyRenderer {
       .attr("fill-opacity", function(d) {
         return flowShown.get(d.source.name + ">" + d.target.name) ? 1 : 0;
       })
-      .transition().duration(chart.options.transition.speed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(chart.options.transition.speed)
       .style("opacity", 1);
   }
 
@@ -278,9 +278,9 @@ export class SankeyRenderer {
   }
 
   remove(chart, layer) {
-    chart.dom.chartArea.selectAll("." + tagName("sankey", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
-    chart.dom.chartArea.selectAll("." + tagName("sankey-node", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
-    chart.dom.chartArea.selectAll("." + tagName("sankey-label", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
-    chart.dom.chartArea.selectAll("." + tagName("sankey-flow", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll("." + tagName("sankey", chart.dom.element.id, layer.label)).transition().ease(easingFor(chart, d3.easeCubic)).duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll("." + tagName("sankey-node", chart.dom.element.id, layer.label)).transition().ease(easingFor(chart, d3.easeCubic)).duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll("." + tagName("sankey-label", chart.dom.element.id, layer.label)).transition().ease(easingFor(chart, d3.easeCubic)).duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll("." + tagName("sankey-flow", chart.dom.element.id, layer.label)).transition().ease(easingFor(chart, d3.easeCubic)).duration(500).style("opacity", 0).remove();
   }
 }
