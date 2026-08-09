@@ -1,3 +1,26 @@
+# myIO (development version)
+
+## Bug fixes
+
+* `setTransition(easing = )` now reaches every chart type. It was documented as
+  universal but only the enter and update joins of about half the renderers
+  actually applied it, so calling it on a radar, funnel, waffle, dumbbell,
+  bracket, beeswarm, bump, calendar heatmap, lollipop, parallel-coordinates or
+  quantile-dots chart changed nothing and produced no warning. All 144
+  transitions across the renderer set now resolve their easing through the
+  public setting, falling back to each renderer's previous curve when no easing
+  is set, so charts that never called `setTransition()` animate exactly as
+  before. `setTransition(stagger = )` reaches the eleven renderers that had no
+  transition delays at all; transitions that use a delay to sequence one
+  animation behind another keep that sequencing.
+* Bump charts now draw rank 1 at the top of the plot with whole-number axis
+  ticks, instead of rank 1 at the bottom with half-rank ticks such as 1.5. This
+  flips the vertical orientation of every existing bump chart.
+* `setLinkedCursor()` no longer describes its `axis` argument in terms of a
+  release two versions old. Only `"x"` is rendered; `"y"` and `"xy"` are still
+  accepted and stored without visible effect.
+* NEWS entries use the US spellings the package declares in `Language: en-US`.
+
 # myIO 1.3.0
 
 ## New features
@@ -58,7 +81,7 @@
   `myIOProxy("chart") |> updateMyIOData(series = new_df)`.
 
 * `setLegendTitle()` puts a title on the legend naming the variable its entries
-  come from, so a grouped chart whose series are labelled `5 6 7 8 9` can say
+  come from, so a grouped chart whose series are labeled `5 6 7 8 9` can say
   those are months. The title renders on whichever legend surface is active --
   the compact in-plot strip or the panel behind the legend button -- and on
   exported SVG, PNG and PDF. Pass a string, or `TRUE` to derive the title from
@@ -84,7 +107,7 @@
 
 * Waterfall charts no longer log a browser console warning about null values,
   and the total bar's tooltip no longer reads `Delta: null`. A total row is
-  declared by putting `NA` in the value column, and that `NA` was travelling all
+  declared by putting `NA` in the value column, and that `NA` was traveling all
   the way to the browser even though the transform had already worked out what
   the bar's height should be. The total row now carries its own magnitude -- the
   running total the bar spans -- so the chart reports a real number everywhere.
@@ -150,7 +173,7 @@
   are unaffected.
 
 * The compact in-plot legend no longer runs underneath the x-axis title on
-  narrow charts. Its first row shares a baseline band with the centred axis
+  narrow charts. Its first row shares a baseline band with the centered axis
   title, so that row now stops short of it and wraps instead; the second row
   sits below the title and keeps the full width.
 
@@ -163,7 +186,7 @@
   `linkCharts()` group dims the non-matching marks on every other chart in the
   group; previously nothing happened at all, in any environment. Three things
   were wrong: the link mode written by `linkCharts()` was a value the
-  browser-side code did not recognise, so neither the outgoing nor the incoming
+  browser-side code did not recognize, so neither the outgoing nor the incoming
   handler was ever connected; the cross-selection machinery required Crosstalk
   to be loaded even though `linkCharts()` is documented as not needing it, so it
   bailed out on a plain R Markdown or Quarto page; and rows were matched between
@@ -189,7 +212,7 @@
 * `type = "regression"` now draws the raw scatter, the fitted line and the
   confidence band in visually separable treatments. Previously all three shared
   a single hue, so the fit and its uncertainty band were hard to distinguish
-  from the data. The scatter keeps the layer colour, the fit line and band take
+  from the data. The scatter keeps the layer color, the fit line and band take
   a second contrasting hue from the Okabe-Ito palette, and the band renders at a
   lighter fill opacity. Pass a two-element `color` vector to set both
   explicitly (`color = c("#333", "#333")` restores the previous single-hue
@@ -210,11 +233,11 @@
 
 * Waffle charts now show a legend. Previously no legend appeared at all --
   neither the in-plot strip nor the bottom-sheet panel listed a single category,
-  so there was no way to tell which colour meant which category. The legend now
+  so there was no way to tell which color meant which category. The legend now
   lists one entry per category, in data order, with swatches that match the cell
-  colours.
+  colors.
 
-* Bump charts now draw each series in its own colour, matching the legend
+* Bump charts now draw each series in its own color, matching the legend
   swatches. Every series previously rendered in the same blue, making the
   legend useless and the ranking lines impossible to tell apart.
 
@@ -229,13 +252,13 @@
   the bottom row had an x axis, and the panels that lost an axis were drawn
   wider than the rest. The facet grid is also styled as a real CSS grid, so
   `ncol` and `minWidth` take effect and panels sit side by side rather than
-  stacked at full width. An explicit `suppressAxis()` setting is now honoured
+  stacked at full width. An explicit `suppressAxis()` setting is now honored
   inside facet panels.
 
 * Radar charts now draw concentric grid rings with radial value labels, so the
   magnitude of each polygon vertex can actually be read. Previously the chart
   showed only the radial spokes and their category labels, leaving the plot
-  without any value reference. The rings can be turned off or re-levelled per
+  without any value reference. The rings can be turned off or re-leveled per
   layer with `options = list(grid = FALSE)` and `options = list(gridLevels = 6)`.
 
 * Bar, grouped bar and lollipop charts now start their value axis at zero by
@@ -262,16 +285,16 @@
   print the stage value and its conversion rate against the first stage; Sankey
   nodes print their total and each flow prints its magnitude. Previously the
   only text was the stage or node name and the values were reachable only by
-  hovering. Labels honour `setAxisFormat(yAxis = )`, are placed so they stay
+  hovering. Labels honor `setAxisFormat(yAxis = )`, are placed so they stay
   readable against the mark they sit on, and are suppressed rather than
   overlapped where the shape is too small. Pass `showValues = FALSE` to
-  `addIoLayer()` to restore the previous names-only labelling.
+  `addIoLayer()` to restore the previous names-only labeling.
 
 * Sankey charts no longer push their terminal nodes against the right edge of
   the plot. The layout now reserves room for the right-hand node labels, so the
   last column and its labels sit inside the plot area instead of being clipped
   and drawn back on top of the flow ribbons. Node labels are also drawn in a
-  high-contrast ink with a background-coloured halo, so they stay legible where
+  high-contrast ink with a background-colored halo, so they stay legible where
   they cross a ribbon; on a dark chart background the ink flips to white.
 
 * Rotated y-axis titles set with `setAxisLabels(yAxis = )` are no longer shaved
@@ -360,7 +383,7 @@
   machine). Ascending order reads bottom-to-top, matching a discrete y axis in
   ggplot2. **This changes the rendering of any existing ridgeline whose group
   column was not already sorted**: the ridges move, the y tick labels move with
-  them, and because the `color` vector is applied by group position, the colours
+  them, and because the `color` vector is applied by group position, the colors
   re-map too. For example, a ridgeline over `mtcars` with `cyl` as a character
   column previously stacked 6, 4, 8 from the bottom and now stacks 4, 6, 8. To
   keep a specific non-alphabetical order, make the group column a factor with
@@ -374,11 +397,11 @@
   machine. **This changes the rendering of any existing boxplot, violin or
   comparison chart whose group column was not already sorted** -- the boxes
   move, the x tick labels move with them, and on a violin passed a vector of
-  colours the hues re-map, because `color` is applied by group position. Every
+  colors the hues re-map, because `color` is applied by group position. Every
   statistic stays with its own group: each box, whisker, median and outlier is
   now looked up by group name rather than by position, and the significance
   brackets on a comparison chart are positioned by the same rule, so they keep
-  spanning the pairs they are labelled with. Charts whose groups
+  spanning the pairs they are labeled with. Charts whose groups
   already appear in sorted order -- including every factor whose rows follow
   its levels -- render exactly as before. To keep a specific non-alphabetical
   order, make the group column a factor with the levels in the order you want.
