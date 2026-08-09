@@ -1,3 +1,5 @@
+import { easingFor, staggerDelay } from "../transitions/easing.js";
+
 export class CalendarHeatmapRenderer {
   static type = "calendarHeatmap";
   static traits = {
@@ -168,7 +170,7 @@ export class CalendarHeatmapRenderer {
       .data(datums, function(d) { return toIso(d); });
 
     cellSelection.exit()
-      .transition().duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
       .style("opacity", 0)
       .remove();
 
@@ -199,7 +201,7 @@ export class CalendarHeatmapRenderer {
         d[dateKey] = toIso({ date: d.date });
         d[valueKey] = d.value;
       })
-      .transition().duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
       .style("opacity", 1)
       .attr("x", function(d) { return leftPad + weekCol(d.date) * (cellSize + gap); })
       .attr("y", function(d) { return topPad + weekdayIdx(d.date) * (cellSize + gap); })

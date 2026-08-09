@@ -25,7 +25,7 @@ export class BarRenderer {
   }
 
   remove(chart, layer) {
-    chart.dom.chartArea.selectAll("." + tagName("bar", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll("." + tagName("bar", chart.dom.element.id, layer.label)).transition().ease(easingFor(chart, d3.easeCubic)).duration(500).style("opacity", 0).remove();
   }
 }
 

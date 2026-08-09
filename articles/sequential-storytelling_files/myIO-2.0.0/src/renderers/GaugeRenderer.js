@@ -42,7 +42,7 @@ export class GaugeRenderer {
     var bands = chart.chart.selectAll(".myIO-gauge-threshold").data(thresholds);
 
     bands.exit()
-      .transition().duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed)
       .style("opacity", 0)
       .remove();
 
@@ -61,7 +61,7 @@ export class GaugeRenderer {
     var pathBackground = chart.chart.selectAll(".myIO-gauge-background").data(pie([1]));
 
     pathBackground.exit()
-      .transition().duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed)
       .style("opacity", 0)
       .remove();
 
@@ -84,7 +84,7 @@ export class GaugeRenderer {
     var path = chart.chart.selectAll(".myIO-gauge-value").data(pie(data));
 
     path.exit()
-      .transition().duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed)
       .style("opacity", 0)
       .remove();
 
@@ -144,7 +144,7 @@ export class GaugeRenderer {
   }
 
   remove(chart) {
-    chart.dom.chartArea.selectAll(".myIO-gauge-threshold, .myIO-gauge-background, .myIO-gauge-value, .gauge-text, .gauge-label, .gauge-min-label, .gauge-max-label").transition().duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll(".myIO-gauge-threshold, .myIO-gauge-background, .myIO-gauge-value, .gauge-text, .gauge-label, .gauge-min-label, .gauge-max-label").transition().ease(easingFor(chart, d3.easeCubic)).duration(500).style("opacity", 0).remove();
   }
 }
 

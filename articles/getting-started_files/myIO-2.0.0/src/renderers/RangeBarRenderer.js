@@ -25,7 +25,7 @@ export class RangeBarRenderer {
       .selectAll("." + tagName("rangeBar", chart.element.id, layer.label))
       .data(layer.data);
 
-    bars.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
+    bars.exit().transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).style("opacity", 0).remove();
 
     function midpointY(d) {
       return chart.yScale((+d[lowVar] + +d[highVar]) / 2);
@@ -80,8 +80,8 @@ export class RangeBarRenderer {
   }
 
   remove(chart, layer) {
-    chart.dom.chartArea.selectAll("." + tagName("rangeBar", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
-    chart.dom.chartArea.selectAll("." + tagName("rangeBar-error", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll("." + tagName("rangeBar", chart.dom.element.id, layer.label)).transition().ease(easingFor(chart, d3.easeCubic)).duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll("." + tagName("rangeBar-error", chart.dom.element.id, layer.label)).transition().ease(easingFor(chart, d3.easeCubic)).duration(500).style("opacity", 0).remove();
   }
 }
 
@@ -116,7 +116,7 @@ function renderErrorBars(chart, layer) {
     .selectAll("." + tagName("rangeBar-error", chart.element.id, layer.label))
     .data(layer.data);
 
-  groups.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
+  groups.exit().transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).style("opacity", 0).remove();
 
   var enter = groups.enter()
     .append("g")

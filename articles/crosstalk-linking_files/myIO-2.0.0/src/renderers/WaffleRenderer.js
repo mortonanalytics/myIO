@@ -1,3 +1,5 @@
+import { easingFor, staggerDelay } from "../transitions/easing.js";
+
 export class WaffleRenderer {
   static type = "waffle";
   static traits = {
@@ -75,7 +77,7 @@ export class WaffleRenderer {
       .data(cells, function(d) { return d.row + "_" + d.col; });
 
     cellSelection.exit()
-      .transition().duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
       .style("opacity", 0)
       .remove();
 
@@ -90,7 +92,7 @@ export class WaffleRenderer {
       .style("opacity", 0);
 
     cellEnter.merge(cellSelection)
-      .transition().duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
       .attr("x", function(d) { return d.col * (cellSize + cellGap); })
       .attr("y", function(d) { return d.row * (cellSize + cellGap); })
       .attr("width", cellSize)

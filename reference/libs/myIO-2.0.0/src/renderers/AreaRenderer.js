@@ -34,7 +34,7 @@ export class AreaRenderer {
       .selectAll("." + tagName("area", chart.element.id, key))
       .data([data]);
 
-    linePath.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
+    linePath.exit().transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).style("opacity", 0).remove();
 
     var newLinePath = linePath.enter().append("path")
       .attr("clip-path", "url(#" + chart.element.id + "clip)")
@@ -67,6 +67,6 @@ export class AreaRenderer {
   }
 
   remove(chart, layer) {
-    chart.dom.chartArea.selectAll("." + tagName("area", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll("." + tagName("area", chart.dom.element.id, layer.label)).transition().ease(easingFor(chart, d3.easeCubic)).duration(500).style("opacity", 0).remove();
   }
 }

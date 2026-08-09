@@ -1,3 +1,4 @@
+import { easingFor, staggerDelay } from "../transitions/easing.js";
 import { resolveColor } from "../utils/responsive.js";
 
 export class BumpRenderer {
@@ -15,6 +16,8 @@ export class BumpRenderer {
     yScaleType: "linear",
     xExtentFields: [],
     yExtentFields: ["y_var"],
+    yReversed: true,
+    yIntegerTicks: true,
     domainMerge: "union"
   };
   static dataContract = {
@@ -65,7 +68,7 @@ export class BumpRenderer {
         .attr("stroke-opacity", 0)
         .attr("d", line);
       linesEnter.merge(lines)
-        .transition().duration(transitionSpeed)
+        .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
         .attr("stroke", color)
         .attr("stroke-opacity", 0.8)
         .attr("d", line);
@@ -74,7 +77,7 @@ export class BumpRenderer {
         .data(sorted, function(d) { return d._source_key || d[xVar]; });
 
       dots.exit()
-        .transition().duration(transitionSpeed)
+        .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
         .style("opacity", 0)
         .remove();
 
@@ -89,7 +92,7 @@ export class BumpRenderer {
         .style("opacity", 0);
 
       dotsEnter.merge(dots)
-        .transition().duration(transitionSpeed)
+        .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
         .style("opacity", 1)
         .attr("cx", function(d) { return xScale(d[xVar]) + bandOffset; })
         .attr("cy", function(d) { return yScale(d[yVar]); })

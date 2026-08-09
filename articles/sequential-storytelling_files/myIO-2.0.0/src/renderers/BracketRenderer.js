@@ -1,3 +1,4 @@
+import { easingFor, staggerDelay } from "../transitions/easing.js";
 import { tagName } from "../utils/responsive.js";
 
 export class BracketRenderer {
@@ -43,7 +44,7 @@ export class BracketRenderer {
       .data(layer.data, bracketKey);
 
     bracketSelection.exit()
-      .transition().duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
       .style("opacity", 0)
       .remove();
 
@@ -66,25 +67,25 @@ export class BracketRenderer {
     var merged = bracketEnter.merge(bracketSelection);
 
     merged
-      .transition().duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
       .style("opacity", 1);
 
     merged.select(".bracket-bar")
-      .transition().duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
       .attr("x1", function(d) { return chart.xScale(+d.x1); })
       .attr("y1", function(d) { return chart.yScale(+d.y); })
       .attr("x2", function(d) { return chart.xScale(+d.x2); })
       .attr("y2", function(d) { return chart.yScale(+d.y); });
 
     merged.select(".bracket-tick-left")
-      .transition().duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
       .attr("x1", function(d) { return chart.xScale(+d.x1); })
       .attr("y1", function(d) { return chart.yScale(+d.y); })
       .attr("x2", function(d) { return chart.xScale(+d.x1); })
       .attr("y2", function(d) { return chart.yScale(+d.y) + tickHeight; });
 
     merged.select(".bracket-tick-right")
-      .transition().duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
       .attr("x1", function(d) { return chart.xScale(+d.x2); })
       .attr("y1", function(d) { return chart.yScale(+d.y); })
       .attr("x2", function(d) { return chart.xScale(+d.x2); })
@@ -92,7 +93,7 @@ export class BracketRenderer {
 
     merged.select(".bracket-label")
       .text(function(d) { return d.label; })
-      .transition().duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
       .attr("x", function(d) { return (chart.xScale(+d.x1) + chart.xScale(+d.x2)) / 2; })
       .attr("y", function(d) { return chart.yScale(+d.y) - labelOffset; });
   }

@@ -16,7 +16,7 @@ export class HistogramRenderer {
       .selectAll("." + tagName("bar", chart.element.id, key))
       .data(data);
 
-    bars.exit().transition().duration(transitionSpeed).attr("y", chart.yScale(0)).remove();
+    bars.exit().transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).attr("y", chart.yScale(0)).remove();
 
     var newBars = bars.enter()
       .append("rect")
@@ -49,6 +49,6 @@ export class HistogramRenderer {
   }
 
   remove(chart, layer) {
-    chart.dom.chartArea.selectAll("." + tagName("bar", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll("." + tagName("bar", chart.dom.element.id, layer.label)).transition().ease(easingFor(chart, d3.easeCubic)).duration(500).style("opacity", 0).remove();
   }
 }

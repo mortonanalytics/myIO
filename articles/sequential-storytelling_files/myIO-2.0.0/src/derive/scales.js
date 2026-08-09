@@ -177,10 +177,17 @@ export function processScales(chart, lys, semantics) {
         .domain(chart.config.scales.flipAxis === true ? chart.derived.xBanded : chart.derived.yBanded);
       break;
     default:
+      // A reversed y axis puts the domain minimum at the top of the plot, which
+      // is what rank charts want: rank 1 above rank 5.
+      var yRange = scaleSemantics.yReversed === true
+        ? [0, chartHeight - (m.top + m.bottom)]
+        : [chartHeight - (m.top + m.bottom), 0];
       chart.derived.yScale = d3.scaleLinear()
-        .range([chartHeight - (m.top + m.bottom), 0])
+        .range(yRange)
         .domain(chart.config.scales.flipAxis === true ? xExtent : yExtent);
   }
+
+  chart.derived.scaleSemantics = scaleSemantics;
 
   if (chart.config.scales.colorScheme && chart.config.scales.colorScheme.enabled) {
     chart.derived.colorDiscrete = d3.scaleOrdinal()

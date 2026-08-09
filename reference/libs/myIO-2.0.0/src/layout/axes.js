@@ -133,6 +133,20 @@ export function updateYAxis(chart, yScale, yAxisSelection, options) {
       });
   } else if (typeof yScale.ticks === "function") {
     yAxisGenerator.ticks(chartHeight < 450 ? 5 : 10);
+    var semantics = chart.derived && chart.derived.scaleSemantics;
+    if (semantics && semantics.yIntegerTicks === true) {
+      // Ranks and counts have no half-steps; drop any d3 picked and keep at
+      // least the domain endpoints so a short axis is not left blank.
+      var wholeTicks = yAxisGenerator.scale().ticks(chartHeight < 450 ? 5 : 10)
+        .filter(Number.isInteger);
+      if (wholeTicks.length === 0) {
+        var bounds = yScale.domain();
+        wholeTicks = [Math.ceil(Math.min.apply(null, bounds)), Math.floor(Math.max.apply(null, bounds))]
+          .filter(Number.isInteger)
+          .filter(function(value, index, self) { return self.indexOf(value) === index; });
+      }
+      yAxisGenerator.tickValues(wholeTicks);
+    }
     if (currentFormatY) {
       yAxisGenerator.tickFormat(currentFormatY);
     }

@@ -1,3 +1,5 @@
+import { easingFor, staggerDelay } from "../transitions/easing.js";
+
 export class RadarRenderer {
   static type = "radar";
   static traits = {
@@ -136,7 +138,7 @@ export class RadarRenderer {
       .attr("d", ringPath(0))
       .merge(rings)
       .attr("stroke", "var(--chart-grid, #cbd5e1)")
-      .transition().duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
       .attr("d", function(d) { return ringPath(radiusScale(d)); });
 
     var ringLabels = gridLayer.selectAll(".radar-grid-label")
@@ -157,7 +159,7 @@ export class RadarRenderer {
       .attr("fill", "var(--chart-fg, #1f2937)")
       .attr("fill-opacity", 0.7)
       .text(function(d) { return gridFormat(d); })
-      .transition().duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
       .attr("x", centerX + 4)
       .attr("y", function(d) { return centerY - radiusScale(d); });
 
@@ -165,7 +167,7 @@ export class RadarRenderer {
       .data(axisOrder, function(d) { return d; });
 
     axisSelection.exit()
-      .transition().duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
       .style("opacity", 0)
       .remove();
 
@@ -193,7 +195,7 @@ export class RadarRenderer {
 
     var axisMerged = axisEnter.merge(axisSelection);
 
-    axisMerged.transition().duration(transitionSpeed).style("opacity", 1);
+    axisMerged.transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0)).style("opacity", 1);
 
     axisMerged.each(function(axisName, index) {
       var geom = axisGeometry(index);
@@ -202,7 +204,7 @@ export class RadarRenderer {
       group.select(".radar-axis-line")
         .attr("stroke", "var(--chart-grid, #cbd5e1)")
         .attr("stroke-width", 1)
-        .transition().duration(transitionSpeed)
+        .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
         .attr("x1", centerX)
         .attr("y1", centerY)
         .attr("x2", geom.lineX)
@@ -210,7 +212,7 @@ export class RadarRenderer {
 
       group.select(".radar-axis-label")
         .text(axisName)
-        .transition().duration(transitionSpeed)
+        .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
         .attr("x", geom.labelX)
         .attr("y", geom.labelY)
         .attr("text-anchor", geom.textAnchor);
@@ -264,7 +266,7 @@ export class RadarRenderer {
       .data(groups, function(d) { return d.key; });
 
     polygons.exit()
-      .transition().duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
       .style("opacity", 0)
       .remove();
 
@@ -279,7 +281,7 @@ export class RadarRenderer {
       .attr("stroke-opacity", 0);
 
     polygonEnter.merge(polygons)
-      .transition().duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
       .attrTween("d", function(d) {
         var self = this;
         var previous = self._radarPoints || d.points.map(function() {

@@ -26,7 +26,7 @@ export class LineRenderer {
       .selectAll("." + tagName("line", chart.element.id, key))
       .data([data]);
 
-    linePath.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
+    linePath.exit().transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).style("opacity", 0).remove();
 
     var newLinePath = linePath.enter()
       .append("path")
@@ -63,7 +63,7 @@ export class LineRenderer {
       .selectAll("." + tagName("point", chart.element.id, layer.label))
       .data(layer.data);
 
-    points.exit().transition().remove();
+    points.exit().transition().ease(easingFor(chart, d3.easeCubic)).remove();
 
     points
       .transition()
@@ -106,7 +106,7 @@ export class LineRenderer {
   }
 
   remove(chart, layer) {
-    chart.dom.chartArea.selectAll("." + tagName("line", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
-    chart.dom.chartArea.selectAll("." + tagName("point", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll("." + tagName("line", chart.dom.element.id, layer.label)).transition().ease(easingFor(chart, d3.easeCubic)).duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll("." + tagName("point", chart.dom.element.id, layer.label)).transition().ease(easingFor(chart, d3.easeCubic)).duration(500).style("opacity", 0).remove();
   }
 }

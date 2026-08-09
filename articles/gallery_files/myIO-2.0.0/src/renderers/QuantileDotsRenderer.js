@@ -1,3 +1,5 @@
+import { easingFor, staggerDelay } from "../transitions/easing.js";
+
 export class QuantileDotsRenderer {
   static type = "quantile_dots";
   static traits = {
@@ -95,7 +97,7 @@ export class QuantileDotsRenderer {
       .data(layer.data, function(d) { return d._source_key; });
 
     points.exit()
-      .transition().duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
       .attr("fill-opacity", 0)
       .remove();
 
@@ -110,7 +112,7 @@ export class QuantileDotsRenderer {
       .attr("role", "graphics-symbol");
 
     entered.merge(points)
-      .transition().duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
       .attr("cx", function(d) { return d._quantile_dot_cx; })
       .attr("cy", function(d) { return d._quantile_dot_cy; })
       .attr("r", radius)

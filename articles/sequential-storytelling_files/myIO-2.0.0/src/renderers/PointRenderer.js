@@ -33,7 +33,7 @@ export class PointRenderer {
       .selectAll("." + tagName("point", chart.element.id, layer.label))
       .data(layer.data);
 
-    points.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
+    points.exit().transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).style("opacity", 0).remove();
 
     points
       .transition()
@@ -90,11 +90,11 @@ export class PointRenderer {
   }
 
   remove(chart, layer) {
-    chart.dom.chartArea.selectAll("." + tagName("point", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
-    chart.dom.chartArea.selectAll("." + tagName("crosshairX", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
-    chart.dom.chartArea.selectAll("." + tagName("crosshairY", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
-    chart.dom.chartArea.selectAll("." + tagName("whiskerCap", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
-    chart.dom.chartArea.selectAll("." + tagName("medianLine", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll("." + tagName("point", chart.dom.element.id, layer.label)).transition().ease(easingFor(chart, d3.easeCubic)).duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll("." + tagName("crosshairX", chart.dom.element.id, layer.label)).transition().ease(easingFor(chart, d3.easeCubic)).duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll("." + tagName("crosshairY", chart.dom.element.id, layer.label)).transition().ease(easingFor(chart, d3.easeCubic)).duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll("." + tagName("whiskerCap", chart.dom.element.id, layer.label)).transition().ease(easingFor(chart, d3.easeCubic)).duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll("." + tagName("medianLine", chart.dom.element.id, layer.label)).transition().ease(easingFor(chart, d3.easeCubic)).duration(500).style("opacity", 0).remove();
   }
 }
 
@@ -104,7 +104,7 @@ function renderCrosshairsX(chart, layer) {
     .selectAll("." + tagName("crosshairX", chart.element.id, layer.label))
     .data(layer.data);
 
-  crosshairsX.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
+  crosshairsX.exit().transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).style("opacity", 0).remove();
 
   crosshairsX.transition()
     .duration(transitionSpeed)
@@ -144,7 +144,7 @@ function renderMedianLine(chart, layer) {
     .selectAll("." + tagName("medianLine", chart.element.id, layer.label))
     .data(layer.data);
 
-  lines.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
+  lines.exit().transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).style("opacity", 0).remove();
 
   lines.transition()
     .duration(transitionSpeed)
@@ -184,7 +184,7 @@ function renderWhiskerCaps(chart, layer) {
     .selectAll("." + tagName("whiskerCap", chart.element.id, layer.label))
     .data(layer.data);
 
-  caps.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
+  caps.exit().transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).style("opacity", 0).remove();
 
   caps.transition()
     .duration(transitionSpeed)
@@ -226,7 +226,7 @@ function renderWhiskerLine(chart, layer) {
     .selectAll("." + tagName("crosshairY", chart.element.id, layer.label))
     .data(layer.data);
 
-  lines.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
+  lines.exit().transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).style("opacity", 0).remove();
 
   lines.transition()
     .ease(easingFor(chart, d3.easeQuad))
@@ -262,7 +262,7 @@ function renderCrosshairsY(chart, layer) {
     .selectAll("." + tagName("crosshairY", chart.element.id, layer.label))
     .data(layer.data);
 
-  crosshairsY.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
+  crosshairsY.exit().transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).style("opacity", 0).remove();
 
   crosshairsY.transition()
     .ease(easingFor(chart, d3.easeQuad))

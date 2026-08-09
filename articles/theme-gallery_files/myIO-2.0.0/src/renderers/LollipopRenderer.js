@@ -1,3 +1,5 @@
+import { easingFor, staggerDelay } from "../transitions/easing.js";
+
 export class LollipopRenderer {
   static type = "lollipop";
   static traits = {
@@ -68,7 +70,7 @@ export class LollipopRenderer {
       .data(layer.data, function(d) { return d._source_key; });
 
     stems.exit()
-      .transition().duration(speed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(speed).delay(staggerDelay(chart, 0))
       .style("opacity", 0)
       .attr("x2", flipAxis ? xBaseline : function(d) { return xScale(d[xVar]) + bandOffset; })
       .attr("y2", flipAxis ? function(d) { var y = yScale(d[xVar]); return yScale.bandwidth ? y + bandOffset : y; } : yBaseline)
@@ -86,7 +88,7 @@ export class LollipopRenderer {
       .style("opacity", 0);
 
     stemEnter.merge(stems)
-      .transition().duration(speed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(speed).delay(staggerDelay(chart, 0))
       .style("opacity", 1)
       .attr("x1", function(d) { return stemPos(d).x1; })
       .attr("x2", function(d) { return stemPos(d).x2; })
@@ -99,7 +101,7 @@ export class LollipopRenderer {
       .data(layer.data, function(d) { return d._source_key; });
 
     heads.exit()
-      .transition().duration(speed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(speed).delay(staggerDelay(chart, 0))
       .style("opacity", 0)
       .attr("cx", function(d) { return stemPos(d).x1; })
       .attr("cy", function(d) { return stemPos(d).y1; })
@@ -115,7 +117,7 @@ export class LollipopRenderer {
       .style("opacity", 0);
 
     headEnter.merge(heads)
-      .transition().duration(speed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(speed).delay(staggerDelay(chart, 0))
       .style("opacity", 1)
       .attr("cx", function(d) { return headPos(d).cx; })
       .attr("cy", function(d) { return headPos(d).cy; })

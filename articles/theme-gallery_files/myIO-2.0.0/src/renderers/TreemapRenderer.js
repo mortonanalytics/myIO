@@ -43,7 +43,7 @@ export class TreemapRenderer {
     var cell = chart.chart.selectAll(".root").data(root.leaves(), function(d) { return d.data.id; });
 
     cell.exit()
-      .transition().duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed)
       .style("opacity", 0)
       .remove();
 
@@ -101,7 +101,7 @@ export class TreemapRenderer {
   }
 
   remove(chart) {
-    chart.dom.chartArea.selectAll(".root").transition().duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll(".root").transition().ease(easingFor(chart, d3.easeCubic)).duration(500).style("opacity", 0).remove();
   }
 }
 

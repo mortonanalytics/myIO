@@ -1,3 +1,5 @@
+import { easingFor, staggerDelay } from "../transitions/easing.js";
+
 export class DumbbellRenderer {
   static type = "dumbbell";
   static traits = {
@@ -62,7 +64,7 @@ export class DumbbellRenderer {
       .data(layer.data, function(d) { return d._source_key; });
 
     lines.exit()
-      .transition().duration(speed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(speed).delay(staggerDelay(chart, 0))
       .style("opacity", 0)
       .attr("x1", function(d) { return endpoints(d).midX; })
       .attr("x2", function(d) { return endpoints(d).midX; })
@@ -82,7 +84,7 @@ export class DumbbellRenderer {
       .style("opacity", 0);
 
     linesEnter.merge(lines)
-      .transition().duration(speed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(speed).delay(staggerDelay(chart, 0))
       .style("opacity", 1)
       .attr("x1", function(d) { return endpoints(d).lowX; })
       .attr("x2", function(d) { return endpoints(d).highX; })
@@ -95,7 +97,7 @@ export class DumbbellRenderer {
       .data(layer.data, function(d) { return d._source_key; });
 
     lowDots.exit()
-      .transition().duration(speed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(speed).delay(staggerDelay(chart, 0))
       .style("opacity", 0)
       .attr("cx", function(d) { return endpoints(d).midX; })
       .attr("cy", function(d) { return endpoints(d).midY; })
@@ -111,7 +113,7 @@ export class DumbbellRenderer {
       .attr("opacity", 0);
 
     lowEnter.merge(lowDots)
-      .transition().duration(speed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(speed).delay(staggerDelay(chart, 0))
       .attr("cx", function(d) { return endpoints(d).lowX; })
       .attr("cy", function(d) { return endpoints(d).lowY; })
       .attr("r", dotRadius)
@@ -122,7 +124,7 @@ export class DumbbellRenderer {
       .data(layer.data, function(d) { return d._source_key; });
 
     highDots.exit()
-      .transition().duration(speed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(speed).delay(staggerDelay(chart, 0))
       .style("opacity", 0)
       .attr("cx", function(d) { return endpoints(d).midX; })
       .attr("cy", function(d) { return endpoints(d).midY; })
@@ -138,7 +140,7 @@ export class DumbbellRenderer {
       .attr("opacity", 0);
 
     highEnter.merge(highDots)
-      .transition().duration(speed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(speed).delay(staggerDelay(chart, 0))
       .attr("cx", function(d) { return endpoints(d).highX; })
       .attr("cy", function(d) { return endpoints(d).highY; })
       .attr("r", dotRadius)

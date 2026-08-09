@@ -28,8 +28,8 @@ setLinkedCursor(myIO, enabled = TRUE, axis = "x")
 - axis:
 
   Character. Which axis to sync: `"x"` (default), `"y"`, or `"xy"`. Only
-  `"x"` is active in v1.2; other values are accepted and persisted but
-  not yet rendered.
+  `"x"` is rendered; the other values are accepted and persisted but
+  currently have no visible effect.
 
 ## Value
 

@@ -1,3 +1,4 @@
+import { easingFor, staggerDelay } from "../transitions/easing.js";
 import { chartBackgroundColor, readableTextColor } from "../theme/contrast.js";
 import { FAB_BAND_BOTTOM, FAB_GUTTER } from "../layout/scaffold.js";
 import { textWidth } from "../utils/text-metrics.js";
@@ -161,7 +162,7 @@ export class FunnelRenderer {
       .data(stages, function(d) { return d.stage; });
 
     stageGroups.exit()
-      .transition().duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
       .style("opacity", 0)
       .remove();
 
@@ -191,18 +192,18 @@ export class FunnelRenderer {
     var stagesMerged = stageEnter.merge(stageGroups);
 
     stagesMerged
-      .transition().duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
       .style("opacity", 1);
 
     stagesMerged.select(".funnel-stage")
-      .transition().duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
       .attr("d", function(d) { return pathFor(d.points); })
       .attr("fill", function(d) { return d.color; });
 
     stagesMerged.select(".funnel-label")
       .text(function(d) { return d.stage; })
       .attr("fill", function(d) { return readableTextColor(d.color); })
-      .transition().duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
       .attr("x", function(d) { return d.labelX; })
       .attr("y", function(d) { return labelBaseline(d); });
 

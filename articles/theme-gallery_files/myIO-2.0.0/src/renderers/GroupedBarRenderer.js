@@ -1,3 +1,4 @@
+import { easingFor, staggerDelay } from "../transitions/easing.js";
 import { getGroupedDataObject, transitionGrouped, transitionStacked } from "./groupedBarHelpers.js";
 import { resolveColor } from "../utils/responsive.js";
 
@@ -44,6 +45,6 @@ export class GroupedBarRenderer {
   }
 
   remove(chart) {
-    chart.dom.chartArea.selectAll(".tag-grouped-bar-g").transition().duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll(".tag-grouped-bar-g").transition().ease(easingFor(chart, d3.easeCubic)).duration(500).delay(staggerDelay(chart, 0)).style("opacity", 0).remove();
   }
 }

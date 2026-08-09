@@ -30,7 +30,7 @@ export class HeatmapRenderer {
       .selectAll("." + tagName("heatmap", chart.element.id, layer.label))
       .data(layer.data);
 
-    cells.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
+    cells.exit().transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).style("opacity", 0).remove();
 
     var cellWidth = chart.xScale.bandwidth ? chart.xScale.bandwidth() : 0;
     var cellHeight = chart.yScale.bandwidth ? chart.yScale.bandwidth() : 0;
@@ -74,6 +74,6 @@ export class HeatmapRenderer {
   }
 
   remove(chart, layer) {
-    chart.dom.chartArea.selectAll("." + tagName("heatmap", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll("." + tagName("heatmap", chart.dom.element.id, layer.label)).transition().ease(easingFor(chart, d3.easeCubic)).duration(500).style("opacity", 0).remove();
   }
 }

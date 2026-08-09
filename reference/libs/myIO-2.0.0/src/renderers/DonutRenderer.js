@@ -60,7 +60,7 @@ export class DonutRenderer {
     function midAngle(d) { return d.startAngle + (d.endAngle - d.startAngle) / 2; }
 
     var textLabel = chart.chart.selectAll(".inner-text").data(pie(data), function(d) { return d.data[xVar]; });
-    textLabel.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
+    textLabel.exit().transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).style("opacity", 0).remove();
 
     var newText = textLabel.enter().append("text")
       .attr("class", "inner-text")
@@ -94,7 +94,7 @@ export class DonutRenderer {
       });
 
     var polyline = chart.chart.selectAll("polyline").data(pie(data), function(d) { return d.data[xVar]; });
-    polyline.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
+    polyline.exit().transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).style("opacity", 0).remove();
 
     var newPolyline = polyline.enter().append("polyline")
       .style("fill", "none")
@@ -120,6 +120,6 @@ export class DonutRenderer {
   }
 
   remove(chart) {
-    chart.dom.chartArea.selectAll(".donut, .inner-text, polyline").transition().duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll(".donut, .inner-text, polyline").transition().ease(easingFor(chart, d3.easeCubic)).duration(500).style("opacity", 0).remove();
   }
 }

@@ -1,3 +1,5 @@
+import { easingFor, staggerDelay } from "../transitions/easing.js";
+
 export class ParallelRenderer {
   static type = "parallel";
   static traits = {
@@ -107,7 +109,7 @@ export class ParallelRenderer {
       .data(layer.data, function(d, i) { return d._source_key != null ? d._source_key : i; });
 
     lineSelection.exit()
-      .transition().duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
       .attr("stroke-opacity", 0)
       .remove();
 
@@ -119,7 +121,7 @@ export class ParallelRenderer {
       .attr("stroke-opacity", 0);
 
     lineEnter.merge(lineSelection)
-      .transition().duration(transitionSpeed)
+      .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
       .attr("d", rowPath)
       .attr("stroke", rowStroke)
       .attr("stroke-opacity", 0.6);

@@ -28,7 +28,7 @@ export class HexbinRenderer {
       .selectAll("." + tagName("hexbin", chart.element.id, layer.label))
       .data(binnedData);
 
-    bins.exit().transition().duration(transitionSpeed).style("opacity", 0).remove();
+    bins.exit().transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).style("opacity", 0).remove();
 
     var newbins = bins.enter()
       .append("path")
@@ -53,6 +53,6 @@ export class HexbinRenderer {
   }
 
   remove(chart, layer) {
-    chart.dom.chartArea.selectAll("." + tagName("hexbin", chart.dom.element.id, layer.label)).transition().duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll("." + tagName("hexbin", chart.dom.element.id, layer.label)).transition().ease(easingFor(chart, d3.easeCubic)).duration(500).style("opacity", 0).remove();
   }
 }
