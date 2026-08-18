@@ -9,4 +9,6 @@ Read current package code, CRAN state, open issues, recent PRs, pymyIO compatibi
 
 Creating `research-candidate` issues is pre-authorized — file them without asking, including on scheduled runs where no human is present to answer. Each issue carries sources, current gap, user value, compatibility impact, validation plan, and provenance. Ending a run with candidates described but unfiled is a failed run: the backlog pipeline reads issues, not logs.
 
-Never apply `backlog-ready`, modify code, bump a version, or begin a release. Those stay with Ryan.
+Apply `backlog-ready` yourself to any candidate that clears all four bars, on scheduled runs as well as supervised ones. A candidate clears when: its evidence is verified against remote state and cited as a command or `file:line` another person can re-run; the issue names a smallest testable change that begins with a failing test; the change needs no R signature change, no change to existing default behavior, no version bump, and no release or CRAN step; and its scope is one issue bounded to the files it names. Miss any bar and the issue stays `research-candidate` only — an unlabeled candidate waiting for Ryan is a correct outcome, and labeling a candidate you could not fully verify is worse than filing nothing. State per issue which call you made and why, so a failed bar is auditable rather than silent.
+
+Never modify code, bump a version, or begin a release. Those stay with Ryan.
