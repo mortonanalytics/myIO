@@ -58,3 +58,14 @@ test_that("setLinkedCursor() preserves pre-existing linked config", {
 test_that("setLinkedCursor() rejects invalid axis", {
   expect_error(setLinkedCursor(myIO(), enabled = TRUE, axis = "z"), "axis")
 })
+
+test_that("setLinkedCursor(axis='y') persists the axis choice", {
+  w <- setLinkedCursor(myIO(), enabled = TRUE, axis = "y")
+  expect_equal(w$x$config$interactions$linked$cursorAxis, "y")
+})
+
+test_that("linkCharts() carries a non-default cursorAxis to every widget", {
+  linked <- linkCharts(myIO(), myIO(), on = "cyl", cursor = TRUE, cursorAxis = "xy")
+  expect_equal(linked[[1]]$x$config$interactions$linked$cursorAxis, "xy")
+  expect_equal(linked[[2]]$x$config$interactions$linked$cursorAxis, "xy")
+})

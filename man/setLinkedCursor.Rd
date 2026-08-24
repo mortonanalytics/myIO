@@ -12,9 +12,11 @@ setLinkedCursor(myIO, enabled = TRUE, axis = "x")
 \item{enabled}{Logical. \code{TRUE} to turn cursor sync on,
 \code{FALSE} to turn it off. Default \code{TRUE}.}
 
-\item{axis}{Character. Which axis to sync: \code{"x"} (default),
-\code{"y"}, or \code{"xy"}. Only \code{"x"} is rendered; the other
-values are accepted and persisted but currently have no visible effect.}
+\item{axis}{Character. Which axis to sync: \code{"x"} (default) draws a
+vertical rule at the hovered x value, \code{"y"} draws a horizontal rule
+at the hovered y value, and \code{"xy"} draws both. A rule is only drawn
+when the sibling chart can map the incoming value through its own scale,
+so a value outside the sibling's domain draws nothing on that axis.}
 }
 \value{
 A modified \code{myIO} htmlwidget.

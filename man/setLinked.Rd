@@ -37,8 +37,10 @@ over which widgets share selections.}
 a synchronized crosshair on every sibling chart in the same group.
 Default \code{FALSE}.}
 
-\item{cursorAxis}{Character. Which axis to sync: \code{"x"} (default),
-\code{"y"}, or \code{"xy"}. Only \code{"x"} is active in v1.2.}
+\item{cursorAxis}{Character. Which axis to sync: \code{"x"} (default) draws
+a vertical rule at the hovered x value, \code{"y"} draws a horizontal rule
+at the hovered y value, and \code{"xy"} draws both. A rule is only drawn
+when the sibling chart can map the incoming value through its own scale.}
 }
 \value{
 A modified \code{myIO} htmlwidget with Crosstalk linking.
