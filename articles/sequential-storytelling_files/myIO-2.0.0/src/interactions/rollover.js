@@ -124,7 +124,14 @@ export function bindRollover(chart, layers) {
         : layer.type === "calendarHeatmap"
           ? (data.date instanceof Date ? data.date : new Date(data[layer.mapping.date] + "T00:00:00Z"))
           : data[layer.mapping.x_var];
-    maybeEmitCursor(that, data, xValue, tooltip);
+    var yValue = layer.type === "hexbin"
+      ? (that.yScale ? that.yScale.invert(data.y) : null)
+      : layer.type === "histogram"
+        ? data.length
+        : layer.type === "calendarHeatmap"
+          ? null
+          : data[that.newY ? that.newY : layer.mapping.y_var];
+    maybeEmitCursor(that, data, xValue, tooltip, yValue);
   }
 
   function clearElementHover(layer) {
@@ -235,7 +242,7 @@ export function bindRollover(chart, layers) {
       title: groupedTooltip.title,
       items: groupedTooltip.items
     });
-    maybeEmitCursor(that, data.data, data.data[0], groupedTooltip);
+    maybeEmitCursor(that, data.data, data.data[0], groupedTooltip, data[1]);
   }
 
   function clearGroupedBar() {
@@ -320,7 +327,7 @@ export function bindRollover(chart, layers) {
       title: overlayTooltip.title,
       items: overlayTooltip.items
     });
-    maybeEmitCursor(that, tipText[0].value, xValue, overlayTooltip);
+    maybeEmitCursor(that, tipText[0].value, xValue, overlayTooltip, tipText[0].value[tipText[0].yVar]);
   }
 
   function clearOverlayTooltip() {

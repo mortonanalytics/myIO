@@ -27,9 +27,11 @@ setLinkedCursor(myIO, enabled = TRUE, axis = "x")
 
 - axis:
 
-  Character. Which axis to sync: `"x"` (default), `"y"`, or `"xy"`. Only
-  `"x"` is rendered; the other values are accepted and persisted but
-  currently have no visible effect.
+  Character. Which axis to sync: `"x"` (default) draws a vertical rule
+  at the hovered x value, `"y"` draws a horizontal rule at the hovered y
+  value, and `"xy"` draws both. A rule is only drawn when the sibling
+  chart can map the incoming value through its own scale, so a value
+  outside the sibling's domain draws nothing on that axis.
 
 ## Value
 

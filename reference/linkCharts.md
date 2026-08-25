@@ -35,9 +35,10 @@ linkCharts(..., on, group = NULL, cursor = FALSE, cursorAxis = "x")
 
 - cursorAxis:
 
-  Character. Which axis to sync: `"x"` (default), `"y"`, or `"xy"`. Only
-  `"x"` is active in v1.2; other values are accepted but not yet
-  rendered.
+  Character. Which axis to sync: `"x"` (default) draws a vertical rule
+  at the hovered x value, `"y"` draws a horizontal rule at the hovered y
+  value, and `"xy"` draws both. A rule is only drawn when the sibling
+  chart can map the incoming value through its own scale.
 
 ## Value
 

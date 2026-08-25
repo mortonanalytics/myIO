@@ -95,8 +95,10 @@ Default <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-cursoraxis">cursorAxis<a class="anchor" aria-label="anchor" href="#arg-cursoraxis"></a></dt>
-<dd><p>Character. Which axis to sync: <code>"x"</code> (default),
-<code>"y"</code>, or <code>"xy"</code>. Only <code>"x"</code> is active in v1.2.</p></dd>
+<dd><p>Character. Which axis to sync: <code>"x"</code> (default) draws
+a vertical rule at the hovered x value, <code>"y"</code> draws a horizontal rule
+at the hovered y value, and <code>"xy"</code> draws both. A rule is only drawn
+when the sibling chart can map the incoming value through its own scale.</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -2,6 +2,20 @@
 
 ## myIO 1.4.0
 
+### New features
+
+- `setLinkedCursor(axis = )`, `linkCharts(cursorAxis = )` and
+  `setLinked(cursorAxis = )` now render. The argument was validated,
+  stored and published to the MCP schema since 1.2.0, but the engine
+  only ever drew a vertical rule, so `"y"` and `"xy"` were accepted and
+  then silently ignored. `"y"` draws a horizontal rule at the hovered y
+  value and `"xy"` draws both, which is what makes cursor sync useful
+  for horizontally-oriented charts and for scatter matrices. Each rule
+  is drawn only when the receiving chart can map the incoming value
+  through its own scale, so a value outside a sibling’s domain draws
+  nothing on that axis rather than clamping to an edge. The default is
+  still `"x"` and its output is unchanged.
+
 ### Bug fixes
 
 - `setTransition(easing = )` now reaches every chart type. It was
@@ -22,10 +36,6 @@
   axis ticks, instead of rank 1 at the bottom with half-rank ticks such
   as 1.5. This flips the vertical orientation of every existing bump
   chart.
-- [`setLinkedCursor()`](https://mortonanalytics.github.io/myIO/reference/setLinkedCursor.md)
-  no longer describes its `axis` argument in terms of a release two
-  versions old. Only `"x"` is rendered; `"y"` and `"xy"` are still
-  accepted and stored without visible effect.
 - NEWS entries use the US spellings the package declares in
   `Language: en-US`.
 

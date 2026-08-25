@@ -36,12 +36,15 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.4.0" id="myio-140">myIO 1.4.0<a class="anchor" aria-label="anchor" href="#myio-140"></a></h2>
 <div class="section level3">
+<h3 id="new-features-1-4-0">New features<a class="anchor" aria-label="anchor" href="#new-features-1-4-0"></a></h3>
+<ul><li>
+<code>setLinkedCursor(axis = )</code>, <code>linkCharts(cursorAxis = )</code> and <code>setLinked(cursorAxis = )</code> now render. The argument was validated, stored and published to the MCP schema since 1.2.0, but the engine only ever drew a vertical rule, so <code>"y"</code> and <code>"xy"</code> were accepted and then silently ignored. <code>"y"</code> draws a horizontal rule at the hovered y value and <code>"xy"</code> draws both, which is what makes cursor sync useful for horizontally-oriented charts and for scatter matrices. Each rule is drawn only when the receiving chart can map the incoming value through its own scale, so a value outside a sibling’s domain draws nothing on that axis rather than clamping to an edge. The default is still <code>"x"</code> and its output is unchanged.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="bug-fixes-1-4-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-4-0"></a></h3>
 <ul><li>
 <code>setTransition(easing = )</code> now reaches every chart type. It was documented as universal but only the enter and update joins of about half the renderers actually applied it, so calling it on a radar, funnel, waffle, dumbbell, bracket, beeswarm, bump, calendar heatmap, lollipop, parallel-coordinates or quantile-dots chart changed nothing and produced no warning. All 144 transitions across the renderer set now resolve their easing through the public setting, falling back to each renderer’s previous curve when no easing is set, so charts that never called <code><a href="../reference/setTransition.html">setTransition()</a></code> animate exactly as before. <code>setTransition(stagger = )</code> reaches the eleven renderers that had no transition delays at all; transitions that use a delay to sequence one animation behind another keep that sequencing.</li>
 <li>Bump charts now draw rank 1 at the top of the plot with whole-number axis ticks, instead of rank 1 at the bottom with half-rank ticks such as 1.5. This flips the vertical orientation of every existing bump chart.</li>
-<li>
-<code><a href="../reference/setLinkedCursor.html">setLinkedCursor()</a></code> no longer describes its <code>axis</code> argument in terms of a release two versions old. Only <code>"x"</code> is rendered; <code>"y"</code> and <code>"xy"</code> are still accepted and stored without visible effect.</li>
 <li>NEWS entries use the US spellings the package declares in <code>Language: en-US</code>.</li>
 </ul></div>
 </div>
