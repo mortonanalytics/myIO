@@ -171,8 +171,8 @@ shinyApp(ui, server)
 
 ## Chart Types
 
-myIO supports 20 chart types. See the [Chart Types](chart-types.html) vignette
-for examples of each.
+myIO supports 36 chart types. See the [Chart Types](chart-types.html) vignette
+for examples, or run `myio_list_chart_types()` for the complete list.
 
 | Category | Types |
 |----------|-------|

@@ -3,14 +3,6 @@ library(dplyr)
 library(crosstalk)
 library(myIO)
 
-# -- Proxy auth filter ----------------------------------------------------
-proxy_secret <- Sys.getenv("PROXY_SECRET", "")
-
-auth_filter <- function(req) {
-  # Temporarily disabled for debugging — allow all requests
-  NULL
-}
-
 # -- UI ------------------------------------------------------------------
 ui <- navbarPage(
   title = tags$span(
@@ -18,6 +10,7 @@ ui <- navbarPage(
     "myIO"
   ),
   id = "nav",
+  collapsible = TRUE,
   theme = bslib::bs_theme(version = 5, primary = "#4A5ACB", bg = "#ffffff", fg = "#212529"),
   header = tags$head(tags$style(HTML("
     .navbar { background-color: #1a1a2e !important; }
@@ -46,7 +39,7 @@ ui <- navbarPage(
       fluidRow(
         column(3, div(class = "feature-card",
           icon("layer-group", style = "font-size: 2rem; color: #4A5ACB;"),
-          h4("30 Chart Types"),
+          h4("36 Chart Types"),
           p("Scatter, line, bar, grouped bar, area, histogram,
              donut, gauge, treemap, hexbin, heatmap, candlestick,
              waterfall, sankey, boxplot, violin, ridgeline,
@@ -72,7 +65,7 @@ ui <- navbarPage(
         column(3, div(class = "feature-card",
           icon("palette", style = "font-size: 2rem; color: #4A5ACB;"),
           h4("Dark Mode + Themes"),
-          p("12 built-in theme presets including dark, midnight,
+          p("14 built-in theme presets including dark, midnight,
              ocean, forest, sunset, neon, corporate, and academic.
              One-line theming with setTheme().")
         ))
@@ -393,7 +386,8 @@ ui <- navbarPage(
         wellPanel(
           selectInput("theme_preset", "Theme Preset",
             choices = c("light", "dark", "midnight", "ocean", "forest",
-                        "sunset", "monochrome", "neon", "corporate", "academic"))
+                        "sunset", "monochrome", "neon", "corporate", "academic",
+                        "nature", "minimal", "retro", "warm"))
         )
       ),
       column(9,
@@ -901,9 +895,11 @@ server <- function(input, output) {
 
   output$beeswarmPlot <- renderMyIO({
     myIO(title = "Iris Measurement Beeswarm") |>
-      addIoLayer("point", label = "Iris", color = "#76B7B2",
-        data = iris, mapping = list(x_var = "Sepal.Length", y_var = "Sepal.Width"),
-        options = list(radius = 3))
+      addIoLayer("beeswarm", label = "Iris", color = "#76B7B2",
+        data = iris, mapping = list(x_var = "Sepal.Length", y_var = "Species"),
+        options = list(radius = 3)) |>
+      defineCategoricalAxis(xAxis = FALSE, yAxis = TRUE) |>
+      setAxisFormat(xLabel = "Sepal length (cm)", yLabel = "Species")
   })
 
   output$bumpPlot <- renderMyIO({
@@ -1100,4 +1096,4 @@ server <- function(input, output) {
   })
 }
 
-shinyApp(ui = ui, server = server, options = list(filter = auth_filter))
+shinyApp(ui = ui, server = server)
