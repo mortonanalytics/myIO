@@ -24,7 +24,7 @@ R implementation agent: R transforms, grouping and composites, and their tests; 
 
 ## Disposition
 
-All intake requirements are Scheduled to the task IDs above. Implementation and independent review are complete. VERIFY-MERGE remains pending PR CI and merge. The unused proxy-auth stub was removed while preserving the public gallery behavior. No release, version bump, or CRAN submission is part of this request.
+All intake requirements are Scheduled to the task IDs above. Implementation and independent review are complete. VERIFY-MERGE is tracked in [PR #127](https://github.com/mortonanalytics/myIO/pull/127). The unused proxy-auth stub was removed while preserving the public gallery behavior. No release, version bump, or CRAN submission is part of this request.
 
 ## Findings from the live gallery and fix review
 
@@ -57,6 +57,7 @@ The R author reviewed the JavaScript and validator changes; the JavaScript autho
 - R package build, examples, vignettes, and pkgdown site build: passed.
 - R CMD check --as-cran: passed with one local NOTE because the system HTML Tidy cannot validate the HTML manual; PDF manual passed.
 - Desktop gallery: all 44 pages visited with no console diagnostics. Screenshots inspected for Beeswarm, calendar, survival, and theme layouts.
+- Live controls: all six regression method/interval combinations and five additional themes passed without Shiny errors or invalid SVG coordinates. Beeswarm renders 150 points at desktop and mobile widths. Mobile navigation opens and closes without horizontal overflow; its toggle remains visible on the dark navbar.
 - Intake coverage: every AUD-001 through AUD-007 appears in the task manifest. No intake item is deferred or out of scope.
 
-PR CI and merge evidence will be added after GitHub verification. Python consumers receive compatible engine fixes with their next submodule update; this work does not claim a completed pymyIO bump or a founder walkthrough.
+All eleven CI checks must pass before merge. [PR #127](https://github.com/mortonanalytics/myIO/pull/127) records the CI results and merge state. Python consumers receive compatible engine fixes with their next submodule update; this work does not claim a completed pymyIO bump or a founder walkthrough.

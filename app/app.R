@@ -16,6 +16,8 @@ ui <- navbarPage(
     .navbar { background-color: #1a1a2e !important; }
     .navbar .navbar-brand, .navbar .nav-link { color: rgba(255,255,255,0.85) !important; }
     .navbar .nav-link:hover, .navbar .nav-link.active { color: #fff !important; }
+    .navbar .navbar-toggler { color: #fff; border-color: rgba(255,255,255,0.5); }
+    .navbar .navbar-toggler-icon { filter: brightness(0) invert(1); }
     .navbar .dropdown-toggle { border-bottom: 0 !important; }
     .navbar .nav-item > .nav-link.active { box-shadow: inset 0 -2px 0 #fff; }
     .feature-card { border: 1px solid #dee2e6; border-radius: 8px; padding: 1.5rem; text-align: center; }
