@@ -13,6 +13,14 @@
   domain draws nothing on that axis rather than clamping to an edge. The default
   is still `"x"` and its output is unchanged.
 
+* `transform_ci()` accepts `method = "polynomial"`. It previously stopped with
+  `"Unknown ci method"`, so `composite_regression()` with a polynomial fit and a
+  confidence band never worked. The fit uses `options$degree` (default 2) and
+  `loess` now honors that same option instead of always fitting locally
+  quadratic. Polynomial fits require `degree + 2` points rather than 3, since a
+  higher-degree fit through too few points has no residual degrees of freedom to
+  build an interval from.
+
 ## Bug fixes
 
 * `setTransition(easing = )` now reaches every chart type. It was documented as
@@ -29,6 +37,60 @@
 * Bump charts now draw rank 1 at the top of the plot with whole-number axis
   ticks, instead of rank 1 at the bottom with half-rank ticks such as 1.5. This
   flips the vertical orientation of every existing bump chart.
+* Confidence and prediction intervals are no longer the same width. `transform_ci()`
+  read `interval` but computed both from the standard error of the fit alone, so a
+  prediction interval was drawn as a confidence interval. Prediction intervals now
+  add the residual scale, and the t critical value uses the degrees of freedom the
+  prediction reports rather than a value derived from the effective parameter count.
+  Every prediction band drawn before this was too narrow.
+
+* Grouped charts no longer emit phantom rows for missing group values. Boxplot,
+  violin, ridgeline, quantile-dots and the other grouped transforms matched groups
+  with `==`, which returns `NA` rather than `FALSE` for an `NA` group value, so
+  subsetting introduced all-`NA` rows into the result. Groups are matched by
+  position now, and a genuinely missing group is labeled `"NA (missing)"` — chosen
+  to avoid colliding with an existing label after the engine strips punctuation
+  from tag names.
+
+* `transform_lm()` returns a typed empty result instead of failing when fewer than
+  two finite points remain after dropping `NA` and infinite values. It also drops
+  those rows before fitting rather than passing them to `lm()`.
+
+* Survival curves extend through the end of follow-up rather than stopping at the
+  last event time, and lines and bands honor `curveType = "stepAfter"` instead of
+  drawing a smooth monotone curve through step data.
+
+* `myio_validate_spec()` rejects mappings that are non-character, empty, `NA`, or
+  whitespace only. It previously accepted them and failed later in the engine. For
+  `parallel` charts it validates every column in the `dimensions` list rather than
+  only single-string mappings.
+
+* Layer opacity set through `setLayerOpacity()` is no longer overwritten by enter
+  transitions, and layer matching uses exact mark tokens — a label that was a
+  prefix of a neighboring label could hide the wrong marks.
+
+* Beeswarm charts center points on their category bands instead of starting at the
+  band edge, which placed points above their axis labels, and category tooltips no
+  longer read `NaN`.
+
+* Calendar heatmaps size cells from the chart's actual clip dimensions and account
+  for the gaps between cells, so the last weekday row is no longer clipped in
+  narrow containers.
+
+* Axis ticks render correctly for R `Date` values before 1970.
+
+* Charts clean up on destruction: delayed callbacks no longer fire against a
+  removed chart, and binding subscriptions are released. Registration is retained
+  while a chart is merely hidden, so charts in inactive tabs still render when
+  their tab is shown.
+
+* `setSlider()` documentation describes what the function does. It does not
+  re-render on its own — the value has to be read from
+  `` input$`myIO-{outputId}-slider-{param}` `` in the render expression and passed
+  to the transform option. The previous example passed a fixed option value and a
+  `param` name that was documented as a transform option, so following it produced
+  a slider that changed nothing.
+
 * NEWS entries use the US spellings the package declares in `Language: en-US`.
 
 # myIO 1.3.0
