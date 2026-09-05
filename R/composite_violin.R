@@ -8,9 +8,8 @@ composite_violin <- function(data, mapping, label, color, options) {
   bandwidth <- options$bandwidth
   box_half_width <- if (is.null(options$boxWidth)) 0.35 else as.numeric(options$boxWidth) / 2
   group_values <- order_group_values(unique(data[[mapping$x_var]]))
-  group_labels <- as.character(group_values)
+  group_labels <- group_labels(group_values)
   positions <- seq_along(group_labels)
-  position_lookup <- stats::setNames(positions, group_labels)
   group_colors <- if (is.null(color)) rep_len(OKABE_ITO_PALETTE, length(group_labels)) else rep_len(color, length(group_labels))
 
   # Compute density for each group and find global max for scaling
@@ -18,7 +17,7 @@ composite_violin <- function(data, mapping, label, color, options) {
   max_density <- 0
   for (i in seq_along(group_values)) {
     group_value <- group_values[[i]]
-    group_data <- data[data[[mapping$x_var]] == group_value, , drop = FALSE]
+    group_data <- data[group_matches(data[[mapping$x_var]], group_value), , drop = FALSE]
     dens <- transform_density(group_data, mapping, list(mirror = FALSE, bandwidth = bandwidth))$data
     if (nrow(dens) > 0) {
       max_density <- max(max_density, max(dens$high_y, na.rm = TRUE))
@@ -68,13 +67,12 @@ composite_violin <- function(data, mapping, label, color, options) {
 
   if (show_box) {
     quantiles <- transform_quantiles(data, mapping, options)$data
-    quantile_groups <- as.character(quantiles[[mapping$x_var]])
 
     box_data <- data.frame(
-      x_var = unname(position_lookup[quantile_groups]),
+      x_var = match(quantiles[[mapping$x_var]], group_values),
       low_y = quantiles$q1,
       high_y = quantiles$q3,
-      group = quantile_groups,
+      group = group_labels[match(quantiles[[mapping$x_var]], group_values)],
       stringsAsFactors = FALSE,
       check.names = FALSE
     )
@@ -92,13 +90,12 @@ composite_violin <- function(data, mapping, label, color, options) {
 
   if (show_median) {
     median_df <- transform_median(data, mapping, options)$data
-    median_groups <- as.character(median_df[[mapping$x_var]])
     median_points <- data.frame(
-      x_var = unname(position_lookup[median_groups]),
+      x_var = match(median_df[[mapping$x_var]], group_values),
       y_var = median_df[[mapping$y_var]],
       low_y = median_df[[mapping$y_var]],
       high_y = median_df[[mapping$y_var]],
-      group = median_groups,
+      group = group_labels[match(median_df[[mapping$x_var]], group_values)],
       stringsAsFactors = FALSE,
       check.names = FALSE
     )
@@ -118,7 +115,7 @@ composite_violin <- function(data, mapping, label, color, options) {
     raw_points <- do.call(rbind, lapply(seq_along(group_values), function(i) {
       group_value <- group_values[[i]]
       group_label <- group_labels[[i]]
-      group_data <- data[data[[mapping$x_var]] == group_value, , drop = FALSE]
+      group_data <- data[group_matches(data[[mapping$x_var]], group_value), , drop = FALSE]
       if (nrow(group_data) == 0) {
         return(NULL)
       }
@@ -128,7 +125,7 @@ composite_violin <- function(data, mapping, label, color, options) {
         offsets <- seq(-0.2, 0.2, length.out = nrow(group_data))
       }
       data.frame(
-        x_var = unname(position_lookup[[group_label]]) + offsets,
+        x_var = positions[[i]] + offsets,
         y_var = group_data[[mapping$y_var]],
         group = group_label,
         stringsAsFactors = FALSE,

@@ -19,7 +19,7 @@ transform_summary <- function(data, mapping, options = list()) {
   )
 
   summarize_group <- function(gv) {
-    group_y <- y_values[x_values == gv]
+    group_y <- y_values[group_matches(x_values, gv)]
     data.frame(
       x = gv,
       y = stat_fn(group_y),
@@ -29,10 +29,13 @@ transform_summary <- function(data, mapping, options = list()) {
   }
 
   transformed <- do.call(rbind, lapply(groups, summarize_group))
+  if (length(groups) == 0L) {
+    transformed <- data.frame(x = x_values[0], y = numeric(0), check.names = FALSE)
+  }
   colnames(transformed)[1:2] <- c(mapping$x_var, mapping$y_var)
 
   source_keys <- lapply(groups, function(gv) {
-    as.character(data[["_source_key"]][x_values == gv])
+    as.character(data[["_source_key"]][group_matches(x_values, gv)])
   })
 
   list(

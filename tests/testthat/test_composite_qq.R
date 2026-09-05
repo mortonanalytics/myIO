@@ -62,3 +62,11 @@ test_that("all sublayers are marked as qq composite", {
   composites <- vapply(w$x$config$layers, function(l) l$`_composite`, character(1))
   expect_true(all(composites == "qq"))
 })
+
+test_that("QQ preserves observations in missing groups", {
+  df <- myIO:::ensure_source_key(data.frame(y = 1:10, g = rep(c("a", NA), each = 5)))
+  layers <- myIO:::composite_qq(df, list(y_var = "y", group = "g"), "qq", NULL, list())
+  points <- Filter(function(x) x$role == "scatter", layers)
+  expect_length(points, 2L)
+  expect_equal(points[[2]]$data$sample, 6:10)
+})

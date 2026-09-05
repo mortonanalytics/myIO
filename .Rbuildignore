@@ -2,6 +2,7 @@
 ^\.Rproj\.user$
 ^\.travis\.yml$
 ^node_modules$
+^\.npmrc$
 ^package\.json$
 ^package-lock\.json$
 ^vitest\.config\.js$

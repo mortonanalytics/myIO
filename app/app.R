@@ -3,14 +3,6 @@ library(dplyr)
 library(crosstalk)
 library(myIO)
 
-# -- Proxy auth filter ----------------------------------------------------
-proxy_secret <- Sys.getenv("PROXY_SECRET", "")
-
-auth_filter <- function(req) {
-  # Temporarily disabled for debugging — allow all requests
-  NULL
-}
-
 # -- UI ------------------------------------------------------------------
 ui <- navbarPage(
   title = tags$span(
@@ -18,11 +10,14 @@ ui <- navbarPage(
     "myIO"
   ),
   id = "nav",
+  collapsible = TRUE,
   theme = bslib::bs_theme(version = 5, primary = "#4A5ACB", bg = "#ffffff", fg = "#212529"),
   header = tags$head(tags$style(HTML("
     .navbar { background-color: #1a1a2e !important; }
     .navbar .navbar-brand, .navbar .nav-link { color: rgba(255,255,255,0.85) !important; }
     .navbar .nav-link:hover, .navbar .nav-link.active { color: #fff !important; }
+    .navbar .navbar-toggle { border-color: rgba(255,255,255,0.5); }
+    .navbar .navbar-toggle .icon-bar { background-color: #fff; }
     .navbar .dropdown-toggle { border-bottom: 0 !important; }
     .navbar .nav-item > .nav-link.active { box-shadow: inset 0 -2px 0 #fff; }
     .feature-card { border: 1px solid #dee2e6; border-radius: 8px; padding: 1.5rem; text-align: center; }
@@ -46,7 +41,7 @@ ui <- navbarPage(
       fluidRow(
         column(3, div(class = "feature-card",
           icon("layer-group", style = "font-size: 2rem; color: #4A5ACB;"),
-          h4("30 Chart Types"),
+          h4("36 Chart Types"),
           p("Scatter, line, bar, grouped bar, area, histogram,
              donut, gauge, treemap, hexbin, heatmap, candlestick,
              waterfall, sankey, boxplot, violin, ridgeline,
@@ -72,7 +67,7 @@ ui <- navbarPage(
         column(3, div(class = "feature-card",
           icon("palette", style = "font-size: 2rem; color: #4A5ACB;"),
           h4("Dark Mode + Themes"),
-          p("12 built-in theme presets including dark, midnight,
+          p("14 built-in theme presets including dark, midnight,
              ocean, forest, sunset, neon, corporate, and academic.
              One-line theming with setTheme().")
         ))
@@ -393,7 +388,8 @@ ui <- navbarPage(
         wellPanel(
           selectInput("theme_preset", "Theme Preset",
             choices = c("light", "dark", "midnight", "ocean", "forest",
-                        "sunset", "monochrome", "neon", "corporate", "academic"))
+                        "sunset", "monochrome", "neon", "corporate", "academic",
+                        "nature", "minimal", "retro", "warm"))
         )
       ),
       column(9,
@@ -707,7 +703,7 @@ server <- function(input, output) {
           level = input$reg_level,
           interval = input$reg_interval,
           showStats = (input$reg_method %in% c("lm", "polynomial")),
-          degree = 3,
+          degree = if (identical(input$reg_method, "polynomial")) 3 else 2,
           span = 0.5
         )) %>%
       setAxisFormat(xLabel = "Day of Experiment", yLabel = "Yield (mg)")
@@ -901,9 +897,11 @@ server <- function(input, output) {
 
   output$beeswarmPlot <- renderMyIO({
     myIO(title = "Iris Measurement Beeswarm") |>
-      addIoLayer("point", label = "Iris", color = "#76B7B2",
-        data = iris, mapping = list(x_var = "Sepal.Length", y_var = "Sepal.Width"),
-        options = list(radius = 3))
+      addIoLayer("beeswarm", label = "Iris", color = "#76B7B2",
+        data = iris, mapping = list(x_var = "Sepal.Length", y_var = "Species"),
+        options = list(radius = 3)) |>
+      defineCategoricalAxis(xAxis = FALSE, yAxis = TRUE) |>
+      setAxisFormat(xLabel = "Sepal length (cm)", yLabel = "Species")
   })
 
   output$bumpPlot <- renderMyIO({
@@ -1100,4 +1098,4 @@ server <- function(input, output) {
   })
 }
 
-shinyApp(ui = ui, server = server, options = list(filter = auth_filter))
+shinyApp(ui = ui, server = server)

@@ -65,3 +65,15 @@ test_that("ungrouped layer labels are unchanged", {
                      mapping = list(x_var = "x", y_var = "y"))
   expect_equal(vapply(w$x$config$layers, function(l) l$label, character(1)), "Trend")
 })
+
+test_that("missing group observations retain their own rows and source keys", {
+  df <- data.frame(x = 1:5, y = 2:6, g = c("a", NA, "b", NA, "NA"))
+  chart <- addIoLayer(myIO(df), "point", label = "points",
+    mapping = list(x_var = "x", y_var = "y", group = "g"))
+  layers <- chart$x$config$layers
+  expect_equal(vapply(layers, function(x) length(x$data), integer(1)), c(1L, 2L, 1L, 1L))
+  expect_false(anyNA(vapply(layers, function(x) x$label, character(1))))
+  keys <- unlist(lapply(layers, function(x) vapply(x$data, function(row) row[["_source_key"]], character(1))))
+  expect_setequal(keys, paste0("row_", 1:5))
+  expect_equal(length(keys), 5L)
+})

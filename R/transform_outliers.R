@@ -9,7 +9,7 @@ transform_outliers <- function(data, mapping, options = list()) {
   outlier_flags <- rep(FALSE, nrow(data))
 
   for (group_value in groups) {
-    group_index <- which(x_values == group_value)
+    group_index <- which(group_matches(x_values, group_value))
     group_y <- y_values[group_index]
     group_y <- group_y[!is.na(group_y)]
 
@@ -25,7 +25,7 @@ transform_outliers <- function(data, mapping, options = list()) {
     outlier_flags[group_index] <- y_values[group_index] < lower_fence | y_values[group_index] > upper_fence
   }
 
-  transformed <- data[outlier_flags, , drop = FALSE]
+  transformed <- data[which(outlier_flags), , drop = FALSE]
   source_keys <- as.list(as.character(transformed[["_source_key"]]))
 
   list(

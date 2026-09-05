@@ -83,6 +83,32 @@ test("narrow widget in a wide viewport: narrow tier + panel owns the legend", as
   await expect(page.locator(".myIO-sheet-handle")).toBeVisible();
 });
 
+test("empty layers retain a usable clipping path after data returns", async ({ page }) => {
+  await ready(page);
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.evaluate(() => {
+    const chart = (window as any).__chart;
+    (window as any).__savedLayers = chart.config.layers;
+    chart.config.layers = [];
+    chart.renderCurrentLayers();
+  });
+  await expect(page.locator("clipPath")).toHaveCount(1);
+  await page.evaluate(() => {
+    const chart = (window as any).__chart;
+    chart.config.layers = (window as any).__savedLayers;
+    chart.renderCurrentLayers();
+  });
+  await expect(page.locator("rect[class^='tag-bar']")).toHaveCount(6);
+  expect(await page.evaluate(() => {
+    return [...document.querySelectorAll("[clip-path]")].every((node) => {
+      const id = node.getAttribute("clip-path")?.match(/#([^)]*)/)?.[1];
+      return !!id && !!document.getElementById(id);
+    });
+  })).toBe(true);
+  expect(errors).toEqual([]);
+});
+
 test("narrow tier for a discrete chart that no longer fits inline still shows a panel legend", async ({ page }) => {
   await ready(page);
   // 400px is wide enough for two short labels inline; shrink to the point the

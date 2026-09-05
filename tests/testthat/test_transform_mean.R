@@ -60,3 +60,19 @@ test_that("transform_mean returns correct metadata", {
   expect_equal(result$meta$derivedFrom, "input_rows")
   expect_equal(result$meta$sourceKeys[[1]], c("row_1", "row_2"))
 })
+
+test_that("aggregate transforms accept empty inputs and summarize missing groups", {
+  mapping <- list(x_var = "x", y_var = "y")
+  df <- myIO:::ensure_source_key(data.frame(x = c("a", NA, "a", NA), y = c(1, 2, 3, 4)))
+  for (name in c("mean", "summary", "mean_ci")) {
+    transform <- get(paste0("transform_", name), asNamespace("myIO"))
+    result <- transform(df, mapping)
+    expected <- if (name == "summary") c(2, 2) else c(2, 3)
+    expect_equal(result$data$y, expected)
+    expect_equal(result$meta$sourceKeys, list(c("row_1", "row_3"), c("row_2", "row_4")))
+    empty <- transform(df[0, ], mapping)
+    expect_equal(nrow(empty$data), 0L)
+    expect_true(all(c("x", "y") %in% names(empty$data)))
+    expect_length(empty$meta$sourceKeys, 0L)
+  }
+})

@@ -106,3 +106,40 @@ test_that("transform_ci returns correct metadata", {
   expect_equal(result$meta$name, "ci")
   expect_equal(result$meta$derivedFrom, "input_rows")
 })
+
+test_that("polynomial intervals match the fitted polynomial", {
+  df <- myIO:::ensure_source_key(data.frame(x = 1:20, y = (1:20)^3 + sin(1:20)))
+  for (interval in c("confidence", "prediction")) {
+    result <- myIO:::transform_ci(df, list(x_var = "x", y_var = "y"),
+      list(method = "polynomial", degree = 3L, interval = interval))
+    fit <- lm(y ~ poly(x, degree = 3L, raw = TRUE), data = df)
+    expected <- predict(fit, newdata = data.frame(x = result$data$x), interval = interval)
+    expect_equal(result$data$low_y, unname(expected[, "lwr"]))
+    expect_equal(result$data$high_y, unname(expected[, "upr"]))
+  }
+})
+
+test_that("loess intervals use the requested fit and prediction degrees of freedom", {
+  df <- myIO:::ensure_source_key(data.frame(x = 1:100, y = sin((1:100) / 10) + cos(1:100)))
+  for (degree in 1:2) {
+    for (interval in c("confidence", "prediction")) {
+      result <- myIO:::transform_ci(df, list(x_var = "x", y_var = "y"),
+        list(method = "loess", degree = degree, interval = interval))
+      fit <- loess(y ~ x, data = df, degree = degree)
+      predicted <- predict(fit, newdata = data.frame(x = result$data$x), se = TRUE)
+      se <- if (interval == "prediction") sqrt(predicted$se.fit^2 + predicted$residual.scale^2) else predicted$se.fit
+      margin <- qt(0.975, df = predicted$df) * se
+      expect_equal(result$data$low_y, unname(predicted$fit - margin))
+      expect_equal(result$data$high_y, unname(predicted$fit + margin))
+    }
+  }
+})
+
+test_that("polynomial intervals require residual degrees of freedom", {
+  df <- myIO:::ensure_source_key(data.frame(x = 1:3, y = c(1, 4, 8)))
+  expect_warning(result <- myIO:::transform_ci(df, list(x_var = "x", y_var = "y"),
+    list(method = "polynomial", degree = 2L)), "at least 4")
+  expect_equal(nrow(result$data), 0L)
+  expect_named(result$data, c("x", "low_y", "high_y"))
+  expect_length(result$meta$sourceKeys, 0L)
+})

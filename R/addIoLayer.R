@@ -452,6 +452,7 @@ check_layer_compatibility <- function(type, existing_layers) {
 build_grouped_layers <- function(data, mapping, type, label, color, transform_fn, options, layer_id,
                                  transform = "identity", existing_layers = list()) {
   group_list <- unique(data[[mapping$group]])
+  group_names <- group_labels(group_list)
   if (is.null(color)) {
     color <- rep_len(OKABE_ITO_PALETTE, length(group_list))
   } else {
@@ -463,18 +464,18 @@ build_grouped_layers <- function(data, mapping, type, label, color, transform_fn
 
   for (index in seq_along(group_list)) {
     group_value <- group_list[[index]]
-    layer_label <- as.character(group_value)
+    layer_label <- group_names[[index]]
     all_labels <- c(existing_labels, vapply(layers, function(layer) layer$label, character(1)))
     if (layer_label %in% all_labels) {
       # Fall back to the legacy "<label> - <group>" form when the bare group
       # value would collide with a layer already on the chart.
-      layer_label <- paste0(label, " \u2014 ", as.character(group_value))
+      layer_label <- paste0(label, " \u2014 ", group_names[[index]])
     }
     if (layer_label %in% all_labels) {
       stop("addIoLayer(): Layer label '", layer_label, "' already exists.", call. = FALSE)
     }
 
-    temp_df <- data[data[[mapping$group]] == group_value, , drop = FALSE]
+    temp_df <- data[group_matches(data[[mapping$group]], group_value), , drop = FALSE]
     transformed <- transform_fn(temp_df, mapping, options)
     layers[[length(layers) + 1L]] <- build_layer(
       layer_type = type,

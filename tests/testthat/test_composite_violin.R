@@ -97,3 +97,15 @@ test_that("violin orders groups deterministically and keeps each box and median 
   expect_equal(as.numeric(rows[["B"]]$x_var), 2); expect_equal(rows[["B"]]$y_var, 102.5)
   expect_equal(as.numeric(rows[["C"]]$x_var), 3); expect_equal(rows[["C"]]$y_var, 1002.5)
 })
+
+test_that("violin retains missing-group density, summaries and observations", {
+  df <- myIO:::ensure_source_key(data.frame(x = rep(c("a", NA), each = 5), y = 1:10))
+  layers <- myIO:::composite_violin(df, list(x_var = "x", y_var = "y"), "violin", NULL, list(showPoints = TRUE))
+  expect_equal(sum(vapply(layers, function(x) x$role == "density_area", logical(1))), 2L)
+  boxes <- Filter(function(x) x$role == "iqr_box", layers)[[1]]$data
+  expect_equal(boxes$x_var, 1:2)
+  expect_equal(boxes$low_y, c(2, 7))
+  points <- Filter(function(x) x$role == "points", layers)[[1]]$data
+  expect_equal(points$y_var, 1:10)
+  expect_false(anyNA(points$x_var))
+})

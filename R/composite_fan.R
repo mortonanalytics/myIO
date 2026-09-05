@@ -45,7 +45,7 @@ composite_fan <- function(data, mapping, label, color, options) {
     })
   } else {
     group_counts <- vapply(groups, function(group_value) {
-      sum(!is.na(data[[y_col]][x_values == group_value]))
+      sum(!is.na(data[[y_col]][group_matches(x_values, group_value)]))
     }, integer(1))
     if (any(group_counts < min_obs)) {
       bad <- groups[group_counts < min_obs]
@@ -62,7 +62,7 @@ composite_fan <- function(data, mapping, label, color, options) {
     layers_data <- lapply(levels, function(level) {
       alpha <- (1 - level / 100) / 2
       rows <- lapply(groups, function(group_value) {
-        group_y <- data[[y_col]][x_values == group_value]
+        group_y <- data[[y_col]][group_matches(x_values, group_value)]
         group_y <- group_y[!is.na(group_y)]
         qs <- stats::quantile(group_y, probs = c(alpha, 1 - alpha), type = 7, names = FALSE, na.rm = TRUE)
         data.frame(

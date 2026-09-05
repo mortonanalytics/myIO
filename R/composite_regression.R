@@ -33,10 +33,12 @@ composite_regression <- function(data, mapping, label, color, options) {
 
   sublayers <- list()
 
-  for (gv in group_vals) {
+  group_names <- group_labels(group_vals)
+  for (index in seq_along(group_vals)) {
+    gv <- group_vals[[index]]
     if (!is.null(gv)) {
-      group_data <- data[data[[mapping$group]] == gv, , drop = FALSE]
-      group_label <- as.character(gv)
+      group_data <- data[group_matches(data[[mapping$group]], gv), , drop = FALSE]
+      group_label <- group_names[[index]]
     } else {
       group_data <- data
       group_label <- label

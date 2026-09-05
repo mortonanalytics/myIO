@@ -7,12 +7,13 @@ composite_qq <- function(data, mapping, label, color, options) {
 
   if (has_group) {
     group_vals <- unique(data[[mapping$group]])
+    group_names <- group_labels(group_vals)
     colors <- if (is.null(color)) rep_len(OKABE_ITO_PALETTE, length(group_vals))
               else rep_len(color, length(group_vals))
     sublayers <- list()
     for (idx in seq_along(group_vals)) {
-      group_data <- data[data[[mapping$group]] == group_vals[idx], , drop = FALSE]
-      group_label <- as.character(group_vals[idx])
+      group_data <- data[group_matches(data[[mapping$group]], group_vals[idx]), , drop = FALSE]
+      group_label <- group_names[[idx]]
       sublayers <- c(sublayers,
         build_qq_sublayers(group_data, mapping, group_label, colors[idx], options, show_envelope))
     }

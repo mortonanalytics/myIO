@@ -112,9 +112,10 @@ myIO(data = mtcars) |>
     options = list(level = 0.95))
 ```
 
-The `ci` transform accepts `method` (`"lm"` or `"loess"`), `level` (default
-0.95), and `interval` (`"confidence"` or `"prediction"`). The mapping only
-needs `x_var` and `y_var` — `low_y`/`high_y` are auto-injected.
+The `ci` transform accepts `method` (`"lm"`, `"loess"`, or `"polynomial"`),
+`level` (default 0.95), and `interval` (`"confidence"` or `"prediction"`).
+Use `degree` for polynomial and LOESS fits and `span` for LOESS. Map `x_var`
+and `y_var`; the transform supplies `low_y` and `high_y`.
 
 ### LOESS Smoothing
 

@@ -86,7 +86,7 @@ export class WaterfallRenderer {
       .transition()
       .ease(easingFor(chart, d3.easeQuad))
       .duration(transitionSpeed)
-      .style("opacity", 1)
+      .style("opacity", layer.options && layer.options.opacity != null ? layer.options.opacity : 1)
       .attr("x1", function(d, i) { return chart.xScale(layer.data[i][xVar]) + barOffset + barWidth; })
       .attr("x2", function(d, i) { return chart.xScale(layer.data[i + 1][xVar]) + barOffset; })
       .attr("y1", function(d) { return chart.yScale(+d._cumulative_y); })

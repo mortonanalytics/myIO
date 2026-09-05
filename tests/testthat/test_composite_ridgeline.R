@@ -153,3 +153,11 @@ test_that("ridgeline sorts numeric group columns numerically", {
 
   expect_equal(w$x$config$axes$yTickLabels, list(`1` = "4", `2` = "6", `3` = "8"))
 })
+
+test_that("ridgeline retains the density for a missing group", {
+  df <- myIO:::ensure_source_key(data.frame(x = 1:10, y = 1:10, g = rep(c("a", NA), each = 5)))
+  layers <- myIO:::composite_ridgeline(df, list(x_var = "x", y_var = "y", group = "g"), "ridge", NULL, list())
+  expect_length(layers, 2L)
+  expect_true(all(is.finite(layers[[2]]$data$density)))
+  expect_true(all(layers[[2]]$data$low_y == 2))
+})

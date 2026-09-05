@@ -8,11 +8,11 @@ transform_quantiles <- function(data, mapping, options = list()) {
 
   summarize_group <- function(group_value) {
     if (is.factor(x_values)) {
-      group_index <- which(x_values == group_value)
+      group_index <- which(group_matches(x_values, group_value))
     } else if (is.character(x_values)) {
-      group_index <- which(x_values == group_value)
+      group_index <- which(group_matches(x_values, group_value))
     } else {
-      group_index <- which(x_values == group_value)
+      group_index <- which(group_matches(x_values, group_value))
     }
 
     group_y <- y_values[group_index]
@@ -51,9 +51,9 @@ transform_quantiles <- function(data, mapping, options = list()) {
 
   source_keys <- lapply(groups, function(group_value) {
     if (is.factor(x_values) || is.character(x_values) || is.numeric(x_values)) {
-      group_index <- which(x_values == group_value)
+      group_index <- which(group_matches(x_values, group_value))
     } else {
-      group_index <- which(x_values == group_value)
+      group_index <- which(group_matches(x_values, group_value))
     }
     as.character(data[["_source_key"]][group_index])
   })

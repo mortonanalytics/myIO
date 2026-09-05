@@ -10,7 +10,7 @@
 
 An R package for creating interactive `d3.js` visualizations using `htmlwidgets`. Supports 36 chart types including scatter plots, line charts, uncertainty views, statistical composites, and more — all composable through a piped API.
 
-[Live Demo](https://mortonanalytics.github.io/myIO/)
+[Live Demo](https://www.morton-analytics.com/myio/)
 
 ## Installation
 
@@ -44,7 +44,9 @@ myIO() |>
   )
 ```
 
-## Supported Chart Types
+## Chart Type Examples
+
+The table below covers common chart types. See the [Chart Types](https://mortonanalytics.github.io/myIO/articles/chart-types.html) article for more examples, or run `myio_list_chart_types()` for the complete list.
 
 | Type | `type` value |
 |------|-------------|

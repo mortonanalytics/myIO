@@ -81,6 +81,14 @@ transform_survfit <- function(data, mapping, options = list()) {
     out_n_event <- c(out_n_event, d_i)
   }
 
+  if (max(t_vec) > out_time[[length(out_time)]]) {
+    out_time <- c(out_time, max(t_vec))
+    out_surv <- c(out_surv, surv)
+    out_var_sum <- c(out_var_sum, var_sum)
+    out_n_risk <- c(out_n_risk, sum(t_vec == max(t_vec)))
+    out_n_event <- c(out_n_event, 0L)
+  }
+
   # Greenwood CI: S(t) +/- z * S(t) * sqrt(var_sum)
   z <- stats::qnorm(1 - (1 - level) / 2)
   se <- out_surv * sqrt(out_var_sum)

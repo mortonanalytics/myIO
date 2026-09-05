@@ -43,7 +43,7 @@ expand_grouped_df <- function(myIO, type, color, label, data, mapping, transform
 
   for (i in seq_len(n_groups)) {
     key_row <- group_keys[i, , drop = FALSE]
-    group_label_parts <- vapply(group_vars, function(v) as.character(key_row[[v]]), character(1))
+    group_label_parts <- vapply(group_vars, function(v) group_labels(ungrouped[[v]])[match(key_row[[v]], ungrouped[[v]])], character(1))
     group_suffix <- paste(group_label_parts, collapse = " / ")
     layer_label <- group_suffix
     if (layer_label %in% existing_labels) {
@@ -54,7 +54,7 @@ expand_grouped_df <- function(myIO, type, color, label, data, mapping, transform
     # Subset rows matching this group key
     mask <- rep(TRUE, nrow(ungrouped))
     for (v in group_vars) {
-      mask <- mask & (ungrouped[[v]] == key_row[[v]])
+      mask <- mask & (group_matches(ungrouped[[v]], key_row[[v]]))
     }
     subset_df <- ungrouped[mask, , drop = FALSE]
 

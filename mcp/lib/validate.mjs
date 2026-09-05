@@ -85,7 +85,7 @@ function normalizeColumns(columns) {
     }
   }
   if (Array.isArray(columns)) {
-    const normalized = {};
+    const normalized = Object.create(null);
     for (const item of columns) {
       if (typeof item === "string") {
         normalized[item] = "unknown";
@@ -143,7 +143,7 @@ export function listChartTypes() {
 export function getChartSchema(type) {
   const schema = loadSchema();
   if (type == null) return schema.types;
-  return schema.types[type] || null;
+  return Object.hasOwn(schema.types, type) ? schema.types[type] : null;
 }
 
 export function validateSpec(spec) {
@@ -151,7 +151,7 @@ export function validateSpec(spec) {
   const payload = spec || {};
   const errors = [];
   const type = payload.type;
-  const typeSchema = schema.types[type];
+  const typeSchema = typeof type === "string" ? getChartSchema(type) : null;
   if (!typeSchema) {
     errors.push(error(
       "UNKNOWN_TYPE",
@@ -175,7 +175,7 @@ export function validateSpec(spec) {
 
   const allowedKeys = allowedMappingKeys(typeSchema);
   for (const field of typeSchema.required_mappings || []) {
-    if (!(field in mapping)) {
+    if (!Object.hasOwn(mapping, field)) {
       errors.push(error(
         "MISSING_MAPPING",
         field,
@@ -183,6 +183,7 @@ export function validateSpec(spec) {
       ));
     }
   }
+  const mappedColumns = Object.create(null);
   for (const field of Object.keys(mapping)) {
     if (!allowedKeys.includes(field)) {
       errors.push(error(
@@ -192,24 +193,35 @@ export function validateSpec(spec) {
         suggest(field, allowedKeys)
       ));
     }
+    const names = type === "parallel" && field === "dimensions" && Array.isArray(mapping[field])
+      ? mapping[field] : [mapping[field]];
+    if (!names.length || !names.every((name) => typeof name === "string" && name.trim())) {
+      errors.push(error(
+        "INVALID_MAPPING", field,
+        `Mapping '${field}' must contain nonempty column names.`
+      ));
+    } else {
+      mappedColumns[field] = names;
+    }
   }
 
   const columns = normalizeColumns(payload.columns);
   if (columns) {
-    for (const [field, columnName] of Object.entries(mapping)) {
-      if (typeof columnName !== "string") continue;
-      if (!(columnName in columns)) {
-        errors.push(error(
-          "MISSING_COLUMN",
-          field,
-          `Mapped column '${columnName}' for '${field}' is not present in columns.`,
-          suggest(columnName, Object.keys(columns))
-        ));
+    for (const [field, names] of Object.entries(mappedColumns)) {
+      for (const columnName of names) {
+        if (!Object.hasOwn(columns, columnName)) {
+          errors.push(error(
+            "MISSING_COLUMN",
+            field,
+            `Mapped column '${columnName}' for '${field}' is not present in columns.`,
+            suggest(columnName, Object.keys(columns))
+          ));
+        }
       }
     }
     for (const field of typeSchema.numeric_fields || []) {
       const columnName = mapping[field];
-      if (typeof columnName === "string" && columnName in columns &&
+      if (typeof columnName === "string" && Object.hasOwn(columns, columnName) &&
           !isNumericColumn(columns[columnName])) {
         errors.push(error(
           "NON_NUMERIC_COLUMN",
@@ -230,14 +242,14 @@ export function listFunctions() {
 export function getFunctionSignature(fn) {
   const schema = loadSchema();
   if (fn == null) return schema.function_signatures;
-  return schema.function_signatures[fn] || null;
+  return Object.hasOwn(schema.function_signatures, fn) ? schema.function_signatures[fn] : null;
 }
 
 export function validateCall(call) {
   const schema = loadSchema();
   const payload = call || {};
   const fn = payload.fn;
-  const signature = schema.function_signatures[fn];
+  const signature = typeof fn === "string" ? getFunctionSignature(fn) : null;
   const errors = [];
   if (!signature) {
     errors.push(error(

@@ -1,10 +1,11 @@
 #' Add a Parameter Slider (Shiny Only)
 #'
-#' Adds a slider control below the chart that adjusts a transform option
-#' and triggers reactive re-rendering in Shiny.
+#' Adds a slider control below the chart. Read its Shiny input in the render
+#' expression and pass the value to the transform option to recompute the chart.
 #'
 #' @param myIO an htmlwidget object created by the \code{myIO()} function
-#' @param param transform option name (e.g., \code{"ci_level"}, \code{"degree"})
+#' @param param Slider input name (e.g., \code{"ci_level"}, \code{"degree"}).
+#'   Values are sent to \code{input$`myIO-{outputId}-slider-{param}`}.
 #' @param label display label for the slider
 #' @param min minimum value
 #' @param max maximum value
@@ -17,13 +18,15 @@
 #' \dontrun{
 #' # In a Shiny server function:
 #' output$chart <- renderMyIO({
+#'   level <- input$`myIO-chart-slider-ci_level`
+#'   if (is.null(level)) level <- 0.95
 #'   myIO(data = mtcars) |>
 #'     addIoLayer(
 #'       type = "regression", label = "fit",
 #'       mapping = list(x_var = "wt", y_var = "mpg"),
-#'       options = list(ci_level = 0.95)
+#'       options = list(level = level)
 #'     ) |>
-#'     setSlider("ci_level", "Confidence level", 0.80, 0.99, 0.95, 0.01)
+#'     setSlider("ci_level", "Confidence level", 0.80, 0.99, level, 0.01)
 #' })
 #' }
 #'
