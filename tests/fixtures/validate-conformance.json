@@ -107,5 +107,152 @@
     "valid": false,
     "error_codes": ["UNKNOWN_FUNCTION"],
     "suggestion_targets": ["setAxisFormat"]
+  },
+  {
+    "name": "validate_spec rejects inherited toString",
+    "tool": "validate_spec",
+    "input": {
+      "type": "toString"
+    },
+    "valid": false,
+    "error_codes": [
+      "UNKNOWN_TYPE"
+    ]
+  },
+  {
+    "name": "validate_call rejects inherited toString",
+    "tool": "validate_call",
+    "input": {
+      "fn": "toString"
+    },
+    "valid": false,
+    "error_codes": [
+      "UNKNOWN_FUNCTION"
+    ]
+  },
+  {
+    "name": "validate_spec rejects inherited constructor",
+    "tool": "validate_spec",
+    "input": {
+      "type": "constructor"
+    },
+    "valid": false,
+    "error_codes": [
+      "UNKNOWN_TYPE"
+    ]
+  },
+  {
+    "name": "validate_call rejects inherited constructor",
+    "tool": "validate_call",
+    "input": {
+      "fn": "constructor"
+    },
+    "valid": false,
+    "error_codes": [
+      "UNKNOWN_FUNCTION"
+    ]
+  },
+  {
+    "name": "validate_spec rejects inherited __proto__",
+    "tool": "validate_spec",
+    "input": {
+      "type": "__proto__"
+    },
+    "valid": false,
+    "error_codes": [
+      "UNKNOWN_TYPE"
+    ]
+  },
+  {
+    "name": "validate_call rejects inherited __proto__",
+    "tool": "validate_call",
+    "input": {
+      "fn": "__proto__"
+    },
+    "valid": false,
+    "error_codes": [
+      "UNKNOWN_FUNCTION"
+    ]
+  },
+  {
+    "name": "rejects null mapping",
+    "tool": "validate_spec",
+    "input": {
+      "type": "point",
+      "mapping": {
+        "x_var": null,
+        "y_var": "y"
+      }
+    },
+    "valid": false,
+    "error_codes": [
+      "INVALID_MAPPING"
+    ]
+  },
+  {
+    "name": "rejects number mapping",
+    "tool": "validate_spec",
+    "input": {
+      "type": "point",
+      "mapping": {
+        "x_var": 42,
+        "y_var": "y"
+      }
+    },
+    "valid": false,
+    "error_codes": [
+      "INVALID_MAPPING"
+    ]
+  },
+  {
+    "name": "rejects empty mapping",
+    "tool": "validate_spec",
+    "input": {
+      "type": "point",
+      "mapping": {
+        "x_var": "",
+        "y_var": "y"
+      }
+    },
+    "valid": false,
+    "error_codes": [
+      "INVALID_MAPPING"
+    ]
+  },
+  {
+    "name": "rejects array mapping",
+    "tool": "validate_spec",
+    "input": {
+      "type": "point",
+      "mapping": {
+        "x_var": [
+          "x",
+          "y"
+        ],
+        "y_var": "y"
+      }
+    },
+    "valid": false,
+    "error_codes": [
+      "INVALID_MAPPING"
+    ]
+  },
+  {
+    "name": "inherited column is missing",
+    "tool": "validate_spec",
+    "input": {
+      "type": "point",
+      "mapping": {
+        "x_var": "toString",
+        "y_var": "y"
+      },
+      "columns": {
+        "y": "numeric"
+      }
+    },
+    "valid": false,
+    "error_codes": [
+      "MISSING_COLUMN"
+    ]
   }
 ]

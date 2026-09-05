@@ -33,6 +33,10 @@ test("shared validation conformance corpus", function() {
 });
 
 test("tool helpers expose chart and function surfaces", function() {
+  for (const name of ["toString", "constructor", "__proto__"]) {
+    assert.equal(getChartSchema(name), null);
+    assert.equal(getFunctionSignature(name), null);
+  }
   assert.ok(listChartTypes().includes("point"));
   assert.ok(listChartTypes().includes("fan"));
   assert.equal(getChartSchema("boxplot").kind, "composite");

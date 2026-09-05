@@ -158,6 +158,14 @@ myio_validate_spec <- function(spec, columns = NULL) {
         myio_levenshtein(field, allowed_keys)
       )
     }
+    column_name <- mapping[[field]]
+    if (!is.character(column_name) || length(column_name) != 1L ||
+        is.na(column_name) || !nzchar(trimws(column_name))) {
+      errors[[length(errors) + 1L]] <- myio_tool_error(
+        "INVALID_MAPPING", field,
+        sprintf("Mapping '%s' must be a nonempty column name.", field)
+      )
+    }
   }
 
   column_map <- myio_normalize_columns(columns %||% spec$columns %||% NULL)
@@ -165,6 +173,7 @@ myio_validate_spec <- function(spec, columns = NULL) {
     for (field in names(mapping)) {
       column_name <- mapping[[field]]
       if (is.character(column_name) && length(column_name) == 1L &&
+          !is.na(column_name) && nzchar(trimws(column_name)) &&
           !(column_name %in% names(column_map))) {
         errors[[length(errors) + 1L]] <- myio_tool_error(
           "MISSING_COLUMN", field,
@@ -176,6 +185,7 @@ myio_validate_spec <- function(spec, columns = NULL) {
     for (field in unlist(type_schema$numeric_fields, use.names = FALSE)) {
       column_name <- mapping[[field]]
       if (is.character(column_name) && length(column_name) == 1L &&
+          !is.na(column_name) && nzchar(trimws(column_name)) &&
           column_name %in% names(column_map) &&
           !myio_is_numeric_column(column_map[[column_name]])) {
         errors[[length(errors) + 1L]] <- myio_tool_error(
