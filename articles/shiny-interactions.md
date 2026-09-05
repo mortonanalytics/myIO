@@ -13,57 +13,59 @@ powers it.
 The gallery app includes chart examples and four I/O interaction demos.
 Navigate to **Interactions** in the top menu to try each one.
 
+Toggle navigation
+
 ![](logo.png) myIO
 
-- [ Home](#tab-2878-1)
+- [ Home](#tab-4769-1)
 - [ Basic Charts ](#)
-  - [Bar](#tab-3063-1)
-  - [Grouped Bar](#tab-3063-2)
-  - [Horizontal Bar](#tab-3063-3)
-  - [Line](#tab-3063-4)
-  - [Area](#tab-3063-5)
+  - [Bar](#tab-1277-1)
+  - [Grouped Bar](#tab-1277-2)
+  - [Horizontal Bar](#tab-1277-3)
+  - [Line](#tab-1277-4)
+  - [Area](#tab-1277-5)
 - [ Statistical ](#)
-  - [Scatter + Trend](#tab-4946-1)
-  - [Regression + CI](#tab-4946-2)
-  - [LOESS Smoothing](#tab-4946-3)
-  - [Mean ± CI](#tab-4946-4)
-  - [Moving Average](#tab-4946-5)
-  - [Residuals](#tab-4946-6)
-  - [Histogram](#tab-4946-7)
-  - [Hexbin Density](#tab-4946-8)
-  - [Q-Q Plot](#tab-4946-9)
+  - [Scatter + Trend](#tab-4369-1)
+  - [Regression + CI](#tab-4369-2)
+  - [LOESS Smoothing](#tab-4369-3)
+  - [Mean ± CI](#tab-4369-4)
+  - [Moving Average](#tab-4369-5)
+  - [Residuals](#tab-4369-6)
+  - [Histogram](#tab-4369-7)
+  - [Hexbin Density](#tab-4369-8)
+  - [Q-Q Plot](#tab-4369-9)
 - [ Specialized ](#)
-  - [Donut](#tab-3392-1)
-  - [Gauge](#tab-3392-2)
-  - [Treemap](#tab-3392-3)
-- [ Financial](#tab-2878-5)
+  - [Donut](#tab-8845-1)
+  - [Gauge](#tab-8845-2)
+  - [Treemap](#tab-8845-3)
+- [ Financial](#tab-4769-5)
 - [ Distribution ](#)
-  - [Boxplot](#tab-6293-1)
-  - [Violin](#tab-6293-2)
-  - [Ridgeline](#tab-6293-3)
-  - [Comparison](#tab-6293-4)
-- [ Relational](#tab-2878-7)
+  - [Boxplot](#tab-8419-1)
+  - [Violin](#tab-8419-2)
+  - [Ridgeline](#tab-8419-3)
+  - [Comparison](#tab-8419-4)
+- [ Relational](#tab-4769-7)
 - [ Interactions ](#)
-  - [Brush Selection](#tab-6959-1)
-  - [Click-to-Annotate](#tab-6959-2)
-  - [Linked Brushing](#tab-6959-3)
-  - [Parameter Slider](#tab-6959-4)
+  - [Brush Selection](#tab-6360-1)
+  - [Click-to-Annotate](#tab-6360-2)
+  - [Linked Brushing](#tab-6360-3)
+  - [Parameter Slider](#tab-6360-4)
 - [ New Charts ](#)
-  - [Lollipop](#tab-5040-1)
-  - [Dumbbell](#tab-5040-2)
-  - [Waffle](#tab-5040-3)
-  - [Beeswarm](#tab-5040-4)
-  - [Bump](#tab-5040-5)
-  - [Radar](#tab-5040-6)
-  - [Funnel](#tab-5040-7)
-  - [Calendar Heatmap](#tab-5040-8)
+  - [Lollipop](#tab-6800-1)
+  - [Dumbbell](#tab-6800-2)
+  - [Waffle](#tab-6800-3)
+  - [Beeswarm](#tab-6800-4)
+  - [Bump](#tab-6800-5)
+  - [Radar](#tab-6800-6)
+  - [Funnel](#tab-6800-7)
+  - [Calendar Heatmap](#tab-6800-8)
 - [ Advanced ](#)
-  - [Survival Curve](#tab-1840-1)
-  - [Distribution Fit](#tab-1840-2)
-  - [Sparklines](#tab-1840-3)
-  - [Small Multiples](#tab-1840-4)
-- [ Theme Demo](#tab-2878-11)
-- [ Export Demo](#tab-2878-12)
+  - [Survival Curve](#tab-8708-1)
+  - [Distribution Fit](#tab-8708-2)
+  - [Sparklines](#tab-8708-3)
+  - [Small Multiples](#tab-8708-4)
+- [ Theme Demo](#tab-4769-11)
+- [ Export Demo](#tab-4769-12)
 
 ![](logo.png)
 
@@ -71,7 +73,7 @@ Navigate to **Interactions** in the top menu to try each one.
 
 Interactive D3.js visualizations, built entirely in R.
 
-#### 30 Chart Types
+#### 36 Chart Types
 
 Scatter, line, bar, grouped bar, area, histogram, donut, gauge, treemap,
 hexbin, heatmap, candlestick, waterfall, sankey, boxplot, violin,
@@ -91,7 +93,7 @@ parameter sliders. User actions flow back as structured data.
 
 #### Dark Mode + Themes
 
-12 built-in theme presets including dark, midnight, ocean, forest,
+14 built-in theme presets including dark, midnight, ocean, forest,
 sunset, neon, corporate, and academic. One-line theming with setTheme().
 
 Use the tabs above to explore each chart type.
@@ -149,8 +151,8 @@ Noise
 
 Value
 
-- [Candlestick](#tab-4781-1)
-- [Waterfall](#tab-4781-2)
+- [Candlestick](#tab-4860-1)
+- [Waterfall](#tab-4860-2)
 
 Test Method
 
@@ -160,8 +162,8 @@ P-value Adjustment
 
 None Bonferroni Holm BH
 
-- [Heatmap](#tab-6325-1)
-- [Sankey](#tab-6325-2)
+- [Heatmap](#tab-1716-1)
+- [Sankey](#tab-1716-2)
 
 #### Selected Points
 
@@ -194,7 +196,7 @@ Normal Log-Normal Exponential
 Theme Preset
 
 light dark midnight ocean forest sunset monochrome neon corporate
-academic
+academic nature minimal retro warm
 
 ##### Export Options
 
