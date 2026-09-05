@@ -29,6 +29,9 @@ jobs:
       - name: Build htmlwidget bundle
         run: npm run build
 
+      - name: Verify the committed htmlwidget bundle
+        run: git diff --exit-code -- inst/htmlwidgets/myIO/myIOapi.js
+
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 

@@ -1031,3 +1031,78 @@ describe("renderer remove() id convention", function() {
     expect(offenders).toEqual([]);
   });
 });
+
+describe("Survival step interpolation", function() {
+  test.each(["line", "area"])("%s honors stepAfter and preserves monotone defaults", function(type) {
+    registerBuiltInRenderers();
+    document.body.innerHTML = "<div id='survival'><svg><g></g></svg></div>";
+    var element = document.getElementById("survival");
+    var chart = {
+      element: element, chart: d3.select(element).select("g"),
+      xScale: d3.scaleLinear(), yScale: d3.scaleLinear(),
+      options: { transition: { speed: 0 } },
+      config: { scales: { colorScheme: { enabled: false } } },
+      runtime: { totalWidth: 500 },
+      width: 500
+    };
+    var layer = makeLayer(type, "survival", [
+      { x: 0, y: 1, lo: 0.9, hi: 1 },
+      { x: 1, y: 0.7, lo: 0.5, hi: 0.9 },
+      { x: 2, y: 0.4, lo: 0.2, hi: 0.6 }
+    ], { x_var: "x", y_var: "y", low_y: "lo", high_y: "hi" },
+    { options: { curveType: "stepAfter" } });
+    var renderer = getRenderer(type);
+    renderer.render(chart, layer);
+    d3.timerFlush();
+    var path = element.querySelector("path").getAttribute("d");
+    var expected = type === "line"
+      ? d3.line().x(function(d) { return d.x; }).y(function(d) { return d.y; })
+      : d3.area().x(function(d) { return d.x; }).y0(function(d) { return d.lo; }).y1(function(d) { return d.hi; });
+    expect(path).toBe(expected.curve(d3.curveStepAfter)(layer.data));
+    layer.options = {};
+    renderer.render(chart, layer);
+    d3.timerFlush();
+    expect(element.querySelector("path").getAttribute("d")).toBe(expected.curve(d3.curveMonotoneX)(layer.data));
+    layer.options.opacity = 0.5;
+    renderer.render(chart, layer);
+    d3.timerFlush();
+    expect(+element.querySelector("path").style.opacity).toBe(type === "area" ? 0.2 : 0.5);
+  });
+});
+
+describe("Beeswarm group placement", function() {
+  test.each(["categorical", "numeric"])("centers %s y values on the axis", function(kind) {
+    registerBuiltInRenderers();
+    document.body.innerHTML = "<svg><g class='swarm'></g></svg>";
+    var yScale = kind === "categorical"
+      ? d3.scaleBand().domain(["setosa", "versicolor", "virginica"]).range([300, 0]).padding(0.1)
+      : d3.scaleLinear().domain([0, 2]).range([300, 0]);
+    var values = yScale.domain();
+    var layer = makeLayer("beeswarm", "groups", values.map(function(value, i) {
+      return { x: i, y: value, _source_key: String(i) };
+    }), { x_var: "x", y_var: "y" });
+    var chart = {
+      derived: { xScale: d3.scaleLinear().domain([0, 2]).range([0, 200]), yScale: yScale },
+      dom: { chartArea: d3.select(".swarm") }, options: { transition: { speed: 0 } }
+    };
+    getRenderer("beeswarm").render(chart, layer);
+    var points = document.querySelectorAll(".beeswarm-point");
+    expect(points.length).toBe(values.length);
+    points.forEach(function(point, i) {
+      var expected = yScale(values[i]) + (kind === "categorical" ? yScale.bandwidth() / 2 : 0);
+      expect(+point.getAttribute("cy")).toBeCloseTo(expected, 8);
+    });
+  });
+});
+
+
+describe("Beeswarm tooltip values", function() {
+  test("preserves category names and numeric formatting", function() {
+    registerBuiltInRenderers();
+    var renderer = getRenderer("beeswarm");
+    var chart = { runtime: { activeYFormat: d3.format(".1f") } };
+    var layer = { mapping: { x_var: "x", y_var: "y" }, label: "Iris", color: "blue" };
+    expect(renderer.formatTooltip(chart, { x: 5.1, y: "setosa" }, layer).items[0].value).toBe("setosa");
+    expect(renderer.formatTooltip(chart, { x: 5.1, y: 3 }, layer).items[0].value).toBe("3.0");
+  });
+});

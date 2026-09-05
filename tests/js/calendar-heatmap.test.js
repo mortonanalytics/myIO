@@ -85,6 +85,33 @@ describe("CalendarHeatmapRenderer", function() {
     expect(cells.length).toBe(365);
   });
 
+  test.each([[260, 75], [120, 50]])("cells fit actual %ix%i plot bounds including gaps", function(width, height) {
+    var ch = mountChart(fullYear(2026));
+    ch.dom = { clipPath: ch.svg.append("rect").attr("width", width).attr("height", height) };
+    ch.element.style.setProperty("--chart-calendar-cell-gap", "4");
+    new CalendarHeatmapRenderer().render(ch, ch._layer);
+    var cells = ch.element.querySelectorAll("rect.myIO-calendar-cell");
+    expect(cells.length).toBe(365);
+    for (var cell of cells) {
+      expect(+cell.getAttribute("width")).toBeGreaterThan(0);
+      expect(+cell.getAttribute("x") + +cell.getAttribute("width")).toBeLessThanOrEqual(width + 1e-9);
+      expect(+cell.getAttribute("y") + +cell.getAttribute("height")).toBeLessThanOrEqual(height + 1e-9);
+    }
+  });
+
+  test("calendar layer opacity applies once and resets", function() {
+    var ch = mountChart(fullYear(2026));
+    var renderer = new CalendarHeatmapRenderer();
+    ch._layer.options.opacity = 0.5;
+    renderer.render(ch, ch._layer);
+    d3.timerFlush();
+    expect(ch.element.querySelector(".myIO-calendar-root").style.opacity).toBe("0.5");
+    expect(ch.element.querySelector(".myIO-calendar-cell").style.opacity).toBe("1");
+    delete ch._layer.options.opacity;
+    renderer.render(ch, ch._layer);
+    expect(ch.element.querySelector(".myIO-calendar-root").style.opacity).toBe("1");
+  });
+
   test("AC-J3: Sunday-start puts 2026-01-04 on row 0 and 2026-01-03 on row 6", function() {
     var rows = [
       { d: "2026-01-03", v: 1 },
