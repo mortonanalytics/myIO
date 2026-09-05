@@ -16,3 +16,18 @@ order_group_values <- function(values) {
     values[order(values, na.last = TRUE)]
   }
 }
+
+# Match one group without introducing NA rows during data frame subsetting.
+group_matches <- function(values, value) {
+  if (is.na(value)) is.na(values) else !is.na(values) & values == value
+}
+
+group_labels <- function(values) {
+  labels <- as.character(values)
+  missing_label <- "NA"
+  while (missing_label %in% labels[!is.na(values)]) {
+    missing_label <- paste0("(", missing_label, ")")
+  }
+  labels[is.na(values)] <- missing_label
+  labels
+}

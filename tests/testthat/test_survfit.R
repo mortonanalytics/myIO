@@ -95,3 +95,24 @@ test_that("addIoLayer type='survfit' produces a valid widget", {
   expect_true("line" %in% layer_types)
   expect_true("area" %in% layer_types)
 })
+
+test_that("survival curve and band extend through final censoring", {
+  for (status in list(c(1, 0, 0), c(0, 0, 0))) {
+    chart <- addIoLayer(myIO(data.frame(time = c(1, 5, 8), status = status)),
+      "survfit", label = "survival", mapping = list(time = "time", status = "status"))
+    curve <- chart$x$config$layers[[1]]$data
+    band <- chart$x$config$layers[[2]]$data
+    expect_equal(tail(vapply(curve, function(x) x$time, numeric(1)), 1), 8)
+    expect_equal(tail(vapply(band, function(x) x$time, numeric(1)), 1), 8)
+    expect_equal(tail(vapply(curve, function(x) x$surv, numeric(1)), 1), if (any(status == 1)) 2 / 3 else 1)
+  }
+})
+
+test_that("survival includes subjects with missing group labels", {
+  df <- data.frame(time = 1:6, status = c(1, 1, 0, 1, 0, 0), g = rep(c("a", NA), each = 3))
+  layers <- myIO:::composite_survfit(df, list(time = "time", status = "status", group = "g"), "survival", NULL, list())
+  curves <- Filter(function(x) x$role == "step_curve", layers)
+  expect_length(curves, 2L)
+  expect_equal(tail(curves[[2]]$data$time, 1L), 6)
+  expect_equal(tail(curves[[2]]$data$surv, 1L), 2 / 3)
+})

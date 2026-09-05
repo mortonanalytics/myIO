@@ -65,3 +65,10 @@ test_that("quantile_dots rejects a separate group aesthetic", {
     "do not supply a separate `group` mapping"
   )
 })
+
+test_that("quantile dots retain observations and lineage in missing groups", {
+  df <- myIO:::ensure_source_key(data.frame(x = rep(c("a", NA), each = 2), y = 1:4))
+  result <- myIO:::transform_quantile_dots(df, list(x_var = "x", y_var = "y"), list(source = "empirical", n = 2L))
+  expect_equal(result$data$value, c(1.25, 1.75, 3.25, 3.75))
+  expect_equal(result$meta$sourceKeys, list(c("row_1", "row_2"), c("row_3", "row_4")))
+})

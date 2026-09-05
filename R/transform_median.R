@@ -7,7 +7,7 @@ transform_median <- function(data, mapping, options = list()) {
   groups <- unique(x_values)
 
   summarize_group <- function(group_value) {
-    group_index <- which(x_values == group_value)
+    group_index <- which(group_matches(x_values, group_value))
     group_y <- y_values[group_index]
     group_y <- group_y[!is.na(group_y)]
     group_median <- if (length(group_y) == 0L) NA_real_ else stats::median(group_y, na.rm = TRUE)
@@ -24,7 +24,7 @@ transform_median <- function(data, mapping, options = list()) {
   colnames(transformed) <- c(mapping$x_var, mapping$y_var)
 
   source_keys <- lapply(groups, function(group_value) {
-    group_index <- which(x_values == group_value)
+    group_index <- which(group_matches(x_values, group_value))
     as.character(data[["_source_key"]][group_index])
   })
 

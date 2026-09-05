@@ -11,3 +11,8 @@ test_that("order_group_values sorts numerics numerically and puts NA last", {
   expect_equal(myIO:::order_group_values(c(10, 2, 33)), c(2, 10, 33))
   expect_equal(myIO:::order_group_values(c("b", NA, "a")), c("a", "b", NA))
 })
+
+test_that("missing labels stay distinct from literal NA labels", {
+  values <- c("NA", NA, "(NA)", "a")
+  expect_equal(myIO:::group_labels(values), c("NA", "((NA))", "(NA)", "a"))
+})

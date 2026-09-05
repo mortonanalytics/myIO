@@ -118,3 +118,22 @@ test_that("whiskerType = 'minmax' draws whiskers at each group's own extremes", 
   expect_equal(lo_rows[["A"]]$y_var, 1)
   expect_equal(lo_rows[["C"]]$y_var, 1000)
 })
+
+test_that("boxplot preserves statistics and outlier positions for missing groups", {
+  df <- myIO:::ensure_source_key(data.frame(x = rep(c("a", NA), each = 5), y = c(1:5, 1, 1, 1, 1, 20)))
+  for (whisker in c("tukey", "minmax")) {
+    layers <- myIO:::composite_boxplot(df, list(x_var = "x", y_var = "y"), "box", NULL, list(whiskerType = whisker))
+    expect_equal(layers[[1]]$data$low_y, c(2, 1))
+    outliers <- Filter(function(x) x$role == "outliers", layers)[[1]]$data
+    expect_equal(outliers$x_var, 2L)
+    expect_equal(outliers$y_var, 20)
+  }
+})
+
+test_that("positional composite labels distinguish literal and missing NA", {
+  df <- data.frame(x = rep(c("NA", NA), each = 5), y = 1:10)
+  for (type in c("boxplot", "violin")) {
+    chart <- addIoLayer(myIO(df), type, label = type, mapping = list(x_var = "x", y_var = "y"))
+    expect_equal(unname(unlist(chart$x$config$axes$xTickLabels)), c("NA", "(NA)"))
+  }
+})

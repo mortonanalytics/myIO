@@ -61,3 +61,10 @@ test_that("fan composite accepts precomputed interval columns", {
   expect_equal(layers[[1]]$data[[1]]$low_y, 5)
   expect_equal(layers[[1]]$data[[1]]$high_y, 15)
 })
+
+test_that("fan retains observations in missing x groups", {
+  df <- data.frame(x = rep(c("a", NA), each = 10), y = 1:20)
+  layers <- myIO:::composite_fan(df, list(x_var = "x", y_var = "y"), "fan", NULL, list(levels = 50))
+  expect_equal(layers[[1]]$data$low_y, c(3.25, 13.25))
+  expect_equal(layers[[1]]$data$high_y, c(7.75, 17.75))
+})

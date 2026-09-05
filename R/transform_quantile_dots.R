@@ -35,7 +35,7 @@ transform_quantile_dots <- function(data, mapping, options = list()) {
   probs <- (seq_len(n) - 0.5) / n
 
   rows <- lapply(groups, function(group_value) {
-    group_index <- which(x_values == group_value)
+    group_index <- which(group_matches(x_values, group_value))
     group_y <- y_values[group_index]
     group_y <- group_y[!is.na(group_y)]
     q <- if (length(group_y) == 0L) {
@@ -65,7 +65,7 @@ transform_quantile_dots <- function(data, mapping, options = list()) {
   rownames(transformed) <- NULL
 
   source_keys <- lapply(groups, function(group_value) {
-    group_index <- which(x_values == group_value)
+    group_index <- which(group_matches(x_values, group_value))
     if ("_source_key" %in% names(data)) {
       as.character(data[["_source_key"]][group_index])
     } else {

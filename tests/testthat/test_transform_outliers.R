@@ -33,3 +33,10 @@ test_that("transform_outliers preserves original columns when none are outliers"
   expect_equal(colnames(result$data), colnames(df))
   expect_equal(nrow(result$data), 0)
 })
+
+test_that("outlier filtering never fabricates a row for a missing response", {
+  df <- myIO:::ensure_source_key(data.frame(x = rep(NA_character_, 6), y = c(1, 1, 1, 1, 20, NA)))
+  result <- myIO:::transform_outliers(df, list(x_var = "x", y_var = "y"))
+  expect_equal(result$data$y, 20)
+  expect_equal(result$data[["_source_key"]], "row_5")
+})
