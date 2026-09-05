@@ -1,0 +1,153 @@
+name: health-watch
+
+# Two outward-facing surfaces had nothing watching them. The CRAN check farm for the
+# published version was covered only as a side effect of a monthly idea-scout run, and
+# CRAN archives on a roughly two-week clock once a check goes red — archival is the worst
+# outcome available to this package. The demo gallery at morton-analytics.com/myio/ is the
+# package's public front door and nothing pinged it at all.
+#
+# Both were green when this was written (13/13 OK on 1.3.0; the gallery HTTP 200), so this
+# is cover, not a fire. It files an issue only on a confident negative: a CRAN outage or a
+# parse that comes back empty is treated as no signal, because a watchdog that cries wolf
+# weekly is the noise this repo's automation review set out to remove.
+
+on:
+  schedule:
+    - cron: '0 16 * * 1' # 10:00 America/Denver (MDT), Monday
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      PKG: myIO
+      DEMO_URL: https://morton-analytics.com/myio/
+
+    steps:
+      - name: Probe CRAN package page for archival
+        id: archived
+        run: |
+          set -uo pipefail
+          CODE=$(curl -sSL -o /dev/null -w '%{http_code}' --max-time 30 --retry 2 \
+            "https://cran.r-project.org/package=${PKG}" || echo "000")
+          echo "package page HTTP ${CODE}"
+          # 000 is a transport failure and 5xx is CRAN's problem, not ours. Only a
+          # definitive 404 means the package is gone from the index.
+          if [ "$CODE" = "404" ]; then
+            echo "verdict=archived" >> "$GITHUB_OUTPUT"
+          elif [ "$CODE" = "200" ]; then
+            echo "verdict=ok" >> "$GITHUB_OUTPUT"
+          else
+            echo "verdict=no-signal" >> "$GITHUB_OUTPUT"
+          fi
+          echo "code=${CODE}" >> "$GITHUB_OUTPUT"
+
+      - name: Probe CRAN check farm
+        id: farm
+        run: |
+          set -uo pipefail
+          CODE=$(curl -sSL -o farm.html -w '%{http_code}' --max-time 30 --retry 2 \
+            "https://cran.r-project.org/web/checks/check_results_${PKG}.html" || echo "000")
+          echo "check farm HTTP ${CODE}"
+
+          if [ "$CODE" != "200" ]; then
+            echo "Non-200 from CRAN. Treating as no signal."
+            echo "verdict=no-signal" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Strip tags, squeeze whitespace, keep only the per-flavor result rows. If the
+          # page renders but yields no rows, CRAN changed its markup — report no signal
+          # rather than inventing a verdict from an empty parse.
+          sed -e 's/<[^>]*>/ /g' farm.html | tr -s ' \n' ' \n' \
+            | grep -E '^ *r-(devel|patched|release|oldrel)-' > rows.txt || true
+
+          ROWS=$(wc -l < rows.txt | tr -d ' ')
+          echo "parsed ${ROWS} flavor rows"
+          if [ "$ROWS" -eq 0 ]; then
+            echo "verdict=no-signal" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # NOTE is deliberately not a trigger: the debian-gcc "new files in some other
+          # directories" NOTE is flavor-wide and carried by ggplot2 and dplyr too.
+          if grep -wE 'WARN|ERROR' rows.txt > bad.txt; then
+            echo "verdict=red" >> "$GITHUB_OUTPUT"
+            {
+              echo 'detail<<EOF'
+              cat bad.txt
+              echo EOF
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "verdict=ok" >> "$GITHUB_OUTPUT"
+          fi
+          echo "rows=${ROWS}" >> "$GITHUB_OUTPUT"
+
+      - name: Probe demo gallery
+        id: demo
+        run: |
+          set -uo pipefail
+          CODE=$(curl -sSL -o /dev/null -w '%{http_code}' --max-time 45 --retry 2 \
+            "$DEMO_URL" || echo "000")
+          echo "demo HTTP ${CODE}"
+          if [ "$CODE" = "200" ]; then
+            echo "verdict=ok" >> "$GITHUB_OUTPUT"
+          else
+            echo "verdict=down" >> "$GITHUB_OUTPUT"
+          fi
+          echo "code=${CODE}" >> "$GITHUB_OUTPUT"
+
+      - name: File or update an issue on a confident negative
+        env:
+          ARCHIVED: ${{ steps.archived.outputs.verdict }}
+          FARM: ${{ steps.farm.outputs.verdict }}
+          FARM_DETAIL: ${{ steps.farm.outputs.detail }}
+          DEMO: ${{ steps.demo.outputs.verdict }}
+          DEMO_CODE: ${{ steps.demo.outputs.code }}
+        run: |
+          set -euo pipefail
+          TITLE="Automation health: outward-facing surface is red"
+
+          : > findings.md
+          if [ "$ARCHIVED" = "archived" ]; then
+            printf -- '- **CRAN package page returns 404.** `%s` may have been archived. This outranks everything else here.\n' "$PKG" >> findings.md
+          fi
+          if [ "$FARM" = "red" ]; then
+            printf -- '- **CRAN check farm reports WARN or ERROR** on the published version. CRAN archives on a clock once a check goes red.\n\n```\n%s\n```\n' "$FARM_DETAIL" >> findings.md
+          fi
+          if [ "$DEMO" = "down" ]; then
+            printf -- '- **Demo gallery is not reachable** — `%s` returned HTTP `%s`. It is the front door the README points at.\n' "$DEMO_URL" "$DEMO_CODE" >> findings.md
+          fi
+
+          if [ ! -s findings.md ]; then
+            echo "All probes ok or no-signal (archived=${ARCHIVED} farm=${FARM} demo=${DEMO}). Filing nothing."
+            exit 0
+          fi
+
+          {
+            echo "Automated probe from \`health-watch.yml\`, run $(date -u +%Y-%m-%dT%H:%M:%SZ)."
+            echo
+            cat findings.md
+            echo
+            echo "A probe that could not reach CRAN, or whose parse came back empty, is recorded as no signal and does not appear above."
+            echo
+            echo "Verdicts this run: package page \`${ARCHIVED}\`, check farm \`${FARM}\`, demo \`${DEMO}\`."
+          } > body.md
+
+          EXISTING=$(gh issue list --state open --search "$TITLE in:title" \
+            --json number,title --jq "[.[] | select(.title == \"$TITLE\")] | .[0].number // empty")
+
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body-file body.md
+            echo "Commented on existing #${EXISTING}."
+          else
+            gh issue create --title "$TITLE" --label bug --body-file body.md
+          fi
