@@ -134,3 +134,12 @@ test_that("loess intervals use the requested fit and prediction degrees of freed
     }
   }
 })
+
+test_that("polynomial intervals require residual degrees of freedom", {
+  df <- myIO:::ensure_source_key(data.frame(x = 1:3, y = c(1, 4, 8)))
+  expect_warning(result <- myIO:::transform_ci(df, list(x_var = "x", y_var = "y"),
+    list(method = "polynomial", degree = 2L)), "at least 4")
+  expect_equal(nrow(result$data), 0L)
+  expect_named(result$data, c("x", "low_y", "high_y"))
+  expect_length(result$meta$sourceKeys, 0L)
+})

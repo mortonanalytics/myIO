@@ -183,6 +183,7 @@ export function validateSpec(spec) {
       ));
     }
   }
+  const mappedColumns = Object.create(null);
   for (const field of Object.keys(mapping)) {
     if (!allowedKeys.includes(field)) {
       errors.push(error(
@@ -192,25 +193,30 @@ export function validateSpec(spec) {
         suggest(field, allowedKeys)
       ));
     }
-    if (typeof mapping[field] !== "string" || !mapping[field].trim()) {
+    const names = type === "parallel" && field === "dimensions" && Array.isArray(mapping[field])
+      ? mapping[field] : [mapping[field]];
+    if (!names.length || !names.every((name) => typeof name === "string" && name.trim())) {
       errors.push(error(
         "INVALID_MAPPING", field,
-        `Mapping '${field}' must be a nonempty column name.`
+        `Mapping '${field}' must contain nonempty column names.`
       ));
+    } else {
+      mappedColumns[field] = names;
     }
   }
 
   const columns = normalizeColumns(payload.columns);
   if (columns) {
-    for (const [field, columnName] of Object.entries(mapping)) {
-      if (typeof columnName !== "string" || !columnName.trim()) continue;
-      if (!Object.hasOwn(columns, columnName)) {
-        errors.push(error(
-          "MISSING_COLUMN",
-          field,
-          `Mapped column '${columnName}' for '${field}' is not present in columns.`,
-          suggest(columnName, Object.keys(columns))
-        ));
+    for (const [field, names] of Object.entries(mappedColumns)) {
+      for (const columnName of names) {
+        if (!Object.hasOwn(columns, columnName)) {
+          errors.push(error(
+            "MISSING_COLUMN",
+            field,
+            `Mapped column '${columnName}' for '${field}' is not present in columns.`,
+            suggest(columnName, Object.keys(columns))
+          ));
+        }
       }
     }
     for (const field of typeSchema.numeric_fields || []) {

@@ -134,6 +134,6 @@ test_that("positional composite labels distinguish literal and missing NA", {
   df <- data.frame(x = rep(c("NA", NA), each = 5), y = 1:10)
   for (type in c("boxplot", "violin")) {
     chart <- addIoLayer(myIO(df), type, label = type, mapping = list(x_var = "x", y_var = "y"))
-    expect_equal(unname(unlist(chart$x$config$axes$xTickLabels)), c("NA", "(NA)"))
+    expect_equal(unname(unlist(chart$x$config$axes$xTickLabels)), c("NA", "NA (missing)"))
   }
 })

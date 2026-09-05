@@ -83,6 +83,6 @@ test_that("grouped and mapped missing labels agree without collisions", {
   mapped <- addIoLayer(myIO(df), "point", label = "points", mapping = list(x_var = "x", y_var = "y", group = "g"))
   grouped <- addIoLayer(myIO(dplyr::group_by(df, g)), "point", label = "points", mapping = list(x_var = "x", y_var = "y"))
   labels <- vapply(mapped$x$config$layers, function(x) x$label, character(1))
-  expect_equal(labels, c("NA", "((NA))", "(NA)", "a"))
+  expect_equal(labels, c("NA", "NA (missing)", "(NA)", "a"))
   expect_equal(vapply(grouped$x$config$layers, function(x) x$label, character(1)), labels)
 })

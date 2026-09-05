@@ -15,9 +15,10 @@ transform_ci <- function(data, mapping, options = list()) {
   x_clean <- x_vals[complete]
   y_clean <- y_vals[complete]
 
-  if (length(x_clean) < 3L) {
-    warning("transform_ci requires at least 3 data points; returning empty.",
-            call. = FALSE)
+  min_points <- if (method == "polynomial") max(3L, degree + 2L) else 3L
+  if (length(x_clean) < min_points) {
+    warning("transform_ci requires at least ", min_points,
+            " data points; returning empty.", call. = FALSE)
     empty <- data.frame(
       x = numeric(0), low_y = numeric(0), high_y = numeric(0),
       stringsAsFactors = FALSE, check.names = FALSE

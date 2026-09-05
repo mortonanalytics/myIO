@@ -19,15 +19,18 @@ order_group_values <- function(values) {
 
 # Match one group without introducing NA rows during data frame subsetting.
 group_matches <- function(values, value) {
-  if (is.na(value)) is.na(values) else !is.na(values) & values == value
+  match(values, value, nomatch = 0L) > 0L
 }
 
 group_labels <- function(values) {
   labels <- as.character(values)
+  existing_tags <- gsub("[^a-zA-Z0-9_-]", "", labels[!is.na(labels)])
   missing_label <- "NA"
-  while (missing_label %in% labels[!is.na(values)]) {
-    missing_label <- paste0("(", missing_label, ")")
+  suffix <- 1L
+  while (gsub("[^a-zA-Z0-9_-]", "", missing_label) %in% existing_tags) {
+    missing_label <- if (suffix == 1L) "NA (missing)" else paste0("NA (missing ", suffix, ")")
+    suffix <- suffix + 1L
   }
-  labels[is.na(values)] <- missing_label
+  labels[is.na(labels)] <- missing_label
   labels
 }

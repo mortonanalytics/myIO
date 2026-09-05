@@ -254,5 +254,90 @@
     "error_codes": [
       "MISSING_COLUMN"
     ]
+  },
+  {
+    "name": "parallel accepts dimension arrays",
+    "tool": "validate_spec",
+    "input": {
+      "type": "parallel",
+      "mapping": {
+        "dimensions": [
+          "a",
+          "b"
+        ]
+      },
+      "columns": {
+        "a": "numeric",
+        "b": "numeric"
+      }
+    },
+    "valid": true,
+    "error_codes": []
+  },
+  {
+    "name": "parallel rejects missing dimension columns",
+    "tool": "validate_spec",
+    "input": {
+      "type": "parallel",
+      "mapping": {
+        "dimensions": [
+          "a",
+          "missing"
+        ]
+      },
+      "columns": {
+        "a": "numeric"
+      }
+    },
+    "valid": false,
+    "error_codes": [
+      "MISSING_COLUMN"
+    ]
+  },
+  {
+    "name": "parallel rejects empty dimensions",
+    "tool": "validate_spec",
+    "input": {
+      "type": "parallel",
+      "mapping": {
+        "dimensions": []
+      }
+    },
+    "valid": false,
+    "error_codes": [
+      "INVALID_MAPPING"
+    ]
+  },
+  {
+    "name": "parallel rejects mixed dimensions",
+    "tool": "validate_spec",
+    "input": {
+      "type": "parallel",
+      "mapping": {
+        "dimensions": [
+          "a",
+          42
+        ]
+      }
+    },
+    "valid": false,
+    "error_codes": [
+      "INVALID_MAPPING"
+    ]
+  },
+  {
+    "name": "parallel accepts a scalar dimension",
+    "tool": "validate_spec",
+    "input": {
+      "type": "parallel",
+      "mapping": {
+        "dimensions": "a"
+      },
+      "columns": {
+        "a": "numeric"
+      }
+    },
+    "valid": true,
+    "error_codes": []
   }
 ]
