@@ -1,0 +1,107 @@
+name: automation-watch
+
+# The backlog-pipeline intake gate refuses new work while an automation-pr is open, so an
+# unreviewed automation PR does not just wait — it idles the whole loop. #120 sat open for
+# five days at 11/11 green, went CONFLICTING at 14 commits behind, and every scheduled run
+# behind it would have no-oped. Nothing said so, because the loops write to log files on a
+# laptop. This comments once per PR, on the PR, where a notification already reaches the
+# maintainer.
+
+on:
+  schedule:
+    - cron: '0 15 * * *' # 09:00 America/Denver (MDT)
+  workflow_dispatch:
+    inputs:
+      max_age_hours:
+        description: "Override the age threshold for a manual run"
+        required: false
+        default: "48"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  stale-automation-pr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Comment once on automation PRs past the age threshold
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          MAX_AGE_HOURS: ${{ github.event.inputs.max_age_hours || '48' }}
+        run: |
+          set -euo pipefail
+
+          # Stable marker so a PR is commented on at most once, ever. Changing it would
+          # re-notify every currently open automation PR.
+          MARKER='<!-- automation-watch:stale-automation-pr -->'
+          NOW=$(date -u +%s)
+
+          gh pr list --label automation-pr --state open \
+            --json number,title,createdAt,mergeable,mergeStateStatus,statusCheckRollup \
+            > prs.json
+
+          COUNT=$(jq 'length' prs.json)
+          echo "Open automation-pr count: ${COUNT}"
+          if [ "$COUNT" -eq 0 ]; then
+            echo "Nothing open. The pipeline's intake gate is clear."
+            exit 0
+          fi
+
+          jq -c '.[]' prs.json | while read -r pr; do
+            NUM=$(printf '%s' "$pr" | jq -r '.number')
+            TITLE=$(printf '%s' "$pr" | jq -r '.title')
+            CREATED=$(printf '%s' "$pr" | jq -r '.createdAt')
+            MERGEABLE=$(printf '%s' "$pr" | jq -r '.mergeable')
+            MERGESTATE=$(printf '%s' "$pr" | jq -r '.mergeStateStatus')
+
+            CREATED_S=$(date -u -d "$CREATED" +%s)
+            AGE_H=$(( (NOW - CREATED_S) / 3600 ))
+            if [ "$AGE_H" -lt "$MAX_AGE_HOURS" ]; then
+              echo "#${NUM}: ${AGE_H}h old, under the ${MAX_AGE_HOURS}h threshold. Skipping."
+              continue
+            fi
+
+            # Capture, then match in-process. Piping gh into `grep -q` under
+            # `set -o pipefail` is wrong: grep exits at the first match, gh dies on
+            # SIGPIPE, and pipefail reports 141 for a pipeline that did match — so the
+            # guard reads "not commented" and re-notifies daily. It only trips once the
+            # output exceeds the pipe buffer, which is to say on the PRs with the most
+            # comments: exactly the long-open ones this job targets.
+            COMMENTS="$(gh pr view "$NUM" --json comments --jq '.comments[].body')"
+            if [[ "$COMMENTS" == *"$MARKER"* ]]; then
+              echo "#${NUM}: already commented. Skipping."
+              continue
+            fi
+
+            # Roll the checks up by conclusion so the comment is actionable without
+            # opening the PR.
+            # A rollup entry is either a CheckRun (.conclusion) or a StatusContext
+            # (.state), and an in-progress CheckRun carries conclusion "" — an empty
+            # string, which is truthy in jq, so `//` never reaches a fallback. Test the
+            # emptiness explicitly or pending checks render as a blank label.
+            CHECKS=$(printf '%s' "$pr" | jq -r '
+              (.statusCheckRollup // [])
+              | map(
+                  (.conclusion // "") as $c | (.state // "") as $s
+                  | if $c != "" then $c elif $s != "" then $s else "PENDING" end
+                )
+              | group_by(.) | map("\(length) \(.[0])") | join(", ")
+              | if . == "" then "no checks reported" else . end')
+
+            {
+              printf '%s\n\n' "$MARKER"
+              printf 'This automation PR has been open for **%s hours** and is blocking `/backlog-pipeline`, whose intake gate refuses new work while any `automation-pr` is open.\n\n' "$AGE_H"
+              printf '| | |\n| --- | --- |\n'
+              printf '| Checks | %s |\n' "$CHECKS"
+              printf '| Mergeable | `%s` / `%s` |\n\n' "$MERGEABLE" "$MERGESTATE"
+              printf 'Merging or closing it releases the queue. The pipeline will rebase it if it goes stale, but it will never merge or close it — that call is yours.\n\n'
+              printf '_Posted once by `automation-watch.yml`. This PR will not be commented on again._\n'
+            } > body.md
+
+            gh pr comment "$NUM" --body-file body.md
+            echo "#${NUM}: commented (${AGE_H}h old, ${TITLE})."
+          done
