@@ -37,6 +37,7 @@ All intake requirements are Scheduled to the task IDs above. Implementation and 
 - FIX-JS / AUD-002, AUD-004: Beeswarm categories used band starts, placing points above their axis labels; category tooltips displayed NaN. Fixed band centering and categorical tooltip formatting with regressions.
 - FIX-DEMO / AUD-004: the regression demo passed degree 3 to LOESS, which rejects it. The example now chooses a valid degree for each method. Mobile navigation now collapses.
 - FIX-JS / AUD-002: the shipped bundle was stale after a dependency update. Rebuilt it and added a CI comparison of the committed bundle with a clean build.
+- VERIFY-MERGE / AUD-007: WebR CI exposed an outdated rig apt signing key in the pinned builder. A disposable-container reproduction returned `NO_PUBKEY 6C439202CCDB438D`. Remove the unused rig apt source: the builder uses its preinstalled R and obtains its required system dependencies from Ubuntu. Retain apt signature verification and validate the complete WebR job.
 
 ## Independent review findings resolved
 
