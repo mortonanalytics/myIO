@@ -37,8 +37,16 @@ compatible, Major = removed deprecated APIs or unavoidable breaking changes.
   reads as breaking. If found, this is **major**, not minor — stop and flag it prominently in the
   output rather than silently picking minor; a wrong major/minor call is a real compatibility
   break for users pinned to `^1.x`.
-- Compute the number from current `DESCRIPTION` `Version:` (read fresh, don't assume `1.2.0` —
-  more time may have passed than expected).
+- Compute the number from the **last released tag**, not from `DESCRIPTION` (read both fresh —
+  more time may have passed than expected). The two diverge whenever `DESCRIPTION` was bumped
+  ahead of the release, which is this project's habit: `Version: 1.4.0` was set on 2026-08-08
+  while the newest tag was still `v1.3.0`. Bumping from `DESCRIPTION` in that state skips a
+  version — a minor bump off `1.4.0` yields `1.5.0` and `1.4.0` is never published.
+- So: if `DESCRIPTION` is already ahead of the last tag, that version **is** the candidate.
+  Verify it matches the bump the merged work implies and use it as-is. Only when `DESCRIPTION`
+  equals the last tag do you compute a new number. Either way, if the number you arrive at
+  differs from what `DESCRIPTION` already says, stop and raise it rather than overwriting —
+  version numbers are the maintainer's call.
 
 ## Step 3 — Update DESCRIPTION and NEWS.md
 

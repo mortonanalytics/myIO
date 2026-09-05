@@ -41,6 +41,13 @@ breaking — a wrong major/minor call is a real compatibility break for users pi
 `^1.x`. **Do not choose the number and do not edit `DESCRIPTION` or `NEWS.md`.** Version
 numbers are the maintainer's call; this skill supplies the evidence for it.
 
+Compare the bump against `DESCRIPTION` rather than assuming they agree. This project bumps
+`DESCRIPTION` ahead of the tag, so an unreleased line shows up as a `Version:` with no
+matching tag — `1.4.0` against a newest tag of `v1.3.0`. That is the normal in-flight state,
+not a defect. Report it as "1.4.0 is the open line, N days since v1.3.0". It becomes a
+finding only when the implied bump disagrees with the number already sitting in
+`DESCRIPTION`, because then whoever cuts the release has to choose.
+
 Run the CRAN gate by invoking the `cran-check` skill or the **cran-submission-expert**
 agent. Report the verdict and the per-gate detail. Do not fix what it finds.
 
