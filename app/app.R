@@ -701,7 +701,7 @@ server <- function(input, output) {
           level = input$reg_level,
           interval = input$reg_interval,
           showStats = (input$reg_method %in% c("lm", "polynomial")),
-          degree = 3,
+          degree = if (identical(input$reg_method, "polynomial")) 3 else 2,
           span = 0.5
         )) %>%
       setAxisFormat(xLabel = "Day of Experiment", yLabel = "Yield (mg)")
