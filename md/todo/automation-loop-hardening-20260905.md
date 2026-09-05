@@ -29,9 +29,9 @@ biweekly schedule, and version numbers are the maintainer's call, not this plan'
 | UNBLOCK | LOOP-001 (R1) | Close pull request #120 as superseded by #127 and close issue #115, whose `Closes` never fired because #120 never merged. | `gh pr view 120` reports `CLOSED`; `gh issue view 115` reports `CLOSED`; `npm audit --omit=dev` reports zero vulnerabilities on `main`. |
 | PIPE-TEND | LOOP-002 (R2) | `backlog-pipeline` tends its own open `automation-pr` — rebase when conflicted, report age and check rollup — instead of stopping at a bare no-op. Never merges or closes it. | Skill states the rebase path, the abort-on-non-mechanical-conflict path, and the never-merge rule. |
 | PIPE-NOWAIT | LOOP-005 (R5) | `backlog-pipeline` opens the pull request, writes its report, and exits rather than polling CI to completion. | Skill states the exit point and requires naming which checks had reported and which were pending. |
-| WATCH-PR | LOOP-003 (R3) | `.github/workflows/automation-watch.yml` — daily; comments once on any `automation-pr` open past the threshold, with its check rollup and mergeability. | `workflow_dispatch` run against current state; comment marker prevents a second comment. |
-| WATCH-HEALTH | LOOP-009 (new) | `.github/workflows/health-watch.yml` — weekly; opens an issue if the CRAN check farm shows `WARN`/`ERROR`, if the package page 404s (archival), or if the demo site is not 200. | `workflow_dispatch` run reports all three probes green and files nothing. |
-| RUN-JSON | LOOP-004, LOOP-010 (R4) | One shared `~/.local/bin/myio-loop.sh` replacing three near-identical scripts: `--output-format json`, parsed outcome, TSV ledger, exit non-zero only on harness error, stdin redirect, worktree prune, fast-forward, PID-checked lock. | Manual run of each loop appends one ledger row; a second concurrent invocation exits on the lock. |
+| WATCH-PR | LOOP-003 (R3) | `.github/workflows/automation-watch.yml` — daily; comments once on any `automation-pr` open past the threshold, with its check rollup and mergeability. | Local: YAML parses; `bash -n` on the `run:` body; the marker guard holds in both directions against a 9.2 MB comment body, where the obvious `gh \| grep -q` form fails under `pipefail` via SIGPIPE; the rollup jq labels an in-progress check `PENDING`. On a runner: not verifiable before merge — see Gate commands. |
+| WATCH-HEALTH | LOOP-009 (new) | `.github/workflows/health-watch.yml` — weekly; opens an issue if the CRAN check farm shows `WARN`/`ERROR`, if the package page 404s (archival), or if the demo site is not 200. | Local dry-run against the live endpoints: package page 200 (303 without `-L`, which would have left the archival probe permanently dead), farm 13/13 `OK`, demo 200, files nothing. Red path exercised with a stubbed `gh`. On a runner: not verifiable before merge — see Gate commands. |
+| RUN-JSON | LOOP-004, LOOP-010 (R4) | One shared `~/.local/bin/myio-loop.sh` replacing three near-identical scripts: `--output-format json`, parsed outcome, TSV ledger, exit non-zero only on harness error, stdin redirect, worktree prune, fast-forward, PID-checked lock. | A real loop run through the script appends one ledger row and writes its log; a concurrent invocation exits on a live-PID lock and proceeds after clearing a stale one; non-JSON output records `harness-fail` and exits 1; the fast-forward is skipped when the checkout is not on `main`. |
 | SCOUT-CADENCE | LOOP-006 (R6) | `idea-scout` moves from monthly (day 1) to weekly Saturday, so the queue is fresh before every Monday pipeline run. Skill gains an explicit instruction to file nothing when a run surfaces nothing new. | `launchctl print` shows `Weekday 6`; skill states the file-nothing rule. |
 | REL-REPORT | LOOP-007 (R7) | New `release-readiness` skill plus a monthly loop. Reports what is merged and unreleased, what the version bump would be, and whether the CRAN gate passes. Opens an issue only when unreleased work exists. Never tags, bumps, releases, or submits. The `cut-release` one-shot plist and script retire to `retired/`. | Skill states the report-only boundary; `launchctl list` shows the new job and no `cut-release` job. |
 | NEWS-DEV | LOOP-008 (R8) | `NEWS.md:1` becomes `# myIO (development version)`. 1.4.0 is untagged and unpublished, and two pull requests appended notes under a header that read as released. | `grep -n '^# myIO' NEWS.md` shows the development header above `# myIO 1.3.0`; no version number is chosen by this change. |
@@ -87,10 +87,11 @@ Repository, carried by this branch:
 - `.agents/skills/backlog-pipeline/SKILL.md` — PIPE-TEND, PIPE-NOWAIT
 - `.agents/skills/idea-scout/SKILL.md` — SCOUT-CADENCE
 - `.agents/skills/release-readiness/SKILL.md` — REL-REPORT (new)
-- `.claude/skills/release-readiness` — symlink matching the six existing ones
+- `.claude/skills/release-readiness` — symlink matching the seven existing ones
 - `.github/workflows/automation-watch.yml` — WATCH-PR (new)
 - `.github/workflows/health-watch.yml` — WATCH-HEALTH (new)
 - `NEWS.md` — NEWS-DEV
+- `md/intake/automation-loop-hardening-20260905.md` — the canonical item list
 - `md/todo/automation-loop-hardening-20260905.md` — this plan
 
 Host, outside the repository and therefore outside this branch:
@@ -100,7 +101,9 @@ Host, outside the repository and therefore outside this branch:
 - `~/Library/LaunchAgents/com.morton.myio-idea-scout.plist` — SCOUT-CADENCE
 - `~/Library/LaunchAgents/com.morton.myio-backlog-pipeline.plist` — RUN-JSON
 - `~/Library/LaunchAgents/com.morton.myio-release-readiness.plist` — REL-REPORT (new)
-- `~/Library/LaunchAgents/com.morton.myio-cut-release.plist.disabled` — retired
+- `~/Library/LaunchAgents/retired/com.morton.myio-cut-release.plist.disabled` — retired there,
+  alongside `~/.local/bin/retired/`, mirroring the existing `~/.claude/commands-retired/`
+  convention rather than deleting either
 
 These host files are unversioned. That is pre-existing and this plan does not change it;
 reconstructing them for this review required reading `launchctl` and the filesystem.
@@ -108,7 +111,18 @@ reconstructing them for this review required reading `launchctl` and the filesys
 ## Gate commands
 
 - Workflows: `actionlint` if present, otherwise `python3 -c "import yaml,sys;
-  yaml.safe_load(open(f))"` on each, then a `workflow_dispatch` run on the branch.
+  yaml.safe_load(open(f))"` on each, plus `bash -n` on every extracted `run:` body and a
+  local dry-run of each probe against its live endpoint.
+
+  **A `workflow_dispatch` run cannot gate this branch.** GitHub exposes dispatch only for
+  workflows already on the default branch: `gh workflow view automation-watch.yml` returns
+  `HTTP 404: not found on the default branch` until this merges. Both workflows therefore
+  reach the pull request having never executed on a runner, and the first post-merge
+  dispatch of each is part of this work rather than a follow-up. What that dispatch has to
+  prove is what no local check can: GNU `date -u -d` on the runner, `set -euo pipefail`
+  through the whole `while read` loop, `GITHUB_OUTPUT` heredoc handling for a multi-line
+  `FARM_DETAIL`, and the two `gh` write paths under the workflow token's `pull-requests:
+  write` and `issues: write` scopes. Neither comment path has ever posted anything.
 - Runner: `bash -n ~/.local/bin/myio-loop.sh`, then a real invocation of each loop with
   the ledger row inspected, then a concurrent invocation to prove the lock.
 - `launchd`: `plutil -lint` each plist, `launchctl bootout`/`bootstrap`, `launchctl print

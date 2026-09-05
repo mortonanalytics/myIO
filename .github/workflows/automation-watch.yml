@@ -65,17 +65,30 @@ jobs:
               continue
             fi
 
-            if gh pr view "$NUM" --json comments \
-                 --jq '.comments[].body' | grep -qF "$MARKER"; then
+            # Capture, then match in-process. Piping gh into `grep -q` under
+            # `set -o pipefail` is wrong: grep exits at the first match, gh dies on
+            # SIGPIPE, and pipefail reports 141 for a pipeline that did match — so the
+            # guard reads "not commented" and re-notifies daily. It only trips once the
+            # output exceeds the pipe buffer, which is to say on the PRs with the most
+            # comments: exactly the long-open ones this job targets.
+            COMMENTS="$(gh pr view "$NUM" --json comments --jq '.comments[].body')"
+            if [[ "$COMMENTS" == *"$MARKER"* ]]; then
               echo "#${NUM}: already commented. Skipping."
               continue
             fi
 
             # Roll the checks up by conclusion so the comment is actionable without
             # opening the PR.
+            # A rollup entry is either a CheckRun (.conclusion) or a StatusContext
+            # (.state), and an in-progress CheckRun carries conclusion "" — an empty
+            # string, which is truthy in jq, so `//` never reaches a fallback. Test the
+            # emptiness explicitly or pending checks render as a blank label.
             CHECKS=$(printf '%s' "$pr" | jq -r '
               (.statusCheckRollup // [])
-              | map((.conclusion // .state // "PENDING"))
+              | map(
+                  (.conclusion // "") as $c | (.state // "") as $s
+                  | if $c != "" then $c elif $s != "" then $s else "PENDING" end
+                )
               | group_by(.) | map("\(length) \(.[0])") | join(", ")
               | if . == "" then "no checks reported" else . end')
 
