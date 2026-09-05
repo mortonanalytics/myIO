@@ -123,8 +123,14 @@ reconstructing them for this review required reading `launchctl` and the filesys
   through the whole `while read` loop, `GITHUB_OUTPUT` heredoc handling for a multi-line
   `FARM_DETAIL`, and the two `gh` write paths under the workflow token's `pull-requests:
   write` and `issues: write` scopes. Neither comment path has ever posted anything.
-- Runner: `bash -n ~/.local/bin/myio-loop.sh`, then a real invocation of each loop with
-  the ledger row inspected, then a concurrent invocation to prove the lock.
+- Runner: `bash -n ~/.local/bin/myio-loop.sh`, then a real invocation with the ledger row
+  and log inspected, then a concurrent invocation to prove the lock, plus the stale-lock,
+  `harness-fail` and wrong-branch paths. `release-readiness` is the loop to run for this,
+  because it is the one that mutates nothing: a real `backlog-pipeline` run would open a
+  pull request against this repo and a real `idea-scout` run would file issues, neither of
+  which belongs in a verification pass. The three loops share one runner, so exercising it
+  once exercises it for all of them; what stays unproven for the other two is only that
+  their own prompts resolve, which their prior run logs already show.
 - `launchd`: `plutil -lint` each plist, `launchctl bootout`/`bootstrap`, `launchctl print
   gui/$(id -u)/<label>` to confirm the parsed calendar interval.
 - Repository unchanged elsewhere: `git diff --stat origin/main` touches no file under
