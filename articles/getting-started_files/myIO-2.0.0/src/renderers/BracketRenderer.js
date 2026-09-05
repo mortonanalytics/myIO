@@ -68,7 +68,7 @@ export class BracketRenderer {
 
     merged
       .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
-      .style("opacity", 1);
+      .style("opacity", layer.options && layer.options.opacity != null ? layer.options.opacity : 1);
 
     merged.select(".bracket-bar")
       .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))

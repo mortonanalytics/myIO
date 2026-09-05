@@ -10,9 +10,8 @@ powers it.
 
 ## Live Demo App
 
-The full gallery app runs all 20 chart types plus the four I/O
-interaction demos. Navigate to **Interactions** in the top menu to try
-each one.
+The gallery app includes chart examples and four I/O interaction demos.
+Navigate to **Interactions** in the top menu to try each one.
 
 ![](logo.png) myIO
 

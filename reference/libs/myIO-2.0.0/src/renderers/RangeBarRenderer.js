@@ -147,7 +147,7 @@ function renderErrorBars(chart, layer) {
 
   merged
     .transition().ease(easingFor(chart, d3.easeQuad)).duration(transitionSpeed)
-    .style("opacity", 1);
+    .style("opacity", layer.options && layer.options.opacity != null ? layer.options.opacity : 1);
 
   merged.select(".mean-ci-whisker")
     .transition().ease(easingFor(chart, d3.easeQuad)).duration(transitionSpeed)

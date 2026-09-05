@@ -99,7 +99,7 @@ export class SankeyRenderer {
       .transition()
       .ease(easingFor(chart, d3.easeQuad))
       .duration(chart.options.transition.speed)
-      .style("opacity", 1)
+      .style("opacity", layer.options && layer.options.opacity != null ? layer.options.opacity : 1)
       .attr("d", d3.sankeyLinkHorizontal())
       .attr("stroke-width", function(d) { return Math.max(1, d.width); })
       .attr("stroke", function(d) { return chart.colorDiscrete(d.source.name); });
@@ -125,7 +125,7 @@ export class SankeyRenderer {
       .transition()
       .ease(easingFor(chart, d3.easeQuad))
       .duration(chart.options.transition.speed)
-      .style("opacity", 1)
+      .style("opacity", layer.options && layer.options.opacity != null ? layer.options.opacity : 1)
       .attr("x", function(d) { return d.x0; })
       .attr("y", function(d) { return d.y0; })
       .attr("width", function(d) { return d.x1 - d.x0; })
@@ -170,7 +170,7 @@ export class SankeyRenderer {
       .attr("paint-order", "stroke")
       .text(labelText)
       .transition().ease(easingFor(chart, d3.easeCubic)).duration(chart.options.transition.speed)
-      .style("opacity", 1)
+      .style("opacity", layer.options && layer.options.opacity != null ? layer.options.opacity : 1)
       .attr("x", labelX)
       .attr("y", labelY)
       .attr("text-anchor", labelAnchor);
@@ -252,7 +252,7 @@ export class SankeyRenderer {
         return flowShown.get(d.source.name + ">" + d.target.name) ? 1 : 0;
       })
       .transition().ease(easingFor(chart, d3.easeCubic)).duration(chart.options.transition.speed)
-      .style("opacity", 1);
+      .style("opacity", layer.options && layer.options.opacity != null ? layer.options.opacity : 1);
   }
 
   formatTooltip(chart, d, layer) {

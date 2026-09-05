@@ -39,7 +39,7 @@ export class BeeswarmRenderer {
 
     for (var i = 0; i < data.length; i++) {
       var cx = xScale(data[i][xVar]);
-      var baseY = yScale(data[i][yVar]);
+      var baseY = yScale(data[i][yVar]) + (typeof yScale.bandwidth === "function" ? yScale.bandwidth() / 2 : 0);
       var dy = 0;
       var found = false;
 
@@ -108,9 +108,10 @@ export class BeeswarmRenderer {
 
   formatTooltip(chart, d, layer) {
     var yFormat = chart.runtime.activeYFormat || d3.format("s");
+    var yValue = d[layer.mapping.y_var];
     return {
       title: { text: String(d[layer.mapping.x_var]) },
-      items: [{ color: layer.color, label: layer.label, value: yFormat(d[layer.mapping.y_var]) }]
+      items: [{ color: layer.color, label: layer.label, value: typeof yValue === "number" ? yFormat(yValue) : String(yValue) }]
     };
   }
 

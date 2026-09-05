@@ -26,6 +26,12 @@ import { initializeKeyframes, destroyKeyframes } from "./interactions/keyframes.
 
 const MIN_CHART_WIDTH = 280;
 const RESIZE_DEBOUNCE_MS = 100;
+const LAYER_MARK_PREFIXES = [
+  "area", "bar", "bracket", "candlestick", "crosshairX", "crosshairY",
+  "heatmap", "hexbin", "line", "medianLine", "point", "rangeBar", "rangeBar-error",
+  "sankey", "sankey-flow", "sankey-label", "sankey-node", "text-annotation",
+  "tree", "waterfall", "waterfall-connector", "whiskerCap"
+];
 
 const EventEmitter = {
   on(event, handler) {
@@ -242,10 +248,16 @@ export class myIOchart {
         var activeLabels = this.derived.currentLayers.map(function(l) { return l.label; });
         var allLabels = this.config.layers.map(function(l) { return l.label; });
         var chartArea = this.dom.chartArea;
-        allLabels.forEach(function(label) {
+        allLabels.forEach((label) => {
           if (activeLabels.indexOf(label) === -1) {
-            var safeName = String(label).replace(/\s+/g, "");
-            chartArea.selectAll("[class*='tag-'][class*='-" + safeName + "']").remove();
+            var layer = this.config.layers.find(function(candidate) { return candidate.label === label; });
+            var rootClass = "tag-" + layer.type + "-" + layer.id;
+            var classes = new Set(LAYER_MARK_PREFIXES.map((prefix) => tagName(prefix, this.dom.element.id, label)));
+            chartArea.selectAll("*").filter(function() {
+              return Array.from(this.classList).some(function(token) {
+                return token === rootClass || classes.has(token);
+              });
+            }).remove();
           }
         });
       }
@@ -336,7 +348,7 @@ export class myIOchart {
 
   renderEmptyState() {
     if (this.dom.chartArea) {
-      this.dom.chartArea.selectAll("*").interrupt().remove();
+      this.dom.chartArea.selectAll(":scope > :not(defs)").interrupt().remove();
     }
     if (this.dom.plot) {
       this.dom.plot.selectAll(".x-axis, .y-axis").interrupt().remove();
@@ -439,9 +451,16 @@ export class myIOchart {
         // Apply per-layer opacity
         var opacity = (layer.options && layer.options.opacity != null)
           ? layer.options.opacity : 1;
-        if (opacity < 1) {
-          var safeName = String(layer.label).replace(/\s+/g, "");
-          that.dom.chartArea.selectAll("[class*='tag-'][class*='-" + safeName + "']")
+        if (opacity <= 1) {
+          var rootClass = "tag-" + layer.type + "-" + layer.id;
+          var classes = new Set(LAYER_MARK_PREFIXES.map((prefix) => tagName(prefix, that.dom.element.id, layer.label)));
+          that.dom.chartArea.selectAll("*").filter(function() {
+            return Array.from(this.classList).some(function(token) {
+              return token === rootClass || classes.has(token);
+            });
+          }).filter(function() {
+            return opacity < 1 || this.hasAttribute("data-myio-layer-opacity");
+          }).attr("data-myio-layer-opacity", opacity < 1 ? opacity : null)
             .style("opacity", opacity);
         }
       }

@@ -70,13 +70,13 @@ export class PointRenderer {
       .ease(easingFor(chart, d3.easeQuad))
       .duration(transitionSpeed)
       .delay(staggerDelay(chart, 0))
-      .style("opacity", 1);
+      .style("opacity", layer.options && layer.options.opacity != null ? layer.options.opacity : 1);
 
     if (chart.options.dragPoints == true) {
       chart.dragPoints(layer);
       var color = resolveColor(chart, layer.data[layer.mapping.group], layer.color);
       setTimeout(function() {
-        chart.updateRegression(color, layer.label);
+        if (chart.config) chart.updateRegression(color, layer.label);
       }, transitionSpeed);
     }
   }
@@ -169,7 +169,7 @@ function renderMedianLine(chart, layer) {
     .delay(transitionSpeed)
     .duration(transitionSpeed)
     .ease(easingFor(chart, d3.easeQuad))
-    .style("opacity", 1)
+    .style("opacity", layer.options && layer.options.opacity != null ? layer.options.opacity : 1)
     .attr("x1", function(d) { return chart.xScale(d[layer.mapping.x_var]) - barHalfWidth; })
     .attr("x2", function(d) { return chart.xScale(d[layer.mapping.x_var]) + barHalfWidth; });
 }

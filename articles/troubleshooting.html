@@ -71,8 +71,8 @@
 <p><strong>Error:</strong>
 <code>addIoLayer(): Unknown layer type 'scatter'. Did you mean 'point'?</code></p>
 <p>You used a type name that doesn’t exist. myIO suggests the closest
-match. Use one of the 20 supported types listed in
-<code><a href="../reference/addIoLayer.html">?addIoLayer</a></code>.</p>
+match. Use <code><a href="../reference/myio_list_chart_types.html">myio_list_chart_types()</a></code> to list the supported
+types.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Wrong</span></span>
 <span><span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"scatter"</span>, <span class="va">...</span><span class="op">)</span></span>
@@ -140,10 +140,10 @@ single character string, not numeric (123).`</p>
 Check the argument types in <code><a href="../reference/setSlider.html">?setSlider</a></code>.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Wrong — param should be a string, not a number</span></span>
-<span><span class="fu"><a href="../reference/setSlider.html">setSlider</a></span><span class="op">(</span><span class="fl">123</span>, <span class="st">"label"</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0.5</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="../reference/setSlider.html">setSlider</a></span><span class="op">(</span><span class="fl">123</span>, <span class="st">"label"</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0.5</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Right</span></span>
-<span><span class="fu"><a href="../reference/setSlider.html">setSlider</a></span><span class="op">(</span><span class="st">"ci_level"</span>, <span class="st">"Confidence Level"</span>, <span class="fl">0.80</span>, <span class="fl">0.99</span>, <span class="fl">0.95</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="../reference/setSlider.html">setSlider</a></span><span class="op">(</span><span class="st">"ci_level"</span>, <span class="st">"Confidence Level"</span>, <span class="fl">0.80</span>, <span class="fl">0.99</span>, <span class="fl">0.95</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="missing-shareddata">Missing SharedData<a class="anchor" aria-label="anchor" href="#missing-shareddata"></a>

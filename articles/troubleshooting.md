@@ -8,8 +8,9 @@
 `addIoLayer(): Unknown layer type 'scatter'. Did you mean 'point'?`
 
 You used a type name that doesn’t exist. myIO suggests the closest
-match. Use one of the 20 supported types listed in
-[`?addIoLayer`](https://mortonanalytics.github.io/myIO/reference/addIoLayer.md).
+match. Use
+[`myio_list_chart_types()`](https://mortonanalytics.github.io/myIO/reference/myio_list_chart_types.md)
+to list the supported types.
 
 ``` r
 
@@ -90,10 +91,10 @@ Check the argument types in
 ``` r
 
 # Wrong — param should be a string, not a number
-setSlider(123, "label", 0, 1, 0.5)
+myIO() |> setSlider(123, "label", 0, 1, 0.5)
 
 # Right
-setSlider("ci_level", "Confidence Level", 0.80, 0.99, 0.95)
+myIO() |> setSlider("ci_level", "Confidence Level", 0.80, 0.99, 0.95)
 ```
 
 ### Missing SharedData

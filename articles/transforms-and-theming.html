@@ -248,11 +248,12 @@ waterfall renderer uses for floating bars:</p>
 <span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"wt"</span>, y_var <span class="op">=</span> <span class="st">"mpg"</span><span class="op">)</span>,</span>
 <span>    options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>level <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>The <code>ci</code> transform accepts <code>method</code>
-(<code>"lm"</code> or <code>"loess"</code>), <code>level</code> (default
-0.95), and <code>interval</code> (<code>"confidence"</code> or
-<code>"prediction"</code>). The mapping only needs <code>x_var</code>
-and <code>y_var</code> — <code>low_y</code>/<code>high_y</code> are
-auto-injected.</p>
+(<code>"lm"</code>, <code>"loess"</code>, or <code>"polynomial"</code>),
+<code>level</code> (default 0.95), and <code>interval</code>
+(<code>"confidence"</code> or <code>"prediction"</code>). Use
+<code>degree</code> for polynomial and LOESS fits and <code>span</code>
+for LOESS. Map <code>x_var</code> and <code>y_var</code>; the transform
+supplies <code>low_y</code> and <code>high_y</code>.</p>
 </div>
 <div class="section level3">
 <h3 id="loess-smoothing">LOESS Smoothing<a class="anchor" aria-label="anchor" href="#loess-smoothing"></a>

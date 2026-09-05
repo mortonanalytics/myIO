@@ -55,7 +55,7 @@ export class HeatmapRenderer {
       .attr("width", cellWidth)
       .attr("height", cellHeight)
       .attr("fill", function(d) { return chart.colorContinuous(+d[valueVar]); })
-      .style("opacity", 1);
+      .style("opacity", layer.options && layer.options.opacity != null ? layer.options.opacity : 1);
   }
 
   getHoverSelector(chart, layer) {

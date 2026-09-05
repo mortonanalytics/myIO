@@ -4,6 +4,10 @@ HTMLWidgets.widget({
   factory: function(el, width, height) {
     return {
       renderValue: function(x) {
+        if (this._myIO_unsubscribe) {
+          this._myIO_unsubscribe();
+          this._myIO_unsubscribe = null;
+        }
         if (this._myIO_bridgeCleanup) {
           try { this._myIO_bridgeCleanup(); } catch (e) { /* ignore */ }
           this._myIO_bridgeCleanup = null;
@@ -89,14 +93,14 @@ HTMLWidgets.widget({
                   var xAdapter = new window.myIO.CrosstalkAdapter({
                     coordinator: coord,
                     sourceId:    x.bigdata.source_id,
-                    group:       x.crosstalk.group[0] || x.crosstalk.group,
+                    group:       Array.isArray(x.crosstalk.group) ? x.crosstalk.group[0] : x.crosstalk.group,
                     rowkeyCol:   (x.bigdata && x.bigdata.rowkey_col) || "__myio_rowkey__",
                     threshold:   (x.config && x.config.crosstalk_threshold) || 100000
                   });
                   xAdapter.attach();
                   // Subscribe to coordinator selection changes on this source so
                   // local brushes broadcast outward.
-                  coord.subscribe(x.bigdata.source_id, function(evt) {
+                  this._myIO_unsubscribe = coord.subscribe(x.bigdata.source_id, function(evt) {
                     if (evt.chartId === "__crosstalk__:" + x.bigdata.source_id) {
                       // Ignore - this was OUR incoming-translated predicate.
                       return;
@@ -114,6 +118,26 @@ HTMLWidgets.widget({
               config: x.config,
               width: width,
               height: height
+            });
+            var widget = this;
+            this.myIOchart.on("destroy", function() {
+              if (widget._myIO_chartId && window.myIO && window.myIO.getCoordinator) {
+                var coordinator = window.myIO.getCoordinator();
+                if (coordinator) coordinator.unregister(widget._myIO_chartId);
+                widget._myIO_chartId = null;
+              }
+              if (widget._myIO_bridgeCleanup) {
+                widget._myIO_bridgeCleanup();
+                widget._myIO_bridgeCleanup = null;
+              }
+              if (widget._myIO_unsubscribe) {
+                widget._myIO_unsubscribe();
+                widget._myIO_unsubscribe = null;
+              }
+              if (widget._myIO_xadapter) {
+                widget._myIO_xadapter.destroy();
+                widget._myIO_xadapter = null;
+              }
             });
             var id = el.id;
             // Register for myIOProxy() partial updates immediately after
@@ -195,13 +219,6 @@ HTMLWidgets.widget({
         }
       },
       resize: function(width, height) {
-        if ((width === 0 || height === 0) && this._myIO_chartId && window.myIO && window.myIO.getCoordinator) {
-          var coord = window.myIO.getCoordinator();
-          if (coord) {
-            try { coord.unregister(this._myIO_chartId); } catch (e) { /* ignore */ }
-          }
-          this._myIO_chartId = null;
-        }
         if (this.myIOchart) {
           if (this.myIOchart.facetController) {
             this.myIOchart.facetController.resize();

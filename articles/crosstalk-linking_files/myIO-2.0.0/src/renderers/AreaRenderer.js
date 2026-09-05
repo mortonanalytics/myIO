@@ -24,7 +24,7 @@ export class AreaRenderer {
         .x1(function(d) { return chart.xScale(d[layer.mapping.high_x]); });
     } else {
       valueArea = d3.area()
-        .curve(d3.curveMonotoneX)
+        .curve(layer.options && layer.options.curveType === "stepAfter" ? d3.curveStepAfter : d3.curveMonotoneX)
         .x(function(d) { return chart.xScale(d[layer.mapping.x_var]); })
         .y0(function(d) { return chart.yScale(d[layer.mapping.low_y]); })
         .y1(function(d) { return chart.yScale(d[layer.mapping.high_y]); });
@@ -56,7 +56,7 @@ export class AreaRenderer {
       .style("stroke", boundaryStroke ? layer.color : "none")
       .style("stroke-width", boundaryStroke ? "1px" : "0")
       .style("stroke-opacity", boundaryStroke ? 0.85 : 0)
-      .style("opacity", fillOpacity);
+      .style("opacity", fillOpacity * ((layer.options && layer.options.opacity) ?? 1));
   }
 
   formatTooltip(chart, d, layer) {

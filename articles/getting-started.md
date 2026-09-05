@@ -173,9 +173,11 @@ shinyApp(ui, server)
 
 ## Chart Types
 
-myIO supports 20 chart types. See the [Chart
+myIO supports 36 chart types. See the [Chart
 Types](https://mortonanalytics.github.io/myIO/articles/chart-types.md)
-vignette for examples of each.
+vignette for examples, or run
+[`myio_list_chart_types()`](https://mortonanalytics.github.io/myIO/reference/myio_list_chart_types.md)
+for the complete list.
 
 | Category     | Types                                          |
 |--------------|------------------------------------------------|

@@ -14,7 +14,7 @@ export class LineRenderer {
     var transitionSpeed = chart.options.transition.speed;
 
     var valueLine = d3.line()
-      .curve(d3.curveMonotoneX)
+      .curve(layer.options && layer.options.curveType === "stepAfter" ? d3.curveStepAfter : d3.curveMonotoneX)
       .x(function(d) {
         return chart.xScale(d[layer.mapping.x_var]);
       })
@@ -43,7 +43,7 @@ export class LineRenderer {
       .transition()
       .ease(easingFor(chart, d3.easeQuad))
       .duration(transitionSpeed)
-      .style("opacity", 1)
+      .style("opacity", (layer.options && layer.options.opacity) ?? 1)
       .style("stroke-width", strokeWidth(chart))
       .style("stroke", function(d) {
         return resolveColor(chart, d[0][layer.mapping.group], layer.color);
@@ -98,7 +98,7 @@ export class LineRenderer {
       .transition()
       .ease(easingFor(chart, d3.easeQuad))
       .duration(transitionSpeed)
-      .style("opacity", 1);
+      .style("opacity", (layer.options && layer.options.opacity) ?? 1);
   }
 
   formatTooltip(chart, d, layer) {

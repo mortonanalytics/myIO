@@ -70,17 +70,16 @@ export class CalendarHeatmapRenderer {
     };
 
     var totalWeeks = weekCol(dec31) + 1;
-    var margin = chart.margin || { top: 0, right: 0, bottom: 0, left: 0 };
-    var innerW = (chart.width || 0) - (margin.left || 0) - (margin.right || 0);
-    var innerH = (chart.height || 0) - (margin.top || 0) - (margin.bottom || 0);
+    var margin = (chart.config && chart.config.layout && chart.config.layout.margin) || chart.margin || { top: 0, right: 0, bottom: 0, left: 0 };
+    var clip = chart.dom && chart.dom.clipPath;
+    var innerW = clip && !clip.empty() ? +clip.attr("width")
+      : ((chart.runtime && chart.runtime.width) ?? chart.width ?? 0) - (margin.left || 0) - (margin.right || 0);
+    var innerH = clip && !clip.empty() ? +clip.attr("height")
+      : ((chart.runtime && chart.runtime.height) ?? chart.height ?? 0) - (margin.top || 0) - (margin.bottom || 0);
     var leftPad = showDow ? 24 : 0;
     var topPad = 18;
     var gridW = Math.max(1, innerW - leftPad);
     var gridH = Math.max(1, innerH - topPad);
-    var cellSize = Math.max(
-      4,
-      Math.min(Math.floor(gridW / totalWeeks), Math.floor(gridH / 7))
-    );
 
     var cs = (chart.element && typeof getComputedStyle === "function")
       ? getComputedStyle(chart.element)
@@ -88,6 +87,11 @@ export class CalendarHeatmapRenderer {
     var gapRaw = cs ? cs.getPropertyValue("--chart-calendar-cell-gap") : "";
     var gap = parseFloat(gapRaw);
     if (!isFinite(gap)) gap = 2;
+    gap = Math.max(0, Math.min(gap, gridW / (2 * totalWeeks), gridH / 14));
+    var cellSize = Math.max(0, Math.min(
+      (gridW - gap * (totalWeeks - 1)) / totalWeeks,
+      (gridH - gap * 6) / 7
+    ));
 
     var vlim = chart.config && chart.config.axis && chart.config.axis.vlim;
     var vmax = d3.max(datums, function(d) { return d.value; });
@@ -127,7 +131,8 @@ export class CalendarHeatmapRenderer {
     var root = chart.chart.selectAll(".myIO-calendar-root")
       .data([null])
       .join("g")
-      .attr("class", "myIO-calendar-root");
+      .attr("class", "myIO-calendar-root")
+      .style("opacity", opts.opacity ?? 1);
 
     if (showDow) {
       var dowLabels = weekStart === 0
