@@ -1,35 +1,52 @@
 ## Update
 
-This is an update from myIO 1.2.0, the version currently on CRAN. Version 1.3.0
-adds backward-compatible keyframe storytelling and legend-title APIs, verifies
-the package's WebR 0.6.0 path end to end, updates documentation and safe
-dependencies, and fixes a large batch of rendering and correctness defects
-found in a full audit of the chart gallery.
+This is an update from myIO 1.3.0, the version currently on CRAN. Version 1.4.0
+adds two backward-compatible features — linked-cursor rendering on the y and xy
+axes, and polynomial confidence bands — and fixes a batch of correctness and
+rendering defects found in a full audit of the package's R transforms, chart
+renderers, and documentation.
 
-Three of those fixes change behaviour that previously errored or produced
-incorrect output, and are noted here so the change in NEWS.md is not mistaken
-for a silent API break:
+Four of those fixes change output for charts that render today. None changes a
+function signature, a default argument, or an exported name, so none is an API
+break; they are listed here so the corresponding NEWS.md entries are not mistaken
+for one:
 
-- `whiskerType = "minmax"` no longer errors on boxplots.
-- Waterfall total rows render their computed value instead of `NA`.
-- Legend entries for grouped layers show the group value alone rather than the
-  layer label concatenated with it; `setLegendTitle()` names the grouping
-  variable when that context is wanted.
+- Prediction intervals widen. `transform_ci(interval = "prediction")` was read
+  but computed from the standard error of the fit alone, so every prediction
+  band was drawn at confidence-interval width. Prediction bands now include the
+  residual scale and are correspondingly wider.
+- Bump charts draw rank 1 at the top with whole-number axis ticks, instead of
+  rank 1 at the bottom with half-rank ticks. This reorients every existing bump
+  chart, and matches the convention for rank charts.
+- Grouped transforms no longer emit all-`NA` rows when a grouping variable
+  contains `NA`. Those rows were an artifact of matching groups with `==`, which
+  returns `NA` rather than `FALSE`. A genuinely missing group is now labeled.
+- `setTransition(easing = )` reaches every chart type. It was documented as
+  universal but applied by only about half the renderers, so it silently did
+  nothing on eleven of them. Charts that never called `setTransition()` animate
+  exactly as before.
 
-Each replaces broken behaviour. Charts that rendered correctly under 1.2.0
-render identically under 1.3.0.
+`myio_validate_spec()` also rejects mappings that are non-character, empty, `NA`,
+or whitespace only. It previously accepted them and failed later inside the
+rendering engine, so a specification that newly fails validation is one that
+could not have rendered under 1.3.0 either.
+
+Each of these replaces broken or incorrect behavior. Charts that rendered
+correctly under 1.3.0 render identically under 1.4.0, apart from the bump-chart
+reorientation noted above.
 
 ## R CMD check results
 
 0 errors | 0 warnings | 1 note
 
 The documented NOTE is produced only by the local macOS check because the
-installed HTML Tidy is older than the version recommended by R. The GitHub
-Actions checks on current R release, devel, and oldrel-1 do not report it.
+installed HTML Tidy is older than the version recommended by R; the PDF manual
+builds cleanly. The GitHub Actions checks on current R release, devel, and
+oldrel-1 do not report it.
 
 ## Test environments
 
-- local: macOS 26.5.2 (R 4.5.0), R CMD check --as-cran
+- local: macOS 26.6.2 (R 4.5.0), R CMD check --as-cran
 - GitHub Actions: ubuntu-latest (devel, release, oldrel-1), windows-latest
   (release), macos-latest (release) — all R CMD check --as-cran: OK
 
