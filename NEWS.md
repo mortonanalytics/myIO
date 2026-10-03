@@ -69,6 +69,10 @@
   transitions, and layer matching uses exact mark tokens — a label that was a
   prefix of a neighboring label could hide the wrong marks.
 
+* `setLayerOpacity()` reaches donut, gauge and grouped-bar charts, which ignored
+  it without a warning. Together with the matching fix above, opacity now applies
+  on every chart type, including layers whose labels contain punctuation (#122).
+
 * Beeswarm charts center points on their category bands instead of starting at the
   band edge, which placed points above their axis labels, and category tooltips no
   longer read `NaN`.

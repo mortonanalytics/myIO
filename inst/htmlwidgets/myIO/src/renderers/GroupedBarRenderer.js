@@ -18,14 +18,20 @@ export class GroupedBarRenderer {
       chart.layout = "grouped";
     }
 
+    // Each series group carries its layer's root class so setLayerOpacity() reaches it.
+    function groupClass(d, i) {
+      return "tag-grouped-bar-g" + (lys[i] ? " tag-groupedBar-" + lys[i].id : "");
+    }
+
     const bars = chart.chart.selectAll("g").data(data);
     bars.exit().remove();
     bars.enter()
       .append("g")
       .style("fill", function(d, i) { return resolveColor(chart, d[layer.mapping.group], colors[i]); })
-      .attr("class", "tag-grouped-bar-g");
+      .attr("class", groupClass);
 
     bars.merge(bars)
+      .attr("class", groupClass)
       .style("fill", function(d, i) { return resolveColor(chart, d[layer.mapping.group], colors[i]); })
       .call(function() {
         if (chart.layout === "grouped") {
