@@ -1,6 +1,6 @@
 # Changelog
 
-## myIO (development version)
+## myIO 1.4.0
 
 ### New features
 
@@ -131,7 +131,7 @@
   labels were close to invisible in dark themes, at about 1.1:1
   contrast. They now read `--chart-grid-color` and `--chart-text-color`
   like every other renderer, so the default light radar grid and labels
-  also change to the theme’s grey
+  also change to the theme’s gray
   ([\#140](https://github.com/mortonanalytics/myIO/issues/140)).
 
 - `setToolTipOptions(suppressY = TRUE)` works again. The option was
