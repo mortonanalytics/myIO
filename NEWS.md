@@ -132,6 +132,11 @@
   icon. It used to turn into an X while the panel was open, and clicking that X
   did nothing.
 
+* Charts with a single series no longer show a one-entry legend in the panel.
+  The entry repeated the layer name, sat above a divider with nothing to divide,
+  and could only be used to hide the chart's only data. Legends with two or more
+  entries and gradient legends are unchanged.
+
 # myIO 1.3.0
 
 ## New features

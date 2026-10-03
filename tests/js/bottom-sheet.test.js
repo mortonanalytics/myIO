@@ -175,7 +175,7 @@ describe("bottom sheet", function() {
     expect(chart.element.querySelector(".myIO-sheet-legend--grid")).toBeTruthy();
   });
 
-  test("single-series chart keeps the panel legend as sole legend", async function() {
+  test("single-series chart has no panel legend or divider", async function() {
     const chart = buildChart();
     chart.plotLayers = chart.plotLayers.slice(0, 1);
     chart.currentLayers = chart.currentLayers.slice(0, 1);
@@ -185,7 +185,9 @@ describe("bottom sheet", function() {
     openPanel(chart);
     await flush();
 
-    expect(chart.element.querySelectorAll(".myIO-sheet-legend-item")).toHaveLength(1);
+    expect(chart.element.querySelector("[data-sheet-section='legend']")).toBeFalsy();
+    expect(chart.element.querySelector(".myIO-sheet-divider")).toBeFalsy();
+    expect(chart.element.querySelectorAll(".myIO-sheet-action").length).toBeGreaterThan(0);
   });
 
   test("continuous legend renders in the panel unchanged", async function() {
@@ -215,13 +217,14 @@ describe("bottom sheet", function() {
     chart.runtime._legendData = {
       type: "layer",
       items: [
-        { key: "alpha", label: "alpha", color: "#E69F00", visible: true, kind: "groupedBar" }
+        { key: "alpha", label: "alpha", color: "#E69F00", visible: true, kind: "groupedBar" },
+        { key: "gamma", label: "gamma", color: "#009E73", visible: true, kind: "groupedBar" }
       ]
     };
 
     renderSheetLegend(chart);
 
-    expect(chart.element.querySelectorAll(".myIO-sheet-legend-item")).toHaveLength(1);
+    expect(chart.element.querySelectorAll(".myIO-sheet-legend-item")).toHaveLength(2);
     expect(chart.element.querySelector(".myIO-sheet-legend-label").textContent).toBe("alpha");
   });
 
