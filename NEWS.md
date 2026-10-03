@@ -97,6 +97,10 @@
 
 * NEWS entries use the US spellings the package declares in `Language: en-US`.
 
+* The large-data vignette no longer advertises server-engine timings or
+  recommends the `"server"` engine for hosted Shiny. It now says that the
+  server engine does not run brush queries in this release (#123).
+
 * Radar charts follow the theme. Their grid rings, spokes and labels read
   `--chart-grid` and `--chart-fg`, two variables nothing defines, so
   `setTheme(textColor = , gridColor = )`, `mode = "dark"` and every preset were
