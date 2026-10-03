@@ -101,6 +101,12 @@
   `--chart-grid-color` and `--chart-text-color` like every other renderer, so
   the default light radar grid and labels also change to the theme's grey (#140).
 
+* `setToolTipOptions(suppressY = TRUE)` works again. The option was validated,
+  stored and documented, but nothing in the v1.0 engine read it, so the y value
+  appeared in every tooltip. Tooltips on point, bar, line, area, grouped-bar and
+  donut charts now show only the x title when it is set. Charts that never call
+  it are unchanged (#121).
+
 # myIO 1.3.0
 
 ## New features

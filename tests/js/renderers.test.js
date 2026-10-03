@@ -873,6 +873,30 @@ describe("Full chart rendering with layers", function() {
     expect(circles.length).toBeGreaterThanOrEqual(3);
   });
 
+  test("setToolTipOptions(suppressY = TRUE) drops the y row from point tooltips", function() {
+    function hoverRows(suppressY) {
+      document.getElementById("chart").innerHTML = "";
+      var layer = makeLayer("point", "pts",
+        [{ x: 1, y: 2 }, { x: 2, y: 4 }],
+        { x_var: "x", y_var: "y" }
+      );
+      var config = makeConfig([layer]);
+      config.interactions.toolTipOptions.suppressY = suppressY;
+      new myIOchart({ element: document.getElementById("chart"), width: 400, height: 300, config: config });
+      var point = document.querySelector("circle.tag-point-chart-pts");
+      point.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+      return {
+        title: document.querySelector(".toolTipTitle").textContent,
+        rows: document.querySelectorAll(".toolTipItem").length
+      };
+    }
+
+    expect(hoverRows(false).rows).toBe(1);
+    var suppressed = hoverRows(true);
+    expect(suppressed.rows).toBe(0);
+    expect(suppressed.title).toMatch(/^x: /);
+  });
+
   test("line layer renders path in DOM", function() {
     var layer = makeLayer("line", "trend",
       [{ x: 1, y: 2 }, { x: 2, y: 4 }, { x: 3, y: 6 }],
