@@ -297,7 +297,7 @@ describe("inline legend (GH #84)", function() {
       .getAttribute("aria-checked")).toBe("false");
   });
 
-  test("waffle renders one inline legend switch per category", function() {
+  test("waffle renders one static inline legend entry per category", function() {
     document.body.innerHTML = "<div id='inline-waffle'></div>";
     const element = document.getElementById("inline-waffle");
     const svg = d3.select(element).append("svg");
@@ -335,6 +335,40 @@ describe("inline legend (GH #84)", function() {
     expect(items[0].getAttribute("data-key")).toBe("Renewable");
     expect(items[0].querySelector("rect:not(.myIO-inline-legend-hit)").getAttribute("fill")).toBe("#1f77b4");
     expect(chart.runtime._legendData.items).toHaveLength(5);
+
+    // The waffle renderer ignores hidden segments, so its entries are a key, not switches.
+    expect(items[0].getAttribute("role")).toBeNull();
+    items[0].dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(chart.runtime._hiddenOrdinalSegments).toEqual([]);
+    expect(chart.routeLayers).not.toHaveBeenCalled();
+  });
+
+  test("funnel has no legend: its stages are labeled on the bars", function() {
+    document.body.innerHTML = "<div id='inline-funnel'></div>";
+    const element = document.getElementById("inline-funnel");
+    const funnelLayer = {
+      label: "pipeline",
+      type: "funnel",
+      mapping: { stage: "s", value: "v" },
+      data: [{ s: "Visit", v: 100 }, { s: "Signup", v: 40 }, { s: "Buy", v: 10 }]
+    };
+    const chart = {
+      element,
+      svg: d3.select(element).append("svg"),
+      options: { suppressLegend: false },
+      runtime: { totalWidth: 800 },
+      margin: { left: 30, right: 20 },
+      height: 300,
+      colorDiscrete: d3.scaleOrdinal(d3.schemeCategory10),
+      plotLayers: [funnelLayer],
+      currentLayers: [funnelLayer],
+      derived: { currentLayers: [funnelLayer] }
+    };
+
+    syncLegend(chart, { ordinalLegend: true });
+
+    expect(chart.runtime._legendData.items).toHaveLength(0);
+    expect(element.querySelectorAll(".myIO-inline-legend-item")).toHaveLength(0);
   });
 
   test("off items render dimmed with aria-checked false", function() {

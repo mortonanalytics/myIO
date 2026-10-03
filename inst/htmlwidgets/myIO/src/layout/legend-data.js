@@ -98,10 +98,6 @@ export function buildOrdinalLegendData(chart, layer) {
     keys = layer.data.map(function(d) {
       return d[layer.mapping.x_var];
     });
-  } else if (layer.type === "funnel" && Array.isArray(layer.data)) {
-    keys = layer.data.map(function(d) {
-      return d[layer.mapping.stage];
-    });
   } else if (layer.type === "waffle" && Array.isArray(layer.data)) {
     keys = Array.from(new Set(layer.data.map(function(d) { return d[layer.mapping.category]; })));
   } else if (layer.type === "radar" && Array.isArray(layer.data)) {
@@ -114,8 +110,11 @@ export function buildOrdinalLegendData(chart, layer) {
       : [layer.label];
   }
 
+  // Funnel has no legend: its stages are labeled on the bars. Only donut
+  // re-renders from _hiddenOrdinalSegments, so only its entries toggle.
   return {
     type: "ordinal",
+    toggleable: layer.type === "donut",
     items: keys.map(function(key) {
       var swatchColor = "#6b7280";
       if (typeof chart.colorDiscrete === "function") {
