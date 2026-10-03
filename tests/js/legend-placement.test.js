@@ -39,10 +39,10 @@ describe("resolveLegendPlacement policy rows (first match wins)", function() {
     })).toEqual({ inline: false, panel: true, reason: "continuous" });
   });
 
-  test("fewer than 2 items is panel-only", function() {
+  test("fewer than 2 items shows no legend", function() {
     expect(resolveLegendPlacement({
       type: "layer", labels: labels(1), suppressLegend: false, availableWidth: 800
-    })).toEqual({ inline: false, panel: true, reason: "too-few-items" });
+    })).toEqual({ inline: false, panel: false, reason: "too-few-items" });
   });
 
   test("more than MAX_INLINE_ITEMS is panel-only", function() {

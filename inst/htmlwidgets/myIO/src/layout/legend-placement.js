@@ -147,7 +147,7 @@ export function resolveLegendPlacement(opts) {
     return { inline: false, panel: true, reason: "continuous" };
   }
   if (labels.length < 2) {
-    return { inline: false, panel: true, reason: "too-few-items" };
+    return { inline: false, panel: false, reason: "too-few-items" };
   }
   if (labels.length > MAX_INLINE_ITEMS) {
     return { inline: false, panel: true, reason: "too-many-items" };

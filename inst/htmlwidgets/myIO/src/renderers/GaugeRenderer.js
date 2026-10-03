@@ -39,7 +39,13 @@ export class GaugeRenderer {
       });
     }
 
-    var bands = chart.chart.selectAll(".myIO-gauge-threshold").data(thresholds);
+    // One root per layer so routeLayers() can apply setLayerOpacity() to it.
+    var root = chart.chart.selectAll(".myIO-gauge-root")
+      .data([null])
+      .join("g")
+      .attr("class", "myIO-gauge-root tag-gauge-" + layer.id);
+
+    var bands = root.selectAll(".myIO-gauge-threshold").data(thresholds);
 
     bands.exit()
       .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed)
@@ -58,7 +64,7 @@ export class GaugeRenderer {
       .attr("opacity", 0.24)
       .attr("d", bandArcFor);
 
-    var pathBackground = chart.chart.selectAll(".myIO-gauge-background").data(pie([1]));
+    var pathBackground = root.selectAll(".myIO-gauge-background").data(pie([1]));
 
     pathBackground.exit()
       .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed)
@@ -81,7 +87,7 @@ export class GaugeRenderer {
         return function(t) { return arc(i(t)); };
       });
 
-    var path = chart.chart.selectAll(".myIO-gauge-value").data(pie(data));
+    var path = root.selectAll(".myIO-gauge-value").data(pie(data));
 
     path.exit()
       .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed)
@@ -104,7 +110,7 @@ export class GaugeRenderer {
         return function(t) { return arc(i(t)); };
       });
 
-    chart.chart.selectAll(".gauge-text")
+    root.selectAll(".gauge-text")
       .data([data[0]])
       .join("text")
       .attr("class", "gauge-text")
@@ -113,7 +119,7 @@ export class GaugeRenderer {
       .attr("font-size", 20)
       .attr("dy", "-0.45em");
 
-    chart.chart.selectAll(".gauge-label")
+    root.selectAll(".gauge-label")
       .data([layer.options && layer.options.metric ? layer.options.metric : layer.label])
       .join("text")
       .attr("class", "gauge-label")
@@ -122,7 +128,7 @@ export class GaugeRenderer {
       .attr("font-size", 12)
       .attr("dy", "1.1em");
 
-    chart.chart.selectAll(".gauge-min-label")
+    root.selectAll(".gauge-min-label")
       .data(["0%"])
       .join("text")
       .attr("class", "gauge-min-label")
@@ -132,7 +138,7 @@ export class GaugeRenderer {
       .attr("x", -radius + barWidth / 2)
       .attr("y", 12);
 
-    chart.chart.selectAll(".gauge-max-label")
+    root.selectAll(".gauge-max-label")
       .data(["100%"])
       .join("text")
       .attr("class", "gauge-max-label")
@@ -144,7 +150,7 @@ export class GaugeRenderer {
   }
 
   remove(chart) {
-    chart.dom.chartArea.selectAll(".myIO-gauge-threshold, .myIO-gauge-background, .myIO-gauge-value, .gauge-text, .gauge-label, .gauge-min-label, .gauge-max-label").transition().ease(easingFor(chart, d3.easeCubic)).duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll(".myIO-gauge-root").transition().ease(easingFor(chart, d3.easeCubic)).duration(500).style("opacity", 0).remove();
   }
 }
 

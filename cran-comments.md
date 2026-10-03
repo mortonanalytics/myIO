@@ -6,7 +6,7 @@ axes, and polynomial confidence bands — and fixes a batch of correctness and
 rendering defects found in a full audit of the package's R transforms, chart
 renderers, and documentation.
 
-Four of those fixes change output for charts that render today. None changes a
+Six of those fixes change output for charts that render today. None changes a
 function signature, a default argument, or an exported name, so none is an API
 break; they are listed here so the corresponding NEWS.md entries are not mistaken
 for one:
@@ -25,6 +25,14 @@ for one:
   universal but applied by only about half the renderers, so it silently did
   nothing on eleven of them. Charts that never called `setTransition()` animate
   exactly as before.
+- Radar charts follow the theme. Their grid and labels read two CSS variables
+  that nothing defined, so themes and dark mode never reached them and labels
+  were close to invisible on dark backgrounds. They now use the same theme
+  variables as every other chart, which also moves the default light grid and
+  labels to the theme's grey.
+- Reference lines from `setReferenceLines()` follow the theme for the same
+  reason. Their default changes from `gray` at 3px to the theme's reference-line
+  color (`#9ca3af`) at 2px, matching the tooltip crosshair.
 
 `myio_validate_spec()` also rejects mappings that are non-character, empty, `NA`,
 or whitespace only. It previously accepted them and failed later inside the
@@ -33,7 +41,7 @@ could not have rendered under 1.3.0 either.
 
 Each of these replaces broken or incorrect behavior. Charts that rendered
 correctly under 1.3.0 render identically under 1.4.0, apart from the bump-chart
-reorientation noted above.
+reorientation and the radar and reference-line colors noted above.
 
 ## R CMD check results
 

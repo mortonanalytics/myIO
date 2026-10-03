@@ -501,6 +501,38 @@ describe("Renderer formatTooltip methods", function() {
     expect(document.querySelectorAll(".tag-radar-radar_1 .radar-polygon").length).toBe(2);
   });
 
+  test("RadarRenderer grid and labels read the setTheme() tokens", function() {
+    var renderer = getRenderer("radar");
+    document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
+    var el = document.getElementById("chart");
+    var chart = {
+      dom: { chartArea: d3.select(el).select(".myIO-chart-area") },
+      derived: {},
+      margin: { top: 30, bottom: 30, left: 30, right: 30 },
+      width: 320,
+      height: 320
+    };
+    var layer = {
+      id: "radar_theme",
+      label: "skills",
+      mapping: { axis: "axis", value: "value" },
+      data: [
+        { axis: "A", value: 3 },
+        { axis: "B", value: 5 },
+        { axis: "C", value: 4 }
+      ]
+    };
+
+    renderer.render(chart, layer);
+
+    var strokes = Array.from(document.querySelectorAll(".radar-grid-ring, .radar-axis-line"));
+    var fills = Array.from(document.querySelectorAll(".radar-axis-label, .radar-grid-label"));
+    expect(strokes.length).toBeGreaterThan(0);
+    expect(fills.length).toBeGreaterThan(0);
+    strokes.forEach(function(n) { expect(n.getAttribute("stroke")).toMatch(/^var\(--chart-grid-color[,)]/); });
+    fills.forEach(function(n) { expect(n.getAttribute("fill")).toMatch(/^var\(--chart-text-color[,)]/); });
+  });
+
   test("RadarRenderer.render draws concentric grid rings with value labels", function() {
     var renderer = getRenderer("radar");
     document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
@@ -527,7 +559,7 @@ describe("Renderer formatTooltip methods", function() {
 
     var rings = document.querySelectorAll(".tag-radar-radar_2 .radar-grid-ring");
     expect(rings.length).toBe(4);
-    expect(rings[0].getAttribute("stroke")).toBe("var(--chart-grid, #cbd5e1)");
+    expect(rings[0].getAttribute("stroke")).toBe("var(--chart-grid-color, #cbd5e1)");
     expect(rings[0].getAttribute("fill")).toBe("none");
     expect(Array.from(document.querySelectorAll(".tag-radar-radar_2 .radar-grid-label")).map(function(node) {
       return node.textContent;
@@ -839,6 +871,30 @@ describe("Full chart rendering with layers", function() {
     });
     var circles = document.querySelectorAll("circle");
     expect(circles.length).toBeGreaterThanOrEqual(3);
+  });
+
+  test("setToolTipOptions(suppressY = TRUE) drops the y row from point tooltips", function() {
+    function hoverRows(suppressY) {
+      document.getElementById("chart").innerHTML = "";
+      var layer = makeLayer("point", "pts",
+        [{ x: 1, y: 2 }, { x: 2, y: 4 }],
+        { x_var: "x", y_var: "y" }
+      );
+      var config = makeConfig([layer]);
+      config.interactions.toolTipOptions.suppressY = suppressY;
+      new myIOchart({ element: document.getElementById("chart"), width: 400, height: 300, config: config });
+      var point = document.querySelector("circle.tag-point-chart-pts");
+      point.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+      return {
+        title: document.querySelector(".toolTipTitle").textContent,
+        rows: document.querySelectorAll(".toolTipItem").length
+      };
+    }
+
+    expect(hoverRows(false).rows).toBe(1);
+    var suppressed = hoverRows(true);
+    expect(suppressed.rows).toBe(0);
+    expect(suppressed.title).toMatch(/^x: /);
   });
 
   test("line layer renders path in DOM", function() {
