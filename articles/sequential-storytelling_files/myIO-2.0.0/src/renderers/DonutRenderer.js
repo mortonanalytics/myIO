@@ -33,7 +33,13 @@ export class DonutRenderer {
     var arc = d3.arc().innerRadius(radius * 0.8).outerRadius(radius * 0.4);
     var outerArc = d3.arc().innerRadius(radius * 0.9).outerRadius(radius * 0.9);
 
-    var path = chart.chart.selectAll(".donut").data(pie(data), function(d) { return d.data[xVar]; });
+    // One root per layer so routeLayers() can apply setLayerOpacity() to it.
+    var root = chart.chart.selectAll(".myIO-donut-root")
+      .data([null])
+      .join("g")
+      .attr("class", "myIO-donut-root tag-donut-" + layer.id);
+
+    var path = root.selectAll(".donut").data(pie(data), function(d) { return d.data[xVar]; });
     path.exit().transition().duration(transitionSpeed).ease(easingFor(chart, d3.easeQuad))
       .attrTween("d", function(a) {
         var end = { startAngle: a.endAngle, endAngle: a.endAngle };
@@ -59,7 +65,7 @@ export class DonutRenderer {
 
     function midAngle(d) { return d.startAngle + (d.endAngle - d.startAngle) / 2; }
 
-    var textLabel = chart.chart.selectAll(".inner-text").data(pie(data), function(d) { return d.data[xVar]; });
+    var textLabel = root.selectAll(".inner-text").data(pie(data), function(d) { return d.data[xVar]; });
     textLabel.exit().transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).style("opacity", 0).remove();
 
     var newText = textLabel.enter().append("text")
@@ -93,7 +99,7 @@ export class DonutRenderer {
         };
       });
 
-    var polyline = chart.chart.selectAll("polyline").data(pie(data), function(d) { return d.data[xVar]; });
+    var polyline = root.selectAll("polyline").data(pie(data), function(d) { return d.data[xVar]; });
     polyline.exit().transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).style("opacity", 0).remove();
 
     var newPolyline = polyline.enter().append("polyline")
@@ -120,6 +126,6 @@ export class DonutRenderer {
   }
 
   remove(chart) {
-    chart.dom.chartArea.selectAll(".donut, .inner-text, polyline").transition().ease(easingFor(chart, d3.easeCubic)).duration(500).style("opacity", 0).remove();
+    chart.dom.chartArea.selectAll(".myIO-donut-root").transition().ease(easingFor(chart, d3.easeCubic)).duration(500).style("opacity", 0).remove();
   }
 }

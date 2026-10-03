@@ -137,7 +137,7 @@ export class RadarRenderer {
       .attr("stroke-opacity", 0.6)
       .attr("d", ringPath(0))
       .merge(rings)
-      .attr("stroke", "var(--chart-grid, #cbd5e1)")
+      .attr("stroke", "var(--chart-grid-color, #cbd5e1)")
       .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
       .attr("d", function(d) { return ringPath(radiusScale(d)); });
 
@@ -156,7 +156,7 @@ export class RadarRenderer {
       .attr("x", centerX + 4)
       .attr("y", centerY)
       .merge(ringLabels)
-      .attr("fill", "var(--chart-fg, #1f2937)")
+      .attr("fill", "var(--chart-text-color, #1f2937)")
       .attr("fill-opacity", 0.7)
       .text(function(d) { return gridFormat(d); })
       .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
@@ -178,7 +178,7 @@ export class RadarRenderer {
 
     axisEnter.append("line")
       .attr("class", "radar-axis-line")
-      .attr("stroke", "var(--chart-grid, #cbd5e1)")
+      .attr("stroke", "var(--chart-grid-color, #cbd5e1)")
       .attr("stroke-width", 1)
       .attr("x1", centerX)
       .attr("y1", centerY)
@@ -187,7 +187,7 @@ export class RadarRenderer {
 
     axisEnter.append("text")
       .attr("class", "radar-axis-label")
-      .attr("fill", "var(--chart-fg, #1f2937)")
+      .attr("fill", "var(--chart-text-color, #1f2937)")
       .attr("x", centerX)
       .attr("y", centerY)
       .attr("dy", "0.35em")
@@ -202,7 +202,7 @@ export class RadarRenderer {
       var group = d3.select(this);
 
       group.select(".radar-axis-line")
-        .attr("stroke", "var(--chart-grid, #cbd5e1)")
+        .attr("stroke", "var(--chart-grid-color, #cbd5e1)")
         .attr("stroke-width", 1)
         .transition().ease(easingFor(chart, d3.easeCubic)).duration(transitionSpeed).delay(staggerDelay(chart, 0))
         .attr("x1", centerX)

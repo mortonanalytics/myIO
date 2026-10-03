@@ -50,19 +50,27 @@ export function addFAB(chart) {
     .html(iconLegend());
 
   fab.on("click", function() {
-    openPanel(chart);
+    togglePanel(chart);
   });
 
   fab.on("keydown", function(event) {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      openPanel(chart);
+      togglePanel(chart);
     }
   });
 
   chart.dom.fab = fab;
   syncFABState(chart);
   return fab;
+}
+
+function togglePanel(chart) {
+  if (chart.runtime && chart.runtime._sheetOpen) {
+    closePanel(chart);
+  } else {
+    openPanel(chart);
+  }
 }
 
 export function openPanel(chart) {
@@ -530,8 +538,7 @@ function syncFABState(chart) {
   var isOpen = chart.runtime && chart.runtime._sheetOpen === true;
   chart.dom.fab
     .attr("aria-expanded", isOpen ? "true" : "false")
-    .attr("aria-label", isOpen ? "Close legend and actions" : "Legend and actions")
-    .html(isOpen ? iconClose() : iconLegend());
+    .attr("aria-label", isOpen ? "Close legend and actions" : "Legend and actions");
 }
 
 function attachSheetKeydown(chart) {

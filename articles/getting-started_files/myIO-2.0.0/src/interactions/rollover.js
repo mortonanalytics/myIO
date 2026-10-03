@@ -14,6 +14,12 @@ export function bindRollover(chart, layers) {
     : d3.format(chart.options.xAxisFormat || "");
   var yFormat = d3.format(chart.options.yAxisFormat || "");
   var currentFormatY = chart.newScaleY ? d3.format(chart.newScaleY) : yFormat;
+  var suppressY = !!(chart.options.toolTipOptions && chart.options.toolTipOptions.suppressY === true);
+
+  // setToolTipOptions(suppressY = TRUE) leaves only the x title, as the v0 engine did.
+  function yItems(items) {
+    return suppressY ? [] : items;
+  }
 
   removeHoverOverlay(chart);
 
@@ -49,11 +55,11 @@ export function bindRollover(chart, layers) {
     bindOrdinalHover(".donut", "donut", function(d, layer) {
       return {
         title: { text: layer.mapping.x_var + ": " + d.data[layer.mapping.x_var] },
-        items: [{
+        items: yItems([{
           color: chart.colorDiscrete(d.index),
           label: layer.mapping.y_var,
           value: d.data[layer.mapping.y_var]
-        }]
+        }])
       };
     });
   }
@@ -182,7 +188,7 @@ export function bindRollover(chart, layers) {
 
     return {
       title: { text: titleText },
-      items: [{ color: color, label: label, value: currentFormatY(data[yKey]) }]
+      items: yItems([{ color: color, label: label, value: currentFormatY(data[yKey]) }])
     };
   }
 
@@ -235,7 +241,7 @@ export function bindRollover(chart, layers) {
 
     var groupedTooltip = {
       title: { text: thisLayer.mapping.x_var + ": " + xFormat(data.data[0]) },
-      items: [{ color: color, label: thisLayer.mapping.y_var, value: currentFormatY(data[1] - data[0]) }]
+      items: yItems([{ color: color, label: thisLayer.mapping.y_var, value: currentFormatY(data[1] - data[0]) }])
     };
     showChartTooltip(that, {
       pointer: getContainerPointer(event),
@@ -318,9 +324,9 @@ export function bindRollover(chart, layers) {
 
     var overlayTooltip = {
       title: { text: tipText[0].xVar + ": " + xFormat(xValue) },
-      items: tipText.map(function(d) {
+      items: yItems(tipText.map(function(d) {
         return { color: d.color, label: d.label, value: currentFormatY(d.displayValue) };
-      })
+      }))
     };
     showChartTooltip(that, {
       pointer: getContainerPointer(event),

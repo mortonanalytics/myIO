@@ -270,7 +270,13 @@ export class myIOchart {
         return;
       }
       if (this.derived.currentLayers.length === 0) {
-        this.renderEmptyState();
+        // Every layer hidden from the legend is still a chart: keep the FAB and
+        // panel so the legend can bring the layers back.
+        var userHidden = Array.isArray(this.runtime._hiddenLayerKeys) && this.runtime._hiddenLayerKeys.length > 0;
+        this.renderEmptyState({ keepControls: userHidden });
+        if (userHidden) {
+          syncLegend(this, this.runtime._legendState);
+        }
         if (!this.config.sparkline) {
           applyARIA(this);
         }
@@ -346,7 +352,8 @@ export class myIOchart {
     }
   }
 
-  renderEmptyState() {
+  renderEmptyState(opts) {
+    var keepControls = !!(opts && opts.keepControls);
     if (this.dom.chartArea) {
       this.dom.chartArea.selectAll(":scope > :not(defs)").interrupt().remove();
     }
@@ -356,10 +363,10 @@ export class myIOchart {
     }
     removeHoverOverlay(this);
     hideChartTooltip(this);
-    if (this.runtime && this.runtime._sheetOpen) {
+    if (!keepControls && this.runtime && this.runtime._sheetOpen) {
       closePanel(this, { returnFocus: false });
     }
-    if (this.dom.element) {
+    if (!keepControls && this.dom.element) {
       d3.select(this.dom.element).select(".myIO-fab").style("display", "none");
     }
     if (this.dom.svg) {

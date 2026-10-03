@@ -168,6 +168,13 @@ server already exists. <code>"wasm"</code> runs DuckDB in the browser
 from the cached WASM runtime, which fits static Quarto or R Markdown
 HTML. <code>"svg"</code> forces the legacy SVG path without the
 coordinator and is mainly useful for testing.</p>
+<p><strong>Known limitation:</strong> in this release the
+<code>"server"</code> engine does not run brush queries: R never
+executes the queries the browser sends, so brushing a server-engine
+chart in Shiny does not re-aggregate. That includes
+<code>engine = "auto"</code> inside a Shiny session and every
+<code>DBI</code> source. Progress is tracked in <a href="https://github.com/mortonanalytics/myIO/issues/123" class="external-link">issue
+#123</a>.</p>
 </div>
 <div class="section level2">
 <h2 id="crosstalk-threshold">Crosstalk threshold<a class="anchor" aria-label="anchor" href="#crosstalk-threshold"></a>
@@ -228,17 +235,13 @@ HTML, serve it with <code>servr::httd()</code> or
 </tr>
 <tr class="odd">
 <td>100k-1M</td>
-<td>
-<code>wasm</code> or <code>server</code>
-</td>
+<td><code>wasm</code></td>
 <td>Canvas or WebGL</td>
-<td>Sub-200ms brush re-aggregation (WASM), sub-500ms (server Shiny)</td>
+<td>Sub-200ms brush re-aggregation</td>
 </tr>
 <tr class="even">
 <td>1M-10M</td>
-<td>
-<code>wasm</code> or <code>server</code>
-</td>
+<td><code>wasm</code></td>
 <td>WebGL</td>
 <td>Target: 60fps pan/zoom; brush re-agg &lt; 300ms</td>
 </tr>
@@ -252,9 +255,10 @@ HTML, serve it with <code>servr::httd()</code> or
 <code>DBI</code> connection. The Crosstalk threshold depends on which
 rows match the current selection. The WASM binary is about 22 MB,
 downloads once per user per version, and is cached indefinitely; clear
-it with <code><a href="../reference/clear_duckdb_wasm_cache.html">clear_duckdb_wasm_cache()</a></code>. On Posit Connect or
-shinyapps.io, use the <code>"server"</code> engine;
-<code><a href="../reference/install_duckdb_wasm.html">install_duckdb_wasm()</a></code> is not needed on the server.</p>
+it with <code><a href="../reference/clear_duckdb_wasm_cache.html">clear_duckdb_wasm_cache()</a></code>. The
+<code>"server"</code> engine is meant for Posit Connect and
+shinyapps.io, where <code><a href="../reference/install_duckdb_wasm.html">install_duckdb_wasm()</a></code> is not needed,
+but see the known limitation above.</p>
 </div>
 <div class="section level2">
 <h2 id="minimal-complete-example">Minimal complete example<a class="anchor" aria-label="anchor" href="#minimal-complete-example"></a>

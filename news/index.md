@@ -86,6 +86,12 @@
   exact mark tokens — a label that was a prefix of a neighboring label
   could hide the wrong marks.
 
+- [`setLayerOpacity()`](https://mortonanalytics.github.io/myIO/reference/setLayerOpacity.md)
+  reaches donut, gauge and grouped-bar charts, which ignored it without
+  a warning. Together with the matching fix above, opacity now applies
+  on every chart type, including layers whose labels contain punctuation
+  ([\#122](https://github.com/mortonanalytics/myIO/issues/122)).
+
 - Beeswarm charts center points on their category bands instead of
   starting at the band edge, which placed points above their axis
   labels, and category tooltips no longer read `NaN`.
@@ -112,6 +118,54 @@
 
 - NEWS entries use the US spellings the package declares in
   `Language: en-US`.
+
+- The large-data vignette no longer advertises server-engine timings or
+  recommends the `"server"` engine for hosted Shiny. It now says that
+  the server engine does not run brush queries in this release
+  ([\#123](https://github.com/mortonanalytics/myIO/issues/123)).
+
+- Radar charts follow the theme. Their grid rings, spokes and labels
+  read `--chart-grid` and `--chart-fg`, two variables nothing defines,
+  so `setTheme(textColor = , gridColor = )`, `mode = "dark"` and every
+  preset were ignored and the light fallbacks always rendered. Axis
+  labels were close to invisible in dark themes, at about 1.1:1
+  contrast. They now read `--chart-grid-color` and `--chart-text-color`
+  like every other renderer, so the default light radar grid and labels
+  also change to the theme’s grey
+  ([\#140](https://github.com/mortonanalytics/myIO/issues/140)).
+
+- `setToolTipOptions(suppressY = TRUE)` works again. The option was
+  validated, stored and documented, but nothing in the v1.0 engine read
+  it, so the y value appeared in every tooltip. Tooltips on point, bar,
+  line, area, grouped-bar and donut charts now show only the x title
+  when it is set. Charts that never call it are unchanged
+  ([\#121](https://github.com/mortonanalytics/myIO/issues/121)).
+
+- Reference lines from
+  [`setReferenceLines()`](https://mortonanalytics.github.io/myIO/reference/setReferenceLines.md)
+  follow the theme. They were drawn with an inline `gray` stroke 3px
+  wide, which overrode the `--chart-ref-line-color` and
+  `--chart-ref-line-width` values that every preset and `mode = "dark"`
+  set, so they could not be themed at all. They now read those tokens,
+  which also changes the default line to `#9ca3af` at 2px, matching the
+  tooltip crosshair
+  ([\#141](https://github.com/mortonanalytics/myIO/issues/141)).
+
+- Hiding every layer from the legend no longer strands the chart. The
+  empty state used to hide the legend-and-actions button and close the
+  panel, so a single-series chart whose only legend entry was clicked
+  could not be brought back without reloading. The button and panel now
+  stay, with the entry shown as off and a “Show All” button.
+
+- The legend-and-actions button opens and closes the panel, and it keeps
+  its menu icon. It used to turn into an X while the panel was open, and
+  clicking that X did nothing.
+
+- Charts with a single series no longer show a one-entry legend in the
+  panel. The entry repeated the layer name, sat above a divider with
+  nothing to divide, and could only be used to hide the chart’s only
+  data. Legends with two or more entries and gradient legends are
+  unchanged.
 
 ## myIO 1.3.0
 

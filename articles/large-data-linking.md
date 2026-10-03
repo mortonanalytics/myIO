@@ -125,6 +125,13 @@ from the cached WASM runtime, which fits static Quarto or R Markdown
 HTML. `"svg"` forces the legacy SVG path without the coordinator and is
 mainly useful for testing.
 
+**Known limitation:** in this release the `"server"` engine does not run
+brush queries: R never executes the queries the browser sends, so
+brushing a server-engine chart in Shiny does not re-aggregate. That
+includes `engine = "auto"` inside a Shiny session and every `DBI`
+source. Progress is tracked in [issue
+\#123](https://github.com/mortonanalytics/myIO/issues/123).
+
 ## Crosstalk threshold
 
 By default, myIO broadcasts row keys to
@@ -159,8 +166,8 @@ serve it with `servr::httd()` or `quarto preview`.
 |----|----|----|----|
 | \<= 20k | `svg` (default) | D3 SVG | Full brush/zoom, publication-quality |
 | 20k-100k | `svg` + aggregation | D3 SVG | Smooth; tooltips on pre-aggregated data |
-| 100k-1M | `wasm` or `server` | Canvas or WebGL | Sub-200ms brush re-aggregation (WASM), sub-500ms (server Shiny) |
-| 1M-10M | `wasm` or `server` | WebGL | Target: 60fps pan/zoom; brush re-agg \< 300ms |
+| 100k-1M | `wasm` | Canvas or WebGL | Sub-200ms brush re-aggregation |
+| 1M-10M | `wasm` | WebGL | Target: 60fps pan/zoom; brush re-agg \< 300ms |
 
 ## Limits and gotchas
 
@@ -169,9 +176,9 @@ connection. The Crosstalk threshold depends on which rows match the
 current selection. The WASM binary is about 22 MB, downloads once per
 user per version, and is cached indefinitely; clear it with
 [`clear_duckdb_wasm_cache()`](https://mortonanalytics.github.io/myIO/reference/clear_duckdb_wasm_cache.md).
-On Posit Connect or shinyapps.io, use the `"server"` engine;
+The `"server"` engine is meant for Posit Connect and shinyapps.io, where
 [`install_duckdb_wasm()`](https://mortonanalytics.github.io/myIO/reference/install_duckdb_wasm.md)
-is not needed on the server.
+is not needed, but see the known limitation above.
 
 ## Minimal complete example
 
