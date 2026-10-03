@@ -93,6 +93,14 @@
 
 * NEWS entries use the US spellings the package declares in `Language: en-US`.
 
+* Radar charts follow the theme. Their grid rings, spokes and labels read
+  `--chart-grid` and `--chart-fg`, two variables nothing defines, so
+  `setTheme(textColor = , gridColor = )`, `mode = "dark"` and every preset were
+  ignored and the light fallbacks always rendered. Axis labels were close to
+  invisible in dark themes, at about 1.1:1 contrast. They now read
+  `--chart-grid-color` and `--chart-text-color` like every other renderer, so
+  the default light radar grid and labels also change to the theme's grey (#140).
+
 # myIO 1.3.0
 
 ## New features
