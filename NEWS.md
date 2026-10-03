@@ -111,6 +111,13 @@
   donut charts now show only the x title when it is set. Charts that never call
   it are unchanged (#121).
 
+* Reference lines from `setReferenceLines()` follow the theme. They were drawn
+  with an inline `gray` stroke 3px wide, which overrode the
+  `--chart-ref-line-color` and `--chart-ref-line-width` values that every preset
+  and `mode = "dark"` set, so they could not be themed at all. They now read
+  those tokens, which also changes the default line to `#9ca3af` at 2px, matching
+  the tooltip crosshair (#141).
+
 # myIO 1.3.0
 
 ## New features
