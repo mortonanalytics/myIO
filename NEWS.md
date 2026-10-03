@@ -122,6 +122,16 @@
   those tokens, which also changes the default line to `#9ca3af` at 2px, matching
   the tooltip crosshair (#141).
 
+* Hiding every layer from the legend no longer strands the chart. The empty
+  state used to hide the legend-and-actions button and close the panel, so a
+  single-series chart whose only legend entry was clicked could not be brought
+  back without reloading. The button and panel now stay, with the entry shown
+  as off and a "Show All" button.
+
+* The legend-and-actions button opens and closes the panel, and it keeps its menu
+  icon. It used to turn into an X while the panel was open, and clicking that X
+  did nothing.
+
 # myIO 1.3.0
 
 ## New features
