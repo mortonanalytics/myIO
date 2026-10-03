@@ -56,12 +56,12 @@ oldrel-1 do not report it.
 
 - local: macOS 26.6.2 (R 4.5.0), R CMD check --as-cran
 - GitHub Actions: ubuntu-latest (devel, release, oldrel-1), windows-latest
-  (release), macos-latest (release) — all R CMD check --as-cran: OK
+  (release), macos-latest (release): all R CMD check --as-cran: OK
 
 ## Notes for the reviewer
 
 myIO differs from existing interactive-visualization packages (plotly,
-echarts4r, highcharter) by computing statistical transforms (confidence
+echarts4r, highcharter, r2d3) by computing statistical transforms (confidence
 intervals, regression fits, pairwise significance tests, uncertainty
 visualizations) in R and rendering them as composable D3.js layers. It also
 ships a machine-readable chart specification schema and validators so that
@@ -70,7 +70,7 @@ large language model agents can author and verify charts.
 The package installs to 4.2 MB. The `htmlwidgets/` subdirectory (2.5 MB) holds the
 bundled, minified JavaScript libraries the widgets require at runtime:
 
-- d3.js 7.9.0 (Mike Bostock, ISC): core rendering
+- d3.js 7.9.0 (Mike Bostock, ISC): core rendering, 279,706 bytes minified
 - d3-hexbin 0.2.2, d3-sankey 0.12.3 (Mike Bostock, BSD-3-Clause): chart layouts
 - jsPDF 2.5.2 (James Hall, yWorks GmbH; MIT): PDF export
 

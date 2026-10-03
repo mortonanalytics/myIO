@@ -24,7 +24,7 @@ Read: `DESCRIPTION`, `LICENSE`, `LICENSE.md`
 - [ ] `roxygen2::roxygenise()` runs without errors
 - [ ] Every exported function (check NAMESPACE) has a man page
 - [ ] Every man page for exported functions has: `\title{}`, `\description{}`, `\arguments{}` (all params), `\value{}`, `\examples{}`
-- [ ] Shiny functions (myIOOutput, renderMyIO) have examples in `\dontrun{}`
+- [ ] Shiny functions (myIOOutput, renderMyIO) have examples guarded by `if (interactive())`, not `\dontrun{}` — CRAN reviewers send `\dontrun{}` back unless the example truly cannot run, and 1.2.0/1.3.0 were accepted with the `interactive()` guard
 - [ ] No broken `\link{}` or `\href{}` references
 - [ ] Package-level man page (`man/myIO-package.Rd` or `man/myIO.Rd`) exists
 
