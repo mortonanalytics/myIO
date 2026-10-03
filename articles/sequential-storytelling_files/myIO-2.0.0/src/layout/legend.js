@@ -100,19 +100,23 @@ function renderInlineLegend(chart, legendData) {
     var itemGroup = g.append("g")
       .attr("class", "myIO-inline-legend-item")
       .attr("transform", "translate(" + position.x + "," + (position.row * 16) + ")")
-      .attr("role", "switch")
-      .attr("aria-checked", isOff ? "false" : "true")
-      .attr("tabindex", 0)
-      .attr("data-key", item.key)
-      .on("click", function() {
-        handleInlineToggle(chart, legendData, item);
-      })
-      .on("keydown", function(event) {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
+      .attr("data-key", item.key);
+
+    if (legendData.type !== "ordinal" || legendData.toggleable) {
+      itemGroup
+        .attr("role", "switch")
+        .attr("aria-checked", isOff ? "false" : "true")
+        .attr("tabindex", 0)
+        .on("click", function() {
           handleInlineToggle(chart, legendData, item);
-        }
-      });
+        })
+        .on("keydown", function(event) {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            handleInlineToggle(chart, legendData, item);
+          }
+        });
+    }
 
     itemGroup.append("title").text(label);
 

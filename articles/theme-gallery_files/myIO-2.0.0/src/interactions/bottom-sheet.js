@@ -363,6 +363,19 @@ function renderOrdinalLegend(chart, container, legendData) {
   container.classed("myIO-sheet-legend--grid", useGrid);
 
   legendData.items.forEach(function(item) {
+    if (!legendData.toggleable) {
+      var entry = container.append("div")
+        .attr("class", "myIO-sheet-legend-item myIO-sheet-legend-item--static")
+        .attr("data-key", item.key);
+      entry.append("span")
+        .attr("class", "myIO-sheet-swatch")
+        .style("background-color", item.color);
+      entry.append("span")
+        .attr("class", "myIO-sheet-legend-label")
+        .text(item.label);
+      return;
+    }
+
     var button = container.append("button")
       .attr("type", "button")
       .attr("class", "myIO-sheet-legend-item")

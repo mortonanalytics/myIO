@@ -133,8 +133,11 @@
 }
 
 .myIO-inline-legend-item {
-  cursor: pointer;
   outline: none;
+}
+
+.myIO-inline-legend-item[role="switch"] {
+  cursor: pointer;
 }
 
 .myIO-inline-legend-item:focus-visible .myIO-inline-legend-hit {
@@ -423,6 +426,10 @@
 
 .myIO-sheet-legend-item:hover {
   background: var(--chart-button-hover-bg);
+}
+
+.myIO-sheet-legend-item--static:hover {
+  background: transparent;
 }
 
 .myIO-sheet-legend-item:focus-visible {

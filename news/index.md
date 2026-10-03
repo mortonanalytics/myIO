@@ -153,9 +153,9 @@
 
 - Hiding every layer from the legend no longer strands the chart. The
   empty state used to hide the legend-and-actions button and close the
-  panel, so a single-series chart whose only legend entry was clicked
-  could not be brought back without reloading. The button and panel now
-  stay, with the entry shown as off and a “Show All” button.
+  panel, so once the last visible series was switched off there was no
+  way to bring any of them back without reloading. The button and panel
+  now stay, with the entries shown as off and a “Show All” button.
 
 - The legend-and-actions button opens and closes the panel, and it keeps
   its menu icon. It used to turn into an X while the panel was open, and
@@ -166,6 +166,12 @@
   nothing to divide, and could only be used to hide the chart’s only
   data. Legends with two or more entries and gradient legends are
   unchanged.
+
+- Funnel charts no longer show a legend. Their stages are already
+  labeled on the bars, and clicking a legend entry did nothing. Waffle,
+  radar, parallel-coordinates and treemap legends show a plain color key
+  instead of entries that looked clickable but did nothing. Donut legend
+  entries still hide and show segments.
 
 ## myIO 1.3.0
 
