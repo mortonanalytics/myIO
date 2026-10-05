@@ -1,3 +1,17 @@
+# myIO (development version)
+
+## Bug fixes
+
+* Boxplot whiskers and caps, error bars, candlestick wicks and waterfall
+  connectors are now visible under `setTheme(mode = "dark")` and the `midnight`,
+  `ocean`, `forest` and `neon` presets. Their strokes were hardcoded to black,
+  `#374151` or `#666`, which sits at 1.1-2.9:1 against those backgrounds, so a
+  dark-mode boxplot showed boxes and outliers but no spread. They now read a new
+  `--chart-mark-stroke` token, which those themes set to their text color.
+  Light mode and the light presets don't define it and render exactly as before,
+  and `setTheme(values = list("--chart-mark-stroke" = ...))` overrides it like
+  any other token (#149).
+
 # myIO 1.4.0
 
 ## New features

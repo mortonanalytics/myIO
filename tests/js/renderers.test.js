@@ -1162,3 +1162,83 @@ describe("Beeswarm tooltip values", function() {
     expect(renderer.formatTooltip(chart, { x: 5.1, y: 3 }, layer).items[0].value).toBe("3.0");
   });
 });
+
+describe("Theme-aware mark strokes", function() {
+  beforeEach(function() {
+    registerBuiltInRenderers();
+    document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
+  });
+
+  function makeChart(xScale) {
+    var el = document.getElementById("chart");
+    return {
+      element: el,
+      chart: d3.select(el).select(".myIO-chart-area"),
+      dom: { chartArea: d3.select(el).select(".myIO-chart-area"), element: el },
+      derived: {},
+      options: { transition: { speed: 0 } },
+      margin: { top: 30, bottom: 60, left: 50, right: 5 },
+      width: 400,
+      runtime: { totalWidth: 800 },
+      config: { scales: { colorScheme: { enabled: false } } },
+      xScale: xScale || d3.scaleLinear().domain([0, 3]).range([0, 120]),
+      yScale: d3.scaleLinear().domain([0, 150]).range([120, 0])
+    };
+  }
+
+  function strokeOf(node) {
+    return node.style.getPropertyValue("stroke") || node.getAttribute("stroke");
+  }
+
+  test("boxplot whiskers and caps read --chart-mark-stroke with a black fallback", function() {
+    var chart = makeChart();
+    getRenderer("point").render(chart, {
+      label: "b", color: "blue", _compositeRole: "whisker_low",
+      mapping: { x_var: "x", y_var: "y", low_y: "lo", high_y: "hi" },
+      data: [{ x: 1, y: 10, lo: 5, hi: 15 }]
+    });
+    var lines = document.querySelectorAll(".myIO-chart-area line");
+    expect(lines.length).toBe(2);
+    lines.forEach(function(line) {
+      expect(strokeOf(line)).toBe("var(--chart-mark-stroke, black)");
+    });
+  });
+
+  test("error-bar crosshairs read --chart-mark-stroke with a black fallback", function() {
+    var chart = makeChart();
+    getRenderer("point").render(chart, {
+      label: "e", color: "blue",
+      mapping: { x_var: "x", y_var: "y", low_y: "lo", high_y: "hi", low_x: "lx", high_x: "hx" },
+      data: [{ x: 1, y: 10, lo: 5, hi: 15, lx: 0.5, hx: 1.5 }]
+    });
+    var lines = document.querySelectorAll(".myIO-chart-area line");
+    expect(lines.length).toBe(2);
+    lines.forEach(function(line) {
+      expect(strokeOf(line)).toBe("var(--chart-mark-stroke, black)");
+    });
+  });
+
+  test("waterfall connectors read --chart-mark-stroke with a #374151 fallback", function() {
+    var chart = makeChart(d3.scaleBand().domain(["Start", "Add"]).range([0, 180]));
+    getRenderer("waterfall").render(chart, {
+      label: "wf", color: "blue",
+      mapping: { x_var: "step", y_var: "delta" },
+      data: [
+        { step: "Start", delta: 100, _base_y: 0, _cumulative_y: 100, _is_total: false },
+        { step: "Add", delta: 30, _base_y: 100, _cumulative_y: 130, _is_total: false }
+      ]
+    });
+    var connector = document.querySelector("line.tag-waterfall-connector-chart-wf");
+    expect(strokeOf(connector)).toBe("var(--chart-mark-stroke, #374151)");
+  });
+
+  test("candlestick wicks read --chart-mark-stroke with a #666 fallback", function() {
+    var chart = makeChart();
+    getRenderer("candlestick").render(chart, {
+      label: "c", color: "blue",
+      mapping: { x_var: "x", open: "open", high: "high", low: "low", close: "close" },
+      data: [{ x: 1, open: 10, high: 15, low: 5, close: 12 }]
+    });
+    expect(strokeOf(document.querySelector("line.wick"))).toBe("var(--chart-mark-stroke, #666)");
+  });
+});
