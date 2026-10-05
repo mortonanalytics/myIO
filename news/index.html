@@ -34,7 +34,7 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="1.4.0" id="myio-140">myIO 1.4.0<a class="anchor" aria-label="anchor" href="#myio-140"></a></h2>
+<h2 class="pkg-version" data-toc-text="1.4.0" id="myio-140">myIO 1.4.0<a class="anchor" aria-label="anchor" href="#myio-140"></a></h2><p class="text-muted">CRAN release: 2026-10-03</p>
 <div class="section level3">
 <h3 id="new-features-1-4-0">New features<a class="anchor" aria-label="anchor" href="#new-features-1-4-0"></a></h3>
 <ul><li><p><code>setLinkedCursor(axis = )</code>, <code>linkCharts(cursorAxis = )</code> and <code>setLinked(cursorAxis = )</code> now render. The argument was validated, stored and published to the MCP schema since 1.2.0, but the engine only ever drew a vertical rule, so <code>"y"</code> and <code>"xy"</code> were accepted and then silently ignored. <code>"y"</code> draws a horizontal rule at the hovered y value and <code>"xy"</code> draws both, which is what makes cursor sync useful for horizontally-oriented charts and for scatter matrices. Each rule is drawn only when the receiving chart can map the incoming value through its own scale, so a value outside a sibling’s domain draws nothing on that axis rather than clamping to an edge. The default is still <code>"x"</code> and its output is unchanged.</p></li>

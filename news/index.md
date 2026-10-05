@@ -2,6 +2,8 @@
 
 ## myIO 1.4.0
 
+CRAN release: 2026-10-03
+
 ### New features
 
 - `setLinkedCursor(axis = )`, `linkCharts(cursorAxis = )` and
