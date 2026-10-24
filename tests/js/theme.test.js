@@ -2,6 +2,8 @@ import * as d3 from "d3";
 import { beforeEach, describe, expect, test } from "vitest";
 import { myIOchart } from "../../inst/htmlwidgets/myIO/src/Chart.js";
 import { registerBuiltInRenderers } from "../../inst/htmlwidgets/myIO/src/registry.js";
+import { LIGHT, DARK, PRESETS } from "../../inst/htmlwidgets/myIO/src/theme/palettes.js";
+import { resolveCSSVariables } from "../../inst/htmlwidgets/myIO/src/utils/resolve-css-vars.js";
 
 globalThis.d3 = d3;
 globalThis.HTMLWidgets = { shinyMode: false };
@@ -109,5 +111,47 @@ describe("Theme system", function() {
       config: baseConfig({})
     });
     expect(chart.config).toBeDefined();
+  });
+});
+
+describe("--chart-mark-stroke token", function() {
+  beforeEach(function() {
+    document.body.innerHTML = "<div id='chart'></div>";
+    registerBuiltInRenderers();
+  });
+
+  test("defined for dark mode and dark-background presets only", function() {
+    expect(DARK["--chart-mark-stroke"]).toBe(DARK["--chart-text-color"]);
+    ["midnight", "ocean", "forest", "neon"].forEach(function(name) {
+      expect(PRESETS[name]["--chart-mark-stroke"]).toBe(PRESETS[name]["--chart-text-color"]);
+    });
+    expect(LIGHT["--chart-mark-stroke"]).toBeUndefined();
+    ["sunset", "monochrome", "corporate", "academic", "nature", "minimal", "retro", "warm"].forEach(function(name) {
+      expect(PRESETS[name]["--chart-mark-stroke"]).toBeUndefined();
+    });
+  });
+
+  test("switching dark to light clears the token so light falls back to the literal", function() {
+    var chart = new myIOchart({
+      element: document.getElementById("chart"),
+      width: 640,
+      height: 400,
+      config: baseConfig({ mode: "dark", preset: null, values: {} })
+    });
+    var el = document.getElementById("chart");
+    expect(el.style.getPropertyValue("--chart-mark-stroke")).toBe("#d1d5db");
+    chart.themeManager.apply("light");
+    expect(el.style.getPropertyValue("--chart-mark-stroke")).toBe("");
+  });
+
+  test("SVG export resolves --chart-mark-stroke", function() {
+    var el = document.getElementById("chart");
+    el.style.setProperty("--chart-mark-stroke", "#d1d5db");
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("style", "stroke: var(--chart-mark-stroke, black)");
+    svg.appendChild(line);
+    resolveCSSVariables(svg, el);
+    expect(line.getAttribute("style")).toBe("stroke: #d1d5db");
   });
 });

@@ -42,7 +42,7 @@ export class CandlestickRenderer {
 
     enter.append("line")
       .attr("class", "wick")
-      .attr("stroke", "#666")
+      .attr("stroke", "var(--chart-mark-stroke, #666)")
       .attr("stroke-width", 1.5)
       .attr("x1", candleX)
       .attr("x2", candleX)
