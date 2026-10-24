@@ -36,7 +36,7 @@ release, push or publication is part of this branch.
 - Full JS regression: 67 files, 724 tests passed.
 - Focused JS contracts: three files, nine tests passed.
 - Full R regression: 1524 passed, three existing DuckDB-fixture skips, no warnings.
-- Seven production-bundle field browser tests and four existing keyframe tests passed.
+- Eight production-bundle field browser tests and four existing keyframe tests passed.
   Field tests cover real mapped coordinates, independent
   widgets, playback and end state, seek, keyboard, selection, trails, events,
   filtering, resize, reduced motion, replacement, removal and destruction.
@@ -57,7 +57,13 @@ release, push or publication is part of this branch.
 Desktop-to-mobile exploration was rechecked at 250, 500 and 1000 ms after resize:
 page width remained 390 px. The demo also caps the outer SVG width during the
 chart resize debounce. A regression covers this transition and public resize,
-including retained player selection and timeline position.
+including retained player selection and timeline position. A subsequent visual
+review caught vertically clipped content despite the width check passing. The
+demo now measures unscaled HTML offsetHeight and refits after chart resize; its
+content uses natural height without an internal vertical scroll container.
+Tests cover fresh 390 px pages and desktop-to-mobile transitions, requiring
+controls, the complete pitch and events inside both cards, with zero internal
+vertical scroll and bounded card height. Both resulting screenshots were inspected.
 
 ## CAGE record
 

@@ -146,10 +146,30 @@ test('desktop exploration stays contained after viewport and public resize',asyn
     await page.waitForTimeout(delay);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   }
-  await page.evaluate(()=>{const chart=(window as any).charts[0];chart.resize(300,550);});
+  await page.evaluate(()=>{const chart=(window as any).charts[0];chart.dom.element.style.width='300px';chart.resize(300,550);});
   await page.waitForTimeout(150);
   await expect(a.locator('.myIO-field-root')).toHaveAttribute('width','284');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await expect(a.getByLabel('Player',{exact:true})).toHaveValue('home-11');
   await expect(a.getByLabel('Timeline',{exact:true})).toHaveValue('8');
+});
+test('both mobile cards contain controls and complete pitch without vertical scrolling',async({page})=>{
+  for(const startWidth of [390,1280]){
+    await page.setViewportSize({width:startWidth,height:900});await ready(page);
+    await page.locator('#field-one').getByLabel('Timeline',{exact:true}).fill('8');
+    await page.locator('#field-one').getByLabel('Player',{exact:true}).selectOption('home-11');
+    await page.setViewportSize({width:390,height:900});
+    await expect.poll(()=>page.evaluate(()=>window.charts.every((chart:any)=>{
+      const host=chart.dom.element.querySelector('.myIO-field');
+      return chart.height===host.offsetHeight+16 && Number(chart.dom.svg.attr('width'))===chart.dom.element.clientWidth && Number(chart.dom.svg.attr('height'))===chart.height;
+    }))).toBe(true);
+    const cards=await page.evaluate(()=>[...document.querySelectorAll('.card')].map(card=>{
+      const host=card.querySelector('.myIO-field') as HTMLElement;
+      const bounds=card.getBoundingClientRect();
+      const parts=[host.querySelector('.field-heading'),host.querySelector('.field-controls'),host.querySelector('.field-pitch'),host.querySelector('.field-events')];
+      return {scrollTop:host.scrollTop,scrollHeight:host.scrollHeight,clientHeight:host.clientHeight,contained:parts.every(part=>{const r=part!.getBoundingClientRect();return r.top>=bounds.top && r.bottom<=bounds.bottom;}),height:bounds.height};
+    }));
+    for(const card of cards){expect(card.scrollTop).toBe(0);expect(card.scrollHeight).toBeLessThanOrEqual(card.clientHeight+1);expect(card.contained).toBe(true);expect(card.height).toBeGreaterThan(450);expect(card.height).toBeLessThan(650);}
+    await page.screenshot({path:'.cage/mobile-contained-'+startWidth+'.png',fullPage:true});
+  }
 });
