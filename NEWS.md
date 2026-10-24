@@ -2,6 +2,13 @@
 
 ## Bug fixes
 
+* `addIoLayer("radar")` and `addIoLayer("parallel")` with a `group` mapping now
+  draw one polygon or line set per group instead of "No data to display".
+  `addIoLayer()` split `group` into one layer per value, and since both are
+  standalone types the engine refused to compose them. They now stay a single
+  layer with `group` in the mapping, which their renderers already handle
+  (#146).
+
 * Boxplot whiskers and caps, error bars, candlestick wicks and waterfall
   connectors are now visible under `setTheme(mode = "dark")` and the `midnight`,
   `ocean`, `forest` and `neon` presets. Their strokes were hardcoded to black,

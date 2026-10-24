@@ -72,7 +72,11 @@ addIoLayer <- function(myIO,
     transform <- "quantile_dots"
   }
 
-  if (is.null(color) && !("group" %in% names(mapping)) && type != "gauge") {
+  # Standalone types whose renderer draws every group inside one layer. Splitting
+  # them into one layer per group breaks the standalone rule and renders nothing.
+  groups_in_renderer <- type %in% c("radar", "parallel")
+
+  if (is.null(color) && (!("group" %in% names(mapping)) || groups_in_renderer) && type != "gauge") {
     color <- if (type %in% c("donut", "treemap", "sankey", "waffle", "funnel", "radar", "parallel")) {
       OKABE_ITO_PALETTE
     } else {
@@ -131,7 +135,7 @@ addIoLayer <- function(myIO,
     stop("addIoLayer(): Transform '", transform, "' is not valid for layer type '", type, "'.", call. = FALSE)
   }
 
-  if (length(grep("group", names(mapping))) == 0) {
+  if (length(grep("group", names(mapping))) == 0 || groups_in_renderer) {
     transformed <- transform_fn(data, transform_mapping, options)
     transformed_data <- transformed$data
 
