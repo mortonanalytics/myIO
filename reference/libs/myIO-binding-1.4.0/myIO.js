@@ -105,7 +105,7 @@ HTMLWidgets.widget({
                       // Ignore - this was OUR incoming-translated predicate.
                       return;
                     }
-                    xAdapter.broadcast({ predicate: evt.predicate });
+                    xAdapter.broadcast({ predicate: evt.predicate, filter: evt.filter });
                   });
                   this._myIO_xadapter = xAdapter;
                 }

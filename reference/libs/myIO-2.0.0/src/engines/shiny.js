@@ -5,13 +5,39 @@
 // Contract: md/design/large-dataset-virtualization-contract.md
 //   §Shiny transport, §JS engine adapter interface.
 
+import { b64ToBytes } from "../utils/b64-to-bytes.js";
+
+// Shiny picks an input handler from the ":type" suffix of the input name;
+// these suffixes match the types registered in R/shiny_dispatch.R.
+export const SHINY_INPUTS = {
+  query: "myio_query:myio.query",
+  cancel: "myio_cancel:myio.cancel",
+  ack: "myio_ack:myio.ack"
+};
+
+// Shiny keeps one handler per custom-message type, so a second adapter (one
+// per big-data source) would replace the first adapter's handlers. One set of
+// handlers is installed per page and routes each message to every live
+// adapter; an adapter ignores query ids it does not own.
+const liveAdapters = new Set();
+let handlersInstalledOn = null;
+
+function installSharedHandlers() {
+  if (handlersInstalledOn === Shiny) return;
+  for (const kind of ["batch", "end", "error"]) {
+    Shiny.addCustomMessageHandler("myio:" + kind, (msg) => {
+      for (const adapter of liveAdapters) adapter._route(kind, msg);
+    });
+  }
+  handlersInstalledOn = Shiny;
+}
+
 export class ShinyEngineAdapter {
   constructor(config = {}) {
     this.config = config;
     /** @type {Map<string, { push: (x:any)=>void, end: ()=>void, error: (e:any)=>void, seqBudget: number }>} */
     this.pending = new Map();
     this.batchWindow = (config && config.shiny_batch_window) || 4;
-    this._handlersRegistered = false;
   }
 
   async init({ sourceRegistry } = {}) {
@@ -20,26 +46,31 @@ export class ShinyEngineAdapter {
         code: "engine-gone"
       });
     }
-    if (this._handlersRegistered) return;
-    const onBatch = (msg) => this._route("batch", msg);
-    const onEnd = (msg) => this._route("end", msg);
-    const onError = (msg) => this._route("error", msg);
-    Shiny.addCustomMessageHandler("myio:batch", onBatch);
-    Shiny.addCustomMessageHandler("myio:end", onEnd);
-    Shiny.addCustomMessageHandler("myio:error", onError);
-    this._handlersRegistered = true;
-    // sourceRegistry is used R-side; the JS adapter does not echo sources
-    // back to R because R already sees them via session$userData.
+    // Lazy import keeps src/ loadable as plain browser modules (no bare
+    // specifier until a server engine actually starts).
+    this._tableFromIPC = (await import("apache-arrow")).tableFromIPC;
+    installSharedHandlers();
+    liveAdapters.add(this);
+    // renderMyIO() registers the source R-side in session$userData, so the
+    // adapter does not echo sources back to R.
   }
 
   _route(kind, msg) {
     const slot = this.pending.get(msg.queryId);
     if (!slot) return;
     if (kind === "batch") {
-      slot.push(msg);
+      let table;
+      try {
+        table = this._tableFromIPC(b64ToBytes(msg.ipc));
+      } catch (err) {
+        slot.error(Object.assign(new Error("could not decode result batch: " +
+          (err?.message || err)), { queryId: msg.queryId, code: "syntax" }));
+        return;
+      }
+      slot.push({ batch: table, queryId: msg.queryId, seq: msg.seq });
       // Acknowledge receipt so R can release backpressure.
       Shiny.setInputValue(
-        "myio_ack",
+        SHINY_INPUTS.ack,
         { v: 1, queryId: msg.queryId, seq: msg.seq },
         { priority: "event" }
       );
@@ -60,10 +91,8 @@ export class ShinyEngineAdapter {
   }
 
   /**
-   * Async iterator for query results. Expects `sql` to already be a validated,
-   * parameterized template string on the R side. In this adapter contract
-   * layer, the "sql" field carries debug context only; the coordinator passes
-   * templateId + bindings, which R validates and composes into SQL.
+   * Async iterator for query results. R composes the SQL from templateId +
+   * bindings; `sql` is forwarded as debug context only and R ignores it.
    */
   query({
     sql,
@@ -116,7 +145,7 @@ export class ShinyEngineAdapter {
     if (signal) {
       abortListener = () => {
         Shiny.setInputValue(
-          "myio_cancel",
+          SHINY_INPUTS.cancel,
           { v: 1, queryId },
           { priority: "event" }
         );
@@ -130,10 +159,8 @@ export class ShinyEngineAdapter {
     }
 
     if (!errorFlag) {
-      // Fire the query. The R side expects templateId + bindings, not raw SQL.
-      // The coordinator should pass these through query(); we forward them.
       Shiny.setInputValue(
-        "myio_query",
+        SHINY_INPUTS.query,
         {
           v: 1,
           queryId,
@@ -179,7 +206,7 @@ export class ShinyEngineAdapter {
   async cancel(queryId) {
     if (typeof Shiny !== "undefined") {
       Shiny.setInputValue(
-        "myio_cancel",
+        SHINY_INPUTS.cancel,
         { v: 1, queryId },
         { priority: "event" }
       );
@@ -202,7 +229,6 @@ export class ShinyEngineAdapter {
       }));
     }
     this.pending.clear();
-    // We do NOT remove the Shiny custom message handlers because Shiny has
-    // no un-register API; they become no-ops once this.pending is empty.
+    liveAdapters.delete(this);
   }
 }

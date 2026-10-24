@@ -16,6 +16,25 @@
   like any other token
   ([\#149](https://github.com/mortonanalytics/myIO/issues/149)).
 
+- The `"server"` engine now works in Shiny
+  ([\#123](https://github.com/mortonanalytics/myIO/issues/123)). A
+  [`setBigData()`](https://mortonanalytics.github.io/myIO/reference/setBigData.md)
+  chart rendered with
+  [`renderMyIO()`](https://mortonanalytics.github.io/myIO/reference/myIO-shiny.md)
+  under `engine = "server"` (what `"auto"` resolves to in a Shiny
+  session) never got data: the browser sent its query under an input
+  name no R handler was registered for,
+  [`renderMyIO()`](https://mortonanalytics.github.io/myIO/reference/myIO-shiny.md)
+  never registered the source with the session, and the browser sent SQL
+  where R only accepts a server-side template id. The browser now sends
+  a template id and column bindings, R composes the query against the
+  source registered at render time, and selections arrive as
+  column/value filters bound as query parameters, so no SQL text from
+  the browser reaches the database. Inline (data frame and Arrow) and
+  `DBIConnection` sources are supported; a DBI connection stays open
+  when the session ends, because the app owns it. File path and URL
+  sources still need the `"wasm"` engine.
+
 ## myIO 1.4.0
 
 CRAN release: 2026-10-03

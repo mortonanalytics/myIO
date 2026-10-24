@@ -82,7 +82,8 @@ export class CrosstalkAdapter {
     const predicate = col + " IN (" + quoted.join(",") + ")";
     this.coordinator.setSelection({
       chartId: "__crosstalk__:" + this.sourceId,
-      predicate
+      predicate,
+      filter: { column: this.rowkeyCol, values: keys.filter(k => k != null).map(String) }
     });
   }
 
@@ -92,7 +93,7 @@ export class CrosstalkAdapter {
    * broadcast per the contract: issue count(*) first, broadcast only if
    * <= threshold, else suppress + one-shot info.
    */
-  async broadcast({ predicate }) {
+  async broadcast({ predicate, filter = null }) {
     if (!this._selectionHandle) {
       // No crosstalk group attached - nothing to broadcast.
       return;
@@ -109,7 +110,8 @@ export class CrosstalkAdapter {
     let count = 0;
     try {
       for await (const item of adapter.query({
-        sql: countSql, params: [], queryId: "__xcount__" + Date.now()
+        sql: countSql, params: [], queryId: "__xcount__" + Date.now(),
+        ...this._serverTemplate("rowkey_count", {}, filter)
       })) {
         if (!item || item.__trailer) continue;
         // Pull the first numeric value from the batch.
@@ -136,7 +138,7 @@ export class CrosstalkAdapter {
       return;
     }
     // Under threshold - fetch rowkeys and broadcast.
-    const keys = await this._fetchKeys(predicate);
+    const keys = await this._fetchKeys(predicate, filter);
     if (keys && keys.length > 0) {
       try { this._selectionHandle.set(keys); } catch (_) {}
     }
@@ -149,7 +151,20 @@ export class CrosstalkAdapter {
     return "SELECT count(*) AS n FROM " + src + " WHERE " + predicate;
   }
 
-  async _fetchKeys(predicate) {
+  /**
+   * Template id + bindings for the server engine, which composes the same
+   * query R-side (R: default_template_registry()). templateId is null when
+   * the selection has no structured filter, so R refuses the query.
+   */
+  _serverTemplate(templateId, bindings, filter) {
+    return {
+      sourceId: this.sourceId,
+      templateId: filter ? templateId : null,
+      bindings: { ...bindings, where: filter ? [filter] : [] }
+    };
+  }
+
+  async _fetchKeys(predicate, filter = null) {
     const adapter = this.coordinator.adapters &&
                     this.coordinator.adapters.get(this.sourceId);
     if (!adapter) return [];
@@ -159,7 +174,8 @@ export class CrosstalkAdapter {
     const keys = [];
     try {
       for await (const item of adapter.query({
-        sql, params: [], queryId: "__xkeys__" + Date.now()
+        sql, params: [], queryId: "__xkeys__" + Date.now(),
+        ...this._serverTemplate("rowkey_keys", { rowkey: this.rowkeyCol }, filter)
       })) {
         if (!item || item.__trailer) continue;
         const rows = item.rows || (item.batch && item.batch.toArray && item.batch.toArray()) || [];
