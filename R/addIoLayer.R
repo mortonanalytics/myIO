@@ -10,9 +10,12 @@
 #'   the same color twice to render data and model in a single hue.
 #' @param label unique layer label
 #' @param data data frame backing the layer
-#' @param mapping named aesthetic mapping list
+#' @param mapping named aesthetic mapping list. Field requires x_var, y_var,
+#'   time (numeric seconds), and entity; team, label, and kind are optional.
 #' @param transform transform name applied before serialization
-#' @param options layer options passed through to the widget config
+#' @param options layer options passed through to the widget config. For field,
+#'   pitchLength and pitchWidth default to 105 and 68 meters; maxGap defaults to
+#'   0.5 seconds. events is a list of records with time, type, and player fields.
 #'
 #' @return A modified \code{myIO} htmlwidget object with the new layer appended
 #'   to the configuration.
@@ -329,6 +332,7 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
     required_map <- transform_contract$required_map
   } else {
     required_map <- switch(type,
+      field = c("x_var", "y_var", "time", "entity"),
       treemap = c("level_1", "level_2"),
       gauge = c("value"),
       histogram = c("value"),
@@ -359,6 +363,18 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
   if (length(missing_map) > 0) {
     stop("addIoLayer(): Missing required mapping for type '", type, "': ",
          paste(missing_map, collapse = ", "), ".", call. = FALSE)
+  }
+
+  if (type == "field") {
+    if ("group" %in% names(mapping)) stop("field uses team, not group, mapping.", call. = FALSE)
+    for (key in intersect(c("x_var", "y_var", "time", "entity", "team", "label", "kind"), names(mapping))) {
+      col <- mapping[[key]]
+      if (!is.character(col) || length(col) != 1L || is.na(col) || !(col %in% names(data)))
+        stop("field mapping must name an existing column: ", key, call. = FALSE)
+    }
+    for (key in c("x_var", "y_var", "time")) {
+      if (!is.numeric(data[[mapping[[key]]]])) stop("field coordinates and time must be numeric.", call. = FALSE)
+    }
   }
 
   # Fields produced by the transform should be skipped in column-existence checks
