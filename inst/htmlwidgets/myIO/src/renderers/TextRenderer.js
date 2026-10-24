@@ -46,8 +46,8 @@ export class TextRenderer {
         .attr("y", (isTop ? 1 : -1) * i * 16)
         .attr("text-anchor", anchor)
         .style("font-size", "12px")
-        .style("font-family", "var(--font-family, sans-serif)")
-        .style("fill", "var(--text-color, #333)")
+        .style("font-family", "var(--chart-font, sans-serif)")
+        .style("fill", "var(--chart-text-color, #333)")
         .style("opacity", 0.8)
         .text(line);
     });

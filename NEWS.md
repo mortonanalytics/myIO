@@ -2,6 +2,15 @@
 
 ## Bug fixes
 
+* The regression and histogram-fit stats text (R², equation) and the
+  `"comparison"` significance brackets and p-value labels now follow the theme.
+  They read `--text-color` and `--font-family`, which no theme defines, so they
+  always drew `#333` in `sans-serif`: nearly invisible under
+  `setTheme(mode = "dark")` and the dark presets, and deaf to
+  `setTheme(textColor = , font = )`. They now read `--chart-text-color` and
+  `--chart-font`, the same tokens as the axis labels. In the default light theme
+  this moves them from `#333` to the axis-label gray and the chart font (#160).
+
 * Boxplot whiskers and caps, error bars, candlestick wicks and waterfall
   connectors are now visible under `setTheme(mode = "dark")` and the `midnight`,
   `ocean`, `forest` and `neon` presets. Their strokes were hardcoded to black,
