@@ -6,6 +6,11 @@ name: automation-watch
 # behind it would have no-oped. Nothing said so, because the loops write to log files on a
 # laptop. This comments once per PR, on the PR, where a notification already reaches the
 # maintainer.
+#
+# The second job covers the opposite failure: no automation PR at all. The 2026-10-05
+# run committed #149 and exited before pushing, and the 10-12 and 10-19 runs never
+# started a session; the stale-PR job saw nothing open and stayed green for three
+# weeks. Ported from ione's loop-liveness.yml.
 
 on:
   schedule:
@@ -20,6 +25,7 @@ on:
 permissions:
   contents: read
   pull-requests: write
+  issues: write
 
 jobs:
   stale-automation-pr:
@@ -105,3 +111,75 @@ jobs:
             gh pr comment "$NUM" --body-file body.md
             echo "#${NUM}: commented (${AGE_H}h old, ${TITLE})."
           done
+
+  stalled-loop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      STALL_TITLE: "Automation loop has not merged in 7 days"
+
+    steps:
+      - name: Open or update an issue when ready work exists and nothing merged
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const title = process.env.STALL_TITLE;
+            const weekAgo = new Date(Date.now() - 7 * 24 * 3600 * 1000);
+
+            const ready = (await github.paginate(
+              github.rest.issues.listForRepo,
+              { ...context.repo, state: 'open', labels: 'backlog-ready', per_page: 100 }
+            )).filter(item => !item.pull_request);
+
+            if (ready.length === 0) {
+              core.info('no backlog-ready work; an idle loop is correct');
+              return;
+            }
+
+            const merged = (await github.paginate(
+              github.rest.pulls.list,
+              { ...context.repo, state: 'closed', sort: 'updated', direction: 'desc', per_page: 50 }
+            )).filter(pr => pr.merged_at && new Date(pr.merged_at) > weekAgo
+                            && pr.user.login !== 'dependabot[bot]');
+
+            if (merged.length > 0) {
+              core.info(`${merged.length} non-dependabot PR(s) merged in the last 7 days; loop is alive`);
+              return;
+            }
+
+            const existing = (await github.paginate(
+              github.rest.issues.listForRepo,
+              { ...context.repo, state: 'open', per_page: 100 }
+            )).find(item => !item.pull_request && item.title === title);
+
+            // Daily schedule: comment at most once a week on an existing issue.
+            if (existing && new Date(existing.updated_at) > weekAgo) {
+              core.warning(`loop still stalled; #${existing.number} updated within 7 days`);
+              return;
+            }
+
+            const oldest = ready[ready.length - 1];
+            const body = [
+              `${ready.length} issue(s) carry \`backlog-ready\` and no non-dependabot pull request has merged since ${weekAgo.toISOString().slice(0, 10)}.`,
+              '',
+              `Oldest ready: #${oldest.number} — ${oldest.title}`,
+              '',
+              'The loop runs from launchd on the maintainer\'s laptop. Check, in this order:',
+              '- `~/.local/share/myio-automation-ledger.tsv` for harness-fail rows',
+              '- `~/.local/share/myio-backlog-pipeline.stderr.log`',
+              '- local `auto/*` branches that were committed but never pushed',
+              '- `main` CI is not red',
+            ].join('\n');
+
+            if (existing) {
+              await github.rest.issues.createComment({
+                ...context.repo, issue_number: existing.number, body,
+              });
+              core.warning(`loop still stalled; commented on #${existing.number}`);
+              return;
+            }
+
+            const { data: issue } = await github.rest.issues.create({
+              ...context.repo, title, body,
+            });
+            core.warning(`loop stalled; opened #${issue.number}`);
