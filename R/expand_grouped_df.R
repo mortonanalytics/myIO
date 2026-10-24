@@ -28,6 +28,21 @@ expand_grouped_df <- function(myIO, type, color, label, data, mapping, transform
   }
 
   ungrouped <- dplyr::ungroup(data)
+
+  # Radar and parallel draw every group inside one standalone layer, so the
+  # grouping becomes mapping$group instead of one layer per group (#146).
+  if (type %in% c("radar", "parallel")) {
+    if (is.null(mapping$group)) {
+      group_var <- paste(group_vars, collapse = " / ")
+      if (length(group_vars) > 1L) {
+        ungrouped[[group_var]] <- do.call(paste, c(unname(as.list(ungrouped[group_vars])), sep = " / "))
+      }
+      mapping$group <- group_var
+    }
+    return(addIoLayer(myIO = myIO, type = type, color = color, label = label,
+                      data = ungrouped, mapping = mapping, transform = transform,
+                      options = options))
+  }
   group_keys <- unique(ungrouped[, group_vars, drop = FALSE])
   n_groups <- nrow(group_keys)
 

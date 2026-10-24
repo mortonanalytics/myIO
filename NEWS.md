@@ -6,8 +6,9 @@
   draw one polygon or line set per group instead of "No data to display".
   `addIoLayer()` split `group` into one layer per value, and since both are
   standalone types the engine refused to compose them. They now stay a single
-  layer with `group` in the mapping, which their renderers already handle
-  (#146).
+  layer with `group` in the mapping, which their renderers already handle.
+  A `dplyr::group_by()` data frame passed to these types is grouped the same
+  way, by its grouping variable (#146).
 
 * Boxplot whiskers and caps, error bars, candlestick wicks and waterfall
   connectors are now visible under `setTheme(mode = "dark")` and the `midnight`,
