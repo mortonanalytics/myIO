@@ -11,6 +11,12 @@ export class Coordinator {
     this.charts = new Map();
     /** @type {Map<string, Map<string,string>>} sourceId -> (chartId -> predicateSQL) */
     this.selectionStore = new Map();
+    /**
+     * Structured form of each predicate, for engines that do not take SQL
+     * from the browser (the server engine).
+     * @type {Map<string, Map<string,{column:string, values:Array}>>} sourceId -> (chartId -> filter)
+     */
+    this.filterStore = new Map();
     /** @type {Map<string, object>} sourceId -> engine adapter */
     this.adapters = new Map();
     /** @type {Map<string, Promise<object>>} sourceId -> in-flight adapter init */
@@ -78,6 +84,8 @@ export class Coordinator {
     const sourceId = reg.sourceHandle.sourceId;
     const selMap = this.selectionStore.get(sourceId);
     if (selMap) selMap.delete(chartId);
+    const filterMap = this.filterStore.get(sourceId);
+    if (filterMap) filterMap.delete(chartId);
 
     const db = this._debouncers.get(chartId);
     if (db) {
@@ -96,11 +104,15 @@ export class Coordinator {
       }
       this._adapterInits.delete(sourceId);
       this.selectionStore.delete(sourceId);
+      this.filterStore.delete(sourceId);
     }
   }
 
-  /** Called by charts when their local selection changes. */
-  setSelection({ chartId, predicate }) {
+  /**
+   * Called by charts when their local selection changes. `filter` is the
+   * structured form of `predicate` ({ column, values }: column IN values).
+   */
+  setSelection({ chartId, predicate, filter = null }) {
     const reg = this.charts.get(chartId);
     if (!reg) return;
 
@@ -111,10 +123,21 @@ export class Coordinator {
       this.selectionStore.set(sourceId, selMap);
     }
 
+    let filterMap = this.filterStore.get(sourceId);
+    if (!filterMap) {
+      filterMap = new Map();
+      this.filterStore.set(sourceId, filterMap);
+    }
+
     if (predicate == null) {
       selMap.delete(chartId);
     } else {
       selMap.set(chartId, predicate);
+    }
+    if (predicate == null || filter == null) {
+      filterMap.delete(chartId);
+    } else {
+      filterMap.set(chartId, filter);
     }
     reg.currentPredicate = predicate;
 
@@ -131,7 +154,7 @@ export class Coordinator {
       if (subs) {
         for (const cb of subs) {
           try {
-            cb({ chartId, predicate });
+            cb({ chartId, predicate, filter });
           } catch (e) {
             console.error("[myIO coordinator] subscriber error:", e);
           }
@@ -236,6 +259,8 @@ export class Coordinator {
           params: [],
           queryId,
           sourceId,
+          ...this._markTemplate(reg.markSpec, chartId, sourceId),
+          predicateHash,
           limit: preview ? 1000 : 100000,
           signal: abortCtrl.signal
         })) {
@@ -284,6 +309,32 @@ export class Coordinator {
       .map(([, p]) => p)
       .filter(Boolean);
     return others.length ? "(" + others.join(") AND (") + ")" : "TRUE";
+  }
+
+  /**
+   * Template id + bindings the server engine composes into the same query as
+   * the chart's SQL template (R: default_template_registry()). templateId is
+   * null when a selection on the source has no structured filter, so R
+   * refuses the query rather than returning unfiltered rows.
+   */
+  _markTemplate(markSpec, chartId, sourceId) {
+    const channels = (markSpec && markSpec.channels) || {};
+    const bindings = { x: channels.x, y: channels.y };
+    let templateId = "mark_xy";
+    if (channels.baseline != null) {
+      templateId = "mark_xy_baseline";
+      bindings.baseline = channels.baseline;
+    } else if (channels.color != null) {
+      templateId = "mark_xy_color";
+      bindings.color = channels.color;
+    }
+    const selMap = this.selectionStore.get(sourceId) || new Map();
+    const filterMap = this.filterStore.get(sourceId) || new Map();
+    const others = [...selMap.entries()].filter(([id, p]) => id !== chartId && p);
+    const where = others.map(([id]) => filterMap.get(id)).filter(Boolean);
+    if (where.length !== others.length) templateId = null;
+    bindings.where = where;
+    return { templateId, bindings };
   }
 
   _substituteTemplate(template, { where, limit }) {
@@ -345,6 +396,7 @@ export class Coordinator {
     this._inflightControllers.clear();
     this.charts.clear();
     this.selectionStore.clear();
+    this.filterStore.clear();
     this.sourceRegistry.clear();
     this.cache.clear();
     this._debouncers.clear();

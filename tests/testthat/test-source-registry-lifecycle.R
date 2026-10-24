@@ -105,7 +105,7 @@ test_that("onSessionEnded cleanup closes owned DBI connections", {
     owner_chart_id = "chart_1"
   ))
 
-  session$ended()
+  session$close()
 
   expect_true(disconnected$called)
 })

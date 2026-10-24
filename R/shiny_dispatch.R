@@ -263,6 +263,18 @@ validate_query_message <- function(message, source_registry, template_registry) 
     }
   }
 
+  if (grepl("\\{\\{\\s*where\\s*\\}\\}", sql, perl = TRUE)) {
+    where <- .myio_compose_where(message$bindings$where, schema_names)
+    if (!identical(where$status, "ok")) {
+      return(where)
+    }
+    sql <- gsub("\\{\\{\\s*where\\s*\\}\\}",
+                gsub("\\", "\\\\", where$sql, fixed = TRUE), sql, perl = TRUE)
+    # Templates place {{where}} after every other value slot, so its
+    # parameters bind last.
+    params <- c(params, where$params)
+  }
+
   if (grepl("\\{\\{\\s*(identifier|value):|\\{\\{", sql, perl = TRUE)) {
     return(.myio_query_error("syntax", "Query template contains unresolved placeholders."))
   }
@@ -276,6 +288,58 @@ validate_query_message <- function(message, source_registry, template_registry) 
     params = params,
     source_ref = source_ref,
     source_id = source_id
+  )
+}
+
+# Compose the `where` binding: a list of row filters, each
+# `list(column = <schema column>, values = <scalar values>)`, ANDed together.
+# Columns are checked against the source schema and values are bound as
+# parameters, so no SQL text from the browser reaches the query.
+.myio_compose_where <- function(filters, schema_names) {
+  if (is.null(filters) || !length(filters)) {
+    return(list(status = "ok", sql = "TRUE", params = list()))
+  }
+  if (!is.list(filters) || !is.null(names(filters))) {
+    return(.myio_query_error("forbidden", "Binding 'where' must be a list of filters."))
+  }
+
+  clauses <- character()
+  params <- list()
+  for (filter in filters) {
+    column <- if (is.list(filter)) filter$column else NULL
+    if (!is.character(column) || length(column) != 1L ||
+        !(column %in% schema_names)) {
+      return(.myio_query_error(
+        "forbidden",
+        "Filter column in binding 'where' is not a registered source column."
+      ))
+    }
+    values <- filter$values
+    if (!length(values)) {
+      clauses <- c(clauses, "FALSE")
+      next
+    }
+    scalar <- vapply(values, function(v) {
+      is.atomic(v) && length(v) == 1L && !is.na(v)
+    }, logical(1))
+    if (!all(scalar)) {
+      return(.myio_query_error(
+        "forbidden",
+        "Filter values in binding 'where' must be non-missing scalars."
+      ))
+    }
+    clauses <- c(clauses, sprintf(
+      "%s IN (%s)",
+      .myio_quote_ident(column),
+      paste(rep("?", length(values)), collapse = ", ")
+    ))
+    params <- c(params, unname(as.list(values)))
+  }
+
+  list(
+    status = "ok",
+    sql = paste0("(", paste(clauses, collapse = ") AND ("), ")"),
+    params = params
   )
 }
 
@@ -295,7 +359,29 @@ default_template_registry <- function() {
         ident_slots = c("source", "xcol"),
         value_slots = c("xmin", "xmax")
       )
-    )
+    ),
+    # Query shapes the browser coordinator issues for a big-data chart
+    # (see .build_bigdata_query_template()) and the crosstalk adapter.
+    mark_xy = list(sql_template = paste(
+      "SELECT {{identifier:x}} AS x, {{identifier:y}} AS y",
+      "FROM {{source}} WHERE {{where}}"
+    )),
+    mark_xy_color = list(sql_template = paste(
+      "SELECT {{identifier:x}} AS x, {{identifier:y}} AS y,",
+      "{{identifier:color}} AS color",
+      "FROM {{source}} WHERE {{where}}"
+    )),
+    mark_xy_baseline = list(sql_template = paste(
+      "SELECT {{identifier:x}} AS x, {{identifier:y}} AS y,",
+      "{{identifier:baseline}} AS baseline",
+      "FROM {{source}} WHERE {{where}}"
+    )),
+    rowkey_count = list(sql_template = paste(
+      "SELECT count(*) AS n FROM {{source}} WHERE {{where}}"
+    )),
+    rowkey_keys = list(sql_template = paste(
+      "SELECT {{identifier:rowkey}} AS rowkey FROM {{source}} WHERE {{where}}"
+    ))
   )
 }
 
@@ -420,7 +506,12 @@ default_template_registry <- function() {
     }
 
     if (is.null(session$userData$myIO_duckdb_conn)) {
-      session$userData$myIO_duckdb_conn <- DBI::dbConnect(duckdb::duckdb(), dbdir = ":memory:")
+      duckdb_con <- DBI::dbConnect(duckdb::duckdb(), dbdir = ":memory:")
+      session$userData$myIO_duckdb_conn <- duckdb_con
+      session$onSessionEnded(function() {
+        tryCatch(DBI::dbDisconnect(duckdb_con, shutdown = TRUE),
+                 error = function(e) NULL)
+      })
     }
     con <- session$userData$myIO_duckdb_conn
     table_name <- .myio_source_identifier(source_ref, validated$source_id)
@@ -433,11 +524,9 @@ default_template_registry <- function() {
         stop("Inline IPC source is missing an Arrow table or data frame.",
              call. = FALSE)
       }
-      if (!requireNamespace("arrow", quietly = TRUE)) {
-        stop("Package 'arrow' is required for inline Shiny query execution.",
-             call. = FALSE)
-      }
-      duckdb::duckdb_register_arrow(con, table_name, arrow::as_arrow_table(arrow_table))
+      # Registered as a data frame: DuckDB's Arrow scan cannot push down the
+      # IN filters the `where` binding composes.
+      duckdb::duckdb_register(con, table_name, as.data.frame(arrow_table))
       registered[[table_name]] <- TRUE
       session$userData$myIO_duckdb_registered <- registered
     }
@@ -452,6 +541,11 @@ default_template_registry <- function() {
   timeout_ms <- suppressWarnings(as.integer(timeout_ms[[1]]))
   if (is.na(timeout_ms) || timeout_ms < 1L) {
     timeout_ms <- 10000L
+  }
+  # DuckDB (the inline-IPC engine) has no statement_timeout setting; the
+  # timeout applies only where the backend supports it.
+  if (inherits(con, "duckdb_connection")) {
+    return(invisible())
   }
   DBI::dbExecute(con, paste("SET statement_timeout TO", timeout_ms))
 }
@@ -486,7 +580,9 @@ default_template_registry <- function() {
     .myio_apply_statement_timeout(con)
 
     db_result <- DBI::dbSendQuery(con, validated$sql)
-    DBI::dbBind(db_result, validated$params)
+    if (length(validated$params)) {
+      DBI::dbBind(db_result, validated$params)
+    }
 
     repeat {
       if (.myio_is_cancelled(session, query_id)) {

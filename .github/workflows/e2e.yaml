@@ -32,6 +32,24 @@ jobs:
       - name: Verify the committed htmlwidget bundle
         run: git diff --exit-code -- inst/htmlwidgets/myIO/myIOapi.js
 
+      # shiny-server-engine.spec.ts runs a live Shiny app against the package
+      # source, so the suite needs R with the server-engine packages.
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"hard"'
+          extra-packages: |
+            any::pkgload
+            any::shiny
+            any::arrow
+            any::base64enc
+            any::duckdb
+            any::DBI
+            any::later
+
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
