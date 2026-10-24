@@ -86,6 +86,10 @@ export class ThemeManager {
       palette = PRESETS[this.config.preset];
     }
 
+    // DARK-only tokens must not outlive a switch back to light
+    for (var darkProp of Object.keys(DARK)) {
+      if (!(darkProp in palette)) this.element.style.removeProperty(darkProp);
+    }
     for (var prop of Object.keys(palette)) {
       this.element.style.setProperty(prop, palette[prop]);
     }

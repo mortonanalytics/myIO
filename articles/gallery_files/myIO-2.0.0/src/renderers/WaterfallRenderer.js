@@ -73,7 +73,7 @@ export class WaterfallRenderer {
       .append("line")
       .attr("class", tagName("waterfall-connector", chart.element.id, layer.label))
       .attr("clip-path", "url(#" + chart.element.id + "clip)")
-      .style("stroke", "#374151")
+      .style("stroke", "var(--chart-mark-stroke, #374151)")
       .style("stroke-width", 1.5)
       .style("stroke-dasharray", "4 2")
       .attr("x1", function(d, i) { return chart.xScale(layer.data[i][xVar]) + barOffset + barWidth; })

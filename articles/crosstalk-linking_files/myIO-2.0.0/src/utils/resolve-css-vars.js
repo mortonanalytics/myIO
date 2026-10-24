@@ -14,6 +14,8 @@ const CHART_CSS_VARS = [
   // Linked cursor crosshair
   "--chart-cursor-rule-color",
   "--chart-cursor-rule-width",
+  // Whiskers, error bars, wicks, waterfall connectors
+  "--chart-mark-stroke",
   // Annotations & accents
   "--chart-annotation-ring",
   "--chart-primary-color",

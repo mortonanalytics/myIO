@@ -67,7 +67,7 @@ if (requireNamespace("duckdb", quietly = TRUE)) {
   DBI::dbDisconnect(con, shutdown = TRUE)
 }
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/RtmpTY3K7A/duckdb
+#> ℹ /tmp/Rtmp7qzYGG/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.

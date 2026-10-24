@@ -34,6 +34,13 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="development version" id="myio-development-version">myIO (development version)<a class="anchor" aria-label="anchor" href="#myio-development-version"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
+<ul><li>Boxplot whiskers and caps, error bars, candlestick wicks and waterfall connectors are now visible under <code>setTheme(mode = "dark")</code> and the <code>midnight</code>, <code>ocean</code>, <code>forest</code> and <code>neon</code> presets. Their strokes were hardcoded to black, <code>#374151</code> or <code>#666</code>, which sits at 1.1-2.9:1 against those backgrounds, so a dark-mode boxplot showed boxes and outliers but no spread. They now read a new <code>--chart-mark-stroke</code> token, which those themes set to their text color. Light mode and the light presets don’t define it and render exactly as before, and <code>setTheme(values = list("--chart-mark-stroke" = ...))</code> overrides it like any other token (<a href="https://github.com/mortonanalytics/myIO/issues/149" class="external-link">#149</a>).</li>
+</ul></div>
+</div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.4.0" id="myio-140">myIO 1.4.0<a class="anchor" aria-label="anchor" href="#myio-140"></a></h2><p class="text-muted">CRAN release: 2026-10-03</p>
 <div class="section level3">
 <h3 id="new-features-1-4-0">New features<a class="anchor" aria-label="anchor" href="#new-features-1-4-0"></a></h3>
