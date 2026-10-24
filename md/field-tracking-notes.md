@@ -36,7 +36,7 @@ release, push or publication is part of this branch.
 - Full JS regression: 67 files, 724 tests passed.
 - Focused JS contracts: three files, nine tests passed.
 - Full R regression: 1524 passed, three existing DuckDB-fixture skips, no warnings.
-- Six production-bundle field browser tests and four existing keyframe tests passed.
+- Seven production-bundle field browser tests and four existing keyframe tests passed.
   Field tests cover real mapped coordinates, independent
   widgets, playback and end state, seek, keyboard, selection, trails, events,
   filtering, resize, reduced motion, replacement, removal and destruction.
@@ -53,6 +53,11 @@ release, push or publication is part of this branch.
 - Mobile review found excess card height and tiny labels. The demo now measures
   content height; browser tests check height and rendered label size. Screenshots
   are retained locally in `.cage/mobile-after.png` and `.cage/desktop-after.png`.
+
+Desktop-to-mobile exploration was rechecked at 250, 500 and 1000 ms after resize:
+page width remained 390 px. The demo also caps the outer SVG width during the
+chart resize debounce. A regression covers this transition and public resize,
+including retained player selection and timeline position.
 
 ## CAGE record
 

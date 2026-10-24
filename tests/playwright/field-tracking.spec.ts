@@ -132,3 +132,24 @@ test('invalid mapped columns and nonnumeric coordinates emit errors without mark
   expect(result.errors.some(e=>e.includes('existing column'))).toBe(true);
   expect(result.errors.some(e=>e.includes('numeric'))).toBe(true);
 });
+test('desktop exploration stays contained after viewport and public resize',async({page})=>{
+  await page.setViewportSize({width:1280,height:900});await ready(page);
+  const a=page.locator('#field-one');
+  await a.getByRole('button',{name:'Play',exact:true}).click();
+  await expect.poll(async()=>Number(await a.getByLabel('Timeline',{exact:true}).inputValue())).toBeGreaterThan(.2);
+  await a.getByRole('button',{name:'Pause',exact:true}).click();
+  await a.getByLabel('Timeline',{exact:true}).fill('8');
+  await a.getByLabel('Player',{exact:true}).selectOption('home-11');
+  await page.setViewportSize({width:390,height:900});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  for(const delay of [250,250,500]){
+    await page.waitForTimeout(delay);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  }
+  await page.evaluate(()=>{const chart=(window as any).charts[0];chart.resize(300,550);});
+  await page.waitForTimeout(150);
+  await expect(a.locator('.myIO-field-root')).toHaveAttribute('width','284');
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await expect(a.getByLabel('Player',{exact:true})).toHaveValue('home-11');
+  await expect(a.getByLabel('Timeline',{exact:true})).toHaveValue('8');
+});
