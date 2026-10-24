@@ -200,6 +200,9 @@ renderMyIO <- function(expr, env = parent.frame(), quoted = FALSE) {
   if (!quoted) {
     expr <- substitute(expr)
   }
+  # Server-engine big-data sources are registered with the session at render
+  # time, the only point where both the widget and the session are in hand.
+  expr <- as.call(list(.myio_register_widget_sources, expr))
   htmlwidgets::shinyRenderWidget(expr, myIOOutput, env, quoted = TRUE)
 }
 

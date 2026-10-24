@@ -92,6 +92,30 @@ describe("CrosstalkAdapter", () => {
     expect(arg.predicate).toContain("IN ('k1','k2','k3')");
   });
 
+  it("incoming row keys also carry a structured filter for the server engine", () => {
+    const coord = makeFakeCoord({});
+    const a = new CrosstalkAdapter({ coordinator: coord, sourceId: "s1", threshold: 100 });
+    a.attach("g1");
+    window._handlers[0]({ value: ["k1", null, "k2"] });
+    expect(coord.setSelection.mock.calls[0][0].filter)
+      .toEqual({ column: "__myio_rowkey__", values: ["k1", "k2"] });
+  });
+
+  it("count and key queries name the server templates, source, and filter", async () => {
+    const seen = [];
+    const coord = makeFakeCoord({});
+    const inner = coord.adapters.get("s1").query;
+    coord.adapters.get("s1").query = (args) => { seen.push(args); return inner(args); };
+    const a = new CrosstalkAdapter({ coordinator: coord, sourceId: "s1", threshold: 100 });
+    a.attach("g1");
+    const filter = { column: "__myio_rowkey__", values: ["k1"] };
+    await a.broadcast({ predicate: "\"__myio_rowkey__\" IN ('k1')", filter });
+    expect(seen.map(q => [q.templateId, q.sourceId, q.bindings])).toEqual([
+      ["rowkey_count", "s1", { where: [filter] }],
+      ["rowkey_keys", "s1", { rowkey: "__myio_rowkey__", where: [filter] }]
+    ]);
+  });
+
   it("null predicate clears downstream selection", async () => {
     const coord = makeFakeCoord({});
     const a = new CrosstalkAdapter({ coordinator: coord, sourceId: "s1", threshold: 100 });
