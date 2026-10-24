@@ -32,6 +32,15 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # ubuntu-latest is Ubuntu 26.04, where /tmp is a RAM-backed tmpfs (~8 GB).
+      # P3M has no R-devel binaries there, so the devel job builds every
+      # dependency from source under R's tempdir; duckdb alone is a 421 MB
+      # built binary, and unpacking it ran out of room ("Failed to install
+      # binary package duckdb"). Keep R's temp files on the runner's disk.
+      - name: Put R temp files on disk
+        if: runner.os == 'Linux'
+        run: echo "TMPDIR=$RUNNER_TEMP" >> "$GITHUB_ENV"
+
       - uses: r-lib/actions/setup-pandoc@v2
 
       - uses: r-lib/actions/setup-r@v2
