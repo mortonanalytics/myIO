@@ -68,6 +68,49 @@ describe("BracketRenderer", function() {
     expect(texts[0].textContent).toBe("p = 0.03 *");
   });
 
+  test("default ink and font read the theme tokens (#160)", function() {
+    document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
+    var el = document.getElementById("chart");
+    var renderer = getRenderer("bracket");
+    var chart = {
+      element: el,
+      chart: d3.select(el).select(".myIO-chart-area"),
+      options: { transition: { speed: 0 } },
+      xScale: d3.scaleLinear().domain([0, 4]).range([0, 200]),
+      yScale: d3.scaleLinear().domain([0, 20]).range([200, 0])
+    };
+    var layer = { label: "test-brackets", data: [{ x1: 1, x2: 2, y: 15, label: "p = 0.03 *" }] };
+
+    renderer.render(chart, layer);
+
+    document.querySelectorAll("line").forEach(function(line) {
+      expect(line.getAttribute("style")).toContain("stroke: var(--chart-text-color");
+    });
+    var labelStyle = document.querySelector(".bracket-label").getAttribute("style");
+    expect(labelStyle).toContain("fill: var(--chart-text-color");
+    expect(labelStyle).toContain("font-family: var(--chart-font");
+  });
+
+  test("an explicit layer color still wins over the theme token", function() {
+    document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
+    var el = document.getElementById("chart");
+    var renderer = getRenderer("bracket");
+    var chart = {
+      element: el,
+      chart: d3.select(el).select(".myIO-chart-area"),
+      options: { transition: { speed: 0 } },
+      xScale: d3.scaleLinear().domain([0, 4]).range([0, 200]),
+      yScale: d3.scaleLinear().domain([0, 20]).range([200, 0])
+    };
+    var layer = { label: "test-brackets", color: "#ff0000",
+      data: [{ x1: 1, x2: 2, y: 15, label: "p = 0.03 *" }] };
+
+    renderer.render(chart, layer);
+
+    expect(document.querySelector(".bracket-bar").getAttribute("style")).toMatch(/#ff0000|rgb\(255, 0, 0\)/);
+    expect(document.querySelector(".bracket-label").getAttribute("style")).toMatch(/#ff0000|rgb\(255, 0, 0\)/);
+  });
+
   test("remove cleans up DOM", function() {
     document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
     var el = document.getElementById("chart");
