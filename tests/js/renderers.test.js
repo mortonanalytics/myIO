@@ -720,6 +720,38 @@ describe("Renderer formatTooltip methods", function() {
     expect(document.querySelectorAll(".tag-parallel-parallel_1 .parallel-line").length).toBe(2);
   });
 
+  test("ParallelRenderer axis labels paint despite d3.axisLeft fill=none on the group (#159)", function() {
+    var renderer = getRenderer("parallel");
+    document.body.innerHTML = "<div id='chart'><svg><g class='myIO-chart-area'></g></svg></div>";
+    var el = document.getElementById("chart");
+    var chart = {
+      dom: { chartArea: d3.select(el).select(".myIO-chart-area") },
+      derived: {},
+      margin: { top: 20, bottom: 20, left: 20, right: 20 },
+      width: 420,
+      height: 260
+    };
+    var layer = {
+      id: "parallel_1",
+      label: "rows",
+      color: "#4E79A7",
+      mapping: { dimensions: ["speed", "power", "stamina"] },
+      data: [
+        { speed: 4, power: 8, stamina: 6 },
+        { speed: 7, power: 5, stamina: 9 }
+      ]
+    };
+
+    renderer.render(chart, layer);
+
+    var labels = document.querySelectorAll(".tag-parallel-parallel_1 .parallel-axis-label");
+    expect(labels.length).toBe(3);
+    expect(document.querySelector(".tag-parallel-parallel_1 .parallel-axis").getAttribute("fill")).toBe("none");
+    labels.forEach(function(label) {
+      expect(label.getAttribute("fill")).toBe("currentColor");
+    });
+  });
+
   test("HistogramRenderer.formatTooltip shows bin range", function() {
     var renderer = getRenderer("histogram");
     var chart = {};
