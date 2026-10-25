@@ -29,7 +29,7 @@ export class BracketRenderer {
     var tickHeight = 6;
     var labelOffset = 4;
     var transitionSpeed = chart.options.transition.speed;
-    var color = layer.color || "var(--text-color, #333)";
+    var color = layer.color || "var(--chart-text-color, #333)";
 
     // Stable root + data join on brackets so updates animate and exit fades.
     var g = chart.chart.selectAll("g." + className + "-root")
@@ -53,15 +53,15 @@ export class BracketRenderer {
       .style("opacity", 0);
 
     bracketEnter.append("line").attr("class", "bracket-bar")
-      .attr("stroke", color).attr("stroke-width", 1.5);
+      .style("stroke", color).attr("stroke-width", 1.5);
     bracketEnter.append("line").attr("class", "bracket-tick-left")
-      .attr("stroke", color).attr("stroke-width", 1.5);
+      .style("stroke", color).attr("stroke-width", 1.5);
     bracketEnter.append("line").attr("class", "bracket-tick-right")
-      .attr("stroke", color).attr("stroke-width", 1.5);
+      .style("stroke", color).attr("stroke-width", 1.5);
     bracketEnter.append("text").attr("class", "bracket-label")
       .attr("text-anchor", "middle")
       .style("font-size", "11px")
-      .style("font-family", "var(--font-family, sans-serif)")
+      .style("font-family", "var(--chart-font, sans-serif)")
       .style("fill", color);
 
     var merged = bracketEnter.merge(bracketSelection);
