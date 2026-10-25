@@ -4,6 +4,12 @@
 
 ### Bug fixes
 
+- Parallel-coordinates charts now show their dimension names. Each label
+  sat inside the axis group, where `d3.axisLeft()` sets `fill="none"`,
+  so the names were in the DOM but never painted. Labels now use
+  `fill="currentColor"`, the same ink as the tick labels
+  ([\#159](https://github.com/mortonanalytics/myIO/issues/159)).
+
 - Boxplot whiskers and caps, error bars, candlestick wicks and waterfall
   connectors are now visible under `setTheme(mode = "dark")` and the
   `midnight`, `ocean`, `forest` and `neon` presets. Their strokes were

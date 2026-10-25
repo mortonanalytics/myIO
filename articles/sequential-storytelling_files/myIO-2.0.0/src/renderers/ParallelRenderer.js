@@ -73,6 +73,7 @@ export class ParallelRenderer {
       });
 
     axisGroups.select(".parallel-axis-label")
+      .attr("fill", "currentColor")
       .attr("x", 0)
       .attr("y", -10)
       .attr("text-anchor", "middle")
