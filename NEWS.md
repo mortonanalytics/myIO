@@ -2,6 +2,14 @@
 
 ## Bug fixes
 
+* `addIoLayer("radar")` and `addIoLayer("parallel")` with a `group` mapping now
+  draw one polygon or line set per group instead of "No data to display".
+  `addIoLayer()` split `group` into one layer per value, and since both are
+  standalone types the engine refused to compose them. They now stay a single
+  layer with `group` in the mapping, which their renderers already handle.
+  A `dplyr::group_by()` data frame passed to these types is grouped the same
+  way, by its grouping variable (#146).
+
 * The regression and histogram-fit stats text (R², equation) and the
   `"comparison"` significance brackets and p-value labels now follow the theme.
   They read `--text-color` and `--font-family`, which no theme defines, so they

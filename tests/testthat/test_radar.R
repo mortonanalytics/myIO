@@ -22,3 +22,16 @@ test_that("radar rejects missing value", {
     "value"
   )
 })
+
+test_that("grouped radar stays one layer with group in its mapping (#146)", {
+  rad <- data.frame(axis = rep(c("S", "P", "R"), 2), value = c(3, 5, 4, 4, 2, 5),
+                    g = rep(c("A", "B"), each = 3))
+  p <- myIO(rad) |>
+    addIoLayer("radar", label = "r", mapping = list(axis = "axis", value = "value", group = "g"))
+  layers <- p$x$config$layers
+  expect_length(layers, 1)
+  expect_equal(layers[[1]]$label, "r")
+  expect_equal(layers[[1]]$mapping$group, "g")
+  expect_length(layers[[1]]$data, 6)
+  expect_setequal(vapply(layers[[1]]$data, function(row) row$g, character(1)), c("A", "B"))
+})
