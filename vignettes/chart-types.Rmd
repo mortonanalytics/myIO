@@ -484,3 +484,40 @@ myIO() |>
     mapping = list(x_var = "wt", y_var = "mpg")
   )
 ```
+
+## Field tracking
+
+`field` displays long-form player and ball observations on a soccer pitch. Map
+`x_var` and `y_var` to numeric meters, `time` to numeric seconds, and `entity` to a
+stable identifier. Optional `team`, `label`, and `kind` mappings supply team
+filters, marker labels, and the ball marker (`kind = "ball"`). Use this type alone.
+
+```{r, eval=FALSE}
+myIO(tracking) |>
+  addIoLayer("field", label = "Match", mapping = list(
+    x_var = "x", y_var = "y", time = "time", entity = "entity_id",
+    team = "team", label = "label", kind = "kind"
+  ), options = list(pitchLength = 105, pitchWidth = 68, maxGap = 0.5,
+                    events = events))
+```
+
+`pitchLength` and `pitchWidth` default to 105 and 68 meters. The origin is the
+upper-left corner. `maxGap` defaults to 0.5 seconds. Positions interpolate linearly
+between finite observations of the same entity within that gap. Missing or
+nonfinite coordinates, duplicate entity/time observations, and longer gaps break
+both positions and trails. There is no extrapolation. Missing identifiers and
+nonfinite timestamps are excluded. At least two distinct timestamps enable play.
+
+`events` is a list of records with numeric `time` and display fields `type`,
+`player`, and optionally `team`, `subtype`, and `target`. Only events inside the
+observed time interval appear. Each button seeks to its exact event time; the
+latest event at or before the current time is highlighted. Equal-time events
+remain individually clickable; the last record is highlighted.
+
+Playback uses elapsed seconds and stops at the last timestamp. Play at the end
+restarts the clip. Timeline seeking and frame stepping pause playback. Player
+selection remains attached to the identifier; the trail control uses seconds.
+Labels and teams can be hidden independently. Controls work with keyboard input
+and reduced motion. Resizing preserves the current view; replacing layer data
+starts a new paused view. The production-bundle example is
+`tests/playwright/fixtures/field-tracking.html`.

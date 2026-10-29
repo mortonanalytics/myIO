@@ -1,0 +1,10 @@
+test_that("field mappings serialize through the native layer API", {
+  d <- data.frame(east=c(1,2), north=c(2,3), seconds=c(0,.2), athlete=c("a","a"), club="home")
+  w <- addIoLayer(myIO(d), "field", label="Match", mapping=list(x_var="east",y_var="north",time="seconds",entity="athlete",team="club"), options=list(pitchLength=105,pitchWidth=68))
+  expect_identical(w$x$config$layers[[1]]$type,"field")
+  expect_identical(w$x$config$layers[[1]]$mapping$entity,"athlete")
+  expect_length(w$x$config$layers[[1]]$data,2)
+  expect_error(addIoLayer(myIO(d),"field",label="Match",mapping=list(x_var="east",y_var="north")),"time, entity")
+  expect_error(addIoLayer(myIO(d),"field",label="Match",mapping=list(x_var="east",y_var="north",time="missing",entity="athlete")),"existing column")
+  expect_error(addIoLayer(w,"point",label="Points",mapping=list(x_var="east",y_var="north")),"incompatible")
+})
