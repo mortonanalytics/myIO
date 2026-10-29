@@ -282,7 +282,7 @@ ui <- page_navbar(
   nav_panel("Sports",
     icon = icon("futbol"),
     layout_columns(
-      col_widths = breakpoints(sm = 12, lg = 8),
+      col_widths = breakpoints(sm = 12, lg = c(8, 4)),
       card(
         full_screen = TRUE,
         card_header("Field tracking"),
@@ -291,6 +291,21 @@ ui <- page_navbar(
           field_clip$source$attribution, " ",
           tags$a(href = field_clip$source$url, target = "_blank", field_clip$source$name),
           paste0(". ", field_clip$source$sampling))
+      ),
+      card(
+        card_header("Tactical overlays"),
+        card_body(
+          checkboxGroupInput("field_overlays", NULL,
+            choices = c("Team shape" = "shape", "Player separation" = "separation"),
+            selected = c("shape", "separation")),
+          checkboxInput("field_exclude_gk", "Leave goalkeepers (Home 11, Away 25) out of team shape", value = TRUE),
+          tags$ul(class = "small text-muted ps-3",
+            tags$li(tags$strong("Width"), " and ", tags$strong("depth"), ": the across- and along-pitch spread of a team's outfield players at the current moment, in meters. The box on the pitch shows it."),
+            tags$li(tags$strong("Separation"), ": select a player to see the distance to the nearest opponent and nearest teammate."),
+            tags$li(tags$strong("Window"), ": use Set window start and Set window end under the pitch to get the mean, minimum and maximum width and depth over a stretch of play."),
+            tags$li("Players without a tracked position are left out, never placed or filled in.")
+          )
+        )
       )
     )
   ),
@@ -1053,7 +1068,10 @@ server <- function(input, output) {
         mapping = list(x_var = "x", y_var = "y", time = "time", entity = "entity_id",
                        team = "team", label = "label", kind = "kind"),
         options = list(pitchLength = field_clip$pitch$length, pitchWidth = field_clip$pitch$width,
-                       maxGap = 0.5, events = field_events)) |>
+                       maxGap = 0.5, events = field_events,
+                       overlays = list(shape = "shape" %in% input$field_overlays,
+                                       separation = "separation" %in% input$field_overlays),
+                       excludeEntities = if (isTRUE(input$field_exclude_gk)) c("home-11", "away-25") else character(0))) |>
       setMargin(top = 8, bottom = 8, left = 8, right = 8) |>
       suppressAxis(xAxis = TRUE, yAxis = TRUE) |>
       suppressLegend()
