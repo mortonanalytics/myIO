@@ -17,6 +17,8 @@ import {
   WebGLArea
 } from "./renderers/webgl/index.js";
 import { selectKeyframe, stepKeyframe } from "./interactions/keyframes.js";
+import { fieldData } from "./interactions/field-tracking.js";
+import { fieldMetrics, fieldMetricsWindow } from "./interactions/field-metrics.js";
 
 // Expose on the global namespace that the htmlwidget entry (myIO.js) consults.
 if (typeof window !== "undefined") {
@@ -31,6 +33,11 @@ if (typeof window !== "undefined") {
   window.myIO.normalizeCoordinatorBatches = normalizeCoordinatorBatches;
   window.myIO.isWebGLEligible = isWebGLEligible;
   window.myIO.getCoordinator = function() { return globalThis.__myioCoordinator || null; };
+  // Field overlay metric math (#169): fieldData(rows, mapping) prepares input for
+  // fieldMetrics(data, time, options) and fieldMetricsWindow(data, [t0, t1], options).
+  window.myIO.fieldData = fieldData;
+  window.myIO.fieldMetrics = fieldMetrics;
+  window.myIO.fieldMetricsWindow = fieldMetricsWindow;
 
   // myIOProxy() partial-update support. The htmlwidget binding registers each
   // live chart here by outputId; a single Shiny custom-message handler routes

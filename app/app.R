@@ -1,32 +1,59 @@
 library(shiny)
+library(bslib)
 library(dplyr)
 library(crosstalk)
 library(myIO)
 
+# Metrica Sports sample clip (period 1, first 20 s) for the field tracking chart.
+field_json <- readLines("data/field-tracking-data.json", warn = FALSE)
+field_clip <- jsonlite::fromJSON(field_json)
+# Events must reach the widget as an array of records, not column vectors.
+field_events <- jsonlite::fromJSON(field_json, simplifyVector = FALSE)$events
+
+# One dashboard card: header naming the chart, chart body, optional controls.
+chart_card <- function(title, ..., controls = NULL, position = "left") {
+  body <- if (is.null(controls)) {
+    card_body(...)
+  } else {
+    layout_sidebar(
+      sidebar = sidebar(controls, width = 220, position = position,
+        open = list(desktop = "open", mobile = "always-above")),
+      ...
+    )
+  }
+  card(full_screen = TRUE, card_header(title), body)
+}
+
 # -- UI ------------------------------------------------------------------
-ui <- navbarPage(
+ui <- page_navbar(
   title = tags$span(
     img(src = "logo.png", height = "28px", style = "margin-right: 8px; margin-top: -3px;"),
     "myIO"
   ),
   id = "nav",
-  collapsible = TRUE,
-  theme = bslib::bs_theme(version = 5, primary = "#4A5ACB", bg = "#ffffff", fg = "#212529"),
-  header = tags$head(tags$style(HTML("
-    .navbar { background-color: #1a1a2e !important; }
-    .navbar .navbar-brand, .navbar .nav-link { color: rgba(255,255,255,0.85) !important; }
-    .navbar .nav-link:hover, .navbar .nav-link.active { color: #fff !important; }
-    .navbar .navbar-toggle { border-color: rgba(255,255,255,0.5); }
-    .navbar .navbar-toggle .icon-bar { background-color: #fff; }
-    .navbar .dropdown-toggle { border-bottom: 0 !important; }
-    .navbar .nav-item > .nav-link.active { box-shadow: inset 0 -2px 0 #fff; }
-    .feature-card { border: 1px solid #dee2e6; border-radius: 8px; padding: 1.5rem; text-align: center; }
-    .feature-card h4 { color: #4A5ACB; margin-top: 0.75rem; }
-    .chart-container { padding: 1rem; }
-  "))),
+  fillable = FALSE,
+  navbar_options = navbar_options(bg = "#1a1a2e", theme = "dark", collapsible = TRUE),
+  theme = bs_theme(version = 5, primary = "#4A5ACB", bg = "#ffffff", fg = "#212529"),
+  header = tags$head(
+    tags$style(HTML("
+      .navbar { background-color: #1a1a2e !important; }
+      .navbar .navbar-brand, .navbar .nav-link { color: rgba(255,255,255,0.85) !important; }
+      .navbar .nav-link:hover, .navbar .nav-link.active { color: #fff !important; }
+      .navbar .nav-item > .nav-link.active { box-shadow: inset 0 -2px 0 #fff; }
+      .feature-card { border: 1px solid #dee2e6; border-radius: 8px; padding: 1.5rem; text-align: center; }
+      .feature-card h4 { color: #4A5ACB; margin-top: 0.75rem; }
+      .card-header { font-weight: 600; }
+      .spark-label { font-size: 0.85rem; color: #6c757d; margin-bottom: 0.25rem; }
+      #fieldPlot .myIO-field { height: auto; overflow: visible; }
+      #fieldPlot .myIO-svg { max-width: 100%; }
+      .field-credit { font-size: 0.85rem; color: #6c757d; }
+      #sliderPlot { margin-bottom: 2.5rem; }
+    ")),
+    tags$script(src = "field-fit.js")
+  ),
 
-  # -- Home tab --
-  tabPanel("Home",
+  # -- Home --
+  nav_panel("Home",
     icon = icon("house"),
     div(
       class = "container",
@@ -54,7 +81,7 @@ ui <- navbarPage(
           icon("sliders", style = "font-size: 2rem; color: #4A5ACB;"),
           h4("Statistical Transforms"),
           p("Built-in CI bands, LOESS smoothing, moving averages,
-             mean \u00B1 CI error bars, and regression diagnostics.
+             mean ± CI error bars, and regression diagnostics.
              Composable and chainable.")
         )),
         column(3, div(class = "feature-card",
@@ -85,337 +112,275 @@ ui <- navbarPage(
     )
   ),
 
-  # -- Basic Charts --
-  navbarMenu("Basic Charts", icon = icon("chart-bar"),
-    tabPanel("Bar",
-      div(class = "chart-container", myIOOutput("barPlot", height = "500px"))
+  # -- Comparisons --
+  nav_panel("Comparisons",
+    icon = icon("chart-bar"),
+    layout_columns(
+      col_widths = 12,
+      chart_card("Grouped bar",
+        myIOOutput("groupedBar", height = "420px"),
+        controls = tagList(
+          sliderInput("gb_noise", "Temperature jitter (F)", min = 0, max = 50, value = 0, step = 5),
+          checkboxGroupInput("gb_months", "Airquality months", choices = 5:9, selected = 5:9, inline = TRUE)
+        ))
     ),
-    tabPanel("Grouped Bar",
-      fluidRow(
-        column(3,
-          wellPanel(
-            sliderInput("gb_noise", "Temperature jitter (F)", min = 0, max = 50, value = 0, step = 5),
-            checkboxGroupInput("gb_months", "Airquality months", choices = 5:9, selected = 5:9, inline = TRUE)
-          )
-        ),
-        column(9, myIOOutput("groupedBar", height = "500px"))
-      )
+    layout_columns(
+      col_widths = c(6, 6, 6, 6, 6, 6),
+      chart_card("Bar", myIOOutput("barPlot", height = "360px")),
+      chart_card("Horizontal bar", myIOOutput("hbarPlot", height = "360px")),
+      chart_card("Lollipop", myIOOutput("lollipopPlot", height = "360px")),
+      chart_card("Dumbbell", myIOOutput("dumbbellPlot", height = "360px")),
+      chart_card("Donut",
+        sliderInput("donut_noise", "Noise", min = 0, max = 30, value = 0, step = 5, width = "100%"),
+        myIOOutput("donutPlot", height = "320px")),
+      chart_card("Waffle", myIOOutput("wafflePlot", height = "400px"))
     ),
-    tabPanel("Horizontal Bar",
-      div(class = "chart-container", myIOOutput("hbarPlot", height = "500px"))
+    layout_columns(
+      col_widths = c(6, 6),
+      chart_card("Waterfall", myIOOutput("waterfallPlot", height = "360px")),
+      chart_card("Treemap", myIOOutput("treemapPlot", height = "360px"))
     ),
-    tabPanel("Line",
-      fluidRow(
-        column(3,
-          wellPanel(sliderInput("line_noise", "Temperature jitter (F)", min = 0, max = 50, value = 0, step = 5))
-        ),
-        column(9, myIOOutput("linePlot", height = "500px"))
-      )
-    ),
-    tabPanel("Area",
-      div(class = "chart-container", myIOOutput("areaPlot", height = "500px"))
+    layout_columns(
+      col_widths = c(6, 6),
+      chart_card("Funnel", myIOOutput("funnelPlot", height = "360px")),
+      chart_card("Gauge",
+        sliderInput("gauge_val", "Value", min = 0, max = 1, value = 0.65, step = 0.05, width = "100%"),
+        myIOOutput("gaugePlot", height = "300px"))
     )
   ),
 
-  # -- Statistical --
-  navbarMenu("Statistical", icon = icon("chart-line"),
-    tabPanel("Scatter + Trend",
-      div(class = "chart-container", myIOOutput("pointPlot", height = "500px"))
-    ),
-    tabPanel("Regression + CI",
-      fluidRow(
-        column(3,
-          wellPanel(
-            selectInput("reg_method", "Method",
-              choices = c("Linear" = "lm", "LOESS" = "loess", "Polynomial" = "polynomial")),
-            sliderInput("reg_level", "Confidence Level", min = 0.80, max = 0.99, value = 0.95, step = 0.01),
-            selectInput("reg_interval", "Interval Type",
-              choices = c("Confidence" = "confidence", "Prediction" = "prediction"))
-          )
-        ),
-        column(9, myIOOutput("regressionPlot", height = "500px"))
-      )
-    ),
-    tabPanel("LOESS Smoothing",
-      fluidRow(
-        column(3,
-          wellPanel(sliderInput("loess_span", "Span", min = 0.1, max = 1.0, value = 0.5, step = 0.05))
-        ),
-        column(9, myIOOutput("loessPlot", height = "500px"))
-      )
-    ),
-    tabPanel("Mean \u00B1 CI",
-      div(class = "chart-container", myIOOutput("meanCIPlot", height = "500px"))
-    ),
-    tabPanel("Moving Average",
-      fluidRow(
-        column(3,
-          wellPanel(
-            selectInput("ma_method", "Method", choices = c("Simple MA" = "sma", "Exponential MA" = "ema")),
-            conditionalPanel("input.ma_method == 'sma'",
-              sliderInput("ma_window", "Window", min = 3, max = 30, value = 10, step = 1)),
-            conditionalPanel("input.ma_method == 'ema'",
-              sliderInput("ma_alpha", "Alpha", min = 0.05, max = 0.5, value = 0.2, step = 0.05))
-          )
-        ),
-        column(9, myIOOutput("movingAvgPlot", height = "500px"))
-      )
-    ),
-    tabPanel("Residuals",
-      div(class = "chart-container", myIOOutput("residualPlot", height = "500px"))
-    ),
-    tabPanel("Histogram",
-      fluidRow(
-        column(3,
-          wellPanel(sliderInput("hist_n", "Sample size", min = 50, max = 500, value = 200, step = 50))
-        ),
-        column(9, myIOOutput("histPlot", height = "500px"))
-      )
-    ),
-    tabPanel("Hexbin Density",
-      div(class = "chart-container", myIOOutput("hexbinPlot", height = "500px"))
-    ),
-    tabPanel("Q-Q Plot",
-      fluidRow(
-        column(3,
-          wellPanel(
-            selectInput("qq_var", "Variable",
-              choices = c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width")),
-            checkboxInput("qq_envelope", "Show CI Envelope", value = TRUE),
-            checkboxInput("qq_grouped", "Group by Species", value = FALSE)
-          )
-        ),
-        column(9, myIOOutput("qqPlot", height = "500px"))
-      )
-    )
-  ),
-
-  # -- Specialized --
-  navbarMenu("Specialized", icon = icon("shapes"),
-    tabPanel("Donut",
-      fluidRow(
-        column(3,
-          wellPanel(sliderInput("donut_noise", "Noise", min = 0, max = 30, value = 0, step = 5))
-        ),
-        column(9, myIOOutput("donutPlot", height = "500px"))
-      )
-    ),
-    tabPanel("Gauge",
-      fluidRow(
-        column(3,
-          wellPanel(sliderInput("gauge_val", "Value", min = 0, max = 1, value = 0.65, step = 0.05))
-        ),
-        column(9, myIOOutput("gaugePlot", height = "400px"))
-      )
-    ),
-    tabPanel("Treemap",
-      div(class = "chart-container", myIOOutput("treemapPlot", height = "550px"))
-    )
-  ),
-
-  # -- Financial --
-  tabPanel("Financial",
+  # -- Trends & Time --
+  nav_panel("Trends & Time",
     icon = icon("chart-line"),
-    tabsetPanel(
-      tabPanel("Candlestick",
-        div(class = "chart-container", myIOOutput("candlestickPlot", height = "500px"))
-      ),
-      tabPanel("Waterfall",
-        div(class = "chart-container", myIOOutput("waterfallPlot", height = "500px"))
-      )
+    layout_columns(
+      col_widths = c(6, 6),
+      chart_card("Line",
+        sliderInput("line_noise", "Temperature jitter (F)", min = 0, max = 50, value = 0, step = 5, width = "100%"),
+        myIOOutput("linePlot", height = "360px")),
+      chart_card("Moving average",
+        myIOOutput("movingAvgPlot", height = "400px"),
+        controls = tagList(
+          selectInput("ma_method", "Method", choices = c("Simple MA" = "sma", "Exponential MA" = "ema")),
+          conditionalPanel("input.ma_method == 'sma'",
+            sliderInput("ma_window", "Window", min = 3, max = 30, value = 10, step = 1)),
+          conditionalPanel("input.ma_method == 'ema'",
+            sliderInput("ma_alpha", "Alpha", min = 0.05, max = 0.5, value = 0.2, step = 0.05))
+        ))
+    ),
+    layout_columns(
+      col_widths = c(6, 6),
+      chart_card("Area", myIOOutput("areaPlot", height = "360px")),
+      chart_card("Bump", myIOOutput("bumpPlot", height = "360px"))
+    ),
+    layout_columns(
+      col_widths = c(8, 4),
+      chart_card("Candlestick", myIOOutput("candlestickPlot", height = "380px")),
+      chart_card("Sparklines",
+        div(class = "spark-label", "Revenue trend"),
+        myIOOutput("sparkline1", height = "60px"),
+        div(class = "spark-label", "User growth"),
+        myIOOutput("sparkline2", height = "60px"),
+        div(class = "spark-label", "Error rate"),
+        myIOOutput("sparkline3", height = "60px"))
+    ),
+    layout_columns(
+      col_widths = 12,
+      chart_card("Calendar heatmap", myIOOutput("calendarPlot", height = "220px"))
     )
   ),
 
-  # -- Distribution --
-  navbarMenu("Distribution", icon = icon("chart-area"),
-    tabPanel("Boxplot",
-      div(class = "chart-container", myIOOutput("boxplotPlot", height = "500px"))
+  # -- Distributions --
+  nav_panel("Distributions",
+    icon = icon("chart-area"),
+    layout_columns(
+      col_widths = c(6, 6),
+      chart_card("Histogram",
+        sliderInput("hist_n", "Sample size", min = 50, max = 500, value = 200, step = 50, width = "100%"),
+        myIOOutput("histPlot", height = "340px")),
+      chart_card("Distribution fit",
+        selectInput("dist_family", "Distribution family",
+          choices = c("Normal" = "normal", "Log-Normal" = "lognormal", "Exponential" = "exponential"),
+          width = "100%"),
+        myIOOutput("distFitPlot", height = "340px"))
     ),
-    tabPanel("Violin",
-      div(class = "chart-container", myIOOutput("violinPlot", height = "500px"))
+    layout_columns(
+      col_widths = c(6, 6),
+      chart_card("Boxplot", myIOOutput("boxplotPlot", height = "360px")),
+      chart_card("Violin", myIOOutput("violinPlot", height = "360px"))
     ),
-    tabPanel("Ridgeline",
-      div(class = "chart-container", myIOOutput("ridgelinePlot", height = "500px"))
+    layout_columns(
+      col_widths = c(6, 6),
+      chart_card("Ridgeline", myIOOutput("ridgelinePlot", height = "360px")),
+      chart_card("Beeswarm", myIOOutput("beeswarmPlot", height = "360px"))
     ),
-    tabPanel("Comparison",
-      fluidRow(
-        column(3,
-          wellPanel(
-            selectInput("cmp_method", "Test Method",
-              choices = c("t-test" = "t.test", "Wilcoxon" = "wilcox.test")),
-            selectInput("cmp_adjust", "P-value Adjustment",
-              choices = c("None" = "none", "Bonferroni" = "bonferroni", "Holm" = "holm", "BH" = "BH"))
-          )
-        ),
-        column(9, myIOOutput("comparisonPlot", height = "500px"))
-      )
+    layout_columns(
+      col_widths = c(6, 6),
+      chart_card("Q-Q plot",
+        myIOOutput("qqPlot", height = "380px"),
+        controls = tagList(
+          selectInput("qq_var", "Variable",
+            choices = c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width")),
+          checkboxInput("qq_envelope", "Show CI Envelope", value = TRUE),
+          checkboxInput("qq_grouped", "Group by Species", value = FALSE)
+        )),
+      chart_card("Hexbin density", myIOOutput("hexbinPlot", height = "380px"))
     )
   ),
 
-  # -- Relational --
-  tabPanel("Relational",
+  # -- Relationships & Models --
+  nav_panel("Relationships & Models",
     icon = icon("diagram-project"),
-    tabsetPanel(
-      tabPanel("Heatmap",
-        div(class = "chart-container", myIOOutput("heatmapPlot", height = "500px"))
+    layout_columns(
+      col_widths = c(6, 6),
+      chart_card("Regression + CI",
+        myIOOutput("regressionPlot", height = "400px"),
+        controls = tagList(
+          selectInput("reg_method", "Method",
+            choices = c("Linear" = "lm", "LOESS" = "loess", "Polynomial" = "polynomial")),
+          sliderInput("reg_level", "Confidence Level", min = 0.80, max = 0.99, value = 0.95, step = 0.01),
+          selectInput("reg_interval", "Interval Type",
+            choices = c("Confidence" = "confidence", "Prediction" = "prediction"))
+        )),
+      chart_card("LOESS smoothing",
+        sliderInput("loess_span", "Span", min = 0.1, max = 1.0, value = 0.5, step = 0.05, width = "100%"),
+        myIOOutput("loessPlot", height = "340px"))
+    ),
+    layout_columns(
+      col_widths = c(6, 6),
+      chart_card("Scatter + trend", myIOOutput("pointPlot", height = "360px")),
+      chart_card("Residuals", myIOOutput("residualPlot", height = "360px"))
+    ),
+    layout_columns(
+      col_widths = c(6, 6),
+      chart_card("Mean ± CI", myIOOutput("meanCIPlot", height = "380px")),
+      chart_card("Group comparison",
+        myIOOutput("comparisonPlot", height = "380px"),
+        controls = tagList(
+          selectInput("cmp_method", "Test Method",
+            choices = c("t-test" = "t.test", "Wilcoxon" = "wilcox.test")),
+          selectInput("cmp_adjust", "P-value Adjustment",
+            choices = c("None" = "none", "Bonferroni" = "bonferroni", "Holm" = "holm", "BH" = "BH"))
+        ))
+    ),
+    layout_columns(
+      col_widths = 12,
+      chart_card("Small multiples", myIOOutput("facetPlot", height = "400px"))
+    ),
+    layout_columns(
+      col_widths = c(6, 6),
+      chart_card("Heatmap", myIOOutput("heatmapPlot", height = "360px")),
+      chart_card("Sankey", myIOOutput("sankeyPlot", height = "360px"))
+    ),
+    layout_columns(
+      col_widths = c(6, 6),
+      chart_card("Radar", myIOOutput("radarPlot", height = "380px")),
+      chart_card("Survival curve", myIOOutput("survivalPlot", height = "380px"))
+    )
+  ),
+
+  # -- Sports --
+  nav_panel("Sports",
+    icon = icon("futbol"),
+    layout_columns(
+      col_widths = breakpoints(sm = 12, lg = c(8, 4)),
+      card(
+        full_screen = TRUE,
+        card_header("Field tracking"),
+        card_body(fillable = FALSE, myIOOutput("fieldPlot", height = "640px")),
+        card_footer(class = "field-credit",
+          field_clip$source$attribution, " ",
+          tags$a(href = field_clip$source$url, target = "_blank", field_clip$source$name),
+          paste0(". ", field_clip$source$sampling))
       ),
-      tabPanel("Sankey",
-        div(class = "chart-container", myIOOutput("sankeyPlot", height = "500px"))
+      card(
+        card_header("Tactical overlays"),
+        card_body(
+          checkboxGroupInput("field_overlays", NULL,
+            choices = c("Team shape" = "shape", "Player separation" = "separation"),
+            selected = c("shape", "separation")),
+          checkboxInput("field_exclude_gk", "Leave goalkeepers (Home 11, Away 25) out of team shape", value = TRUE),
+          tags$ul(class = "small text-muted ps-3",
+            tags$li(tags$strong("Width"), " and ", tags$strong("depth"), ": the across- and along-pitch spread of a team's outfield players at the current moment, in meters. The box on the pitch shows it."),
+            tags$li(tags$strong("Separation"), ": select a player to see the distance to the nearest opponent and nearest teammate."),
+            tags$li(tags$strong("Window"), ": use Set window start and Set window end under the pitch to get the mean, minimum and maximum width and depth over a stretch of play."),
+            tags$li("Players without a tracked position are left out, never placed or filled in.")
+          )
+        )
       )
     )
   ),
 
-  # -- Interactions --
-  navbarMenu("Interactions", icon = icon("hand-pointer"),
-    tabPanel("Brush Selection",
-      fluidRow(
-        column(8, myIOOutput("brushPlot", height = "450px")),
-        column(4,
-          wellPanel(
-            h4("Selected Points"),
-            verbatimTextOutput("brushInfo"),
-            selectInput("brush_dir", "Brush Direction",
-              choices = c("Both axes" = "xy", "X only" = "x", "Y only" = "y"))
+  # -- Interactivity --
+  nav_panel("Interactivity",
+    icon = icon("hand-pointer"),
+    layout_columns(
+      col_widths = c(6, 6),
+      chart_card("Brush selection",
+        myIOOutput("brushPlot", height = "420px"),
+        position = "right",
+        controls = tagList(
+          h6("Selected Points"),
+          verbatimTextOutput("brushInfo"),
+          selectInput("brush_dir", "Brush Direction",
+            choices = c("Both axes" = "xy", "X only" = "x", "Y only" = "y"))
+        )),
+      chart_card("Click-to-annotate",
+        myIOOutput("annotatePlot", height = "420px"),
+        position = "right",
+        controls = tagList(
+          h6("Annotations"),
+          tableOutput("annotationTable"),
+          p(class = "text-muted", style = "font-size: 12px;",
+            "Click any point to add a label. Click an annotated point to edit or remove.")
+        ))
+    ),
+    layout_columns(
+      col_widths = 12,
+      card(
+        full_screen = TRUE,
+        card_header("Linked brushing"),
+        card_body(
+          p(class = "text-muted mb-0",
+            "Brush points in the left chart to highlight them in the right chart."),
+          layout_columns(
+            col_widths = c(6, 6),
+            myIOOutput("linkedA", height = "380px"),
+            myIOOutput("linkedB", height = "380px")
           )
         )
       )
     ),
-    tabPanel("Click-to-Annotate",
-      fluidRow(
-        column(8, myIOOutput("annotatePlot", height = "450px")),
-        column(4,
-          wellPanel(
-            h4("Annotations"),
-            tableOutput("annotationTable"),
-            p(class = "text-muted", style = "font-size: 12px;",
-              "Click any point to add a label. Click an annotated point to edit or remove.")
-          )
-        )
-      )
-    ),
-    tabPanel("Linked Brushing",
-      p(class = "text-muted", style = "padding: 0 1rem;",
-        "Brush points in the left chart to highlight them in the right chart."),
-      fluidRow(
-        column(6, myIOOutput("linkedA", height = "400px")),
-        column(6, myIOOutput("linkedB", height = "400px"))
-      )
-    ),
-    tabPanel("Parameter Slider",
-      div(class = "chart-container", myIOOutput("sliderPlot", height = "500px"))
+    layout_columns(
+      col_widths = 12,
+      chart_card("Parameter slider", myIOOutput("sliderPlot", height = "440px"))
     )
   ),
 
-  # -- New Charts --
-  navbarMenu("New Charts", icon = icon("star"),
-    tabPanel("Lollipop",
-      div(class = "chart-container", myIOOutput("lollipopPlot", height = "500px"))
-    ),
-    tabPanel("Dumbbell",
-      div(class = "chart-container", myIOOutput("dumbbellPlot", height = "500px"))
-    ),
-    tabPanel("Waffle",
-      div(class = "chart-container", myIOOutput("wafflePlot", height = "500px"))
-    ),
-    tabPanel("Beeswarm",
-      div(class = "chart-container", myIOOutput("beeswarmPlot", height = "500px"))
-    ),
-    tabPanel("Bump",
-      div(class = "chart-container", myIOOutput("bumpPlot", height = "500px"))
-    ),
-    tabPanel("Radar",
-      div(class = "chart-container", myIOOutput("radarPlot", height = "500px"))
-    ),
-    tabPanel("Funnel",
-      div(class = "chart-container", myIOOutput("funnelPlot", height = "500px"))
-    ),
-    tabPanel("Calendar Heatmap",
-      div(class = "chart-container", myIOOutput("calendarPlot", height = "220px"))
-    )
-  ),
-
-  # -- Advanced --
-  navbarMenu("Advanced", icon = icon("flask"),
-    tabPanel("Survival Curve",
-      div(class = "chart-container", myIOOutput("survivalPlot", height = "500px"))
-    ),
-    tabPanel("Distribution Fit",
-      fluidRow(
-        column(3,
-          wellPanel(
-            selectInput("dist_family", "Distribution Family",
-              choices = c("Normal" = "normal", "Log-Normal" = "lognormal", "Exponential" = "exponential"))
-          )
-        ),
-        column(9, myIOOutput("distFitPlot", height = "500px"))
-      )
-    ),
-    tabPanel("Sparklines",
-      div(class = "chart-container",
-        h4("Inline Sparklines"),
-        fluidRow(
-          column(4,
-            wellPanel(
-              h5("Revenue Trend"),
-              myIOOutput("sparkline1", height = "60px")
-            )
-          ),
-          column(4,
-            wellPanel(
-              h5("User Growth"),
-              myIOOutput("sparkline2", height = "60px")
-            )
-          ),
-          column(4,
-            wellPanel(
-              h5("Error Rate"),
-              myIOOutput("sparkline3", height = "60px")
-            )
-          )
-        )
-      )
-    ),
-    tabPanel("Small Multiples",
-      div(class = "chart-container", myIOOutput("facetPlot", height = "500px"))
-    )
-  ),
-
-  # -- Theme Demo --
-  tabPanel("Theme Demo",
+  # -- Theme & Export --
+  nav_panel("Theme & Export",
     icon = icon("palette"),
-    fluidRow(
-      column(3,
-        wellPanel(
-          selectInput("theme_preset", "Theme Preset",
-            choices = c("light", "dark", "midnight", "ocean", "forest",
-                        "sunset", "monochrome", "neon", "corporate", "academic",
-                        "nature", "minimal", "retro", "warm"))
-        )
-      ),
-      column(9,
-        fluidRow(
-          column(6, myIOOutput("themeBar", height = "230px")),
-          column(6, myIOOutput("themeLine", height = "230px"))
+    layout_columns(
+      col_widths = 12,
+      chart_card("Theme presets",
+        layout_columns(
+          col_widths = c(6, 6, 6, 6, 6, 6),
+          myIOOutput("themeBar", height = "230px"),
+          myIOOutput("themeLine", height = "230px"),
+          myIOOutput("themeHeatmap", height = "230px"),
+          myIOOutput("themeGauge", height = "230px"),
+          myIOOutput("themeSankey", height = "230px"),
+          myIOOutput("themeScatter", height = "230px")
         ),
-        fluidRow(
-          column(6, myIOOutput("themeHeatmap", height = "230px")),
-          column(6, myIOOutput("themeGauge", height = "230px"))
-        ),
-        fluidRow(
-          column(6, myIOOutput("themeSankey", height = "230px")),
-          column(6, myIOOutput("themeScatter", height = "230px"))
-        )
-      )
-    )
-  ),
-
-  # -- Export Demo --
-  tabPanel("Export Demo",
-    icon = icon("download"),
-    fluidRow(
-      column(3,
-        wellPanel(
-          h5("Export Options"),
+        controls = selectInput("theme_preset", "Theme Preset",
+          choices = c("light", "dark", "midnight", "ocean", "forest",
+                      "sunset", "monochrome", "neon", "corporate", "academic",
+                      "nature", "minimal", "retro", "warm")))
+    ),
+    layout_columns(
+      col_widths = 12,
+      chart_card("Export",
+        myIOOutput("exportPlot", height = "460px"),
+        controls = tagList(
           p(class = "text-muted", style = "font-size: 0.85rem;",
             "Toggle which export buttons appear in the chart toolbar."),
           checkboxInput("exp_png", "PNG download", TRUE),
@@ -428,9 +393,7 @@ ui <- navbarPage(
             choices = c("light", "dark", "midnight", "ocean"),
             selected = "light"),
           helpText("Try exporting in dark mode to verify CSS variable resolution.")
-        )
-      ),
-      column(9, myIOOutput("exportPlot", height = "500px"))
+        ))
     )
   )
 )
@@ -1095,6 +1058,23 @@ server <- function(input, output) {
         clipboard = input$exp_clipboard,
         title = "MPG by Weight — myIO Export Demo"
       )
+  })
+
+  # -- Sports: field tracking --
+
+  output$fieldPlot <- renderMyIO({
+    myIO(field_clip$tracking) |>
+      addIoLayer("field", label = "Metrica Sample Game 1 · opening 20 seconds",
+        mapping = list(x_var = "x", y_var = "y", time = "time", entity = "entity_id",
+                       team = "team", label = "label", kind = "kind"),
+        options = list(pitchLength = field_clip$pitch$length, pitchWidth = field_clip$pitch$width,
+                       maxGap = 0.5, events = field_events,
+                       overlays = list(shape = "shape" %in% input$field_overlays,
+                                       separation = "separation" %in% input$field_overlays),
+                       excludeEntities = if (isTRUE(input$field_exclude_gk)) c("home-11", "away-25") else character(0))) |>
+      setMargin(top = 8, bottom = 8, left = 8, right = 8) |>
+      suppressAxis(xAxis = TRUE, yAxis = TRUE) |>
+      suppressLegend()
   })
 }
 

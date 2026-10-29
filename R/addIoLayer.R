@@ -10,9 +10,20 @@
 #'   the same color twice to render data and model in a single hue.
 #' @param label unique layer label
 #' @param data data frame backing the layer
-#' @param mapping named aesthetic mapping list
+#' @param mapping named aesthetic mapping list. Field requires x_var, y_var,
+#'   time (numeric seconds), and entity; team, label, and kind are optional.
 #' @param transform transform name applied before serialization
-#' @param options layer options passed through to the widget config
+#' @param options layer options passed through to the widget config. For field,
+#'   pitchLength and pitchWidth default to 105 and 68 meters; maxGap defaults to
+#'   0.5 seconds. events is a list of records with time, type, and player fields.
+#'   Field analysis overlays are off by default: overlays = list(shape = TRUE,
+#'   separation = TRUE) enables the team width x depth box and the selected
+#'   player's nearest-opponent line with a metrics panel. minPlayers (whole
+#'   number >= 2, default 2) is the fewest positioned players for a team width
+#'   or depth; below it the metric is missing, never 0. excludeEntities is a
+#'   vector of entity ids (e.g. goalkeepers) left out of shape metrics only.
+#'   metricWindow = c(t0, t1) sets the interval, in seconds, for the
+#'   mean/min/max summaries; the default is the whole clip.
 #'
 #' @return A modified \code{myIO} htmlwidget object with the new layer appended
 #'   to the configuration.
@@ -61,6 +72,10 @@ addIoLayer <- function(myIO,
   presets <- list(barSize = "large", toolTipOptions = list(suppressY = FALSE))
   if (is.null(options)) {
     options <- presets
+  }
+
+  if (type == "field") {
+    options <- validate_field_options(options)
   }
 
   check_layer_compatibility(type, existing_layers)
@@ -333,6 +348,7 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
     required_map <- transform_contract$required_map
   } else {
     required_map <- switch(type,
+      field = c("x_var", "y_var", "time", "entity"),
       treemap = c("level_1", "level_2"),
       gauge = c("value"),
       histogram = c("value"),
@@ -363,6 +379,18 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
   if (length(missing_map) > 0) {
     stop("addIoLayer(): Missing required mapping for type '", type, "': ",
          paste(missing_map, collapse = ", "), ".", call. = FALSE)
+  }
+
+  if (type == "field") {
+    if ("group" %in% names(mapping)) stop("field uses team, not group, mapping.", call. = FALSE)
+    for (key in intersect(c("x_var", "y_var", "time", "entity", "team", "label", "kind"), names(mapping))) {
+      col <- mapping[[key]]
+      if (!is.character(col) || length(col) != 1L || is.na(col) || !(col %in% names(data)))
+        stop("field mapping must name an existing column: ", key, call. = FALSE)
+    }
+    for (key in c("x_var", "y_var", "time")) {
+      if (!is.numeric(data[[mapping[[key]]]])) stop("field coordinates and time must be numeric.", call. = FALSE)
+    }
   }
 
   # Fields produced by the transform should be skipped in column-existence checks
@@ -545,4 +573,41 @@ inject_transform_mapping <- function(transform, mapping) {
     }
   }
   mapping
+}
+
+# Field overlay options (#169). Returns options with JSON-stable shapes.
+validate_field_options <- function(options) {
+  overlays <- options$overlays
+  if (!is.null(overlays)) {
+    keys <- names(overlays)
+    if (!is.list(overlays) || length(overlays) == 0L || is.null(keys) || any(keys == "") ||
+        !all(keys %in% c("shape", "separation")) ||
+        !all(vapply(overlays, function(v) is.logical(v) && length(v) == 1L && !is.na(v), logical(1)))) {
+      stop("addIoLayer(): field option overlays must be a named list of TRUE/FALSE values for shape and separation.", call. = FALSE)
+    }
+  }
+  min_players <- options$minPlayers
+  if (!is.null(min_players)) {
+    if (!is.numeric(min_players) || length(min_players) != 1L || !is.finite(min_players) ||
+        min_players < 2 || min_players != round(min_players)) {
+      stop("addIoLayer(): field option minPlayers must be a whole number of at least 2.", call. = FALSE)
+    }
+    options$minPlayers <- as.integer(min_players)
+  }
+  exclude <- options$excludeEntities
+  if (!is.null(exclude)) {
+    if (is.list(exclude)) exclude <- unlist(exclude, use.names = FALSE)
+    if (!(is.character(exclude) || is.numeric(exclude)) || anyNA(exclude)) {
+      stop("addIoLayer(): field option excludeEntities must be a vector of entity ids.", call. = FALSE)
+    }
+    options$excludeEntities <- as.list(as.character(exclude))
+  }
+  window <- options$metricWindow
+  if (!is.null(window)) {
+    if (!is.numeric(window) || length(window) != 2L || !all(is.finite(window)) || window[1] > window[2]) {
+      stop("addIoLayer(): field option metricWindow must be c(start, end) in seconds with start <= end.", call. = FALSE)
+    }
+    options$metricWindow <- as.numeric(window)
+  }
+  options
 }

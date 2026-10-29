@@ -1,6 +1,7 @@
 import { getRendererForLayer } from "../registry.js";
 
 const COMPAT_GROUP = {
+  field: "standalone-field",
   line: "axes-continuous",
   point: "axes-continuous",
   area: "axes-continuous",
@@ -76,6 +77,23 @@ export function validateAgainstContract(layer, contract) {
   const errors = [];
   const warnings = [];
   if (!contract) {
+    return { errors, warnings };
+  }
+  if (layer.type === "field") {
+    if (!Array.isArray(layer.data) || layer.data.some(row => !row || typeof row !== "object")) {
+      return { errors: ["Field data must be an array of observation records."], warnings };
+    }
+    for (const key of Object.keys(contract)) {
+      const column = layer.mapping?.[key];
+      if (column == null && !contract[key].required) continue;
+      if (typeof column !== "string" || !column || (layer.data.length && !layer.data.some(row => Object.hasOwn(row, column)))) {
+        errors.push("Field mapping '" + key + "' must name an existing column.");
+      } else if (contract[key].numeric && layer.data.some(row => row[column] != null && typeof row[column] !== "number")) {
+        errors.push("Field column '" + column + "' must contain numeric values or missing observations.");
+      } else if (key === "entity" && layer.data.some(row => row[column] != null && !["string", "number"].includes(typeof row[column])) ) {
+        errors.push("Field entity identifiers must be strings or numbers.");
+      }
+    }
     return { errors, warnings };
   }
   Object.entries(contract).forEach(function(entry) {

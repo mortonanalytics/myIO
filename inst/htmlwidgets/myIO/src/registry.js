@@ -1,3 +1,4 @@
+import { FieldTrackingRenderer } from "./renderers/FieldTrackingRenderer.js";
 const rendererRegistry = new Map();
 
 import { LineRenderer } from "./renderers/LineRenderer.js";
@@ -60,6 +61,7 @@ export function getRendererForLayer(layer) {
 }
 
 export function registerBuiltInRenderers() {
+  if (!rendererRegistry.has("field")) registerRenderer("field", new FieldTrackingRenderer());
   if (!rendererRegistry.has(LineRenderer.type)) {
     registerRenderer(LineRenderer.type, new LineRenderer());
   }

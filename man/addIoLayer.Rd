@@ -29,11 +29,22 @@ the same color twice to render data and model in a single hue.}
 
 \item{data}{data frame backing the layer}
 
-\item{mapping}{named aesthetic mapping list}
+\item{mapping}{named aesthetic mapping list. Field requires x_var, y_var,
+time (numeric seconds), and entity; team, label, and kind are optional.}
 
 \item{transform}{transform name applied before serialization}
 
-\item{options}{layer options passed through to the widget config}
+\item{options}{layer options passed through to the widget config. For field,
+pitchLength and pitchWidth default to 105 and 68 meters; maxGap defaults to
+0.5 seconds. events is a list of records with time, type, and player fields.
+Field analysis overlays are off by default: overlays = list(shape = TRUE,
+separation = TRUE) enables the team width x depth box and the selected
+player's nearest-opponent line with a metrics panel. minPlayers (whole
+number >= 2, default 2) is the fewest positioned players for a team width
+or depth; below it the metric is missing, never 0. excludeEntities is a
+vector of entity ids (e.g. goalkeepers) left out of shape metrics only.
+metricWindow = c(t0, t1) sets the interval, in seconds, for the
+mean/min/max summaries; the default is the whole clip.}
 }
 \value{
 A modified \code{myIO} htmlwidget object with the new layer appended

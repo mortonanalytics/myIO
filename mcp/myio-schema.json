@@ -15,6 +15,46 @@
     "UNKNOWN_ARGUMENT"
   ],
   "types": {
+    "field": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": [
+        "x_var",
+        "y_var",
+        "time",
+        "entity"
+      ],
+      "numeric_fields": [
+        "x_var",
+        "y_var",
+        "time"
+      ],
+      "valid_transforms": [
+        "identity"
+      ],
+      "group": "standalone-field",
+      "data_contract": {
+        "x_var": {
+          "required": true,
+          "numeric": true
+        },
+        "y_var": {
+          "required": true,
+          "numeric": true
+        },
+        "time": {
+          "required": true,
+          "numeric": true
+        },
+        "entity": {
+          "required": true
+        },
+        "team": {},
+        "label": {},
+        "kind": {}
+      },
+      "scale_hints": null
+    },
     "line": {
       "kind": "primitive",
       "renderer_type": true,
@@ -1067,6 +1107,7 @@
     "candlestick",
     "donut",
     "dumbbell",
+    "field",
     "funnel",
     "gauge",
     "groupedBar",
@@ -1121,6 +1162,7 @@
     "lttb"
   ],
   "compatibility_groups": {
+    "field": "standalone-field",
     "line": "axes-continuous",
     "point": "axes-continuous",
     "area": "axes-continuous",

@@ -446,6 +446,9 @@ export class myIOchart {
   }
 
   routeLayers(layers) {
+    if (this.runtime.field && !layers.some(layer => layer.type === "field" && layer.label === this.runtime.field.label)) {
+      this.runtime.field.dispose();
+    }
     var that = this;
     this.derived.layerIndex = this.config.layers.map(function(d) { return d.label; });
     this.syncLegacyAliases();

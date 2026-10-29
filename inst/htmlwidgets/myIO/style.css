@@ -988,3 +988,35 @@
   .myIO-popover { display: none !important; }
   .myIO-slider-wrapper { display: none !important; }
 }
+
+/* Native field tracking view */
+.myIO-field { box-sizing: border-box; height: 100%; overflow: auto; color: var(--chart-text-color, #263442); background: var(--chart-bg, #fff); font: 13px/1.4 system-ui, sans-serif; padding: 8px; }
+.myIO-field .field-heading { font-size: 18px; font-weight: 650; margin-bottom: 8px; }
+.myIO-field .field-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 6px 0; }
+.myIO-field button, .myIO-field select { color: inherit; background: var(--chart-bg, #fff); border: 1px solid #91a1ad; border-radius: 5px; padding: 6px 9px; cursor: pointer; font: inherit; }
+.myIO-field button:disabled { opacity: .5; cursor: default; }
+.myIO-field :focus-visible { outline: 3px solid #b55d00; outline-offset: 2px; }
+.myIO-field label { display: inline-flex; align-items: center; gap: 4px; }
+.myIO-field input[aria-label="Trail length"] { width: 80px; }
+.myIO-field .field-time { margin-left: auto; font-variant-numeric: tabular-nums; }
+.myIO-field .field-timeline { display: block; width: 100%; accent-color: #0072b2; }
+.myIO-field .field-pitch { display: block; width: 100%; max-height: 460px; background: #194f42; border-radius: 7px; }
+.myIO-field .field-markings { stroke: #c8e3d7; stroke-width: .25; fill: none; }
+.myIO-field .field-entity circle { stroke: #102d26; stroke-width: .35; }
+.myIO-field .field-entity.selected circle { stroke: white; stroke-width: .7; }
+.myIO-field .field-entity { cursor: pointer; }
+.myIO-field .field-entity text { text-anchor: middle; font: bold var(--field-label-size, 1.7px) system-ui; fill: white; paint-order: stroke; stroke: #194f42; stroke-width: .5px; pointer-events: none; }
+.myIO-field .field-trail { fill: none; stroke-width: .65; opacity: .85; }
+.myIO-field .field-detail { min-height: 20px; padding: 8px 0; }
+.myIO-field .field-events { display: flex; gap: 6px; overflow-x: auto; padding: 3px 3px 8px; }
+.myIO-field .field-events button { white-space: nowrap; font-size: 12px; }
+.myIO-field .field-events [aria-current="true"] { background: #d9edf7; color: #123d55; border-color: #0072b2; }
+.myIO-field .field-shape-box { fill-opacity: .1; stroke-width: .35; stroke-dasharray: 1.2 .8; }
+.myIO-field .field-separation-link line { stroke: white; stroke-width: .35; stroke-dasharray: .8 .5; }
+.myIO-field .field-separation-link text { text-anchor: middle; font: bold var(--field-label-size, 1.7px) system-ui; fill: white; paint-order: stroke; stroke: #194f42; stroke-width: .5px; }
+.myIO-field .field-metrics { border-top: 1px solid #d5dfe5; padding-top: 6px; font-variant-numeric: tabular-nums; }
+.myIO-field .field-metrics table { border-collapse: collapse; margin: 4px 0; font-size: 12px; }
+.myIO-field .field-metrics caption { text-align: left; font-weight: 600; }
+.myIO-field .field-metrics th, .myIO-field .field-metrics td { padding: 2px 8px 2px 0; text-align: left; }
+.myIO-field .field-metrics td { text-align: right; }
+.myIO-field .field-separation-text { margin: 4px 0; }

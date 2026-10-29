@@ -25,6 +25,7 @@ OKABE_ITO_PALETTE <- c(
 )
 
 ALLOWED_TYPES <- c(
+  "field",
   "line", "point", "bar", "hexbin", "treemap", "gauge",
   "donut", "area", "groupedBar", "histogram", "heatmap",
   "candlestick", "waterfall", "sankey", "boxplot", "violin",
@@ -38,6 +39,7 @@ ALLOWED_TYPES <- c(
 )
 
 COMPATIBILITY_GROUPS <- list(
+  field = "standalone-field",
   line = "axes-continuous",
   point = "axes-continuous",
   area = "axes-continuous",
@@ -77,6 +79,7 @@ COMPATIBILITY_GROUPS <- list(
 )
 
 GROUP_MATRIX <- list(
+  "standalone-field" = character(0),
   "axes-continuous" = c("axes-continuous", "axes-categorical", "axes-binned"),
   "axes-categorical" = c("axes-continuous", "axes-categorical"),
   "axes-binned" = c("axes-continuous", "axes-binned"),
@@ -94,6 +97,7 @@ GROUP_MATRIX <- list(
 )
 
 VALID_COMBINATIONS <- list(
+  field = c("identity"),
   line = c("identity", "lm", "loess", "polynomial", "smooth", "lttb"),
   point = c("identity", "mean", "summary", "residuals"),
   area = c("identity", "ci"),

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>myIO · Field tracking</title>
+<script src="/inst/htmlwidgets/lib/d3.min.js"></script><script src="/inst/htmlwidgets/myIO/myIOapi.js"></script><link rel="stylesheet" href="/inst/htmlwidgets/myIO/style.css">
+<style>body{margin:0;background:#eef2f4;color:#243342;font:15px/1.5 system-ui}main{max-width:1160px;margin:32px auto;padding:0 16px}h1{margin-bottom:4px}p{margin-top:4px}.card{background:white;border:1px solid #d5dfe5;border-radius:12px;padding:8px;margin:20px 0;box-shadow:0 4px 18px #1937440b}.card .myIO-svg{max-width:100%}.card .myIO-field{height:auto;overflow:visible}.credit{font-size:13px}a{color:#006b9e}</style></head>
+<body><main><h1>Watch the play develop</h1><p>Metrica Sample Game 1 · opening 20 seconds · 105 × 68 m</p><p>Play the clip, scrub to a pass, or select a player to follow their movement. Each view has independent controls.</p><section class="card"><div id="field-one"></div></section><section class="card"><div id="field-two"></div></section><p class="credit">Tracking and event data: <a href="https://github.com/metrica-sports/sample-data">Metrica Sports sample-data</a>. Anonymized Sample Game 1; sampled every 0.2 seconds. Coordinates in meters, origin at top left.</p></main>
+<script>
+fetch('field-tracking-data.json').then(r=>r.json()).then(clip=>{
+window.clip=clip; window.charts=[];
+for(const [index,id] of ['field-one','field-two'].entries()){
+const element=document.getElementById(id);
+const layer={id:'field',type:'field',label:index ? 'Explore independently' : 'Match view',data:clip.tracking,mapping:{x_var:'x',y_var:'y',time:'time',entity:'entity_id',team:'team',label:'label',kind:'kind'},options:{pitchLength:105,pitchWidth:68,maxGap:0.5,events:clip.events},transform:'identity',transformMeta:{},encoding:{},sourceKey:'entity_id',derivedFrom:null,order:1,visibility:true};
+window.charts.push(new myIOchart({element,width:element.clientWidth,height:780,config:{specVersion:2,layers:[layer],layout:{margin:{top:8,bottom:8,left:8,right:8},suppressLegend:true,suppressAxis:{xAxis:true,yAxis:true}},scales:{xlim:{min:0,max:105},ylim:{min:0,max:68},categoricalScale:{xAxis:false,yAxis:false},flipAxis:false,colorScheme:{enabled:false,colors:[],domain:[]}},axes:{xAxisFormat:'s',yAxisFormat:'s',toolTipFormat:'s'},interactions:{dragPoints:false,toggleY:{variable:null,format:null},toolTipOptions:{suppressY:false}},theme:{},transitions:{speed:0},referenceLines:{x:null,y:null}}}));
+}
+function fitChart(chart){
+  if(!chart.dom)return;
+  const host=chart.dom.element.querySelector('.myIO-field');
+  const width=chart.dom.element.clientWidth;
+  const height=host ? host.offsetHeight+16 : 650;
+  if(chart.width!==width || chart.height!==height) chart.resize(width,height);
+}
+window.charts.forEach(chart=>chart.on('resize',()=>fitChart(chart)));
+window.addEventListener('resize',()=>window.charts.forEach(fitChart));
+window.charts.forEach(fitChart);
+window.ready=true;
+});
+</script></body></html>
