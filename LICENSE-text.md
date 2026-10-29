@@ -1,4 +1,4 @@
 # License
 
     YEAR: 2026
-    COPYRIGHT HOLDER: Ryan Morton
+    COPYRIGHT HOLDER: Morton Analytics LLC

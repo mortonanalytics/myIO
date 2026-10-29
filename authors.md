@@ -3,7 +3,9 @@
 ## Authors
 
 - **[Ryan Morton](https://github.com/mortonanalytics)**. Author,
-  maintainer, copyright holder.
+  maintainer.
+
+- **Morton Analytics LLC**. Copyright holder, funder.
 
 - **Mike Bostock**. Copyright holder.  
   D3.js, d3-hexbin, and d3-sankey libraries
