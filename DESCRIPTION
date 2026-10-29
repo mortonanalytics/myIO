@@ -4,7 +4,8 @@ Title: Interactive Data Visualizations Using 'd3.js'
 Version: 1.4.0
 Authors@R: c(
     person("Ryan", "Morton", email = "morton@myma.us",
-           role = c("aut", "cre", "cph")),
+           role = c("aut", "cre")),
+    person("Morton Analytics LLC", role = c("cph", "fnd")),
     person("Mike", "Bostock", role = "cph",
            comment = "D3.js, d3-hexbin, and d3-sankey libraries"),
     person("James", "Hall", role = "cph",

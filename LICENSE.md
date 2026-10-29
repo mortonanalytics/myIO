@@ -1,6 +1,6 @@
 # MIT License
 
-Copyright (c) 2026 Ryan Morton
+Copyright (c) 2026 Morton Analytics LLC
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

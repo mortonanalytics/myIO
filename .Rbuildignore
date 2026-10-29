@@ -51,3 +51,7 @@
 ^duckdb-fixture$
 ^test-results$
 ^playwright-report$
+^CLA\.md$
+^SECURITY\.md$
+^CONTRIBUTING\.md$
+^CODE_OF_CONDUCT\.md$
