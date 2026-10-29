@@ -1011,3 +1011,12 @@
 .myIO-field .field-events { display: flex; gap: 6px; overflow-x: auto; padding: 3px 3px 8px; }
 .myIO-field .field-events button { white-space: nowrap; font-size: 12px; }
 .myIO-field .field-events [aria-current="true"] { background: #d9edf7; color: #123d55; border-color: #0072b2; }
+.myIO-field .field-shape-box { fill-opacity: .1; stroke-width: .35; stroke-dasharray: 1.2 .8; }
+.myIO-field .field-separation-link line { stroke: white; stroke-width: .35; stroke-dasharray: .8 .5; }
+.myIO-field .field-separation-link text { text-anchor: middle; font: bold var(--field-label-size, 1.7px) system-ui; fill: white; paint-order: stroke; stroke: #194f42; stroke-width: .5px; }
+.myIO-field .field-metrics { border-top: 1px solid #d5dfe5; padding-top: 6px; font-variant-numeric: tabular-nums; }
+.myIO-field .field-metrics table { border-collapse: collapse; margin: 4px 0; font-size: 12px; }
+.myIO-field .field-metrics caption { text-align: left; font-weight: 600; }
+.myIO-field .field-metrics th, .myIO-field .field-metrics td { padding: 2px 8px 2px 0; text-align: left; }
+.myIO-field .field-metrics td { text-align: right; }
+.myIO-field .field-separation-text { margin: 4px 0; }

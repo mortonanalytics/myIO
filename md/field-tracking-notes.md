@@ -102,3 +102,47 @@ No project source content or private data was submitted.
 | FTR-005 | Scheduled: F03 | Unit, R and production-bundle browser tests |
 | FTR-006 | Scheduled: F04 | Branch demo ready; coordinator owns servers and comparison |
 | FTR-007 | Scheduled: F05 | Coordinator owns conditional tactical feature request |
+
+## Analysis overlays (#169, first tier)
+
+Scope (Ryan, 2026-10-29): "Land + #169 overlays" — team shape and player
+separation, synced with playback and event seeking, metric definitions documented
+and tested against hand-calculated values. No model-based tactical scores,
+pitch control or xG.
+
+Options (all optional, overlays off by default so existing output is unchanged):
+`overlays = list(shape, separation)`, `minPlayers` (whole number >= 2, default 2),
+`excludeEntities` (ids removed from shape metrics only), `metricWindow = c(t0, t1)`
+(default the whole clip). R validates all four in `validate_field_options()` and
+serializes `excludeEntities` as a list so one id stays a JSON array. The JS
+renderer falls back to defaults for invalid values, like the other field options.
+
+Definitions are in the vignette's "Field analysis overlays" section: width is the
+y range, depth the x range of a team's positioned non-ball players at t under the
+existing `maxGap` interpolation; null (never 0) below `minPlayers`; separation is
+the nearest positioned opponent and teammate of the selected player; the interval
+summary is mean/min/max over sampled timestamps in the window where the metric
+exists, with a frame count. Attack direction does not enter any metric. Team
+visibility hides geometry only, not values.
+
+API: `fieldMetrics(data, time, options)` and `fieldMetricsWindow(data, [t0, t1],
+options)` in `src/interactions/field-metrics.js`, also on `window.myIO` with
+`fieldData`. The renderer adds a metrics panel (`.field-metrics`) with *Set window
+start* / *Set window end* buttons and emits `fieldMetrics` through `chart.emit`,
+the same channel as the field `select` event. Neither event is forwarded to Shiny:
+`inst/htmlwidgets/myIO.js` bridges only error/rollover/dragEnd/brushed/annotated.
+The generated schema carries no per-type options for any chart, so it is unchanged;
+options agree across R, JS and the vignette. This is visible to Python consumers
+(new options and event); pymyIO should expose them on its next submodule bump.
+
+Independent check: `tests/js/fixtures/field_metrics_reference.py` reads the
+fixture JSON (SHA-256 verified) and recomputes interpolation, width/depth,
+separation and window summaries without any myIO JavaScript, writing
+`field-metrics-reference.json`. Cases: 0.12 s and 7.64 s (pass events between
+samples), 10.04 s (sampled), 15.12 s with goalkeepers excluded, 5.5 s with home-2
+observations removed between 5 and 6 s (a 1.2 s gap above `maxGap`), minPlayers
+11 during that gap, and windows over the whole clip and 4.5–6.5 s. The JS function
+agrees to 1e-9 m on every value and on every nearest-entity id. The browser test
+converts rendered box and line bounds back to meters with the pitch's screen CTM
+and requires agreement within 0.01 m; a temporary 0.02 m widening of the box made
+that test fail.

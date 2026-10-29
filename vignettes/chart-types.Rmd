@@ -521,3 +521,59 @@ Labels and teams can be hidden independently. Controls work with keyboard input
 and reduced motion. Resizing preserves the current view; replacing layer data
 starts a new paused view. The production-bundle example is
 `tests/playwright/fixtures/field-tracking.html`.
+
+### Field analysis overlays
+
+Two optional overlays add team shape and player separation. Both are off unless
+requested, and both follow playback, timeline seeking, event buttons, player
+selection and team visibility.
+
+```{r, eval=FALSE}
+myIO(tracking) |>
+  addIoLayer("field", label = "Match", mapping = list(
+    x_var = "x", y_var = "y", time = "time", entity = "entity_id",
+    team = "team", label = "label", kind = "kind"
+  ), options = list(events = events,
+                    overlays = list(shape = TRUE, separation = TRUE),
+                    minPlayers = 2, excludeEntities = c("home-11", "away-25"),
+                    metricWindow = c(5, 10)))
+```
+
+Every metric uses the positions the chart draws: an entity has a position at time
+`t` only under the interpolation and `maxGap` rules above. Players without one are
+left out; they are never placed at 0 or carried across a gap. The ball
+(`kind = "ball"`) never counts. Units are the data units (meters).
+
+- **Team width**: `max(y) - min(y)` over the team's positioned players at `t`.
+- **Team depth**: `max(x) - min(x)` over the same players.
+- `n` is the number of players used. When `n < minPlayers` (default 2) width and
+  depth are missing, never 0. `excludeEntities` removes those ids (for example
+  goalkeepers) from shape metrics only; they still count for separation.
+- **Separation**: for the selected player, the distance to the nearest opponent
+  and the nearest teammate with a position at `t`, with their entity ids. It is
+  missing when the selected player has no position, or when no other player does.
+  A nearest opponent or teammate is missing on its own when that group has no
+  positioned player. Ties go to the entity that appears first in the data.
+- **Interval summary**: mean, minimum and maximum width and depth over the
+  chart's sampled timestamps in `metricWindow = c(t0, t1)` (inclusive; default the
+  whole clip), using only frames where the metric exists, with the count of
+  contributing frames. Missing frames are excluded, never filled. *Set window
+  start* and *Set window end* set either bound to the current time.
+- Attack direction does not affect any of these metrics: they are ranges and
+  distances, unchanged when the pitch is mirrored.
+
+The shape overlay draws, per visible team, the rectangle spanning its x and y
+range (depth × width) in the team color. The separation overlay draws a line
+from the selected player to the nearest opponent, labeled with the distance.
+Each is hidden when its metric is missing or either team is hidden; hiding a team
+does not change the numbers. A metrics panel below the pitch lists the current
+values and the window summary.
+
+The same values are emitted on every repaint as the chart event
+`fieldMetrics` with payload `{layer, time, teams, separation, window}`;
+`teams` entries hold `team`, `n`, `width`, `depth` and the box bounds. Like the
+field `select` event it is a JavaScript chart event, received with
+`chart.on("fieldMetrics", handler)`, and is not forwarded to a Shiny input.
+In the browser, `myIO.fieldMetrics(myIO.fieldData(rows, mapping), time, options)` and
+`myIO.fieldMetricsWindow(data, [t0, t1], options)` compute them without a chart.
+No model-based scores (pitch control, expected goals) are included.

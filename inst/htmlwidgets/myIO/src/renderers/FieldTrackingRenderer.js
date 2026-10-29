@@ -1,4 +1,7 @@
 import { fieldData, positionAt, trailAt, playback } from "../interactions/field-tracking.js";
+import { fieldMetrics, fieldMetricsWindow } from "../interactions/field-metrics.js";
+
+const metric = value => value === null ? "—" : value.toFixed(2);
 
 export class FieldTrackingRenderer {
   static type = "field";
@@ -15,6 +18,11 @@ export class FieldTrackingRenderer {
       const width = Number.isFinite(options.pitchWidth) && options.pitchWidth > 0 ? options.pitchWidth : 68;
       const gap = Number.isFinite(options.maxGap) && options.maxGap > 0 ? options.maxGap : 0.5;
       const data = fieldData(layer.data, layer.mapping);
+      const overlays = options.overlays && typeof options.overlays === "object" ? options.overlays : {};
+      const showShape = overlays.shape === true, showSeparation = overlays.separation === true;
+      const metricOptions = { maxGap: gap, minPlayers: Number.isInteger(options.minPlayers) && options.minPlayers >= 2 ? options.minPlayers : 2, excludeEntities: Array.isArray(options.excludeEntities) ? options.excludeEntities.map(String) : [] };
+      const requested = options.metricWindow;
+      let metricWindow = Array.isArray(requested) && requested.length === 2 && requested.every(Number.isFinite) && requested[0] <= requested[1] ? [...requested] : [data.times[0] ?? 0, data.times.at(-1) ?? 0];
       const root = chart.dom.chartArea.append("foreignObject").attr("class", "myIO-field-root");
       const host = root.append("xhtml:div").attr("class", "myIO-field").on("keydown", event => event.stopPropagation());
       host.append("div").attr("class", "field-heading").text(layer.label || "Field tracking");
@@ -61,8 +69,26 @@ export class FieldTrackingRenderer {
         marks.append("rect").attr("x", side ? length : -2).attr("y", width / 2 - 3.66).attr("width", 2).attr("height", 7.32);
       }
       const trail = pitch.append("path").attr("class", "field-trail");
+      const overlay = showShape || showSeparation ? pitch.append("g").attr("class", "field-overlays").attr("pointer-events", "none") : null;
       const players = pitch.append("g");
+      const separationLayer = showSeparation ? pitch.append("g").attr("class", "field-separation").attr("pointer-events", "none") : null;
       const detail = host.append("div").attr("class", "field-detail").text("Select a player to follow their trail.");
+      const panel = overlay ? host.append("div").attr("class", "field-metrics").attr("role", "group").attr("aria-label", "Tactical metrics") : null;
+      let shapeTable, windowLabel, windowTable, windowSummary, separationText;
+      if (showShape) {
+        shapeTable = panel.append("table").attr("class", "field-shape-table");
+        shapeTable.append("caption");
+        shapeTable.append("thead").append("tr").selectAll("th").data(["Team", "Players", "Width (m)", "Depth (m)"]).join("th").attr("scope", "col").text(d => d);
+        shapeTable.append("tbody");
+        const windowControls = panel.append("div").attr("class", "field-controls");
+        windowLabel = windowControls.append("output").attr("class", "field-window").attr("aria-label", "Metric window");
+        windowControls.append("button").attr("type", "button").text("Set window start").on("click", () => { metricWindow = [controller.state.time, Math.max(controller.state.time, metricWindow[1])]; windowSummary = null; paint(); });
+        windowControls.append("button").attr("type", "button").text("Set window end").on("click", () => { metricWindow = [Math.min(controller.state.time, metricWindow[0]), controller.state.time]; windowSummary = null; paint(); });
+        windowTable = panel.append("table").attr("class", "field-window-table");
+        windowTable.append("thead").append("tr").selectAll("th").data(["Team", "Frames", "Width mean / min / max", "Depth mean / min / max"]).join("th").attr("scope", "col").text(d => d);
+        windowTable.append("tbody");
+      }
+      if (showSeparation) separationText = panel.append("p").attr("class", "field-separation-text");
       const events = (Array.isArray(options.events) ? options.events : []).filter(e => Number.isFinite(e.time) && e.time >= data.times[0] && e.time <= data.times.at(-1)).slice().sort((a, b) => a.time - b.time);
       const eventList = host.append("div").attr("class", "field-events").attr("role", "group").attr("aria-label", "Match events");
       const eventButtons = eventList.selectAll("button").data(events).join("button").attr("type", "button").text(e => `${e.time.toFixed(2)}s · ${e.type} · ${e.player ?? e.team ?? ""}`).on("click", (_, e) => { controller.pause(); controller.seek(e.time); });
@@ -84,6 +110,33 @@ export class FieldTrackingRenderer {
         if (entity) { const p = positionAt(entity.samples, time, gap); detail.text(`${entity.team} · ${entity.label} — ${p ? `${p.x.toFixed(2)}, ${p.y.toFixed(2)} m` : "No observation"} · ${seconds}s trail`); }
         const current = events.filter(e => e.time <= time + 1e-8).at(-1);
         eventButtons.attr("aria-current", e => e === current ? "true" : null);
+        if (overlay) paintMetrics(time);
+      }
+      function paintMetrics(time) {
+        const metrics = fieldMetrics(data, time, { ...metricOptions, selected: showSeparation && selected ? selected : null });
+        const payload = { layer: layer.label, time, teams: showShape ? metrics.teams : null, separation: showSeparation ? metrics.separation : null, window: null };
+        if (showShape) {
+          windowSummary = windowSummary || fieldMetricsWindow(data, metricWindow, metricOptions);
+          payload.window = windowSummary;
+          overlay.selectAll("rect.field-shape-box").data(metrics.teams.filter(t => t.width !== null && !hidden.has(t.team)), t => t.team).join("rect").attr("class", "field-shape-box").attr("data-team", t => t.team).attr("x", t => t.minX).attr("y", t => t.minY).attr("width", t => t.depth).attr("height", t => t.width).attr("stroke", t => color(t.team)).attr("fill", t => color(t.team));
+          shapeTable.select("caption").text(`Team shape at ${time.toFixed(2)} s`);
+          shapeTable.select("tbody").selectAll("tr").data(metrics.teams, t => t.team).join(enter => { const tr = enter.append("tr"); tr.append("th").attr("scope", "row"); ["n", "width", "depth"].forEach(key => tr.append("td").attr("data-metric", key)); return tr; }).attr("data-team", t => t.team).call(tr => { tr.select("th").text(t => t.team); for (const key of ["n", "width", "depth"]) tr.select(`td[data-metric="${key}"]`).attr("data-value", t => String(t[key])).text(t => key === "n" ? String(t.n) : metric(t[key])); });
+          windowLabel.text(`Window ${metricWindow[0].toFixed(2)}–${metricWindow[1].toFixed(2)} s · ${windowSummary.sampled} sampled frames`);
+          windowTable.select("tbody").selectAll("tr").data(windowSummary.teams, t => t.team).join(enter => { const tr = enter.append("tr"); tr.append("th").attr("scope", "row"); ["frames", "width", "depth"].forEach(key => tr.append("td").attr("data-metric", key)); return tr; }).attr("data-team", t => t.team).call(tr => { tr.select("th").text(t => t.team); tr.select('td[data-metric="frames"]').text(t => String(t.frames)); for (const key of ["width", "depth"]) tr.select(`td[data-metric="${key}"]`).attr("data-value", t => JSON.stringify(t[key])).text(t => [t[key].mean, t[key].min, t[key].max].map(metric).join(" / ")); });
+        }
+        if (showSeparation) {
+          const s = metrics.separation, self = s && data.entities.find(d => d.id === s.entity);
+          const lines = s && s.opponent && !hidden.has(self.team) && !hidden.has(data.entities.find(d => d.id === s.opponent.entity).team) ? [s] : [];
+          const link = separationLayer.selectAll("g.field-separation-link").data(lines).join(enter => { const g = enter.append("g").attr("class", "field-separation-link"); g.append("line"); g.append("text"); return g; });
+          link.select("line").attr("x1", d => d.x).attr("y1", d => d.y).attr("x2", d => d.opponent.x).attr("y2", d => d.opponent.y).attr("data-distance", d => d.opponent.distance);
+          link.select("text").attr("x", d => (d.x + d.opponent.x) / 2).attr("y", d => (d.y + d.opponent.y) / 2 + 3).text(d => `${metric(d.opponent.distance)} m`);
+          const name = id => { const e = data.entities.find(d => d.id === id); return `${e.team} · ${e.label}`; };
+          const near = (role, n) => n ? `nearest ${role} ${name(n.entity)} at ${metric(n.distance)} m` : `no ${role} position`;
+          separationText.text(!selected ? "Select a player to measure separation." : s ? `${name(s.entity)}: ${near("opponent", s.opponent)}; ${near("teammate", s.teammate)}.` : `${name(selected)}: no valid position at this time.`)
+            .attr("data-opponent", s?.opponent?.entity ?? null).attr("data-opponent-distance", s?.opponent ? String(s.opponent.distance) : null)
+            .attr("data-teammate", s?.teammate?.entity ?? null).attr("data-teammate-distance", s?.teammate ? String(s.teammate.distance) : null);
+        }
+        chart.emit("fieldMetrics", payload);
       }
       const controller = playback(data.times, paint);
       view = { data: layer.data, mapping: layer.mapping, options: layer.options, label: layer.label, root, controller, dispose() { controller.dispose(); root.remove(); chart.off("destroy", view.dispose); if (chart.runtime?.field === view) chart.runtime.field = null; } };
