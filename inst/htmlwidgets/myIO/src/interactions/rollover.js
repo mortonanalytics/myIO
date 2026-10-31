@@ -24,7 +24,9 @@ export function bindRollover(chart, layers) {
   removeHoverOverlay(chart);
 
   lys.forEach(function(layer) {
-    if (["bar", "point", "hexbin", "histogram", "calendarHeatmap"].indexOf(layer.type) > -1) {
+    // groupedBar declares "element" but keeps its own handler below.
+    var rolloverStyle = getRendererForLayer(layer).constructor.traits.rolloverStyle;
+    if ((rolloverStyle === "element" || rolloverStyle === "hex") && layer.type !== "groupedBar") {
       bindElementLayer(layer);
     }
   });
@@ -113,7 +115,7 @@ export function bindRollover(chart, layers) {
     var tooltip = buildTooltip(layer, renderer, data, this);
 
     if (HTMLWidgets.shinyMode) {
-      Shiny.onInputChange("myIO-" + that.element.id + "-rollover", JSON.stringify(data));
+      Shiny.onInputChange("myIO-" + that.element.id + "-rollover", JSON.stringify(data, dropCycles()));
     }
 
     applyElementHighlight(this, layer, data);
@@ -179,16 +181,29 @@ export function bindRollover(chart, layers) {
     var label = layer.type === "point" || layer.type === "bar" ? layer.mapping.y_var : layer.label;
     var color = resolveColor(that, layer.label, layer.color);
 
+    var value = currentFormatY(data[yKey]);
+
     if (renderer && typeof renderer.formatTooltip === "function") {
       var formatted = renderer.formatTooltip(that, data, layer);
-      titleText = formatted.title || titleText;
+      var formattedTitle = formatted.title && typeof formatted.title === "object" ? formatted.title.text : formatted.title;
+      titleText = formattedTitle || titleText;
+
+      // Renderers that build their own rows ({ title, items }) are shown as-is.
+      if (Array.isArray(formatted.items)) {
+        return { title: { text: titleText }, items: yItems(formatted.items) };
+      }
+
       label = formatted.label || label;
       color = formatted.color || color;
+      // Bar and point keep the y-format path; the rest describe their value in body.
+      if (layer.type !== "point" && layer.type !== "bar") {
+        value = formatted.body != null ? formatted.body : formatted.value;
+      }
     }
 
     return {
       title: { text: titleText },
-      items: yItems([{ color: color, label: label, value: currentFormatY(data[yKey]) }])
+      items: yItems([{ color: color, label: label, value: value }])
     };
   }
 
@@ -198,6 +213,13 @@ export function bindRollover(chart, layers) {
 
     if (layer.type === "hexbin") {
       selection.style("stroke", color).style("stroke-width", "2px");
+      return;
+    }
+
+    // Marks that draw their own stroke (sankey links, parallel lines, radar
+    // outlines) keep its colour and width; hover raises it to full opacity.
+    if (node.hasAttribute("stroke")) {
+      selection.interrupt().style("stroke-opacity", 1);
       return;
     }
 
@@ -214,6 +236,10 @@ export function bindRollover(chart, layers) {
 
   function removeElementHighlight(node, layer) {
     var selection = d3.select(node);
+    if (node.hasAttribute("stroke")) {
+      selection.interrupt().style("stroke-opacity", null);
+      return;
+    }
     selection.interrupt().transition().duration(HOVER_TRANSITION_MS)
       .style("stroke-width", "0px")
       .style("stroke", "transparent")
@@ -408,4 +434,17 @@ export function bindRollover(chart, layers) {
   function getContainerPointer(event) {
     return d3.pointer(event, that.dom.element);
   }
+}
+
+// Sankey link and node data reference each other; drop repeated objects so
+// the Shiny rollover payload serialises.
+function dropCycles() {
+  var seen = new WeakSet();
+  return function(key, value) {
+    if (value && typeof value === "object") {
+      if (seen.has(value)) return undefined;
+      seen.add(value);
+    }
+    return value;
+  };
 }

@@ -2,6 +2,15 @@
 
 ## Bug fixes
 
+* Hovering lollipop, dumbbell, range bar, candlestick, heatmap, waffle,
+  beeswarm, quantile dots, bump, radar, funnel, parallel, waterfall, and sankey
+  charts now shows a tooltip and sends the Shiny `myIO-{id}-rollover` input.
+  Their renderers already defined the tooltip, but the hover handler was bound
+  only for bar, point, hexbin, histogram, and calendar heatmap. It now binds
+  every layer whose renderer declares element hover. Marks that draw their own
+  stroke (sankey links, parallel lines, radar outlines) brighten on hover and
+  keep their stroke afterwards (#179).
+
 * `addIoLayer("radar")` and `addIoLayer("parallel")` with a `group` mapping now
   draw one polygon or line set per group instead of "No data to display".
   `addIoLayer()` split `group` into one layer per value, and since both are
