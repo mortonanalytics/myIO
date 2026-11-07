@@ -11,9 +11,9 @@
     "test:playwright": "playwright test tests/playwright"
   },
   "dependencies": {
-    "alasql": "^4.20.0",
+    "alasql": "^4.22.0",
     "apache-arrow": "^21.2.0",
-    "d3-force": "^3.0.0",
+    "d3-force": "^3.0.1",
     "regl": "^2.1.0",
     "regl-scatterplot": "^1.16.0"
   },
