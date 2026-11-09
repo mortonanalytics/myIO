@@ -11,6 +11,10 @@
   stroke (sankey links, parallel lines, radar outlines) brighten on hover and
   keep their stroke afterwards (#179).
 
+* Hovering a donut slice or treemap cell now sends the Shiny
+  `myIO-{id}-rollover` input with the hovered row, as every other chart type
+  already did. Before, both showed the tooltip but sent nothing (#187).
+
 * `addIoLayer("radar")` and `addIoLayer("parallel")` with a `group` mapping now
   draw one polygon or line set per group instead of "No data to display".
   `addIoLayer()` split `group` into one layer per value, and since both are
