@@ -126,4 +126,32 @@ describe("Shiny rollover input", function() {
     expect(call).toBeDefined();
     expect(JSON.parse(call[1]).value).toBe(2);
   });
+
+  function shinyRolloverPayload(type, data, mapping, selector) {
+    registerBuiltInRenderers();
+    globalThis.HTMLWidgets.shinyMode = true;
+    globalThis.Shiny = { onInputChange: vi.fn(), addCustomMessageHandler: vi.fn(), setInputValue: vi.fn() };
+    render(type, data, mapping, false);
+    hover(selector);
+    var call = globalThis.Shiny.onInputChange.mock.calls.find(function(c) { return c[0] === "myIO-chart-rollover"; });
+    expect(call).toBeDefined();
+    return JSON.parse(call[1]);
+  }
+
+  test("fires for donut slices with the hovered row", function() {
+    var payload = shinyRolloverPayload("donut", [{ k: "A", v: 2 }, { k: "B", v: 3 }], { x_var: "k", y_var: "v" }, ".donut");
+    expect(payload).toEqual({ k: "A", v: 2 });
+  });
+
+  test("fires for treemap cells with the hovered leaf row", function() {
+    var tree = {
+      name: "root",
+      children: [
+        { name: "Sales", children: [{ name: "East", dept: "Sales", team: "East", n: 40 }] },
+        { name: "Eng", children: [{ name: "Core", dept: "Eng", team: "Core", n: 30 }] }
+      ]
+    };
+    var payload = shinyRolloverPayload("treemap", tree, { level_1: "dept", level_2: "team", x_var: "team", y_var: "n" }, ".root");
+    expect(payload).toEqual({ name: "East", dept: "Sales", team: "East", n: 40, id: "root.Sales.East" });
+  });
 });
