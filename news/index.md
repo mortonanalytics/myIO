@@ -15,6 +15,11 @@
   keep their stroke afterwards
   ([\#179](https://github.com/mortonanalytics/myIO/issues/179)).
 
+- Hovering a donut slice or treemap cell now sends the Shiny
+  `myIO-{id}-rollover` input with the hovered row, as every other chart
+  type already did. Before, both showed the tooltip but sent nothing
+  ([\#187](https://github.com/mortonanalytics/myIO/issues/187)).
+
 - `addIoLayer("radar")` and `addIoLayer("parallel")` with a `group`
   mapping now draw one polygon or line set per group instead of “No data
   to display”.

@@ -385,6 +385,9 @@ export function bindRollover(chart, layers) {
       .on("mouseover", function(event, d) {
         chart.chart.selectAll(selector).style("opacity", 0.4);
         d3.select(this).style("opacity", 0.85);
+        if (HTMLWidgets.shinyMode) {
+          Shiny.onInputChange("myIO-" + that.element.id + "-rollover", JSON.stringify(d.data, dropCycles()));
+        }
         var tooltip = tooltipBuilder(d, layer);
         showChartTooltip(that, { pointer: getContainerPointer(event), title: tooltip.title, items: tooltip.items });
       })
@@ -415,6 +418,9 @@ export function bindRollover(chart, layers) {
     }
     chart.chart.selectAll(".root").style("opacity", 0.4);
     d3.select(this).style("opacity", 0.85);
+    if (HTMLWidgets.shinyMode) {
+      Shiny.onInputChange("myIO-" + that.element.id + "-rollover", JSON.stringify(d.data, dropCycles()));
+    }
     showChartTooltip(that, {
       pointer: getContainerPointer(event),
       title: { text: layer.mapping.level_1 + ": " + d.data[layer.mapping.level_1] },
