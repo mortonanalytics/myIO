@@ -131,6 +131,7 @@ reference:
     contents:
       - starts_with("myIO-shiny")
       - myIOProxy
+      - updateMyIOOptions
       - setKeyframe
       - stepKeyframe
   - title: LLM Tool Calling

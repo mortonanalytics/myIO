@@ -1,5 +1,15 @@
 # myIO (development version)
 
+## New features
+
+* New `updateMyIOOptions()` merges new options into rendered layers from the
+  Shiny server, matched by label, without re-running `renderMyIO()`. A field
+  chart keeps its playback time, play state, speed, selected player, hidden
+  teams, labels, trail length and metric window across the update; changing
+  pitch size or `maxGap` starts it over. Other chart types redraw from the new
+  options. The demo's Sports page uses it for the Tactical overlays controls,
+  which used to reset the field chart on every toggle (#193).
+
 ## Bug fixes
 
 * Hovering lollipop, dumbbell, range bar, candlestick, heatmap, waffle,

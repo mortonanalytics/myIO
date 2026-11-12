@@ -1074,20 +1074,32 @@ server <- function(input, output, session) {
 
   # -- Sports: field tracking --
 
+  field_label <- "Metrica Sample Game 1 · opening 20 seconds"
+  field_overlay_options <- function() {
+    list(overlays = list(shape = "shape" %in% input$field_overlays,
+                         separation = "separation" %in% input$field_overlays),
+         excludeEntities = if (isTRUE(input$field_exclude_gk)) c("home-11", "away-25") else character(0))
+  }
+
   output$fieldPlot <- renderMyIO({
     myIO(field_clip$tracking) |>
-      addIoLayer("field", label = "Metrica Sample Game 1 · opening 20 seconds",
+      addIoLayer("field", label = field_label,
         mapping = list(x_var = "x", y_var = "y", time = "time", entity = "entity_id",
                        team = "team", label = "label", kind = "kind"),
-        options = list(pitchLength = field_clip$pitch$length, pitchWidth = field_clip$pitch$width,
-                       maxGap = 0.5, events = field_events,
-                       overlays = list(shape = "shape" %in% input$field_overlays,
-                                       separation = "separation" %in% input$field_overlays),
-                       excludeEntities = if (isTRUE(input$field_exclude_gk)) c("home-11", "away-25") else character(0))) |>
+        options = c(list(pitchLength = field_clip$pitch$length, pitchWidth = field_clip$pitch$width,
+                         maxGap = 0.5, events = field_events),
+                    isolate(field_overlay_options()))) |>
       setMargin(top = 8, bottom = 8, left = 8, right = 8) |>
       suppressAxis(xAxis = TRUE, yAxis = TRUE) |>
       suppressLegend()
   })
+
+  # Overlay toggles update the rendered chart in place, so playback time, the
+  # selected player and the metric window carry over (#193).
+  observeEvent(list(input$field_overlays, input$field_exclude_gk), {
+    update <- stats::setNames(list(field_overlay_options()), field_label)
+    do.call(updateMyIOOptions, c(list(myIOProxy("fieldPlot")), update))
+  }, ignoreInit = TRUE, ignoreNULL = FALSE)
 }
 
 shinyApp(ui = ui, server = server)

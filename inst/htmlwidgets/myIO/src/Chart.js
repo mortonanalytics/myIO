@@ -576,6 +576,28 @@ export class myIOchart {
     this.renderCurrentLayers();
   }
 
+  // Shiny proxy options update (updateMyIOOptions): merge new options into
+  // existing layers by label and re-render. Each renderer decides which option
+  // changes force a re-init; the field chart keeps playback and selection across
+  // overlay-only changes. Unknown labels are ignored; `updates` is
+  // [{ label, options }].
+  updateOptions(updates) {
+    if (!Array.isArray(updates) || !this.config || !Array.isArray(this.config.layers)) {
+      return;
+    }
+    const byLabel = Object.create(null);
+    this.config.layers.forEach(function(layer) { byLabel[layer.label] = layer; });
+    updates.forEach(function(update) {
+      if (update && Object.prototype.hasOwnProperty.call(byLabel, update.label) &&
+          update.options !== null && typeof update.options === "object" && !Array.isArray(update.options)) {
+        const layer = byLabel[update.label];
+        layer.options = Object.assign({}, layer.options, update.options);
+      }
+    });
+    this.syncLegacyAliases();
+    this.renderCurrentLayers();
+  }
+
   resize(width, height) {
     if (!width || !height || width < 2 || height < 2) return;
     const wasSheetOpen = this.runtime && this.runtime._sheetOpen === true;

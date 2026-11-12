@@ -59,3 +59,45 @@ test_that("updateMyIOData validates its inputs", {
   expect_error(updateMyIOData(p), "named")
   expect_error(updateMyIOData(p, series = 1:3), "data frame")
 })
+
+test_that("updateMyIOOptions sends validated options to the right id", {
+  s <- fake_session()
+  p <- myIOProxy("chart", session = s)
+  updateMyIOOptions(p, match = list(overlays = list(shape = TRUE, separation = FALSE),
+                                    excludeEntities = c("home-11", "away-25"),
+                                    metricWindow = c(7.64, 12L),
+                                    minPlayers = 3))
+
+  expect_equal(s$.captured$type, "myio:proxy-options")
+  msg <- s$.captured$message
+  expect_equal(msg$id, "ns-chart")
+  expect_length(msg$layers, 1L)
+  expect_equal(msg$layers[[1]]$label, "match")
+  options <- msg$layers[[1]]$options
+  expect_equal(options$overlays, list(shape = TRUE, separation = FALSE))
+  expect_equal(options$excludeEntities, list("home-11", "away-25"))
+  expect_identical(options$metricWindow, c(7.64, 12))
+  expect_identical(options$minPlayers, 3L)
+
+  updateMyIOOptions(p, a = list(barSize = "small"), b = list(excludeEntities = character(0)))
+  layers <- s$.captured$message$layers
+  expect_equal(vapply(layers, function(l) l$label, character(1)), c("a", "b"))
+  expect_equal(layers[[1]]$options, list(barSize = "small"))
+  expect_equal(layers[[2]]$options$excludeEntities, list())
+})
+
+test_that("updateMyIOOptions validates its inputs", {
+  s <- fake_session()
+  p <- myIOProxy("chart", session = s)
+  expect_error(updateMyIOOptions(list()), "myIOProxy")
+  expect_error(updateMyIOOptions(p), "named")
+  expect_error(updateMyIOOptions(p, list(barSize = "small")), "named")
+  expect_error(updateMyIOOptions(p, match = TRUE), "named list of options")
+  expect_error(updateMyIOOptions(p, match = list()), "named list of options")
+  expect_error(updateMyIOOptions(p, match = data.frame(x = 1)), "named list of options")
+  expect_error(updateMyIOOptions(p, match = list(overlays = list(shape = "yes"))),
+               "updateMyIOOptions\\(\\): field option overlays")
+  expect_error(updateMyIOOptions(p, match = list(minPlayers = 1)), "minPlayers")
+  expect_error(updateMyIOOptions(p, match = list(metricWindow = c(12, 7))), "metricWindow")
+  expect_null(s$.captured$type)
+})

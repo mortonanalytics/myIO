@@ -209,3 +209,55 @@ test("two charts keep independent overlay state", async ({ page }) => {
   const times = await page.evaluate(() => (window as any).metrics.map((m: any) => m.time));
   expect(times).toEqual([PASS.time, 15.12]);
 });
+
+// #193: updateOptions (the path updateMyIOOptions() drives) keeps playback, selection and the window.
+test("an overlay-only options update keeps time, player and metric window", async ({ page }) => {
+  const errors: string[] = []; page.on("pageerror", e => errors.push(String(e)));
+  await ready(page);
+  const a = page.locator("#field-one");
+  await enable(page, 0, { overlays: { shape: true, separation: true } });
+  await seek(a, 7.64); await a.getByRole("button", { name: "Set window start" }).click();
+  await seek(a, 12); await a.getByRole("button", { name: "Set window end" }).click();
+  await seek(a, 7.64);
+  await a.getByLabel("Player", { exact: true }).selectOption("home-9");
+  const windowText = await a.locator(".field-window").textContent();
+  expect(windowText).toMatch(/^Window 7\.64–12\.00 s · \d+ sampled frames$/);
+  await expect(cell(a, "field-shape-table", "home", "n")).toHaveText("11");
+  await expect(cell(a, "field-shape-table", "home", "width")).toHaveText(PASS.shape.home.width.toFixed(2));
+
+  const update = (options: Record<string, unknown>) => page.evaluate((options) => {
+    const chart = (window as any).charts[0];
+    chart.updateOptions([{ label: chart.config.layers[0].label, options }]);
+  }, options);
+  const kept = async () => {
+    await expect(a.locator(".field-time")).toHaveText("7.64 / 20.04 s");
+    await expect(a.getByLabel("Player", { exact: true })).toHaveValue("home-9");
+    await expect(a.locator(".field-window")).toHaveText(windowText!);
+    await expect(a.locator(".field-separation-text")).toContainText("home · Home 9:");
+  };
+
+  await update({ excludeEntities: ["home-11", "away-25"] });
+  await kept();
+  await expect(cell(a, "field-shape-table", "home", "n")).toHaveText("10");
+  const expected = await page.evaluate(() => {
+    const w = window as any, layer = w.charts[0].config.layers[0];
+    return w.myIO.fieldMetrics(w.myIO.fieldData(layer.data, layer.mapping), 7.64, { maxGap: 0.5, excludeEntities: ["home-11", "away-25"] }).teams.find((t: any) => t.team === "home");
+  });
+  // The home keeper sits inside the outfield width at 7.64 s but well behind it, so depth shrinks.
+  expect(expected.depth).toBeLessThan(PASS.shape.home.depth - 1);
+  await expect(cell(a, "field-shape-table", "home", "width")).toHaveText(expected.width.toFixed(2));
+  await expect(cell(a, "field-shape-table", "home", "depth")).toHaveText(expected.depth.toFixed(2));
+  await expectBox(a, "home", expected.width, expected.depth);
+
+  await update({ excludeEntities: [] });
+  await kept();
+  await expect(cell(a, "field-shape-table", "home", "n")).toHaveText("11");
+  await expect(cell(a, "field-shape-table", "home", "width")).toHaveText(PASS.shape.home.width.toFixed(2));
+  await expectBox(a, "home", PASS.shape.home.width, PASS.shape.home.depth);
+
+  // maxGap changes interpolation, so it starts the view over.
+  await update({ maxGap: 0.4 });
+  await expect(a.locator(".field-time")).toHaveText("0.04 / 20.04 s");
+  await expect(a.getByLabel("Player", { exact: true })).toHaveValue("");
+  expect(errors).toEqual([]);
+});

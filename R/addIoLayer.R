@@ -577,21 +577,21 @@ inject_transform_mapping <- function(transform, mapping) {
 }
 
 # Field overlay options (#169). Returns options with JSON-stable shapes.
-validate_field_options <- function(options) {
+validate_field_options <- function(options, caller = "addIoLayer") {
   overlays <- options$overlays
   if (!is.null(overlays)) {
     keys <- names(overlays)
     if (!is.list(overlays) || length(overlays) == 0L || is.null(keys) || any(keys == "") ||
         !all(keys %in% c("shape", "separation")) ||
         !all(vapply(overlays, function(v) is.logical(v) && length(v) == 1L && !is.na(v), logical(1)))) {
-      stop("addIoLayer(): field option overlays must be a named list of TRUE/FALSE values for shape and separation.", call. = FALSE)
+      stop(caller, "(): field option overlays must be a named list of TRUE/FALSE values for shape and separation.", call. = FALSE)
     }
   }
   min_players <- options$minPlayers
   if (!is.null(min_players)) {
     if (!is.numeric(min_players) || length(min_players) != 1L || !is.finite(min_players) ||
         min_players < 2 || min_players != round(min_players)) {
-      stop("addIoLayer(): field option minPlayers must be a whole number of at least 2.", call. = FALSE)
+      stop(caller, "(): field option minPlayers must be a whole number of at least 2.", call. = FALSE)
     }
     options$minPlayers <- as.integer(min_players)
   }
@@ -599,14 +599,14 @@ validate_field_options <- function(options) {
   if (!is.null(exclude)) {
     if (is.list(exclude)) exclude <- unlist(exclude, use.names = FALSE)
     if (!(is.character(exclude) || is.numeric(exclude)) || anyNA(exclude)) {
-      stop("addIoLayer(): field option excludeEntities must be a vector of entity ids.", call. = FALSE)
+      stop(caller, "(): field option excludeEntities must be a vector of entity ids.", call. = FALSE)
     }
     options$excludeEntities <- as.list(as.character(exclude))
   }
   window <- options$metricWindow
   if (!is.null(window)) {
     if (!is.numeric(window) || length(window) != 2L || !all(is.finite(window)) || window[1] > window[2]) {
-      stop("addIoLayer(): field option metricWindow must be c(start, end) in seconds with start <= end.", call. = FALSE)
+      stop(caller, "(): field option metricWindow must be c(start, end) in seconds with start <= end.", call. = FALSE)
     }
     options$metricWindow <- as.numeric(window)
   }
