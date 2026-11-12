@@ -2,6 +2,21 @@
 
 ## myIO (development version)
 
+### New features
+
+- New
+  [`updateMyIOOptions()`](https://mortonanalytics.github.io/myIO/reference/updateMyIOOptions.md)
+  merges new options into rendered layers from the Shiny server, matched
+  by label, without re-running
+  [`renderMyIO()`](https://mortonanalytics.github.io/myIO/reference/myIO-shiny.md).
+  A field chart keeps its playback time, play state, speed, selected
+  player, hidden teams, labels, trail length and metric window across
+  the update; changing pitch size or `maxGap` starts it over. Other
+  chart types redraw from the new options. The demo’s Sports page uses
+  it for the Tactical overlays controls, which used to reset the field
+  chart on every toggle
+  ([\#193](https://github.com/mortonanalytics/myIO/issues/193)).
+
 ### Bug fixes
 
 - Hovering lollipop, dumbbell, range bar, candlestick, heatmap, waffle,

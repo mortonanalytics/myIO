@@ -271,6 +271,8 @@ Use myIO widgets in Shiny applications
 - [`myIOProxy()`](https://mortonanalytics.github.io/myIO/reference/myIOProxy.md)
   [`updateMyIOData()`](https://mortonanalytics.github.io/myIO/reference/myIOProxy.md)
   : Update a myIO chart in place from the Shiny server
+- [`updateMyIOOptions()`](https://mortonanalytics.github.io/myIO/reference/updateMyIOOptions.md)
+  : Update layer options of a myIO chart in place from the Shiny server
 - [`setKeyframe()`](https://mortonanalytics.github.io/myIO/reference/setKeyframe.md)
   [`stepKeyframe()`](https://mortonanalytics.github.io/myIO/reference/setKeyframe.md)
   : Control Keyframes in Shiny

@@ -41,7 +41,8 @@ if (typeof window !== "undefined") {
 
   // myIOProxy() partial-update support. The htmlwidget binding registers each
   // live chart here by outputId; a single Shiny custom-message handler routes
-  // R-side myIOProxy() data swaps to the matching chart's updateData().
+  // R-side myIOProxy() data swaps to the matching chart's updateData() and
+  // option updates to its updateOptions().
   // Null-prototype map: keys are untrusted outputIds, so a key of "__proto__"
   // must not reach Object.prototype.
   window.myIO._instances = window.myIO._instances || Object.create(null);
@@ -67,6 +68,18 @@ if (typeof window !== "undefined") {
       }
       if (typeof chart.updateData === "function") {
         chart.updateData(msg.layers || []);
+      }
+    });
+    window.Shiny.addCustomMessageHandler("myio:proxy-options", function(msg) {
+      if (!msg || !msg.id) return;
+      var chart = window.myIO._instances[msg.id];
+      if (!chart) return;
+      if (!chart.config) {
+        window.myIO.unregisterInstance(msg.id);
+        return;
+      }
+      if (typeof chart.updateOptions === "function") {
+        chart.updateOptions(msg.layers || []);
       }
     });
     window.Shiny.addCustomMessageHandler("myio:keyframe-control", function(msg) {
