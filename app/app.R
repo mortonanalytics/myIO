@@ -399,7 +399,19 @@ ui <- page_navbar(
 )
 
 # -- Server --------------------------------------------------------------
-server <- function(input, output) {
+server <- function(input, output, session) {
+
+  # Deep links: /myio/#sports opens the Sports tab, and the hash follows the selected tab.
+  tab_names <- c("Home", "Comparisons", "Trends & Time", "Distributions",
+                 "Relationships & Models", "Sports", "Interactivity", "Theme & Export")
+  tab_slug <- function(x) gsub("^-+|-+$", "", gsub("[^a-z0-9]+", "-", tolower(x)))
+  observeEvent(session$clientData$url_hash, {
+    hit <- tab_names[tab_slug(tab_names) == tab_slug(session$clientData$url_hash)]
+    if (length(hit) == 1) nav_select("nav", hit, session = session)
+  }, once = TRUE)
+  observeEvent(input$nav, {
+    updateQueryString(paste0("#", tab_slug(input$nav)), mode = "replace", session = session)
+  }, ignoreInit = TRUE)
 
   output$barPlot <- renderMyIO({
     df <- data.frame(
