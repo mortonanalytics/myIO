@@ -12,7 +12,7 @@ services:
     instance_size_slug: basic-xxs
     envs:
       - key: PROXY_SECRET
-        value: ae536a852eb7111946bfe8ae0b48013232ace79bc6cdcbf57108a2d16490da15
+        value: EV[1:q0tbkBiEkqX1dge87UaKVyivC/Z3gDcI:n4UQ698RTqKXmHFfbKoOC71IQRNpCwui1h9XneP3WnZ+DJACSjDSJKV2wJXZ76zO8J2rwQfDn853NmYRs/C2h4Dz1bOByCUKcoWRbr2n0hY=]
         type: SECRET
     routes:
       - path: /
