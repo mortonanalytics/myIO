@@ -24,6 +24,8 @@
       if (widget && widget.myIOchart && !widget.myIOchart._fieldFit) {
         widget.myIOchart._fieldFit = true;
         widget.myIOchart.on("resize", fit);
+        // Overlay changes arrive by updateMyIOOptions() without a shiny:value.
+        widget.myIOchart.on("afterRender", fit);
       }
       fit();
     }, 0);

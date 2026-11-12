@@ -86,3 +86,64 @@ updateMyIOData <- function(proxy, ...) {
   )
   invisible(proxy)
 }
+
+#' Update layer options of a myIO chart in place from the Shiny server
+#'
+#' `updateMyIOOptions()` merges new options into one or more existing layers of
+#' a rendered chart and redraws it, without re-running `renderMyIO()`. Only the
+#' supplied option names change; every other option keeps its current value.
+#'
+#' Each chart type decides what to keep across the redraw. A field chart keeps
+#' its playback time, play state, speed, selected player, hidden teams, labels,
+#' trail length and metric window when the update leaves `pitchLength`,
+#' `pitchWidth` and `maxGap` unchanged; a new `metricWindow` replaces the kept
+#' window. Changing pitch size or `maxGap` starts the field chart over. Other
+#' chart types redraw from the new options.
+#'
+#' Layers are matched by their `label`. Unknown labels are ignored client-side.
+#' Field options (`overlays`, `minPlayers`, `excludeEntities`, `metricWindow`,
+#' `events`) are checked the same way `addIoLayer()` checks them.
+#'
+#' @param proxy A `myIO_proxy` object from [myIOProxy()].
+#' @param ... One or more `label = list(...)` updates, where `label` is an
+#'   existing layer label and the list holds the option names and new values.
+#'
+#' @return The proxy, invisibly.
+#'
+#' @examples
+#' \dontrun{
+#' observeEvent(input$overlays, {
+#'   myIOProxy("field") |>
+#'     updateMyIOOptions(match = list(overlays = list(shape = "shape" %in% input$overlays)))
+#' })
+#' }
+#'
+#' @export
+updateMyIOOptions <- function(proxy, ...) {
+  if (!inherits(proxy, "myIO_proxy")) {
+    stop("updateMyIOOptions(): `proxy` must be a myIOProxy() object.", call. = FALSE)
+  }
+  updates <- list(...)
+  labels <- names(updates)
+  if (length(updates) == 0L || is.null(labels) || any(labels == "")) {
+    stop("updateMyIOOptions(): supply one or more named `label = list(...)` updates.",
+         call. = FALSE)
+  }
+
+  layers <- lapply(labels, function(label) {
+    options <- updates[[label]]
+    keys <- names(options)
+    if (!is.list(options) || is.data.frame(options) || length(options) == 0L ||
+        is.null(keys) || any(keys == "")) {
+      stop("updateMyIOOptions(): update for layer '", label,
+           "' must be a named list of options.", call. = FALSE)
+    }
+    list(label = label, options = validate_field_options(options, "updateMyIOOptions"))
+  })
+
+  proxy$session$sendCustomMessage(
+    "myio:proxy-options",
+    list(id = proxy$id, layers = layers)
+  )
+  invisible(proxy)
+}

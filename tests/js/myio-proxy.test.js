@@ -88,6 +88,38 @@ describe("Chart.updateData (myIOProxy partial update)", () => {
   });
 });
 
+describe("Chart.updateOptions (updateMyIOOptions)", () => {
+  beforeEach(() => {
+    document.body.innerHTML = "<div id='chart'></div>";
+    registerBuiltInRenderers();
+  });
+
+  test("merges options into the layer matched by label and re-renders once", () => {
+    const chart = makeChart([{ x: 1, y: 10 }]);
+    chart.renderCurrentLayers = vi.fn();
+    const before = chart.config.layers[0].options;
+    chart.updateOptions([{ label: "pts", options: { overlays: { shape: true } } }]);
+    const after = chart.config.layers[0].options;
+    expect(after).toEqual({ barSize: "large", overlays: { shape: true } });
+    expect(after).not.toBe(before);
+    expect(chart.renderCurrentLayers).toHaveBeenCalledTimes(1);
+    chart.updateOptions([{ label: "pts", options: { barSize: "small" } }]);
+    expect(chart.config.layers[0].options).toEqual({ barSize: "small", overlays: { shape: true } });
+  });
+
+  test("ignores unknown labels, a __proto__ label and malformed input", () => {
+    const chart = makeChart([{ x: 1, y: 10 }]);
+    chart.renderCurrentLayers = vi.fn();
+    const before = chart.config.layers[0].options;
+    expect(() => chart.updateOptions([{ label: "nope", options: { barSize: "small" } }])).not.toThrow();
+    expect(() => chart.updateOptions(null)).not.toThrow();
+    chart.updateOptions([{ label: "pts", options: "bad" }, { label: "pts", options: ["bad"] }, { label: "pts", options: null }]);
+    chart.updateOptions([{ label: "__proto__", options: { polluted: true } }]);
+    expect(chart.config.layers[0].options).toBe(before);
+    expect(({}).polluted).toBeUndefined();
+  });
+});
+
 describe("proxy message handler wiring", () => {
   test("installProxyHandler routes myio:proxy-update to the registered chart", async () => {
     const handlers = {};
@@ -134,6 +166,18 @@ describe("proxy message handler wiring", () => {
     handlers["myio:proxy-update"]({ id: "chartDead", layers: [] });
     expect(deadChart.updateData).not.toHaveBeenCalled();
     expect(window.myIO._instances["chartDead"]).toBeUndefined();
+
+    expect(typeof handlers["myio:proxy-options"]).toBe("function");
+    fakeChart.updateOptions = vi.fn();
+    const optionsPayload = { id: "chartA", layers: [{ label: "pts", options: { overlays: { shape: false } } }] };
+    handlers["myio:proxy-options"](optionsPayload);
+    expect(fakeChart.updateOptions).toHaveBeenCalledWith(optionsPayload.layers);
+    expect(() => handlers["myio:proxy-options"]({ id: "missing", layers: [] })).not.toThrow();
+    const deadOptions = { config: null, updateOptions: vi.fn() };
+    window.myIO.registerInstance("chartDeadOptions", deadOptions);
+    handlers["myio:proxy-options"]({ id: "chartDeadOptions", layers: [] });
+    expect(deadOptions.updateOptions).not.toHaveBeenCalled();
+    expect(window.myIO._instances["chartDeadOptions"]).toBeUndefined();
 
     // unregister removes it
     window.myIO.unregisterInstance("chartA");
