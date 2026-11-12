@@ -3,7 +3,7 @@
 ## Portfolio Context
 
 - **Role:** OSS engineering infrastructure (part of the IONe + myIO stack) that de-risks Morton Analytics' products (GroundPulse, TerraYield, IONe). Not a standalone product or GTM tool.
-- **Target:** Data scientists working in R who need best-in-class interactive web visualizations. 36 chart types with composable statistical transforms.
+- **Target:** Data scientists working in R who need best-in-class interactive web visualizations. 37 chart types with composable statistical transforms.
 - **Website presence:** Demo gallery + package docs live at morton-analytics.com/myio/ (reverse-proxied from droplet).
 - **Related:** See `../morton-command-center/market-research/brand-strategy.md` for brand context
 

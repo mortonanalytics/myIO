@@ -92,6 +92,9 @@ test("seeking to an event shows shape and separation values that match the drawn
   await a.getByLabel("Player", { exact: true }).selectOption(PASS.selected);
   await a.locator(".field-events button", { hasText: "7.64s" }).click();
   await expect(a.locator(".field-time")).toHaveText("7.64 / 20.04 s");
+  await page.addStyleTag({ content: "caption { caption-side: bottom; }" });
+  const [caption, head] = await Promise.all([a.locator(".field-shape-table caption").boundingBox(), a.locator(".field-shape-table thead").boundingBox()]);
+  expect(caption!.y).toBeLessThan(head!.y);
   for (const team of ["home", "away"]) {
     const expected = PASS.shape[team];
     await expect(cell(a, "field-shape-table", team, "n")).toHaveText(String(expected.n));

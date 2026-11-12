@@ -1016,7 +1016,7 @@
 .myIO-field .field-separation-link text { text-anchor: middle; font: bold var(--field-label-size, 1.7px) system-ui; fill: white; paint-order: stroke; stroke: #194f42; stroke-width: .5px; }
 .myIO-field .field-metrics { border-top: 1px solid #d5dfe5; padding-top: 6px; font-variant-numeric: tabular-nums; }
 .myIO-field .field-metrics table { border-collapse: collapse; margin: 4px 0; font-size: 12px; }
-.myIO-field .field-metrics caption { text-align: left; font-weight: 600; }
+.myIO-field .field-metrics caption { caption-side: top; text-align: left; font-weight: 600; }
 .myIO-field .field-metrics th, .myIO-field .field-metrics td { padding: 2px 8px 2px 0; text-align: left; }
 .myIO-field .field-metrics td { text-align: right; }
 .myIO-field .field-separation-text { margin: 4px 0; }
