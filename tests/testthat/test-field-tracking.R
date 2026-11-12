@@ -33,3 +33,12 @@ test_that("field overlay options are validated and serialize as JSON arrays", {
   expect_error(field(metricWindow=3), "metricWindow")
   expect_error(field(metricWindow=c(0, Inf)), "metricWindow")
 })
+
+test_that("field events accept a data.frame and serialize as an array of records", {
+  d <- data.frame(east=c(1,2), north=c(2,3), seconds=c(0,.2), athlete=c("a","b"), club=c("home","away"))
+  m <- list(x_var="east",y_var="north",time="seconds",entity="athlete",team="club")
+  ev <- data.frame(time=c(0, .2), type=factor(c("PASS", "SHOT")), player=c("a", NA))
+  o <- addIoLayer(myIO(d), "field", label="Match", mapping=m, options=list(events=ev))$x$config$layers[[1]]$options
+  expect_identical(o$events, list(list(time=0, type="PASS", player="a"), list(time=.2, type="SHOT")))
+  expect_match(jsonlite::toJSON(o, auto_unbox=TRUE), '"events":[{"time":0,"type":"PASS","player":"a"},{"time":0.2,"type":"SHOT"}]', fixed=TRUE)
+})

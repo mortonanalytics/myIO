@@ -68,7 +68,7 @@ ui <- page_navbar(
       fluidRow(
         column(3, div(class = "feature-card",
           icon("layer-group", style = "font-size: 2rem; color: #4A5ACB;"),
-          h4("36 Chart Types"),
+          h4(paste(length(myio_list_chart_types()), "Chart Types")),
           p("Scatter, line, bar, grouped bar, area, histogram,
              donut, gauge, treemap, hexbin, heatmap, candlestick,
              waterfall, sankey, boxplot, violin, ridgeline,

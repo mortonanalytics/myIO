@@ -15,7 +15,8 @@
 #' @param transform transform name applied before serialization
 #' @param options layer options passed through to the widget config. For field,
 #'   pitchLength and pitchWidth default to 105 and 68 meters; maxGap defaults to
-#'   0.5 seconds. events is a list of records with time, type, and player fields.
+#'   0.5 seconds. events is a list of records, or a data.frame with one row per event,
+#'   with time, type, and player fields.
 #'   Field analysis overlays are off by default: overlays = list(shape = TRUE,
 #'   separation = TRUE) enables the team width x depth box and the selected
 #'   player's nearest-opponent line with a metrics panel. minPlayers (whole
@@ -608,6 +609,14 @@ validate_field_options <- function(options) {
       stop("addIoLayer(): field option metricWindow must be c(start, end) in seconds with start <= end.", call. = FALSE)
     }
     options$metricWindow <- as.numeric(window)
+  }
+  events <- options$events
+  if (is.data.frame(events)) {
+    # One record per row; NA cells are dropped so optional fields stay absent.
+    options$events <- lapply(seq_len(nrow(events)), function(i) {
+      row <- lapply(events[i, , drop = FALSE], function(v) if (is.factor(v)) as.character(v) else v)
+      row[!vapply(row, function(v) length(v) == 1L && is.na(v), logical(1))]
+    })
   }
   options
 }

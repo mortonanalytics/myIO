@@ -36,7 +36,8 @@ time (numeric seconds), and entity; team, label, and kind are optional.}
 
 \item{options}{layer options passed through to the widget config. For field,
 pitchLength and pitchWidth default to 105 and 68 meters; maxGap defaults to
-0.5 seconds. events is a list of records with time, type, and player fields.
+0.5 seconds. events is a list of records, or a data.frame with one row per event,
+with time, type, and player fields.
 Field analysis overlays are off by default: overlays = list(shape = TRUE,
 separation = TRUE) enables the team width x depth box and the selected
 player's nearest-opponent line with a metrics panel. minPlayers (whole

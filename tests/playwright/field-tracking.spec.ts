@@ -49,6 +49,9 @@ test('real clip renders, seeks, selects, filters and synchronizes events indepen
   await expect(a.locator('[data-entity="home-2"]')).toHaveAttribute('aria-pressed','true');
   expect(await a.locator('.field-trail').getAttribute('d')).toContain('L');
   await a.getByLabel('Show home',{exact:true}).uncheck();await expect(a.locator('.field-entity')).toHaveCount(12);
+  await expect(a.locator('[data-entity="ball"] text')).toHaveText('');
+  const heading=await a.locator('.field-heading').evaluate(el=>el.getBoundingClientRect().right-parseFloat(getComputedStyle(el).paddingRight));
+  const fab=(await a.locator('.myIO-fab').boundingBox())!;expect(heading).toBeLessThanOrEqual(fab.x);
   await a.getByLabel('Labels',{exact:true}).uncheck();await expect(a.locator('.field-entity text').first()).toHaveText('');
   await a.locator('.field-events button').nth(3).click();await expect(a.locator('.field-time')).toHaveText('1.80 / 20.04 s');
   await expect(a.locator('.field-events button').nth(3)).toHaveAttribute('aria-current','true');

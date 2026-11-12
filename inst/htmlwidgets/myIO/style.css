@@ -991,7 +991,7 @@
 
 /* Native field tracking view */
 .myIO-field { box-sizing: border-box; height: 100%; overflow: auto; color: var(--chart-text-color, #263442); background: var(--chart-bg, #fff); font: 13px/1.4 system-ui, sans-serif; padding: 8px; }
-.myIO-field .field-heading { font-size: 18px; font-weight: 650; margin-bottom: 8px; }
+.myIO-field .field-heading { font-size: 18px; font-weight: 650; margin-bottom: 8px; padding-right: 44px; }
 .myIO-field .field-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 6px 0; }
 .myIO-field button, .myIO-field select { color: inherit; background: var(--chart-bg, #fff); border: 1px solid #91a1ad; border-radius: 5px; padding: 6px 9px; cursor: pointer; font: inherit; }
 .myIO-field button:disabled { opacity: .5; cursor: default; }
