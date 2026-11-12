@@ -104,6 +104,7 @@ export class FieldTrackingRenderer {
         nodes.attr("transform", d => `translate(${d.point.x},${d.point.y})`).attr("data-entity", d => d.id).attr("data-kind", d => d.kind).attr("tabindex", d => d.kind === "ball" ? null : 0).attr("role", "button").attr("aria-label", d => `${d.team} ${d.label}, ${d.point.x.toFixed(1)}, ${d.point.y.toFixed(1)} meters`).attr("aria-pressed", d => String(d.id === selected)).classed("selected", d => d.id === selected).on("click", (_, d) => { if (d.kind !== "ball") choose(d); }).on("keydown", (event, d) => { if (["Enter", " "].includes(event.key) && d.kind !== "ball") { event.preventDefault(); choose(d); } });
         nodes.select("circle").attr("r", d => d.kind === "ball" ? 0.8 : 1.3).attr("fill", d => d.kind === "ball" ? "white" : color(d.team));
         nodes.select("text").attr("y", -2).text(d => labels && d.kind !== "ball" ? (d.label.match(/\d+$/)?.[0] || d.label) : "");
+        nodes.filter(d => d.kind === "ball").raise();
         nodes.select("title").text(d => `${d.team} · ${d.label} · ${d.point.x.toFixed(2)}, ${d.point.y.toFixed(2)} m`);
         const entity = data.entities.find(d => d.id === selected);
         trail.attr("d", entity && !hidden.has(entity.team) ? trailAt(entity.samples, time, seconds, gap) : "").attr("stroke", entity ? color(entity.team) : "none");

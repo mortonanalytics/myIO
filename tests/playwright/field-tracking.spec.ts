@@ -50,6 +50,7 @@ test('real clip renders, seeks, selects, filters and synchronizes events indepen
   expect(await a.locator('.field-trail').getAttribute('d')).toContain('L');
   await a.getByLabel('Show home',{exact:true}).uncheck();await expect(a.locator('.field-entity')).toHaveCount(12);
   await expect(a.locator('[data-entity="ball"] text')).toHaveText('');
+  await expect(a.locator('.field-pitch g.field-entity').last()).toHaveAttribute('data-entity','ball');
   const heading=await a.locator('.field-heading').evaluate(el=>el.getBoundingClientRect().right-parseFloat(getComputedStyle(el).paddingRight));
   const fab=(await a.locator('.myIO-fab').boundingBox())!;expect(heading).toBeLessThanOrEqual(fab.x);
   await a.getByLabel('Labels',{exact:true}).uncheck();await expect(a.locator('.field-entity text').first()).toHaveText('');
