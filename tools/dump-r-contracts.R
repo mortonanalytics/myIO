@@ -26,6 +26,7 @@ for (fn in exported_functions) {
 
 required_mapping_for_type <- function(type) {
   switch(type,
+    field = c("x_var", "y_var", "time", "entity"),
     treemap = c("level_1", "level_2"),
     gauge = c("value"),
     histogram = c("value"),
@@ -57,6 +58,7 @@ required_mapping_for_type <- function(type) {
 
 numeric_fields_for_type <- function(type) {
   fields <- switch(type,
+    field = c("x_var", "y_var", "time"),
     line = c("x_var", "y_var"),
     point = c("x_var", "y_var"),
     bar = c("y_var"),

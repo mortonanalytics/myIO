@@ -1,0 +1,273 @@
+{
+  "source": "tests/js/fixtures/field_metrics_reference.py",
+  "fixture_sha256": "879d886b8a37ec183484fa526bb4bc0f2e87aeed792ed9692f5750306195adf4",
+  "maxGap": 0.5,
+  "gap": {
+    "entity": "home-2",
+    "removedAfter": 5.0,
+    "removedBefore": 6.0
+  },
+  "instants": [
+    {
+      "name": "kick-off pass (interpolated 0.12 s)",
+      "data": "full",
+      "time": 0.12,
+      "selected": "away-21",
+      "shape": {
+        "away": {
+          "n": 11,
+          "width": 60.799616,
+          "depth": 55.32744000000001
+        },
+        "home": {
+          "n": 11,
+          "width": 35.026391999999994,
+          "depth": 57.90015
+        }
+      },
+      "separation": {
+        "opponent": {
+          "entity": "home-10",
+          "distance": 0.1328809830788411
+        },
+        "teammate": {
+          "entity": "away-19",
+          "distance": 10.719476514815637
+        }
+      }
+    },
+    {
+      "name": "pass at 7.64 s (interpolated)",
+      "data": "full",
+      "time": 7.64,
+      "selected": "away-21",
+      "shape": {
+        "away": {
+          "n": 11,
+          "width": 52.721759999999996,
+          "depth": 57.82245
+        },
+        "home": {
+          "n": 11,
+          "width": 36.51736,
+          "depth": 46.432050000000004
+        }
+      },
+      "separation": {
+        "opponent": {
+          "entity": "home-5",
+          "distance": 6.104500068973708
+        },
+        "teammate": {
+          "entity": "away-20",
+          "distance": 9.349420990205758
+        }
+      }
+    },
+    {
+      "name": "sampled frame 10.04 s",
+      "data": "full",
+      "time": 10.04,
+      "selected": "home-2",
+      "shape": {
+        "away": {
+          "n": 11,
+          "width": 47.33072,
+          "depth": 61.3641
+        },
+        "home": {
+          "n": 11,
+          "width": 38.528800000000004,
+          "depth": 43.82385
+        }
+      },
+      "separation": {
+        "opponent": {
+          "entity": "away-18",
+          "distance": 2.1517672328576785
+        },
+        "teammate": {
+          "entity": "home-6",
+          "distance": 8.498012145349053
+        }
+      }
+    },
+    {
+      "name": "recovery at 15.12 s excluding goalkeepers",
+      "data": "full",
+      "time": 15.12,
+      "selected": "home-2",
+      "exclude": [
+        "home-11",
+        "away-25"
+      ],
+      "shape": {
+        "away": {
+          "n": 10,
+          "width": 40.017864,
+          "depth": 32.97483
+        },
+        "home": {
+          "n": 10,
+          "width": 36.007087999999996,
+          "depth": 27.053459999999994
+        }
+      },
+      "separation": {
+        "opponent": {
+          "entity": "away-24",
+          "distance": 2.6695893335148004
+        },
+        "teammate": {
+          "entity": "home-3",
+          "distance": 7.5904742016988624
+        }
+      }
+    },
+    {
+      "name": "home-2 inside a 1.2 s tracking gap",
+      "data": "gapped",
+      "time": 5.5,
+      "selected": "home-2",
+      "shape": {
+        "away": {
+          "n": 11,
+          "width": 55.197232,
+          "depth": 55.04394
+        },
+        "home": {
+          "n": 10,
+          "width": 34.891072,
+          "depth": 49.897155
+        }
+      },
+      "separation": null
+    },
+    {
+      "name": "teammate of the gapped player",
+      "data": "gapped",
+      "time": 5.5,
+      "selected": "home-3",
+      "shape": {
+        "away": {
+          "n": 11,
+          "width": 55.197232,
+          "depth": 55.04394
+        },
+        "home": {
+          "n": 10,
+          "width": 34.891072,
+          "depth": 49.897155
+        }
+      },
+      "separation": {
+        "opponent": {
+          "entity": "away-24",
+          "distance": 2.74055092091791
+        },
+        "teammate": {
+          "entity": "home-6",
+          "distance": 9.957047915390184
+        }
+      }
+    },
+    {
+      "name": "minPlayers above available players",
+      "data": "gapped",
+      "time": 5.5,
+      "selected": null,
+      "minPlayers": 11,
+      "shape": {
+        "away": {
+          "n": 11,
+          "width": 55.197232,
+          "depth": 55.04394
+        },
+        "home": {
+          "n": 10,
+          "width": null,
+          "depth": null
+        }
+      },
+      "separation": null
+    }
+  ],
+  "windows": [
+    {
+      "name": "full clip",
+      "data": "full",
+      "window": [
+        0.04,
+        20.04
+      ],
+      "minPlayers": 2,
+      "sampled": 101,
+      "teams": {
+        "away": {
+          "frames": 101,
+          "width": {
+            "mean": 46.85182495049505,
+            "min": 23.80068,
+            "max": 61.683479999999996
+          },
+          "depth": {
+            "mean": 57.238899504950496,
+            "min": 52.408649999999994,
+            "max": 61.3641
+          }
+        },
+        "home": {
+          "frames": 101,
+          "width": {
+            "mean": 35.115765544554456,
+            "min": 29.7534,
+            "max": 38.858599999999996
+          },
+          "depth": {
+            "mean": 47.73335346534653,
+            "min": 42.76335,
+            "max": 58.01565
+          }
+        }
+      }
+    },
+    {
+      "name": "gap window, minPlayers 11",
+      "data": "gapped",
+      "window": [
+        4.5,
+        6.5
+      ],
+      "minPlayers": 11,
+      "sampled": 10,
+      "teams": {
+        "away": {
+          "frames": 10,
+          "width": {
+            "mean": 55.394092,
+            "min": 53.964119999999994,
+            "max": 57.578320000000005
+          },
+          "depth": {
+            "mean": 55.223175000000005,
+            "min": 54.73544999999999,
+            "max": 56.07735
+          }
+        },
+        "home": {
+          "frames": 5,
+          "width": {
+            "mean": 34.792608,
+            "min": 34.378080000000004,
+            "max": 35.08188
+          },
+          "depth": {
+            "mean": 49.645889999999994,
+            "min": 48.47745,
+            "max": 51.01845
+          }
+        }
+      }
+    }
+  ]
+}
