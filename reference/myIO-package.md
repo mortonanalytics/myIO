@@ -24,9 +24,11 @@ Useful links:
 
 ## Author
 
-**Maintainer**: Ryan Morton <morton@myma.us> \[copyright holder\]
+**Maintainer**: Ryan Morton <morton@myma.us>
 
 Other contributors:
+
+- Morton Analytics LLC \[copyright holder, funder\]
 
 - Mike Bostock (D3.js, d3-hexbin, and d3-sankey libraries) \[copyright
   holder\]

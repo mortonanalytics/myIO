@@ -16,5 +16,5 @@ A character vector of chart type names.
 
 ``` r
 head(myio_list_chart_types())
-#> [1] "line"    "point"   "bar"     "hexbin"  "treemap" "gauge"  
+#> [1] "field"   "line"    "point"   "bar"     "hexbin"  "treemap"
 ```

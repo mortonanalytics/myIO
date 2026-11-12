@@ -105,15 +105,16 @@ server</strong> (covered at the end) for assistants.</p>
 <p>List the chart types myIO knows about — this is the model’s menu:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/myio_list_chart_types.html">myio_list_chart_types</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt;  [1] "line"            "point"           "bar"             "hexbin"         </span></span>
-<span><span class="co">#&gt;  [5] "treemap"         "gauge"           "donut"           "area"           </span></span>
-<span><span class="co">#&gt;  [9] "groupedBar"      "histogram"       "heatmap"         "candlestick"    </span></span>
-<span><span class="co">#&gt; [13] "waterfall"       "sankey"          "boxplot"         "violin"         </span></span>
-<span><span class="co">#&gt; [17] "ridgeline"       "rangeBar"        "text"            "regression"     </span></span>
-<span><span class="co">#&gt; [21] "bracket"         "comparison"      "qq"              "lollipop"       </span></span>
-<span><span class="co">#&gt; [25] "dumbbell"        "waffle"          "beeswarm"        "bump"           </span></span>
-<span><span class="co">#&gt; [29] "radar"           "funnel"          "parallel"        "survfit"        </span></span>
-<span><span class="co">#&gt; [33] "histogram_fit"   "calendarHeatmap" "quantile_dots"   "fan"</span></span></code></pre></div>
+<span><span class="co">#&gt;  [1] "field"           "line"            "point"           "bar"            </span></span>
+<span><span class="co">#&gt;  [5] "hexbin"          "treemap"         "gauge"           "donut"          </span></span>
+<span><span class="co">#&gt;  [9] "area"            "groupedBar"      "histogram"       "heatmap"        </span></span>
+<span><span class="co">#&gt; [13] "candlestick"     "waterfall"       "sankey"          "boxplot"        </span></span>
+<span><span class="co">#&gt; [17] "violin"          "ridgeline"       "rangeBar"        "text"           </span></span>
+<span><span class="co">#&gt; [21] "regression"      "bracket"         "comparison"      "qq"             </span></span>
+<span><span class="co">#&gt; [25] "lollipop"        "dumbbell"        "waffle"          "beeswarm"       </span></span>
+<span><span class="co">#&gt; [29] "bump"            "radar"           "funnel"          "parallel"       </span></span>
+<span><span class="co">#&gt; [33] "survfit"         "histogram_fit"   "calendarHeatmap" "quantile_dots"  </span></span>
+<span><span class="co">#&gt; [37] "fan"</span></span></code></pre></div>
 <p>Now suppose the assistant proposes a box plot but guesses the mapping
 keys:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
@@ -183,7 +184,7 @@ myIO actually draws, and it covers the full surface, not a hand-picked
 subset:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="../reference/myio_list_chart_types.html">myio_list_chart_types</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>   <span class="co"># chart types</span></span>
-<span><span class="co">#&gt; [1] 36</span></span>
+<span><span class="co">#&gt; [1] 37</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="../reference/myio_list_functions.html">myio_list_functions</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>     <span class="co"># exported function signatures</span></span>
 <span><span class="co">#&gt; [1] 48</span></span></code></pre></div>
 </li>

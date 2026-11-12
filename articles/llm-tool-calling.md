@@ -43,15 +43,16 @@ List the chart types myIO knows about — this is the model’s menu:
 ``` r
 
 myio_list_chart_types()
-#>  [1] "line"            "point"           "bar"             "hexbin"         
-#>  [5] "treemap"         "gauge"           "donut"           "area"           
-#>  [9] "groupedBar"      "histogram"       "heatmap"         "candlestick"    
-#> [13] "waterfall"       "sankey"          "boxplot"         "violin"         
-#> [17] "ridgeline"       "rangeBar"        "text"            "regression"     
-#> [21] "bracket"         "comparison"      "qq"              "lollipop"       
-#> [25] "dumbbell"        "waffle"          "beeswarm"        "bump"           
-#> [29] "radar"           "funnel"          "parallel"        "survfit"        
-#> [33] "histogram_fit"   "calendarHeatmap" "quantile_dots"   "fan"
+#>  [1] "field"           "line"            "point"           "bar"            
+#>  [5] "hexbin"          "treemap"         "gauge"           "donut"          
+#>  [9] "area"            "groupedBar"      "histogram"       "heatmap"        
+#> [13] "candlestick"     "waterfall"       "sankey"          "boxplot"        
+#> [17] "violin"          "ridgeline"       "rangeBar"        "text"           
+#> [21] "regression"      "bracket"         "comparison"      "qq"             
+#> [25] "lollipop"        "dumbbell"        "waffle"          "beeswarm"       
+#> [29] "bump"            "radar"           "funnel"          "parallel"       
+#> [33] "survfit"         "histogram_fit"   "calendarHeatmap" "quantile_dots"  
+#> [37] "fan"
 ```
 
 Now suppose the assistant proposes a box plot but guesses the mapping
@@ -128,7 +129,7 @@ matter:
   ``` r
 
   length(myio_list_chart_types())   # chart types
-  #> [1] 36
+  #> [1] 37
   length(myio_list_functions())     # exported function signatures
   #> [1] 48
   ```

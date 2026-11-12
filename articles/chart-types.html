@@ -570,6 +570,119 @@ layer points, a connecting line, and a linear model trend line:</p>
 <span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"wt"</span>, y_var <span class="op">=</span> <span class="st">"mpg"</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
+<div class="section level2">
+<h2 id="field-tracking">Field tracking<a class="anchor" aria-label="anchor" href="#field-tracking"></a>
+</h2>
+<p><code>field</code> displays long-form player and ball observations on
+a soccer pitch. Map <code>x_var</code> and <code>y_var</code> to numeric
+meters, <code>time</code> to numeric seconds, and <code>entity</code> to
+a stable identifier. Optional <code>team</code>, <code>label</code>, and
+<code>kind</code> mappings supply team filters, marker labels, and the
+ball marker (<code>kind = "ball"</code>). Use this type alone.</p>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="va">tracking</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span><span class="st">"field"</span>, label <span class="op">=</span> <span class="st">"Match"</span>, mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    x_var <span class="op">=</span> <span class="st">"x"</span>, y_var <span class="op">=</span> <span class="st">"y"</span>, time <span class="op">=</span> <span class="st">"time"</span>, entity <span class="op">=</span> <span class="st">"entity_id"</span>,</span>
+<span>    team <span class="op">=</span> <span class="st">"team"</span>, label <span class="op">=</span> <span class="st">"label"</span>, kind <span class="op">=</span> <span class="st">"kind"</span></span>
+<span>  <span class="op">)</span>, options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>pitchLength <span class="op">=</span> <span class="fl">105</span>, pitchWidth <span class="op">=</span> <span class="fl">68</span>, maxGap <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>                    events <span class="op">=</span> <span class="va">events</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><code>pitchLength</code> and <code>pitchWidth</code> default to 105
+and 68 meters. The origin is the upper-left corner. <code>maxGap</code>
+defaults to 0.5 seconds. Positions interpolate linearly between finite
+observations of the same entity within that gap. Missing or nonfinite
+coordinates, duplicate entity/time observations, and longer gaps break
+both positions and trails. There is no extrapolation. Missing
+identifiers and nonfinite timestamps are excluded. At least two distinct
+timestamps enable play.</p>
+<p><code>events</code> is a list of records with numeric
+<code>time</code> and display fields <code>type</code>,
+<code>player</code>, and optionally <code>team</code>,
+<code>subtype</code>, and <code>target</code>. Only events inside the
+observed time interval appear. Each button seeks to its exact event
+time; the latest event at or before the current time is highlighted.
+Equal-time events remain individually clickable; the last record is
+highlighted.</p>
+<p>Playback uses elapsed seconds and stops at the last timestamp. Play
+at the end restarts the clip. Timeline seeking and frame stepping pause
+playback. Player selection remains attached to the identifier; the trail
+control uses seconds. Labels and teams can be hidden independently.
+Controls work with keyboard input and reduced motion. Resizing preserves
+the current view; replacing layer data starts a new paused view. The
+production-bundle example is
+<code>tests/playwright/fixtures/field-tracking.html</code>.</p>
+<div class="section level3">
+<h3 id="field-analysis-overlays">Field analysis overlays<a class="anchor" aria-label="anchor" href="#field-analysis-overlays"></a>
+</h3>
+<p>Two optional overlays add team shape and player separation. Both are
+off unless requested, and both follow playback, timeline seeking, event
+buttons, player selection and team visibility.</p>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="va">tracking</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span><span class="st">"field"</span>, label <span class="op">=</span> <span class="st">"Match"</span>, mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    x_var <span class="op">=</span> <span class="st">"x"</span>, y_var <span class="op">=</span> <span class="st">"y"</span>, time <span class="op">=</span> <span class="st">"time"</span>, entity <span class="op">=</span> <span class="st">"entity_id"</span>,</span>
+<span>    team <span class="op">=</span> <span class="st">"team"</span>, label <span class="op">=</span> <span class="st">"label"</span>, kind <span class="op">=</span> <span class="st">"kind"</span></span>
+<span>  <span class="op">)</span>, options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>events <span class="op">=</span> <span class="va">events</span>,</span>
+<span>                    overlays <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>shape <span class="op">=</span> <span class="cn">TRUE</span>, separation <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>                    minPlayers <span class="op">=</span> <span class="fl">2</span>, excludeEntities <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"home-11"</span>, <span class="st">"away-25"</span><span class="op">)</span>,</span>
+<span>                    metricWindow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">10</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>Every metric uses the positions the chart draws: an entity has a
+position at time <code>t</code> only under the interpolation and
+<code>maxGap</code> rules above. Players without one are left out; they
+are never placed at 0 or carried across a gap. The ball
+(<code>kind = "ball"</code>) never counts. Units are the data units
+(meters).</p>
+<ul>
+<li>
+<strong>Team width</strong>: <code>max(y) - min(y)</code> over the
+team’s positioned players at <code>t</code>.</li>
+<li>
+<strong>Team depth</strong>: <code>max(x) - min(x)</code> over the
+same players.</li>
+<li>
+<code>n</code> is the number of players used. When
+<code>n &lt; minPlayers</code> (default 2) width and depth are missing,
+never 0. <code>excludeEntities</code> removes those ids (for example
+goalkeepers) from shape metrics only; they still count for
+separation.</li>
+<li>
+<strong>Separation</strong>: for the selected player, the distance
+to the nearest opponent and the nearest teammate with a position at
+<code>t</code>, with their entity ids. It is missing when the selected
+player has no position, or when no other player does. A nearest opponent
+or teammate is missing on its own when that group has no positioned
+player. Ties go to the entity that appears first in the data.</li>
+<li>
+<strong>Interval summary</strong>: mean, minimum and maximum width
+and depth over the chart’s sampled timestamps in
+<code>metricWindow = c(t0, t1)</code> (inclusive; default the whole
+clip), using only frames where the metric exists, with the count of
+contributing frames. Missing frames are excluded, never filled. <em>Set
+window start</em> and <em>Set window end</em> set either bound to the
+current time.</li>
+<li>Attack direction does not affect any of these metrics: they are
+ranges and distances, unchanged when the pitch is mirrored.</li>
+</ul>
+<p>The shape overlay draws, per visible team, the rectangle spanning its
+x and y range (depth × width) in the team color. The separation overlay
+draws a line from the selected player to the nearest opponent, labeled
+with the distance. Each is hidden when its metric is missing or either
+team is hidden; hiding a team does not change the numbers. A metrics
+panel below the pitch lists the current values and the window
+summary.</p>
+<p>The same values are emitted on every repaint as the chart event
+<code>fieldMetrics</code> with payload
+<code>{layer, time, teams, separation, window}</code>;
+<code>teams</code> entries hold <code>team</code>, <code>n</code>,
+<code>width</code>, <code>depth</code> and the box bounds. Like the
+field <code>select</code> event it is a JavaScript chart event, received
+with <code>chart.on("fieldMetrics", handler)</code>, and is not
+forwarded to a Shiny input. In the browser,
+<code>myIO.fieldMetrics(myIO.fieldData(rows, mapping), time, options)</code>
+and <code>myIO.fieldMetricsWindow(data, [t0, t1], options)</code>
+compute them without a chart. No model-based scores (pitch control,
+expected goals) are included.</p>
+</div>
+</div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
 </div>
