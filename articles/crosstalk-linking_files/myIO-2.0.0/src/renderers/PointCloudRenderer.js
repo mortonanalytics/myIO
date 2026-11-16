@@ -19,7 +19,16 @@
 import { b64ToBytes } from "../utils/b64-to-bytes.js";
 
 export const COLOR_MODES = ["rgb", "class", "height", "sigma"];
+// 2D sits on the page theme's chart background (--chart-bg); 3D on the
+// myDAR app's dark scene background.
 const BACKGROUND = [0.969, 0.973, 0.98, 1];
+export const BACKGROUND_3D = [0.078, 0.071, 0.118, 1];
+
+function themeBackground(node) {
+  const value = node ? getComputedStyle(node).getPropertyValue("--chart-bg").trim() : "";
+  const c = value ? d3.rgb(value) : null;
+  return c && Number.isFinite(c.r) ? [c.r / 255, c.g / 255, c.b / 255, 1] : BACKGROUND;
+}
 // Points are drawn at least this wide in meters, so surfaces close up.
 const POINT_WORLD_SIZE = 0.025;
 
@@ -187,6 +196,31 @@ export function buildRibbon(path, halfWidth, zAt, lift) {
     [[a.l, a.c], [a.r, a.c], [b.r, b.c], [a.l, a.c], [b.r, b.c], [b.l, b.c]].forEach((v) => { pos.push(...v[0]); col.push(...v[1]); });
   }
   return { positions: new Float32Array(pos), colors: new Float32Array(col), count: pos.length / 3 };
+}
+
+// The profile line clipped to where there is data: sampled at n + 1 points,
+// kept from the first to the last sample with a DEM height under it (or,
+// without a DEM, inside the cloud's x/y box). Each kept point gets the ground
+// height plus `lift`; gaps inside the run carry the last known height.
+// Returns null when the line misses the data.
+export function clipProfile(line, groundAt, box, lift, n) {
+  const steps = n || 120;
+  const samples = [];
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const x = line[0][0] + (line[1][0] - line[0][0]) * t, y = line[0][1] + (line[1][1] - line[0][1]) * t;
+    const g = groundAt ? groundAt(x, y) : NaN;
+    const inside = groundAt ? Number.isFinite(g) : x >= box[0] && x <= box[1] && y >= box[2] && y <= box[3];
+    samples.push({ x, y, g, inside });
+  }
+  let first = samples.findIndex((p) => p.inside), last = -1;
+  for (let i = samples.length - 1; i >= 0; i--) if (samples[i].inside) { last = i; break; }
+  if (first < 0) return null;
+  let ground = Number.isFinite(samples[first].g) ? samples[first].g : box[4];
+  return samples.slice(first, last + 1).map((p) => {
+    if (Number.isFinite(p.g)) ground = p.g;
+    return [p.x, p.y, ground + (lift || 0)];
+  });
 }
 
 // Keys of the selectable points inside a world rectangle [x0, x1, y0, y1].
@@ -518,7 +552,7 @@ function createView(chart, layer, opts) {
         projScale: regl.prop("projScale"), pixelsPerMeter: regl.prop("pixelsPerMeter"), isPlan: regl.prop("isPlan"),
         ramp, classTex,
         fogNear: regl.prop("fogNear"), fogFar: regl.prop("fogFar"),
-        background: BACKGROUND.slice(0, 3)
+        background: regl.prop("background")
       },
       count: cloud.n,
       primitive: "points",
@@ -565,7 +599,7 @@ function createView(chart, layer, opts) {
           normal: regl.buffer(meshGeom.normals),
           color: { buffer: regl.buffer({ data: meshGeom.colors, type: "uint8" }), normalized: true }
         },
-        uniforms: { view: regl.prop("view"), proj: regl.prop("proj"), light: norm([0.3, -0.4, 0.85]), background: BACKGROUND.slice(0, 3),
+        uniforms: { view: regl.prop("view"), proj: regl.prop("proj"), light: norm([0.3, -0.4, 0.85]), background: regl.prop("background"),
           fogNear: regl.prop("fogNear"), fogFar: regl.prop("fogFar") },
         count: meshGeom.count,
         cull: { enable: false },
@@ -590,7 +624,7 @@ function createView(chart, layer, opts) {
               float fog = clamp((vDepth - fogNear) / max(fogFar - fogNear, 1e-3), 0.0, 1.0) * 0.45;
               gl_FragColor = vec4(mix(c.rgb, background, fog), 1.0); }`,
           attributes,
-          uniforms: { view: regl.prop("view"), proj: regl.prop("proj"), tex: texture, background: BACKGROUND.slice(0, 3),
+          uniforms: { view: regl.prop("view"), proj: regl.prop("proj"), tex: texture, background: regl.prop("background"),
             fogNear: regl.prop("fogNear"), fogFar: regl.prop("fogFar") },
           count,
           depth
@@ -617,18 +651,8 @@ function createView(chart, layer, opts) {
       : null;
     let profileLine = null;
     const setProfile = (o) => {
-      profileLine = null;
       const pr = o.profile;
-      if (!Array.isArray(pr) || pr.length !== 2) return;
-      const pts = [];
-      let lastGround = NaN;
-      for (let i = 0; i <= 60; i++) {
-        const t = i / 60, x = pr[0][0] + (pr[1][0] - pr[0][0]) * t, y = pr[0][1] + (pr[1][1] - pr[0][1]) * t;
-        const g = groundAt ? groundAt(x, y) : NaN;
-        if (Number.isFinite(g)) lastGround = g;
-        pts.push([x, y, (Number.isFinite(lastGround) ? lastGround : bbox[4]) + BAND_LIFT]);
-      }
-      profileLine = pts;
+      profileLine = Array.isArray(pr) && pr.length === 2 ? clipProfile(pr, groundAt, cloud.box, BAND_LIFT) : null;
     };
     setProfile(opts);
 
@@ -759,11 +783,13 @@ function createView(chart, layer, opts) {
       const w = canvas.width, h = canvas.height;
       if (!w || !h) return;
       regl.poll();
-      regl.clear({ color: BACKGROUND, depth: 1 });
-      const m = viewMatrices(state.view, w, h);
       const plan = state.view.mode === "plan";
+      const bg = plan ? themeBackground(host.node()) : BACKGROUND_3D;
+      regl.clear({ color: bg, depth: 1 });
+      host.classed("is-3d", !plan);
+      const m = viewMatrices(state.view, w, h);
       const dpr = canvas.width / Math.max(1, canvas.clientWidth || canvas.width);
-      const fog = { fogNear: plan ? 1e6 : state.view.dist * 0.6, fogFar: plan ? 2e6 : state.view.dist * 1.8 };
+      const fog = { fogNear: plan ? 1e6 : state.view.dist * 0.6, fogFar: plan ? 2e6 : state.view.dist * 1.8, background: bg.slice(0, 3) };
       if (state.ortho) {
         if (plan && drawFlatOrtho) drawFlatOrtho(Object.assign({ view: m.view, proj: m.proj }, fog));
         if (!plan && drawDrape) drawDrape(Object.assign({ view: m.view, proj: m.proj }, fog));
@@ -780,8 +806,13 @@ function createView(chart, layer, opts) {
         }, fog));
       }
       if (band && band.count) drawTriangles({ view: m.view, proj: m.proj, position: band.positions, color: band.colors, count: band.count, alpha: 0.85, depth: !plan });
-      if (track) drawLines({ view: m.view, proj: m.proj, position: track, count: track.length, color: [0.11, 0.14, 0.19, 1], primitive: "line strip" });
-      if (profileLine) drawLines({ view: m.view, proj: m.proj, position: profileLine, count: profileLine.length, color: [0, 0.447, 0.698, 1], primitive: "line strip" });
+      // The phone's path runs at hand height. In 2D it is the line inside the
+      // band, as in the app; in 3D, with the band on the ground, it would
+      // float above it, so the band alone shows the track there.
+      const phonePath = !!track && (plan || !band);
+      canvas.dataset.phonePath = phonePath ? "1" : "0";
+      if (phonePath) drawLines({ view: m.view, proj: m.proj, position: track, count: track.length, color: plan ? [0.11, 0.14, 0.19, 1] : [0.94, 0.62, 0.2, 1], primitive: "line strip" });
+      if (profileLine) drawLines({ view: m.view, proj: m.proj, position: profileLine, count: profileLine.length, color: plan ? [0, 0.447, 0.698, 1] : [0.34, 0.71, 0.91, 1], primitive: "line strip" });
       if (plan) {
         const ppm = (m.pixelsPerMeter || 1) / dpr;
         const target = 90 / ppm;

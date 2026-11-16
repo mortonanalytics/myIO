@@ -1022,8 +1022,11 @@
 .myIO-field .field-separation-text { margin: 4px 0; }
 
 /* pointcloud: WebGL point cloud with overlay controls (colors follow the myDAR Results screen). */
-.myIO-pointcloud { position: relative; width: 100%; height: 100%; overflow: hidden; border-radius: 10px; background: #f7f8fa; color: #1d2430; font: 13px/1.35 var(--chart-font, system-ui, sans-serif); touch-action: none; }
+.myIO-pointcloud { position: relative; width: 100%; height: 100%; overflow: hidden; border-radius: 10px; background: var(--chart-bg, #f7f8fa); color: #1d2430; font: 13px/1.35 var(--chart-font, system-ui, sans-serif); touch-action: none; }
 .myIO-pointcloud-canvas { position: absolute; inset: 0; display: block; cursor: grab; }
+/* 3D: the myDAR app's dark scene; the controls keep their own light panels. */
+.myIO-pointcloud.is-3d { background: #14121e; }
+.myIO-pointcloud.is-3d .myIO-pc-hint { color: #dfe3ea; background: rgba(20, 18, 30, .7); }
 .myIO-pointcloud-canvas:active { cursor: grabbing; }
 .myIO-pointcloud-message { padding: 16px; color: #5b6575; }
 .myIO-pc-top { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; align-items: center; gap: 10px; pointer-events: none; }
