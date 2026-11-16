@@ -114,7 +114,7 @@ export function bindRollover(chart, layers) {
     var renderer = getRendererForLayer(layer);
     var tooltip = buildTooltip(layer, renderer, data, this);
 
-    if (HTMLWidgets.shinyMode) {
+    if (typeof HTMLWidgets !== "undefined" && HTMLWidgets.shinyMode) {
       Shiny.onInputChange("myIO-" + that.element.id + "-rollover", JSON.stringify(data, dropCycles()));
     }
 
@@ -255,7 +255,7 @@ export function bindRollover(chart, layers) {
     var thisLayer = lys[data.idx];
     var color = resolveColor(that, thisLayer.label, thisLayer.color);
 
-    if (HTMLWidgets.shinyMode) {
+    if (typeof HTMLWidgets !== "undefined" && HTMLWidgets.shinyMode) {
       Shiny.onInputChange("myIO-" + that.element.id + "-rollover", JSON.stringify(data.data.values));
     }
 
@@ -321,7 +321,7 @@ export function bindRollover(chart, layers) {
       return;
     }
 
-    if (HTMLWidgets.shinyMode) {
+    if (typeof HTMLWidgets !== "undefined" && HTMLWidgets.shinyMode) {
       Shiny.onInputChange("myIO-" + that.element.id + "-rollover", JSON.stringify(tipText.map(function(d) {
         return d.value;
       })));
@@ -385,7 +385,7 @@ export function bindRollover(chart, layers) {
       .on("mouseover", function(event, d) {
         chart.chart.selectAll(selector).style("opacity", 0.4);
         d3.select(this).style("opacity", 0.85);
-        if (HTMLWidgets.shinyMode) {
+        if (typeof HTMLWidgets !== "undefined" && HTMLWidgets.shinyMode) {
           Shiny.onInputChange("myIO-" + that.element.id + "-rollover", JSON.stringify(d.data, dropCycles()));
         }
         var tooltip = tooltipBuilder(d, layer);
@@ -418,7 +418,7 @@ export function bindRollover(chart, layers) {
     }
     chart.chart.selectAll(".root").style("opacity", 0.4);
     d3.select(this).style("opacity", 0.85);
-    if (HTMLWidgets.shinyMode) {
+    if (typeof HTMLWidgets !== "undefined" && HTMLWidgets.shinyMode) {
       Shiny.onInputChange("myIO-" + that.element.id + "-rollover", JSON.stringify(d.data, dropCycles()));
     }
     showChartTooltip(that, {
