@@ -82,18 +82,21 @@ export function renderAxes(chart, options) {
             return label == null ? value : label;
           });
       } else {
-        xAxisGenerator.ticks(chart.width < 550 ? 5 : 10);
+        xAxisGenerator.ticks(continuousXTickCount(chart.width - (m.left + m.right)));
         if (xFormat) {
           xAxisGenerator.tickFormat(xFormat);
         }
       }
+      // Numeric ticks stay level; narrow plots get fewer of them instead of
+      // rotated labels. Named tick labels can be long, so they still rotate.
+      var rotateX = !!xTickLabels && chart.width < 550;
       xAxisSelection
         .attr("transform", "translate(0," + (chartHeight - (m.top + m.bottom)) + ")")
         .call(xAxisGenerator)
         .selectAll("text")
         .attr("dy", "1.25em")
-        .attr("text-anchor", chart.width < 550 ? "end" : "center")
-        .attr("transform", chart.width < 550 ? "rotate(-65)" : "rotate(-0)");
+        .attr("text-anchor", rotateX ? "end" : "middle")
+        .attr("transform", rotateX ? "rotate(-65)" : "rotate(-0)");
     }
   }
 
@@ -308,13 +311,13 @@ function renderAxisTitles(chart) {
           .attr("class", "myIO-axis-title myIO-axis-title-x")
           .attr("text-anchor", "middle")
           .attr("x", plotWidth / 2)
-          .attr("y", plotHeight + chart.margin.bottom - 16)
+          .attr("y", xAxisTitleY(chart, plotHeight))
           .text(function(d) { return d; });
       },
       function(update) {
         return update
           .attr("x", plotWidth / 2)
-          .attr("y", plotHeight + chart.margin.bottom - 16)
+          .attr("y", xAxisTitleY(chart, plotHeight))
           .text(function(d) { return d; });
       },
       function(exit) { return exit.remove(); }
@@ -343,4 +346,26 @@ function applyAxisStyles(axis, axisType) {
   axis.selectAll(".domain").attr("class", axisType + "-axis-line");
   axis.selectAll(".tick line").attr("class", axisType + "-grid");
   axis.selectAll("text").attr("class", axisType + "-label");
+}
+
+// Tick count for a continuous x axis: about one tick per 70px of plot width,
+// between 2 and 10.
+export function continuousXTickCount(plotWidth) {
+  return Math.max(2, Math.min(10, Math.floor((plotWidth || 0) / 70)));
+}
+
+// Baseline of the x-axis title: near the bottom of the chart, lifted by
+// chart.runtime._xTitleLift when the inline legend needs a second row.
+export function xAxisTitleY(chart, plotHeight) {
+  var lift = chart.runtime && chart.runtime._xTitleLift > 0 ? chart.runtime._xTitleLift : 0;
+  return plotHeight + chart.margin.bottom - 16 - lift;
+}
+
+// Sets the x-axis title's lift and moves the title already on the chart.
+export function setXAxisTitleLift(chart, lift) {
+  if (!chart.runtime) chart.runtime = {};
+  chart.runtime._xTitleLift = lift > 0 ? lift : 0;
+  if (!chart.plot) return;
+  var plotHeight = getChartHeight(chart) - (chart.margin.top + chart.margin.bottom);
+  chart.plot.selectAll(".myIO-axis-title-x").attr("y", xAxisTitleY(chart, plotHeight));
 }

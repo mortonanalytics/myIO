@@ -3,14 +3,17 @@ agg
 Airgap
 airgapped
 Analytics
+autodar
 beeswarm
 BH
 bigdata
 bonferroni
+browsable
 bslib
 camelCase
 checksums
 chr
+CLI
 CMD
 colorScheme
 composability
@@ -21,11 +24,13 @@ crosstalk
 Crosstalk
 Crosstalk's
 csv
+data's
 dbi
 DBIConnection
 debounce
 Debounce
 debounced
+DEMs
 df
 donut
 Donut
@@ -41,6 +46,9 @@ DuckDB
 echarts
 flexdashboard
 geoms
+GeoPackage
+georeference
+georeferenced
 ggiraph
 ggplot
 ggplotly
@@ -51,6 +59,9 @@ groupedBar
 gzipped
 hexbin
 Hexbin
+hillshade
+Hillshade
+hillshaded
 holm
 htmlwidget
 htmlwidgets
@@ -69,6 +80,8 @@ keyframe
 Keyframe
 Keyframes
 keyframes
+LiDAR
+LiDAR's
 Lifecycle
 linkable
 LLM
@@ -81,6 +94,7 @@ md
 minified
 minmax
 mvp
+myDAR
 myIO's
 myIOOutput
 myIOProxy
@@ -90,6 +104,9 @@ nrd
 OHLC
 Okabe
 Ollama
+Ortho
+orthophoto
+orthophotos
 param
 plotly
 plotly's
@@ -110,6 +127,7 @@ renderMyIO
 reticulate
 Ridgeline
 rlang
+rlas
 RMarkdown
 RStudio
 sankey
@@ -127,6 +145,8 @@ Sparklines
 stopifnot
 sublayers
 Survfit
+terra
+th
 theming
 Theming
 tibble
@@ -139,6 +159,9 @@ tukey
 UI
 unminified
 updateMyIOData
+USDA
+usdz
+USDZ
 validator
 validators
 walkthrough

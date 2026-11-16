@@ -1020,3 +1020,49 @@
 .myIO-field .field-metrics th, .myIO-field .field-metrics td { padding: 2px 8px 2px 0; text-align: left; }
 .myIO-field .field-metrics td { text-align: right; }
 .myIO-field .field-separation-text { margin: 4px 0; }
+
+/* pointcloud: WebGL point cloud with overlay controls (colors follow the myDAR Results screen). */
+.myIO-pointcloud { position: relative; width: 100%; height: 100%; overflow: hidden; border-radius: 10px; background: var(--chart-bg, #f7f8fa); color: #1d2430; font: 13px/1.35 var(--chart-font, system-ui, sans-serif); touch-action: none; }
+.myIO-pointcloud-canvas { position: absolute; inset: 0; display: block; cursor: grab; }
+/* 3D: the myDAR app's dark scene; the controls keep their own light panels. */
+.myIO-pointcloud.is-3d { background: #14121e; }
+.myIO-pointcloud.is-3d .myIO-pc-hint { color: #dfe3ea; background: rgba(20, 18, 30, .7); }
+.myIO-pointcloud-canvas:active { cursor: grabbing; }
+.myIO-pointcloud-message { padding: 16px; color: #5b6575; }
+.myIO-pc-top { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; align-items: center; gap: 10px; pointer-events: none; }
+.myIO-pc-seg { display: inline-flex; background: #eef1f5; border: 1px solid #c9d0da; border-radius: 9px; padding: 2px; pointer-events: auto; }
+.myIO-pc-seg button { border: 0; background: transparent; color: #5b6575; font: inherit; font-weight: 600; padding: 4px 14px; border-radius: 7px; cursor: pointer; }
+.myIO-pc-seg button.is-on { background: #fff; color: #1d2430; box-shadow: 0 1px 2px rgba(29, 36, 48, .18); }
+.myIO-pc-hint { font-size: 12px; color: #5b6575; background: rgba(247, 248, 250, .85); border-radius: 6px; padding: 2px 6px; }
+.myIO-pc-bottom { position: absolute; left: 10px; right: 10px; bottom: 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; pointer-events: none; }
+.myIO-pc-card { display: flex; gap: 0; max-width: min(100%, 440px); background: #fff; border: 1px solid #c9d0da; border-radius: 10px; box-shadow: 0 2px 8px rgba(29, 36, 48, .08); pointer-events: auto; }
+.myIO-pc-figure { padding: 7px 14px; min-width: 104px; flex: 1 1 0; }
+.myIO-pc-figure + .myIO-pc-figure { border-left: 1px solid #c9d0da; }
+.myIO-pc-figure-label { font-size: 11px; color: #5b6575; }
+.myIO-pc-figure-value { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.01em; white-space: nowrap; }
+.myIO-pc-figure-note { font-size: 11px; color: #5b6575; }
+.myIO-pc-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 12px; background: rgba(255, 255, 255, .88); border-radius: 6px; padding: 2px 6px; pointer-events: auto; }
+.myIO-pc-legend:empty { display: none; }
+.myIO-pc-legend-item { display: inline-flex; align-items: center; gap: 4px; }
+.myIO-pc-legend-item i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.myIO-pc-legend-label { font-weight: 600; }
+.myIO-pc-ramp { display: inline-block; width: 90px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, #440154, #3b528b, #21918c, #5ec962, #fde725); }
+.myIO-pc-chips { display: flex; flex-wrap: wrap; gap: 6px; pointer-events: auto; }
+.myIO-pc-chip { border: 1px solid #c9d0da; background: #fff; color: #1d2430; font: inherit; font-weight: 600; padding: 4px 12px; border-radius: 999px; cursor: pointer; }
+.myIO-pc-chip.is-on { background: #1f5f8b; border-color: #1f5f8b; color: #fff; }
+.myIO-pc-chip-camera.is-on { background: #6b3fa0; border-color: #6b3fa0; }
+.myIO-pc-chip-classes.is-on { background: #2e6b3a; border-color: #2e6b3a; }
+.myIO-pc-chip-ortho.is-on { background: #5b3f8c; border-color: #5b3f8c; }
+.myIO-pc-select { pointer-events: auto; padding: 3px 12px; }
+.myIO-pc-chip-disabled { color: #8a93a2; background: #eef1f5; cursor: not-allowed; }
+.myIO-pc-chip-note { font-size: 11px; color: #5b6575; background: rgba(255, 255, 255, .88); border-radius: 6px; padding: 1px 6px; pointer-events: auto; }
+.myIO-pc-seg-small { pointer-events: auto; }
+.myIO-pc-seg-small button { padding: 2px 10px; font-size: 12px; }
+.myIO-pc-band-swatch { width: 26px !important; height: 8px !important; border-radius: 4px !important; background: linear-gradient(90deg, rgb(254, 217, 178), rgb(217, 71, 15)); }
+.myIO-pc-rect { position: absolute; border: 1.5px dashed #1d2430; background: rgba(31, 95, 139, .12); pointer-events: none; }
+.myIO-pc-scale { position: absolute; right: 12px; bottom: 14px; height: 6px; border: 2px solid #1d2430; border-top: 0; font-size: 11px; line-height: 1; text-align: center; padding-bottom: 12px; box-sizing: content-box; pointer-events: none; }
+@media (max-width: 520px) {
+  .myIO-pc-hint { display: none; }
+  .myIO-pc-figure { padding: 6px 10px; min-width: 0; }
+  .myIO-pc-figure-value { font-size: 18px; }
+}

@@ -2,6 +2,54 @@
 
 ## New features
 
+* New `raster` chart type draws a regular grid of numeric cells (an elevation
+  model, a density surface) as one image on continuous axes, so point and line
+  layers can sit on top. Map `x_var`, `y_var` (cell centers) and `value`, and
+  optionally `shade` (0-1) to darken cells by a hillshade. Hovering shows the
+  cell's value. `options$palette` picks `"viridis"`, `"cividis"` or `"greys"`.
+
+* New `image` chart type stretches a picture (`options$src`, a data or web
+  URL) over the x/y extent of its rows, under every other layer: an
+  orthophoto under a plan view, for example.
+
+* New `pointcloud` chart type: one map-first WebGL view, as the myDAR app's
+  Results screen. One canvas switches between a top-down 2D plan (with a
+  scale bar) and a 3D orbit view. Layer chips (LiDAR, Camera, Classes,
+  Ortho) toggle independently, and points can be colored by photo color,
+  height or sigma. In 2D the orthophoto lies under the points; in 3D it is
+  draped on the DEM (`options$terrain`). A Points / Mesh switch shows a
+  colored mesh (`options$mesh`). The track's uncertainty band
+  (`options$trackBand`) runs light to dark orange, and the view also takes a
+  profile line (`options$profile`) and a caption card. A 2D Select tool
+  sends the keys of the points in its rectangle (`options$selectable`) to
+  charts linked with `linkCharts()`. Map `x_var`, `y_var`, `z_var` and optionally `red`, `green`,
+  `blue`, `class` and `sigma`; the points travel packed as binary, not one
+  JSON row each.
+
+* New `setEqualAspect()` makes one unit as long on x as on y, for maps and
+  plans.
+
+* Point layers take `options$pointRadius`; line layers take
+  `options$curveType = "linear"` (straight segments in row order, for paths
+  whose x goes back and forth, with no "x is not sorted" warning) and
+  `options$showPoints = FALSE` (no vertex dots).
+
+* New readers and charts for myDAR walks. `read_mydar_walk()` reads a walk's
+  point cloud, DEM, orthophoto, GeoPackage and trajectory into data frames
+  (with the Suggested packages rlas, terra and sf), thinning large clouds to
+  `max_points`; `local = TRUE` moves every table to walk-local x, y and z.
+  `mydar_cloud_view()` draws the cloud in 3D with the walk's Shape and Map
+  accuracy as a caption, as one 2D / 3D map with the draped orthophoto, the
+  phone's mesh (`read_mydar_mesh()` reads `walk.mesh.usdz` and converts it
+  into the project CRS), the track's uncertainty band and the profile line;
+  `mydar_plan_view()` draws the plan over the orthophoto as SVG; `mydar_orthophoto_view()`,
+  `mydar_terrain_view()`, `mydar_profile_view()`, `mydar_trajectory_view()`,
+  `mydar_sigma_view()`, `mydar_accuracy_view()` and `mydar_gps_view()` cover
+  the rest, and `mydar_dashboard()` lays them out map first (one viewer,
+  whose 2D Select tool drives the profile), then profile, then quality. `mydar_iphone_walk` and `mydar_iphone_cloud()` are a real
+  iPhone walk (500,000 of its points for the 3D view), shown in local
+  coordinates only; the demo app has a myDAR walk page built from them.
+
 * New `updateMyIOOptions()` merges new options into rendered layers from the
   Shiny server, matched by label, without re-running `renderMyIO()`. A field
   chart keeps its playback time, play state, speed, selected player, hidden
@@ -9,6 +57,15 @@
   pitch size or `maxGap` starts it over. Other chart types redraw from the new
   options. The demo's Sports page uses it for the Tactical overlays controls,
   which used to reset the field chart on every toggle (#193).
+
+* Continuous x axes keep their tick labels level at every width and show
+  about one tick per 70 px of plot width (2 to 10), instead of rotating the
+  labels on charts narrower than 550 px. Named tick labels still rotate.
+
+* An inline legend no longer draws across the x-axis title: an item that does
+  not fit beside the title wraps, and when the legend wraps to a second row
+  the title moves up to clear it. Image and text layers are left out of the
+  layer legend.
 
 ## Bug fixes
 

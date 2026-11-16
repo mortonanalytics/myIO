@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>myIO · Raster</title>
+<script src="/inst/htmlwidgets/lib/d3.min.js"></script><script src="/inst/htmlwidgets/myIO/myIOapi.js"></script><link rel="stylesheet" href="/inst/htmlwidgets/myIO/style.css">
+</head><body><div id="raster" style="width:600px"></div>
+<script>
+// 20 x 10 grid of 1 m cells, z = x + 10 * y; the 3 x 3 block at x 5-7, y 3-5 is empty.
+var data = [];
+for (var y = 0; y < 10; y++) for (var x = 0; x < 20; x++) {
+  if (x >= 5 && x <= 7 && y >= 3 && y <= 5) continue;
+  data.push({ x: x, y: y, z: x + 10 * y, shade: 0.8 });
+}
+var layer = { id: 'dem', type: 'raster', label: 'Height', data: data, color: '#E69F00',
+  mapping: { x_var: 'x', y_var: 'y', value: 'z', shade: 'shade' }, options: { cellWidth: 1, cellHeight: 1 },
+  transform: 'identity', transformMeta: {}, encoding: {}, sourceKey: '_source_key', derivedFrom: null, order: 1, visibility: true };
+var element = document.getElementById('raster');
+window.chart = new myIOchart({ element: element, width: 600, height: 400, config: { specVersion: 2, layers: [layer],
+  layout: { margin: { top: 20, bottom: 40, left: 50, right: 50 } },
+  scales: { xlim: { min: null, max: null }, ylim: { min: null, max: null }, categoricalScale: { xAxis: false, yAxis: false }, flipAxis: false, colorScheme: { enabled: false, colors: [], domain: [] } },
+  axes: { xAxisFormat: '.0f', yAxisFormat: '.0f', toolTipFormat: 's' },
+  interactions: { dragPoints: false, toggleY: { variable: null, format: null }, toolTipOptions: { suppressY: false } },
+  theme: {}, transitions: { speed: 0 }, referenceLines: { x: null, y: null } } });
+window.ready = true;
+</script></body></html>
