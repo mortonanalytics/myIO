@@ -141,11 +141,16 @@ export class FunnelRenderer {
         // One-line mode leaves the stage name on the centre line, so the value
         // can only go outside the trapezoid.
         var inside = valueLayout === "two" && length <= Math.max(0, s.innerWidth - 8);
+        // Lower stages narrow faster than their names, so a name can run past
+        // the trapezoid's edge: an outside value starts after the name (#191).
+        var nameNode = this.parentNode && this.parentNode.querySelector(".funnel-label");
+        var nameRight = s.labelX + textWidth(nameNode, s.stage) / 2;
+        var outsideX = Math.max(s.outsideX, nameRight + 6);
         var clearsFab = (s.labelY - VALUE_HALF_HEIGHT) >= fabBandBottom;
-        var outsideFits = s.outsideX + length <= (clearsFab ? width : fabLeft);
+        var outsideFits = outsideX + length <= (clearsFab ? width : fabLeft);
         var visible = valueLayout !== "none" && (inside || outsideFits);
         d3.select(this)
-          .attr("x", inside ? s.labelX : s.outsideX)
+          .attr("x", inside ? s.labelX : outsideX)
           .attr("y", inside ? s.labelY + 9 : s.labelY)
           .attr("text-anchor", inside ? "middle" : "start")
           .attr("fill", inside ? readableTextColor(s.color) : outsideInk)

@@ -103,6 +103,13 @@
   treemap tooltips show again in pymyIO (pymyIO
   [\#41](https://github.com/mortonanalytics/myIO/issues/41)).
 
+- Funnel value labels placed outside a stage now start after the stage
+  name, so on narrow charts they no longer overlap “Qualified”,
+  “Proposals” and similar names that run past their narrowing stage. A
+  label that then does not fit is hidden, and the tooltip still carries
+  the value
+  ([\#191](https://github.com/mortonanalytics/myIO/issues/191)).
+
 - Hovering lollipop, dumbbell, range bar, candlestick, heatmap, waffle,
   beeswarm, quantile dots, bump, radar, funnel, parallel, waterfall, and
   sankey charts now shows a tooltip and sends the Shiny
