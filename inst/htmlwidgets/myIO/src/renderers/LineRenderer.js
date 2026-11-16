@@ -14,7 +14,7 @@ export class LineRenderer {
     var transitionSpeed = chart.options.transition.speed;
 
     var valueLine = d3.line()
-      .curve(layer.options && layer.options.curveType === "stepAfter" ? d3.curveStepAfter : d3.curveMonotoneX)
+      .curve(lineCurve(layer.options && layer.options.curveType))
       .x(function(d) {
         return chart.xScale(d[layer.mapping.x_var]);
       })
@@ -109,4 +109,12 @@ export class LineRenderer {
     chart.dom.chartArea.selectAll("." + tagName("line", chart.dom.element.id, layer.label)).transition().ease(easingFor(chart, d3.easeCubic)).duration(500).style("opacity", 0).remove();
     chart.dom.chartArea.selectAll("." + tagName("point", chart.dom.element.id, layer.label)).transition().ease(easingFor(chart, d3.easeCubic)).duration(500).style("opacity", 0).remove();
   }
+}
+
+// curveType "stepAfter" for step functions and "linear" for paths whose x is
+// not monotone (a walk track); otherwise a monotone-x curve.
+function lineCurve(curveType) {
+  if (curveType === "stepAfter") return d3.curveStepAfter;
+  if (curveType === "linear") return d3.curveLinear;
+  return d3.curveMonotoneX;
 }

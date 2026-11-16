@@ -35,7 +35,8 @@ ALLOWED_TYPES <- c(
   "waffle", "beeswarm", "bump",
   "radar", "funnel", "parallel",
   "survfit", "histogram_fit",
-  "calendarHeatmap", "quantile_dots", "fan"
+  "calendarHeatmap", "quantile_dots", "fan",
+  "raster"
 )
 
 COMPATIBILITY_GROUPS <- list(
@@ -75,7 +76,8 @@ COMPATIBILITY_GROUPS <- list(
   histogram_fit = "axes-binned",
   calendarHeatmap = "standalone-calendar",
   quantile_dots = "axes-categorical",
-  fan = "axes-continuous"
+  fan = "axes-continuous",
+  raster = "axes-continuous"
 )
 
 GROUP_MATRIX <- list(
@@ -130,7 +132,8 @@ VALID_COMBINATIONS <- list(
   histogram_fit = c("identity"),
   calendarHeatmap = c("identity"),
   quantile_dots = c("identity", "quantile_dots"),
-  fan = c("identity")
+  fan = c("identity"),
+  raster = c("identity")
 )
 
 composite_registry <- function() {

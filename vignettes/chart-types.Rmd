@@ -30,7 +30,7 @@ types like treemap or gauge cannot be mixed with other types.
 
 | Group | Types |
 |-------|-------|
-| Continuous axes | `line`, `point`, `area`, `candlestick`, `bracket`, `qq` |
+| Continuous axes | `line`, `point`, `area`, `candlestick`, `bracket`, `qq`, `raster` |
 | Categorical axes | `bar`, `groupedBar`, `waterfall`, `boxplot`, `violin`, `comparison` |
 | Binned axes | `histogram`, `ridgeline` |
 | Matrix axes | `heatmap` |
@@ -216,6 +216,32 @@ myIO() |>
   defineCategoricalAxis(xAxis = TRUE, yAxis = TRUE) |>
   setAxisFormat(xLabel = "Quarter", yLabel = "Segment")
 ```
+
+### Raster
+
+A raster draws a regular grid of numeric cells, such as an elevation model, as
+one image on continuous x and y axes, so it can sit under point and line
+layers. Map `x_var` and `y_var` to cell centers and `value` to the cell value;
+an optional `shade` column (0-1) darkens cells, e.g. a hillshade. Cell size is
+taken from `options$cellWidth` / `cellHeight` or from the data's spacing.
+`options$palette` is `"viridis"` (default), `"cividis"` or `"greys"`. Hover a
+cell for its value.
+
+```{r raster, eval = FALSE}
+grid <- expand.grid(x = seq(0, 5, by = 0.1), y = seq(0, 3, by = 0.1))
+grid$height <- sin(grid$x) * cos(grid$y)
+
+myIO() |>
+  addIoLayer(
+    type = "raster",
+    label = "Height",
+    data = grid,
+    mapping = list(x_var = "x", y_var = "y", value = "height")
+  )
+```
+
+`mydar_terrain_view()` uses it for myDAR walk DEMs; see
+`vignette("mydar-walks")`.
 
 ### Calendar Heatmap
 

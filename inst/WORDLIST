@@ -7,10 +7,12 @@ beeswarm
 BH
 bigdata
 bonferroni
+browsable
 bslib
 camelCase
 checksums
 chr
+CLI
 CMD
 colorScheme
 composability
@@ -21,11 +23,13 @@ crosstalk
 Crosstalk
 Crosstalk's
 csv
+data's
 dbi
 DBIConnection
 debounce
 Debounce
 debounced
+DEMs
 df
 donut
 Donut
@@ -41,6 +45,7 @@ DuckDB
 echarts
 flexdashboard
 geoms
+GeoPackage
 ggiraph
 ggplot
 ggplotly
@@ -51,6 +56,9 @@ groupedBar
 gzipped
 hexbin
 Hexbin
+hillshade
+Hillshade
+hillshaded
 holm
 htmlwidget
 htmlwidgets
@@ -69,6 +77,7 @@ keyframe
 Keyframe
 Keyframes
 keyframes
+LiDAR
 Lifecycle
 linkable
 LLM
@@ -81,6 +90,7 @@ md
 minified
 minmax
 mvp
+myDAR
 myIO's
 myIOOutput
 myIOProxy
@@ -110,6 +120,7 @@ renderMyIO
 reticulate
 Ridgeline
 rlang
+rlas
 RMarkdown
 RStudio
 sankey
@@ -127,6 +138,8 @@ Sparklines
 stopifnot
 sublayers
 Survfit
+terra
+th
 theming
 Theming
 tibble

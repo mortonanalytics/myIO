@@ -10,6 +10,20 @@ field_clip <- jsonlite::fromJSON(field_json)
 # Events must reach the widget as an array of records, not column vectors.
 field_events <- jsonlite::fromJSON(field_json, simplifyVector = FALSE)$events
 
+# myDAR walk demo: a real iPhone walk that ships with myIO, in local
+# coordinates. The profile line crosses the walk through the track's midpoint
+# at a chosen bearing.
+mydar_walk <- mydar_iphone_walk
+mydar_profile_line <- function(walk, bearing_deg, offset_m) {
+  track <- walk$track
+  mid <- c(mean(range(track$x)), mean(range(track$y)))
+  b <- bearing_deg * pi / 180
+  dir <- c(sin(b), cos(b))
+  center <- mid + c(dir[2], -dir[1]) * offset_m
+  reach <- max(abs((walk$points$x - center[1]) * dir[1] + (walk$points$y - center[2]) * dir[2]))
+  list(from = center - dir * reach, to = center + dir * reach)
+}
+
 # One dashboard card: header naming the chart, chart body, optional controls.
 chart_card <- function(title, ..., controls = NULL, position = "left") {
   body <- if (is.null(controls)) {
@@ -310,6 +324,40 @@ ui <- page_navbar(
     )
   ),
 
+  # -- myDAR walk --
+  nav_panel("myDAR walk",
+    icon = icon("route"),
+    p(class = "text-muted mt-3",
+      "A real outdoor walk recorded with the myDAR iPhone app, as the phone processed it:",
+      "LiDAR and camera points with the phone's classes, the DEM, the track and the accuracy figures.",
+      "Shown in local coordinates only, meters from the walk's south-west corner.",
+      "6,000 of the walk's 897,935 points are shown. Brush an empty part of the plan view to find the same points on the profile."),
+    layout_columns(
+      col_widths = breakpoints(sm = 12, lg = c(6, 6)),
+      chart_card("Plan view by class", myIOOutput("mydarPlan", height = "460px")),
+      chart_card("Terrain (DEM, hillshaded)", myIOOutput("mydarTerrain", height = "460px"))
+    ),
+    layout_columns(
+      col_widths = 12,
+      chart_card("Profile across the walk",
+        myIOOutput("mydarProfile", height = "360px"),
+        controls = tagList(
+          sliderInput("mydar_bearing", "Line bearing (degrees from north)", min = 0, max = 175, value = 90, step = 5, width = "100%"),
+          sliderInput("mydar_offset", "Shift along the track (m)", min = -8, max = 8, value = 0, step = 0.5, width = "100%"),
+          sliderInput("mydar_width", "Corridor width (m)", min = 0.1, max = 2, value = 0.5, step = 0.1, width = "100%")
+        ))
+    ),
+    layout_columns(
+      col_widths = 12,
+      chart_card("Map position uncertainty", myIOOutput("mydarTrajectory", height = "300px"))
+    ),
+    layout_columns(
+      col_widths = breakpoints(sm = 12, lg = c(6, 6)),
+      chart_card("Point sigma by source", myIOOutput("mydarSigma", height = "320px")),
+      chart_card("Accuracy figures", myIOOutput("mydarAccuracy", height = "320px"))
+    )
+  ),
+
   # -- Interactivity --
   nav_panel("Interactivity",
     icon = icon("hand-pointer"),
@@ -403,7 +451,7 @@ server <- function(input, output, session) {
 
   # Deep links: /myio/#sports opens the Sports tab, and the hash follows the selected tab.
   tab_names <- c("Home", "Comparisons", "Trends & Time", "Distributions",
-                 "Relationships & Models", "Sports", "Interactivity", "Theme & Export")
+                 "Relationships & Models", "Sports", "myDAR walk", "Interactivity", "Theme & Export")
   tab_slug <- function(x) gsub("^-+|-+$", "", gsub("[^a-z0-9]+", "-", tolower(x)))
   observeEvent(session$clientData$url_hash, {
     hit <- tab_names[tab_slug(tab_names) == tab_slug(session$clientData$url_hash)]
@@ -834,6 +882,27 @@ server <- function(input, output, session) {
       setSlider("ci_level", "Confidence Level", 0.80, 0.99, ci, 0.01) %>%
       setAxisFormat(xLabel = "Day of Experiment", yLabel = "Yield (mg)")
   })
+
+  # -- myDAR walk --
+
+  # Brushing the plan view highlights the same points (point_id) on the profile.
+  mydar_space <- reactive({
+    line <- mydar_profile_line(mydar_walk, input$mydar_bearing, input$mydar_offset)
+    validate(need(nrow(mydar_profile(mydar_walk, line$from, line$to, input$mydar_width)) > 0,
+                  "No points within the corridor here; widen it or move the line."))
+    linkCharts(
+      mydar_plan_view(mydar_walk, profile = line, height = "460px") |> setBrush(),
+      mydar_profile_view(mydar_walk, from = line$from, to = line$to, width = input$mydar_width),
+      on = "point_id", group = "mydar_points"
+    )
+  })
+
+  output$mydarPlan <- renderMyIO(mydar_space()[[1]])
+  output$mydarProfile <- renderMyIO(mydar_space()[[2]])
+  output$mydarTerrain <- renderMyIO(mydar_terrain_view(mydar_walk, height = "460px"))
+  output$mydarTrajectory <- renderMyIO(mydar_trajectory_view(mydar_walk))
+  output$mydarSigma <- renderMyIO(mydar_sigma_view(mydar_walk))
+  output$mydarAccuracy <- renderMyIO(mydar_accuracy_view(mydar_walk))
 
   # -- New Charts --
 

@@ -11,6 +11,7 @@ const COMPAT_GROUP = {
   violin: "axes-categorical",
   histogram: "axes-binned",
   heatmap: "axes-matrix",
+  raster: "axes-continuous",
   candlestick: "axes-continuous",
   waterfall: "axes-categorical",
   ridgeline: "axes-binned",
@@ -124,7 +125,8 @@ export function validateAgainstContract(layer, contract) {
         errors.push("Layer '" + layer.label + "' field '" + mapped + "' must be positive.");
       }
     }
-    if (rules.sorted) {
+    // A linear-curve line draws its rows in order on purpose (a walk track).
+    if (rules.sorted && !(layer.options && layer.options.curveType === "linear")) {
       for (let i = 1; i < values.length; i += 1) {
         if (+values[i] < +values[i - 1]) {
           warnings.push("Layer '" + layer.label + "' field '" + mapped + "' is not sorted.");

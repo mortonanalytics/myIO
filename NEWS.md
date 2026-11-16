@@ -2,6 +2,28 @@
 
 ## New features
 
+* New `raster` chart type draws a regular grid of numeric cells (an elevation
+  model, a density surface) as one image on continuous axes, so point and line
+  layers can sit on top. Map `x_var`, `y_var` (cell centers) and `value`, and
+  optionally `shade` (0-1) to darken cells by a hillshade. Hovering shows the
+  cell's value. `options$palette` picks `"viridis"`, `"cividis"` or `"greys"`.
+
+* Line layers take `options$curveType = "linear"` to draw straight segments in
+  row order, for paths whose x goes back and forth (a walk track). Such lines
+  no longer warn that x is not sorted.
+
+* New readers and charts for myDAR walks. `read_mydar_walk()` reads a walk's
+  point cloud, DEM, GeoPackage and trajectory into data frames (with the
+  Suggested packages rlas, terra and sf), thinning large clouds to
+  `max_points`. `mydar_plan_view()`, `mydar_terrain_view()`,
+  `mydar_profile_view()`, `mydar_trajectory_view()`, `mydar_sigma_view()`,
+  `mydar_accuracy_view()` and `mydar_gps_view()` plot it, and
+  `mydar_dashboard()` lays them out with the plan view brushing the profile
+  (and, for walks with GPS residuals, the uncertainty and GPS charts sharing a
+  time cursor). `mydar_iphone_walk` is a real iPhone walk, shown in local
+  coordinates only, to try them on; the demo app has a myDAR walk page built
+  from it.
+
 * New `updateMyIOOptions()` merges new options into rendered layers from the
   Shiny server, matched by label, without re-running `renderMyIO()`. A field
   chart keeps its playback time, play state, speed, selected player, hidden
