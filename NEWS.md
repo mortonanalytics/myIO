@@ -69,6 +69,11 @@
 
 ## Bug fixes
 
+* Hover no longer throws `HTMLWidgets is not defined` outside R htmlwidgets
+  hosts (pymyIO's anywidget and standalone pages). The Shiny rollover and
+  slider checks now test for the global first, so donut and treemap tooltips
+  show again in pymyIO (pymyIO #41).
+
 * Hovering lollipop, dumbbell, range bar, candlestick, heatmap, waffle,
   beeswarm, quantile dots, bump, radar, funnel, parallel, waterfall, and sankey
   charts now shows a tooltip and sends the Shiny `myIO-{id}-rollover` input.

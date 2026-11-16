@@ -33,7 +33,7 @@ export function bindSliders(chart) {
       .attr("class", "myIO-slider-value")
       .text(formatSliderValue(cfg.value, cfg.step));
 
-    if (!HTMLWidgets.shinyMode) {
+    if (typeof HTMLWidgets === "undefined" || !HTMLWidgets.shinyMode) {
       input.attr("disabled", true)
         .attr("title", "Parameter sliders require Shiny");
       row.style("opacity", "0.5");
