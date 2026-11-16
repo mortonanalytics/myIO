@@ -1,3 +1,8 @@
+import { getRendererForLayer } from "../registry.js";
+
+// Layer types left out of the layer legend.
+var LEGENDLESS_TYPES = ["image", "text"];
+
 // Column whose values name the entries of an ordinal legend, per layer type.
 var ORDINAL_KEY_FIELDS = {
   treemap: "level_1",
@@ -143,7 +148,13 @@ function buildLayerLegendData(chart) {
 
   return {
     type: "layer",
-    items: (chart.plotLayers || []).map(function(layer) {
+    // Image backdrops and text captions are not series; their renderers
+    // declare legendType "none".
+    items: (chart.plotLayers || []).filter(function(layer) {
+      var renderer;
+      try { renderer = getRendererForLayer(layer); } catch (err) { return true; }
+      return !(LEGENDLESS_TYPES.indexOf(layer.type) > -1 && renderer.constructor.traits.legendType === "none");
+    }).map(function(layer) {
       var key = layer._composite || layer.label;
       return {
         key: key,

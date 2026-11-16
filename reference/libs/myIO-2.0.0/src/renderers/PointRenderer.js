@@ -1,5 +1,5 @@
 import { easingFor, staggerDelay } from "../transitions/easing.js";
-import { pointRadius, resolveColor, tagName } from "../utils/responsive.js";
+import { layerPointRadius, resolveColor, tagName } from "../utils/responsive.js";
 
 export class PointRenderer {
   static type = "point";
@@ -40,7 +40,7 @@ export class PointRenderer {
       .ease(easingFor(chart, d3.easeQuad))
       .duration(transitionSpeed)
       .delay(staggerDelay(chart, 0))
-      .attr("r", pointRadius(chart))
+      .attr("r", layerPointRadius(chart, layer))
       .style("fill", function(d) {
         return resolveColor(chart, d[layer.mapping.group], layer.color);
       })
@@ -53,7 +53,7 @@ export class PointRenderer {
 
     points.enter()
       .append("circle")
-      .attr("r", pointRadius(chart))
+      .attr("r", layerPointRadius(chart, layer))
       .style("fill", function(d) {
         return resolveColor(chart, d[layer.mapping.group], layer.color);
       })

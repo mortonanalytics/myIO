@@ -187,6 +187,10 @@ export function processScales(chart, lys, semantics) {
         .domain(chart.config.scales.flipAxis === true ? xExtent : yExtent);
   }
 
+  if (chart.config.scales.equalAspect === true) {
+    applyEqualAspect(chart.derived.xScale, chart.derived.yScale);
+  }
+
   chart.derived.scaleSemantics = scaleSemantics;
 
   if (chart.config.scales.colorScheme && chart.config.scales.colorScheme.enabled) {
@@ -206,4 +210,23 @@ function onlyUnique(value, index, self) {
 
 function hasLimit(value) {
   return value !== null && value !== undefined && value !== "" && Number.isFinite(+value);
+}
+
+// Equal units per pixel on x and y: widen whichever domain is tighter, about
+// its center, so a meter is the same length across and up the plot. Only
+// linear scales take part.
+export function applyEqualAspect(xScale, yScale) {
+  if (!xScale || !yScale || xScale.bandwidth || yScale.bandwidth) return;
+  var xd = xScale.domain(), yd = yScale.domain();
+  var xr = xScale.range(), yr = yScale.range();
+  var xPx = Math.abs(xr[1] - xr[0]), yPx = Math.abs(yr[1] - yr[0]);
+  var xSpan = Math.abs(xd[1] - xd[0]), ySpan = Math.abs(yd[1] - yd[0]);
+  if (!(xPx > 0 && yPx > 0 && xSpan > 0 && ySpan > 0)) return;
+  var unitsPerPx = Math.max(xSpan / xPx, ySpan / yPx);
+  var widen = function(domain, px) {
+    var center = (domain[0] + domain[1]) / 2, half = unitsPerPx * px / 2;
+    return domain[1] >= domain[0] ? [center - half, center + half] : [center + half, center - half];
+  };
+  xScale.domain(widen(xd, xPx));
+  yScale.domain(widen(yd, yPx));
 }

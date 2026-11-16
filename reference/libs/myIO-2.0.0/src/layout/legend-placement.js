@@ -61,6 +61,10 @@ export function legendAvailableWidth(chart) {
 
 export var AXIS_TITLE_GAP = 12;
 
+// How far the x-axis title moves up when the inline legend has a second row,
+// so that row sits under the title instead of across it.
+export var X_TITLE_LIFT_PX = 10;
+
 // Axis titles are the same 12px face as the legend, so they measure at roughly
 // the same per-character rate as an item label minus its swatch.
 function estimateAxisTitleWidth(label) {
@@ -69,8 +73,9 @@ function estimateAxisTitleWidth(label) {
 
 // The x-axis title is centred in the plot area and sits on the same baseline
 // band as the inline legend's FIRST row, so that row has to stop short of it.
-// Wrapped rows sit below the title and keep the full width. Charts with no
-// x-axis title are unaffected.
+// Wrapped rows sit below the title (the legend lifts the title to make room,
+// see X_TITLE_LIFT_PX) and keep the full width. Charts with no x-axis title
+// are unaffected.
 export function legendFirstRowWidth(chart) {
   var available = legendAvailableWidth(chart);
   var options = (chart && chart.options) || {};
@@ -112,7 +117,10 @@ export function computeInlineRows(labels, availableWidth, titleWidth, firstRowWi
       return null;
     }
     var rowWidth = row === 0 ? firstWidth : availableWidth;
-    if (cursor > 0 && cursor + width > rowWidth) {
+    // An item that does not fit the rest of its row wraps. On a first row
+    // shortened by the x-axis title that holds even for the first item, which
+    // would otherwise be drawn across the title.
+    if ((cursor > 0 || rowWidth < availableWidth) && cursor + width > rowWidth) {
       row += 1;
       cursor = 0;
       if (row >= MAX_INLINE_ROWS) {

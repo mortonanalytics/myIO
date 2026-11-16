@@ -10,8 +10,10 @@ import {
   legendItemLabel,
   legendTitleText,
   resolveLegendPlacement,
-  uniqueLegendItems
+  uniqueLegendItems,
+  X_TITLE_LIFT_PX
 } from "./legend-placement.js";
+import { setXAxisTitleLift } from "./axes.js";
 
 export { buildLegendData, buildOrdinalLegendData };
 
@@ -70,10 +72,14 @@ function renderInlineLegend(chart, legendData) {
   });
 
   if (!placement.inline) {
+    setXAxisTitleLift(chart, 0);
     return;
   }
 
   var layout = computeInlineRows(labels, availableWidth, titleWidth, firstRowWidth);
+  // A second row runs under the centred x-axis title; lift the title so the
+  // row clears it.
+  setXAxisTitleLift(chart, layout.rowCount > 1 && firstRowWidth < availableWidth ? X_TITLE_LIFT_PX : 0);
 
   // Reserve vertical space for one or two rows. Second-row items render at row * 16
   // below the baseline, so the baseline must clear that or labels clip below the SVG.

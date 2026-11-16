@@ -52,7 +52,7 @@ myio_list_chart_types()
 #> [25] "lollipop"        "dumbbell"        "waffle"          "beeswarm"       
 #> [29] "bump"            "radar"           "funnel"          "parallel"       
 #> [33] "survfit"         "histogram_fit"   "calendarHeatmap" "quantile_dots"  
-#> [37] "fan"
+#> [37] "fan"             "raster"          "image"           "pointcloud"
 ```
 
 Now suppose the assistant proposes a box plot but guesses the mapping
@@ -129,9 +129,9 @@ matter:
   ``` r
 
   length(myio_list_chart_types())   # chart types
-  #> [1] 37
+  #> [1] 40
   length(myio_list_functions())     # exported function signatures
-  #> [1] 49
+  #> [1] 68
   ```
 
 - **Stable, machine-readable errors.** Every result is

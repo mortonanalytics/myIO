@@ -12,6 +12,12 @@ export function pointRadius(chart) {
   return responsiveValue(chart, 5, 3);
 }
 
+// A point layer's radius: options.pointRadius when given, else the chart's.
+export function layerPointRadius(chart, layer) {
+  var r = layer && layer.options ? +layer.options.pointRadius : NaN;
+  return Number.isFinite(r) && r > 0 ? r : pointRadius(chart);
+}
+
 export function strokeWidth(chart) {
   return responsiveValue(chart, 3, 1);
 }

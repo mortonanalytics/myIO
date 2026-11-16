@@ -90,7 +90,8 @@ types.</p>
 <td>Continuous axes</td>
 <td>
 <code>line</code>, <code>point</code>, <code>area</code>,
-<code>candlestick</code>, <code>bracket</code>, <code>qq</code>
+<code>candlestick</code>, <code>bracket</code>, <code>qq</code>,
+<code>raster</code>, <code>image</code>
 </td>
 </tr>
 <tr class="even">
@@ -118,7 +119,7 @@ types.</p>
 <td>Standalone</td>
 <td>
 <code>hexbin</code>, <code>treemap</code>, <code>donut</code>,
-<code>gauge</code>, <code>sankey</code>
+<code>gauge</code>, <code>sankey</code>, <code>pointcloud</code>
 </td>
 </tr>
 </tbody>
@@ -305,6 +306,78 @@ Both axes are categorical. Mapping requires <code>x_var</code>,
 <span>  <span class="fu"><a href="../reference/setAxisFormat.html">setAxisFormat</a></span><span class="op">(</span>xLabel <span class="op">=</span> <span class="st">"Quarter"</span>, yLabel <span class="op">=</span> <span class="st">"Segment"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
+<h3 id="raster">Raster<a class="anchor" aria-label="anchor" href="#raster"></a>
+</h3>
+<p>A raster draws a regular grid of numeric cells, such as an elevation
+model, as one image on continuous x and y axes, so it can sit under
+point and line layers. Map <code>x_var</code> and <code>y_var</code> to
+cell centers and <code>value</code> to the cell value; an optional
+<code>shade</code> column (0-1) darkens cells, e.g. a hillshade. Cell
+size is taken from <code>options$cellWidth</code> /
+<code>cellHeight</code> or from the data’s spacing.
+<code>options$palette</code> is <code>"viridis"</code> (default),
+<code>"cividis"</code> or <code>"greys"</code>. Hover a cell for its
+value.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">5</span>, by <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">3</span>, by <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">grid</span><span class="op">$</span><span class="va">height</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">grid</span><span class="op">$</span><span class="va">x</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">grid</span><span class="op">$</span><span class="va">y</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
+<span>    type <span class="op">=</span> <span class="st">"raster"</span>,</span>
+<span>    label <span class="op">=</span> <span class="st">"Height"</span>,</span>
+<span>    data <span class="op">=</span> <span class="va">grid</span>,</span>
+<span>    mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"x"</span>, y_var <span class="op">=</span> <span class="st">"y"</span>, value <span class="op">=</span> <span class="st">"height"</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<p><code><a href="../reference/mydar_views.html">mydar_terrain_view()</a></code> uses it for myDAR walk DEMs; see
+<code><a href="../articles/mydar-walks.html">vignette("mydar-walks")</a></code>.</p>
+</div>
+<div class="section level3">
+<h3 id="image">Image<a class="anchor" aria-label="anchor" href="#image"></a>
+</h3>
+<p>An image layer stretches a picture over the x/y extent of its rows
+and draws it under every other layer, e.g. an orthophoto under points
+and a track. Give the picture as <code>options$src</code> (a
+<code>data:</code> URL or a web URL) and map <code>x_var</code> /
+<code>y_var</code> to its corners. Pair it with
+<code><a href="../reference/setEqualAspect.html">setEqualAspect()</a></code> so a meter is the same length on both
+axes.</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">corners</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">20</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">15</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"image"</span>, label <span class="op">=</span> <span class="st">"Orthophoto"</span>, data <span class="op">=</span> <span class="va">corners</span>,</span>
+<span>             mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"x"</span>, y_var <span class="op">=</span> <span class="st">"y"</span><span class="op">)</span>,</span>
+<span>             options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>src <span class="op">=</span> <span class="st">"https://example.org/ortho.png"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/setEqualAspect.html">setEqualAspect</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="point-cloud">Point cloud<a class="anchor" aria-label="anchor" href="#point-cloud"></a>
+</h3>
+<p><code>pointcloud</code> draws large point clouds with WebGL in their
+own panel: drag to orbit, shift-drag to pan, scroll or pinch to zoom,
+and switch between 3D and a top-down 2D plan. Map <code>x_var</code>,
+<code>y_var</code>, <code>z_var</code>, and optionally <code>red</code>,
+<code>green</code>, <code>blue</code> (0-255), <code>class</code> and
+<code>sigma</code>; chips in the view switch the coloring between RGB,
+class, height and sigma. The points are sent packed as binary, so
+hundreds of thousands draw smoothly. Options: <code>color</code>,
+<code>mode</code> (<code>"3d"</code> or <code>"plan"</code>),
+<code>pointSize</code>, <code>classColors</code>,
+<code>classNames</code>, <code>ortho</code>
+(<code>list(src, extent, z)</code>), <code>track</code> (list of
+<code>c(x, y, z)</code>), and <code>caption</code>
+(<code>list(shape, shapeNote, map, mapNote)</code>).
+<code><a href="../reference/mydar_cloud_view.html">mydar_cloud_view()</a></code> fills them in for a myDAR walk.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cloud</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mydar_iphone_cloud.html">mydar_iphone_cloud</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span>height <span class="op">=</span> <span class="st">"560px"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"pointcloud"</span>, label <span class="op">=</span> <span class="st">"Cloud"</span>, data <span class="op">=</span> <span class="va">cloud</span>,</span>
+<span>             mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>x_var <span class="op">=</span> <span class="st">"x"</span>, y_var <span class="op">=</span> <span class="st">"y"</span>, z_var <span class="op">=</span> <span class="st">"z"</span>,</span>
+<span>                            red <span class="op">=</span> <span class="st">"r"</span>, green <span class="op">=</span> <span class="st">"g"</span>, blue <span class="op">=</span> <span class="st">"b"</span>, class <span class="op">=</span> <span class="st">"class"</span><span class="op">)</span>,</span>
+<span>             options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"rgb"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/setMargin.html">setMargin</a></span><span class="op">(</span>top <span class="op">=</span> <span class="fl">0</span>, bottom <span class="op">=</span> <span class="fl">0</span>, left <span class="op">=</span> <span class="fl">0</span>, right <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
 <h3 id="calendar-heatmap">Calendar Heatmap<a class="anchor" aria-label="anchor" href="#calendar-heatmap"></a>
 </h3>
 <p>Calendar heatmaps render daily values as a GitHub-contributions-style
@@ -312,7 +385,7 @@ grid: one cell per day, seven rows per week, with month labels across
 the top. The chart is scoped to a single calendar year in v1.2. Mapping
 requires <code>date</code> (any Date or ISO <code>"YYYY-MM-DD"</code>
 string) and <code>value</code> (numeric):</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
 <span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  day     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2026-01-01"</span><span class="op">)</span> <span class="op">+</span> <span class="fl">0</span><span class="op">:</span><span class="fl">364</span>,</span>
@@ -339,7 +412,7 @@ hover crosshair by date across both charts.</p>
 close &gt;= open, red bars indicate close &lt; open. Mapping requires
 <code>x_var</code>, <code>open</code>, <code>high</code>,
 <code>low</code>, and <code>close</code>:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  day <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span>,</span>
 <span>  open  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">12</span>, <span class="fl">11</span>, <span class="fl">14</span>, <span class="fl">13</span>, <span class="fl">15</span>, <span class="fl">14</span>, <span class="fl">16</span>, <span class="fl">15</span>, <span class="fl">17</span><span class="op">)</span>,</span>
@@ -367,7 +440,7 @@ close &gt;= open, red bars indicate close &lt; open. Mapping requires
 <p>Waterfall charts show how an initial value is affected by sequential
 positive and negative changes. The <code>cumulative</code> transform is
 auto-applied. Mark summary rows with a <code>total</code> mapping:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  step  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Revenue"</span>, <span class="st">"COGS"</span>, <span class="st">"Gross Profit"</span>, <span class="st">"OpEx"</span>, <span class="st">"Net Income"</span><span class="op">)</span>,</span>
 <span>  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">500</span>, <span class="op">-</span><span class="fl">200</span>, <span class="cn">NA</span>, <span class="op">-</span><span class="fl">150</span>, <span class="cn">NA</span><span class="op">)</span>,</span>
@@ -390,7 +463,7 @@ auto-applied. Mark summary rows with a <code>total</code> mapping:</p>
 <p>Sankey diagrams show flows between nodes. Mapping requires
 <code>source</code>, <code>target</code>, and <code>value</code>. This
 is a standalone type and cannot be mixed with other charts:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  source <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Budget"</span>, <span class="st">"Budget"</span>, <span class="st">"Sales"</span>, <span class="st">"Sales"</span>, <span class="st">"Marketing"</span><span class="op">)</span>,</span>
 <span>  target <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Sales"</span>, <span class="st">"Marketing"</span>, <span class="st">"Revenue"</span>, <span class="st">"Leads"</span>, <span class="st">"Leads"</span><span class="op">)</span>,</span>
@@ -413,7 +486,7 @@ is a standalone type and cannot be mixed with other charts:</p>
 (IQR box), point (whiskers, median), and optional outlier layers.
 Mapping requires <code>x_var</code> (categorical) and <code>y_var</code>
 (numeric):</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
 <span>    type <span class="op">=</span> <span class="st">"boxplot"</span>,</span>
@@ -433,7 +506,7 @@ Mapping requires <code>x_var</code> (categorical) and <code>y_var</code>
 <p>Violin plots show the distribution shape via a mirrored kernel
 density estimate. They expand into area (density), optional box (IQR),
 and optional median point layers:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
 <span>    type <span class="op">=</span> <span class="st">"violin"</span>,</span>
@@ -456,7 +529,7 @@ comparing distributions across groups. They expand into one area
 sub-layer per group value. Mapping requires <code>x_var</code> (numeric
 values), <code>y_var</code> (numeric), and <code>group</code>
 (categorical):</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="va">mtcars</span></span>
 <span><span class="va">df</span><span class="op">$</span><span class="va">cyl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">cyl</span><span class="op">)</span></span>
 <span></span>
@@ -481,7 +554,7 @@ theoretical distribution to assess normality. The composite expands into
 a point layer (Q-Q scatter), a reference line (through Q1/Q3), and an
 optional confidence envelope. Only <code>y_var</code> is required in the
 mapping:</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
 <span>    type <span class="op">=</span> <span class="st">"qq"</span>,</span>
@@ -502,7 +575,7 @@ mapping.</p>
 <p>Comparison plots combine boxplots with pairwise significance brackets
 showing p-values from hypothesis tests. The composite expands into
 boxplot sub-layers plus a bracket layer with test results:</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
 <span>    type <span class="op">=</span> <span class="st">"comparison"</span>,</span>
@@ -524,7 +597,7 @@ boxplot sub-layers plus a bracket layer with test results:</p>
 <p>Brackets can also be added as a standalone layer on top of any
 grouped chart. Use <code>transform = "pairwise_test"</code> to compute
 significance tests:</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
 <span>    type <span class="op">=</span> <span class="st">"boxplot"</span>, color <span class="op">=</span> <span class="st">"#4E79A7"</span>,</span>
@@ -545,7 +618,7 @@ significance tests:</p>
 </h2>
 <p>You can overlay compatible chart types on a single widget. Here we
 layer points, a connecting line, and a linear model trend line:</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span></span>
 <span>    type <span class="op">=</span> <span class="st">"point"</span>,</span>
@@ -579,7 +652,7 @@ meters, <code>time</code> to numeric seconds, and <code>entity</code> to
 a stable identifier. Optional <code>team</code>, <code>label</code>, and
 <code>kind</code> mappings supply team filters, marker labels, and the
 ball marker (<code>kind = "ball"</code>). Use this type alone.</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="va">tracking</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span><span class="st">"field"</span>, label <span class="op">=</span> <span class="st">"Match"</span>, mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    x_var <span class="op">=</span> <span class="st">"x"</span>, y_var <span class="op">=</span> <span class="st">"y"</span>, time <span class="op">=</span> <span class="st">"time"</span>, entity <span class="op">=</span> <span class="st">"entity_id"</span>,</span>
@@ -616,7 +689,7 @@ production-bundle example is
 <p>Two optional overlays add team shape and player separation. Both are
 off unless requested, and both follow playback, timeline seeking, event
 buttons, player selection and team visibility.</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="va">tracking</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/addIoLayer.html">addIoLayer</a></span><span class="op">(</span><span class="st">"field"</span>, label <span class="op">=</span> <span class="st">"Match"</span>, mapping <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    x_var <span class="op">=</span> <span class="st">"x"</span>, y_var <span class="op">=</span> <span class="st">"y"</span>, time <span class="op">=</span> <span class="st">"time"</span>, entity <span class="op">=</span> <span class="st">"entity_id"</span>,</span>

@@ -1,7 +1,7 @@
 # myIO
 
 An R package for creating interactive `d3.js` visualizations using
-`htmlwidgets`. Supports 37 chart types including scatter plots, line
+`htmlwidgets`. Supports 40 chart types including scatter plots, line
 charts, uncertainty views, statistical composites, and more — all
 composable through a piped API.
 
@@ -184,6 +184,8 @@ Control axis formatting, limits, and orientation
   : Set Axis Format
 - [`setAxisLimits()`](https://mortonanalytics.github.io/myIO/reference/setAxisLimits.md)
   : Set Axis Limits
+- [`setEqualAspect()`](https://mortonanalytics.github.io/myIO/reference/setEqualAspect.md)
+  : Equal Units per Pixel on x and y
 - [`defineCategoricalAxis()`](https://mortonanalytics.github.io/myIO/reference/defineCategoricalAxis.md)
   : Define Categorical Axis
 - [`flipAxis()`](https://mortonanalytics.github.io/myIO/reference/flipAxis.md)
@@ -247,6 +249,36 @@ Multi-panel composition, opacity, and export configuration
   : Set Layer Opacity
 - [`setExportOptions()`](https://mortonanalytics.github.io/myIO/reference/setExportOptions.md)
   : Configure Export Options
+
+## myDAR walks
+
+Read myDAR walk outputs and plot them
+
+- [`read_mydar_walk()`](https://mortonanalytics.github.io/myIO/reference/read_mydar_walk.md)
+  [`read_mydar_points()`](https://mortonanalytics.github.io/myIO/reference/read_mydar_walk.md)
+  [`read_mydar_terrain()`](https://mortonanalytics.github.io/myIO/reference/read_mydar_walk.md)
+  [`read_mydar_orthophoto()`](https://mortonanalytics.github.io/myIO/reference/read_mydar_walk.md)
+  [`read_mydar_gpkg()`](https://mortonanalytics.github.io/myIO/reference/read_mydar_walk.md)
+  [`read_mydar_trajectory()`](https://mortonanalytics.github.io/myIO/reference/read_mydar_walk.md)
+  : Read a myDAR walk
+- [`mydar_cloud_view()`](https://mortonanalytics.github.io/myIO/reference/mydar_cloud_view.md)
+  : 3D view of a myDAR walk's point cloud
+- [`mydar_plan_view()`](https://mortonanalytics.github.io/myIO/reference/mydar_views.md)
+  [`mydar_orthophoto_view()`](https://mortonanalytics.github.io/myIO/reference/mydar_views.md)
+  [`mydar_terrain_view()`](https://mortonanalytics.github.io/myIO/reference/mydar_views.md)
+  [`mydar_profile()`](https://mortonanalytics.github.io/myIO/reference/mydar_views.md)
+  [`mydar_profile_view()`](https://mortonanalytics.github.io/myIO/reference/mydar_views.md)
+  [`mydar_trajectory_view()`](https://mortonanalytics.github.io/myIO/reference/mydar_views.md)
+  [`mydar_sigma_view()`](https://mortonanalytics.github.io/myIO/reference/mydar_views.md)
+  [`mydar_accuracy_view()`](https://mortonanalytics.github.io/myIO/reference/mydar_views.md)
+  [`mydar_gps_view()`](https://mortonanalytics.github.io/myIO/reference/mydar_views.md)
+  : Plot a myDAR walk
+- [`mydar_dashboard()`](https://mortonanalytics.github.io/myIO/reference/mydar_dashboard.md)
+  : myDAR walk dashboard
+- [`mydar_iphone_walk`](https://mortonanalytics.github.io/myIO/reference/mydar_iphone_walk.md)
+  : A real myDAR iPhone walk, in local coordinates
+- [`mydar_iphone_cloud()`](https://mortonanalytics.github.io/myIO/reference/mydar_iphone_cloud.md)
+  : The bundled myDAR walk's point cloud
 
 ## Big-data
 
@@ -333,6 +365,11 @@ Debugging and error reporting
   Tables](https://mortonanalytics.github.io/myIO/articles/sparklines.md):
 - [WebR 0.6.0 and Quarto
   Live](https://mortonanalytics.github.io/myIO/articles/webr-quarto-live.md):
+
+### Data sources
+
+- [Plotting myDAR
+  walks](https://mortonanalytics.github.io/myIO/articles/mydar-walks.md):
 
 ### Migration
 

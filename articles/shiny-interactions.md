@@ -17,14 +17,14 @@ Toggle navigation
 
 ![](logo.png) myIO
 
-- [ Home](#tab-1143-1)
-- [ Comparisons](#tab-1143-2)
-- [ Trends & Time](#tab-1143-3)
-- [ Distributions](#tab-1143-4)
-- [ Relationships & Models](#tab-1143-5)
-- [ Sports](#tab-1143-6)
-- [ Interactivity](#tab-1143-7)
-- [ Theme & Export](#tab-1143-8)
+- [ Home](#tab-7664-1)
+- [ Comparisons](#tab-7664-2)
+- [ Trends & Time](#tab-7664-3)
+- [ Distributions](#tab-7664-4)
+- [ Relationships & Models](#tab-7664-5)
+- [ Sports](#tab-7664-6)
+- [ Interactivity](#tab-7664-7)
+- [ Theme & Export](#tab-7664-8)
 
 ![](logo.png)
 

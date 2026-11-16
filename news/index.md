@@ -4,6 +4,62 @@
 
 ### New features
 
+- New `raster` chart type draws a regular grid of numeric cells (an
+  elevation model, a density surface) as one image on continuous axes,
+  so point and line layers can sit on top. Map `x_var`, `y_var` (cell
+  centers) and `value`, and optionally `shade` (0-1) to darken cells by
+  a hillshade. Hovering shows the cell’s value. `options$palette` picks
+  `"viridis"`, `"cividis"` or `"greys"`.
+
+- New `image` chart type stretches a picture (`options$src`, a data or
+  web URL) over the x/y extent of its rows, under every other layer: an
+  orthophoto under a plan view, for example.
+
+- New `pointcloud` chart type draws hundreds of thousands of points with
+  WebGL: orbit, pan and zoom in 3D, or a top-down 2D plan with a scale
+  bar. Points can be colored by RGB, class, height or sigma (switchable
+  in the view), with an optional orthophoto under them, a track line
+  over them and a caption card. Map `x_var`, `y_var`, `z_var` and
+  optionally `red`, `green`, `blue`, `class` and `sigma`; the points
+  travel packed as binary, not one JSON row each.
+
+- New
+  [`setEqualAspect()`](https://mortonanalytics.github.io/myIO/reference/setEqualAspect.md)
+  makes one unit as long on x as on y, for maps and plans.
+
+- Point layers take `options$pointRadius`; line layers take
+  `options$curveType = "linear"` (straight segments in row order, for
+  paths whose x goes back and forth, with no “x is not sorted” warning)
+  and `options$showPoints = FALSE` (no vertex dots).
+
+- New readers and charts for myDAR walks.
+  [`read_mydar_walk()`](https://mortonanalytics.github.io/myIO/reference/read_mydar_walk.md)
+  reads a walk’s point cloud, DEM, orthophoto, GeoPackage and trajectory
+  into data frames (with the Suggested packages rlas, terra and sf),
+  thinning large clouds to `max_points`; `local = TRUE` moves every
+  table to walk-local x, y and z.
+  [`mydar_cloud_view()`](https://mortonanalytics.github.io/myIO/reference/mydar_cloud_view.md)
+  draws the cloud in 3D with the walk’s Shape and Map accuracy as a
+  caption;
+  [`mydar_plan_view()`](https://mortonanalytics.github.io/myIO/reference/mydar_views.md)
+  draws points, track and profile line over the orthophoto to scale;
+  [`mydar_orthophoto_view()`](https://mortonanalytics.github.io/myIO/reference/mydar_views.md),
+  [`mydar_terrain_view()`](https://mortonanalytics.github.io/myIO/reference/mydar_views.md),
+  [`mydar_profile_view()`](https://mortonanalytics.github.io/myIO/reference/mydar_views.md),
+  [`mydar_trajectory_view()`](https://mortonanalytics.github.io/myIO/reference/mydar_views.md),
+  [`mydar_sigma_view()`](https://mortonanalytics.github.io/myIO/reference/mydar_views.md),
+  [`mydar_accuracy_view()`](https://mortonanalytics.github.io/myIO/reference/mydar_views.md)
+  and
+  [`mydar_gps_view()`](https://mortonanalytics.github.io/myIO/reference/mydar_views.md)
+  cover the rest, and
+  [`mydar_dashboard()`](https://mortonanalytics.github.io/myIO/reference/mydar_dashboard.md)
+  lays them out map first, then profile, then quality.
+  `mydar_iphone_walk` and
+  [`mydar_iphone_cloud()`](https://mortonanalytics.github.io/myIO/reference/mydar_iphone_cloud.md)
+  are a real iPhone walk (500,000 of its points for the 3D view), shown
+  in local coordinates only; the demo app has a myDAR walk page built
+  from them.
+
 - New
   [`updateMyIOOptions()`](https://mortonanalytics.github.io/myIO/reference/updateMyIOOptions.md)
   merges new options into rendered layers from the Shiny server, matched
@@ -16,6 +72,16 @@
   it for the Tactical overlays controls, which used to reset the field
   chart on every toggle
   ([\#193](https://github.com/mortonanalytics/myIO/issues/193)).
+
+- Continuous x axes keep their tick labels level at every width and show
+  about one tick per 70 px of plot width (2 to 10), instead of rotating
+  the labels on charts narrower than 550 px. Named tick labels still
+  rotate.
+
+- An inline legend no longer draws across the x-axis title: an item that
+  does not fit beside the title wraps, and when the legend wraps to a
+  second row the title moves up to clear it. Image and text layers are
+  left out of the layer legend.
 
 ### Bug fixes
 
