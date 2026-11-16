@@ -7,7 +7,15 @@ output directory; the other functions read one file each.
 ## Usage
 
 ``` r
-read_mydar_walk(dir, max_points = 20000, max_cells = 40000, local = TRUE)
+read_mydar_mesh(path, crs = NULL, max_triangles = 20000)
+
+read_mydar_walk(
+  dir,
+  max_points = 20000,
+  max_cells = 40000,
+  local = TRUE,
+  max_triangles = 20000
+)
 
 read_mydar_points(path, max_points = 20000)
 
@@ -21,6 +29,23 @@ read_mydar_trajectory(path)
 ```
 
 ## Arguments
+
+- path:
+
+  Path to one walk file.
+
+- crs:
+
+  For `read_mydar_mesh()`: the CRS to put the mesh in, e.g. the walk's
+  project CRS (`"EPSG:32612"`). The phone writes the mesh in meters
+  east, north and up of a geodetic origin; with `crs` each vertex is
+  converted through WGS84 latitude, longitude and ellipsoidal height
+  into that CRS so it lines up with the point cloud. `NULL` keeps the
+  file's frame.
+
+- max_triangles:
+
+  Passed to `read_mydar_mesh()`.
 
 - dir:
 
@@ -47,10 +72,6 @@ read_mydar_trajectory(path)
   kept in `$origin` (x, y, z); add it back to recover project
   coordinates. `trajectory.csv` is in its own local frame (meters east,
   north and up of the first GPS fix) and is left as written.
-
-- path:
-
-  Path to one walk file.
 
 - max_pixels:
 
@@ -105,6 +126,12 @@ read_mydar_trajectory(path)
   From `orthophoto.tif`: `png`, the image as PNG bytes with no
   georeference or metadata, and `extent`, `c(xmin, xmax, ymin, ymax)` in
   the walk's coordinates.
+
+- mesh:
+
+  From `walk.mesh.usdz`, when the phone recorded one: `vertices` (`x`,
+  `y`, `z`, `r`, `g`, `b`) and `faces`, a three-column matrix of 0-based
+  vertex indices, in the same coordinates as the points.
 
 - trajectory:
 

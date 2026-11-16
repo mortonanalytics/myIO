@@ -89,7 +89,8 @@ Multi-panel composition, opacity, and export configuration
 
 Read myDAR walk outputs and plot them
 
-- [`read_mydar_walk()`](https://mortonanalytics.github.io/myIO/reference/read_mydar_walk.md)
+- [`read_mydar_mesh()`](https://mortonanalytics.github.io/myIO/reference/read_mydar_walk.md)
+  [`read_mydar_walk()`](https://mortonanalytics.github.io/myIO/reference/read_mydar_walk.md)
   [`read_mydar_points()`](https://mortonanalytics.github.io/myIO/reference/read_mydar_walk.md)
   [`read_mydar_terrain()`](https://mortonanalytics.github.io/myIO/reference/read_mydar_walk.md)
   [`read_mydar_orthophoto()`](https://mortonanalytics.github.io/myIO/reference/read_mydar_walk.md)
@@ -97,7 +98,7 @@ Read myDAR walk outputs and plot them
   [`read_mydar_trajectory()`](https://mortonanalytics.github.io/myIO/reference/read_mydar_walk.md)
   : Read a myDAR walk
 - [`mydar_cloud_view()`](https://mortonanalytics.github.io/myIO/reference/mydar_cloud_view.md)
-  : 3D view of a myDAR walk's point cloud
+  : Map view of a myDAR walk, in 2D and 3D
 - [`mydar_plan_view()`](https://mortonanalytics.github.io/myIO/reference/mydar_views.md)
   [`mydar_orthophoto_view()`](https://mortonanalytics.github.io/myIO/reference/mydar_views.md)
   [`mydar_terrain_view()`](https://mortonanalytics.github.io/myIO/reference/mydar_views.md)

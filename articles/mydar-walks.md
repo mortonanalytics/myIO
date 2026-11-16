@@ -38,7 +38,7 @@ PNG with its extent in the same coordinates.
 
 The examples below use `mydar_iphone_walk`: a real outdoor walk recorded
 with the myDAR iPhone app and processed with the myDAR CLI (autodar
-commit `a1388d8`), shown in local coordinates only. Its x and y were
+commit `5f3aeb4`), shown in local coordinates only. Its x and y were
 moved to meters from the walk’s south-west corner and its heights to
 height above the lowest ground cell, by subtraction only; the subtracted
 origin and the project CRS are not included, and the orthophoto ships as
@@ -60,6 +60,7 @@ walk
 #>   gps_fixes:    49
 #>   features:     none
 #>   trajectory:   2,984 poses
+#>   mesh:         11,219 triangles
 #>   orthophoto:   352 x 453 px
 #>   local coordinates (origin withheld)
 ```
@@ -74,33 +75,39 @@ line <- list(from = c(0, ym), to = c(22, ym))
 
 ## The views
 
-### 3D point cloud
+### The map: 2D and 3D in one view
 
-The cloud in 3D, the way the myDAR app’s Results screen shows it: drag
-to orbit, shift-drag to pan, scroll or pinch to zoom, or switch to 2D
-for a top-down plan with a scale bar. The chips color the points by
-camera color, class, height or sigma and turn the orthophoto under them
-on and off. The card gives the walk’s two accuracy figures, Shape and
-Map, separately.
+[`mydar_cloud_view()`](https://mortonanalytics.github.io/myIO/reference/mydar_cloud_view.md)
+is the walk’s map, the way the myDAR app’s Results screen shows it: one
+view with a 2D / 3D switch.
+
+- **2D** is the plan over the orthophoto, with a scale bar.
+- **3D** is the point cloud with the orthophoto draped on the DEM, so
+  the imagery and the points line up in one scene. When the walk has a
+  mesh, a Points / Mesh switch shows the phone’s scene mesh in its own
+  colors.
+- The **layer chips** switch on and off independently: LiDAR, Camera
+  (when the walk has camera points), Classes and Ortho. Points can also
+  be colored by photo color, height or sigma.
+- The **track** runs through both modes with its uncertainty band, light
+  to dark orange as the map-position uncertainty rises. The **profile
+  line** and the **accuracy card** (Shape and Map, never merged) are on
+  the map too.
+
+Drag to orbit (2D: pan), shift-drag to pan, scroll or pinch to zoom.
 
 ``` r
 
-mydar_cloud_view(walk, points = mydar_iphone_cloud())
+mydar_cloud_view(walk, points = mydar_iphone_cloud(), profile = line)
 ```
 
-### Plan view
-
-The orthophoto with the points (by LAS class), the track and the profile
-line over it, drawn to scale
-([`setEqualAspect()`](https://mortonanalytics.github.io/myIO/reference/setEqualAspect.md)),
-with the accuracy figures in the corner.
+The SVG views
+[`mydar_plan_view()`](https://mortonanalytics.github.io/myIO/reference/mydar_views.md)
+and
 [`mydar_orthophoto_view()`](https://mortonanalytics.github.io/myIO/reference/mydar_views.md)
-shows the orthophoto alone.
-
-``` r
-
-mydar_plan_view(walk, profile = line)
-```
+draw the plan to scale
+([`setEqualAspect()`](https://mortonanalytics.github.io/myIO/reference/setEqualAspect.md))
+where a WebGL view is not wanted.
 
 ### Terrain
 
@@ -180,11 +187,11 @@ far larger than the shape figure within 5 m.
 ## All at once
 
 [`mydar_dashboard()`](https://mortonanalytics.github.io/myIO/reference/mydar_dashboard.md)
-lays out the views on one page in the app’s order: the 3D cloud and the
-plan view first, then the profile, then the quality charts. Brush the
-plan view and the same points light up on the profile; hover the
-uncertainty or GPS chart and the other shows a cursor at the same moment
-(the GPS chart appears when the walk has GPS residuals).
+lays out the views on one page in the app’s order: the map first, then
+the profile, then the quality charts. In the map’s 2D view, turn on
+Select and drag a rectangle: the same points light up on the profile;
+hover the uncertainty or GPS chart and the other shows a cursor at the
+same moment (the GPS chart appears when the walk has GPS residuals).
 
 ``` r
 

@@ -134,7 +134,7 @@ The orthophoto comes back as a plain PNG with its extent in the same
 coordinates.</p>
 <p>The examples below use <code>mydar_iphone_walk</code>: a real outdoor
 walk recorded with the myDAR iPhone app and processed with the myDAR CLI
-(autodar commit <code>a1388d8</code>), shown in local coordinates only.
+(autodar commit <code>5f3aeb4</code>), shown in local coordinates only.
 Its x and y were moved to meters from the walk’s south-west corner and
 its heights to height above the lowest ground cell, by subtraction only;
 the subtracted origin and the project CRS are not included, and the
@@ -154,6 +154,7 @@ both from a walk folder.</p>
 <span><span class="co">#&gt;   gps_fixes:    49</span></span>
 <span><span class="co">#&gt;   features:     none</span></span>
 <span><span class="co">#&gt;   trajectory:   2,984 poses</span></span>
+<span><span class="co">#&gt;   mesh:         11,219 triangles</span></span>
 <span><span class="co">#&gt;   orthophoto:   352 x 453 px</span></span>
 <span><span class="co">#&gt;   local coordinates (origin withheld)</span></span></code></pre></div>
 <p>A profile line across the middle of the track, used below:</p>
@@ -165,26 +166,34 @@ both from a walk folder.</p>
 <h2 id="the-views">The views<a class="anchor" aria-label="anchor" href="#the-views"></a>
 </h2>
 <div class="section level3">
-<h3 id="d-point-cloud">3D point cloud<a class="anchor" aria-label="anchor" href="#d-point-cloud"></a>
+<h3 id="the-map-2d-and-3d-in-one-view">The map: 2D and 3D in one view<a class="anchor" aria-label="anchor" href="#the-map-2d-and-3d-in-one-view"></a>
 </h3>
-<p>The cloud in 3D, the way the myDAR app’s Results screen shows it:
-drag to orbit, shift-drag to pan, scroll or pinch to zoom, or switch to
-2D for a top-down plan with a scale bar. The chips color the points by
-camera color, class, height or sigma and turn the orthophoto under them
-on and off. The card gives the walk’s two accuracy figures, Shape and
-Map, separately.</p>
+<p><code><a href="../reference/mydar_cloud_view.html">mydar_cloud_view()</a></code> is the walk’s map, the way the myDAR
+app’s Results screen shows it: one view with a 2D / 3D switch.</p>
+<ul>
+<li>
+<strong>2D</strong> is the plan over the orthophoto, with a scale
+bar.</li>
+<li>
+<strong>3D</strong> is the point cloud with the orthophoto draped on
+the DEM, so the imagery and the points line up in one scene. When the
+walk has a mesh, a Points / Mesh switch shows the phone’s scene mesh in
+its own colors.</li>
+<li>The <strong>layer chips</strong> switch on and off independently:
+LiDAR, Camera (when the walk has camera points), Classes and Ortho.
+Points can also be colored by photo color, height or sigma.</li>
+<li>The <strong>track</strong> runs through both modes with its
+uncertainty band, light to dark orange as the map-position uncertainty
+rises. The <strong>profile line</strong> and the <strong>accuracy
+card</strong> (Shape and Map, never merged) are on the map too.</li>
+</ul>
+<p>Drag to orbit (2D: pan), shift-drag to pan, scroll or pinch to
+zoom.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/mydar_cloud_view.html">mydar_cloud_view</a></span><span class="op">(</span><span class="va">walk</span>, points <span class="op">=</span> <span class="fu"><a href="../reference/mydar_iphone_cloud.html">mydar_iphone_cloud</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="plan-view">Plan view<a class="anchor" aria-label="anchor" href="#plan-view"></a>
-</h3>
-<p>The orthophoto with the points (by LAS class), the track and the
-profile line over it, drawn to scale (<code><a href="../reference/setEqualAspect.html">setEqualAspect()</a></code>),
-with the accuracy figures in the corner.
-<code><a href="../reference/mydar_views.html">mydar_orthophoto_view()</a></code> shows the orthophoto alone.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/mydar_views.html">mydar_plan_view</a></span><span class="op">(</span><span class="va">walk</span>, profile <span class="op">=</span> <span class="va">line</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/mydar_cloud_view.html">mydar_cloud_view</a></span><span class="op">(</span><span class="va">walk</span>, points <span class="op">=</span> <span class="fu"><a href="../reference/mydar_iphone_cloud.html">mydar_iphone_cloud</a></span><span class="op">(</span><span class="op">)</span>, profile <span class="op">=</span> <span class="va">line</span><span class="op">)</span></span></code></pre></div>
+<p>The SVG views <code><a href="../reference/mydar_views.html">mydar_plan_view()</a></code> and
+<code><a href="../reference/mydar_views.html">mydar_orthophoto_view()</a></code> draw the plan to scale
+(<code><a href="../reference/setEqualAspect.html">setEqualAspect()</a></code>) where a WebGL view is not wanted.</p>
 </div>
 <div class="section level3">
 <h3 id="terrain">Terrain<a class="anchor" aria-label="anchor" href="#terrain"></a>
@@ -192,12 +201,12 @@ with the accuracy figures in the corner.
 <p>The DEM uses the <code>raster</code> chart type: a grid of cells
 drawn as one image, colored by height and shaded by a hillshade. Hover a
 cell for its height.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/mydar_views.html">mydar_terrain_view</a></span><span class="op">(</span><span class="va">walk</span>, azimuth <span class="op">=</span> <span class="fl">315</span>, altitude <span class="op">=</span> <span class="fl">45</span><span class="op">)</span></span></code></pre></div>
 <p>The raster type works for any regular grid: map <code>x_var</code>,
 <code>y_var</code> (cell centers) and <code>value</code>, and optionally
 <code>shade</code> (0-1).</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">5</span>, by <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">3</span>, by <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">grid</span><span class="op">$</span><span class="va">value</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">grid</span><span class="op">$</span><span class="va">x</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">grid</span><span class="op">$</span><span class="va">y</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/myIO.html">myIO</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -212,9 +221,9 @@ cell for its height.</p>
 along the line, with the DEM height along the same line.
 <code><a href="../reference/mydar_views.html">mydar_profile()</a></code> returns the corridor points as a data
 frame.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/mydar_views.html">mydar_profile_view</a></span><span class="op">(</span><span class="va">walk</span>, from <span class="op">=</span> <span class="va">line</span><span class="op">$</span><span class="va">from</span>, to <span class="op">=</span> <span class="va">line</span><span class="op">$</span><span class="va">to</span>, width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="../reference/mydar_views.html">mydar_profile</a></span><span class="op">(</span><span class="va">walk</span>, from <span class="op">=</span> <span class="va">line</span><span class="op">$</span><span class="va">from</span>, to <span class="op">=</span> <span class="va">line</span><span class="op">$</span><span class="va">to</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   distance       offset point_id     x      y         z class       class_name</span></span>
 <span><span class="co">#&gt; 1    2.146 -0.200905845     1247 2.146 13.593 0.3133428     3   Low vegetation</span></span>
@@ -234,7 +243,7 @@ frame.</p>
 <div class="section level3">
 <h3 id="uncertainty-and-qa">Uncertainty and QA<a class="anchor" aria-label="anchor" href="#uncertainty-and-qa"></a>
 </h3>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/mydar_views.html">mydar_trajectory_view</a></span><span class="op">(</span><span class="va">walk</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/mydar_views.html">mydar_gps_view</a></span><span class="op">(</span><span class="va">walk</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/mydar_views.html">mydar_sigma_view</a></span><span class="op">(</span><span class="va">walk</span><span class="op">)</span></span>
@@ -254,12 +263,12 @@ figure within 5 m.</p>
 <h2 id="all-at-once">All at once<a class="anchor" aria-label="anchor" href="#all-at-once"></a>
 </h2>
 <p><code><a href="../reference/mydar_dashboard.html">mydar_dashboard()</a></code> lays out the views on one page in the
-app’s order: the 3D cloud and the plan view first, then the profile,
-then the quality charts. Brush the plan view and the same points light
-up on the profile; hover the uncertainty or GPS chart and the other
-shows a cursor at the same moment (the GPS chart appears when the walk
-has GPS residuals).</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+app’s order: the map first, then the profile, then the quality charts.
+In the map’s 2D view, turn on Select and drag a rectangle: the same
+points light up on the profile; hover the uncertainty or GPS chart and
+the other shows a cursor at the same moment (the GPS chart appears when
+the walk has GPS residuals).</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/mydar_dashboard.html">mydar_dashboard</a></span><span class="op">(</span><span class="va">walk</span>, points <span class="op">=</span> <span class="fu"><a href="../reference/mydar_iphone_cloud.html">mydar_iphone_cloud</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
