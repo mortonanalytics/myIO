@@ -13,7 +13,7 @@
 \alias{mydar_gps_view}
 \title{Plot a myDAR walk}
 \usage{
-mydar_plan_view(walk, profile = NULL, points = TRUE, height = "460px")
+mydar_plan_view(walk, profile = NULL, points = NULL, height = "460px")
 
 mydar_orthophoto_view(walk, height = "460px")
 
@@ -43,8 +43,10 @@ mydar_gps_view(walk, height = "320px")
 \item{profile}{Optional \code{list(from = c(x, y), to = c(x, y))}; draws the
 profile line on the plan view.}
 
-\item{points}{If \code{TRUE} (default), draw the points (by class) over the
-orthophoto.}
+\item{points}{Draw the points, colored by class, over the orthophoto, small
+and translucent so the image shows through. Defaults to \code{TRUE} only
+when the walk has no orthophoto. Brushing the plan view selects these
+points, so turn them on to link it to a profile.}
 
 \item{height}{Widget height, a CSS size.}
 
@@ -74,11 +76,11 @@ myIO chart.
 }
 \details{
 \describe{
-  \item{\code{mydar_plan_view()}}{The walk from above: the orthophoto,
-    points colored by LAS class, the track, point features and, when
-    \code{profile} is given, the profile line, drawn to scale (equal
-    meters per pixel on both axes) with the walk's Shape and Map accuracy
-    as a caption.}
+  \item{\code{mydar_plan_view()}}{The walk from above: the orthophoto
+    with the track, point features and, when \code{profile} is given, the
+    profile line on it, drawn to scale (equal meters per pixel on both
+    axes) with the walk's Shape and Map accuracy as a caption. Points
+    colored by LAS class are an optional overlay (\code{points}).}
   \item{\code{mydar_orthophoto_view()}}{The orthophoto alone, to scale,
     with the track.}
   \item{\code{mydar_terrain_view()}}{The DEM as a \code{"raster"} layer,

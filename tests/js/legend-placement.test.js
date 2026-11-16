@@ -261,4 +261,11 @@ describe("computeInlineRows with a narrowed first row", function() {
       computeInlineRows(["a", "b", "c"], 300, 0, 300)
     );
   });
+
+  test("an item too wide for a first row shortened by the axis title wraps to the next row", function() {
+    // 400px available, first row cut to 60px by the centred x-axis title.
+    var layout = computeInlineRows(["Never classified", "Low vegetation"], 400, 0, 60);
+    expect(layout.positions[0]).toEqual({ row: 1, x: 0 });
+    expect(layout.positions[1].row).toBe(1);
+  });
 });

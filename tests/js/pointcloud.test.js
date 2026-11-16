@@ -69,6 +69,50 @@ describe("pointcloud", function() {
     });
   });
 
+  test("the 3D view fits the box: every corner inside the canvas, the widest close to its edge", function() {
+    const box = [0, 10, 0, 20, 0, 2];
+    [0.6, 1.6].forEach(function(aspect) {
+      const view = initialView(box, "3d", aspect);
+      const m = viewMatrices(view, 300 * aspect, 300);
+      let widest = 0;
+      for (let i = 0; i < 8; i++) {
+        const c = apply(m.proj, apply(m.view, [box[i & 1 ? 1 : 0], box[i & 2 ? 3 : 2], box[i & 4 ? 5 : 4]]));
+        const nx = Math.abs(c[0] / c[3]), ny = Math.abs(c[1] / c[3]);
+        expect(nx).toBeLessThanOrEqual(0.95);
+        expect(ny).toBeLessThanOrEqual(0.95);
+        widest = Math.max(widest, nx, ny);
+      }
+      expect(widest).toBeGreaterThan(0.85);
+      expect(view.el).toBeGreaterThan(0.3);
+      expect(view.el).toBeLessThan(1.2);
+    });
+  });
+
+  test("fitting to the points themselves fills the canvas and centres an L-shaped cloud", function() {
+    const pts = [];
+    for (let i = 0; i <= 50; i++) { pts.push([i * 0.2, 0, 0]); pts.push([0, i * 0.4, 0]); }
+    const box = [0, 10, 0, 20, 0, 0.5];
+    const view = initialView(box, "3d", 1.5, pts);
+    const m = viewMatrices(view, 150, 100);
+    const q = pts.map((p) => { const c = apply(m.proj, apply(m.view, p)); return [c[0] / c[3], c[1] / c[3]]; });
+    const xs = q.map((c) => c[0]), ys = q.map((c) => c[1]);
+    const spanX = Math.max(...xs) - Math.min(...xs), spanY = Math.max(...ys) - Math.min(...ys);
+    expect(Math.max(spanX, spanY)).toBeGreaterThan(1.7);
+    // Centred to within a few percent of the canvas (perspective makes the pan
+    // approximate).
+    expect(Math.abs(Math.max(...xs) + Math.min(...xs))).toBeLessThan(0.15);
+    expect(Math.abs(Math.max(...ys) + Math.min(...ys))).toBeLessThan(0.15);
+  });
+
+  test("decode keeps a box of the middle 98% of points on each axis", function() {
+    const n = 1000, pos = new Uint16Array(n * 3);
+    for (let i = 0; i < n; i++) { pos[i * 3] = Math.round(i / (n - 1) * 65535); pos[i * 3 + 1] = 32768; pos[i * 3 + 2] = 0; }
+    const cloud = decodeCloud({ n, bbox: [0, 100, 0, 10, 0, 1], positions: b64(pos) });
+    expect(cloud.box[0]).toBeGreaterThan(0.5);
+    expect(cloud.box[1]).toBeLessThan(99.5);
+    expect(cloud.box[0]).toBeLessThan(2);
+  });
+
   test("the 3D view looks at the cloud's center from above", function() {
     const view = initialView([0, 10, 0, 20, 0, 2], "3d", 1.5);
     const m = viewMatrices(view, 300, 200);
@@ -102,7 +146,7 @@ describe("pointcloud", function() {
     expect(Math.abs(clip[2] / clip[3])).toBeLessThan(1);
   });
 
-  test("says so when the browser has no WebGL", function() {
+  test("says so when the browser has no WebGL", async function() {
     const container = document.createElement("div");
     container.id = "pc";
     document.body.appendChild(container);
@@ -116,6 +160,7 @@ describe("pointcloud", function() {
       on: (name, fn) => { listeners[name] = fn; }, off: () => {}
     };
     new PointCloudRenderer().render(chart, { label: "cloud", options: payload() });
+    await chart.runtime.pointcloud.ready;
     expect(container.querySelector(".myIO-pointcloud-message").textContent).toMatch(/WebGL is not available/);
     new PointCloudRenderer().remove(chart);
     expect(container.querySelector(".myIO-pointcloud")).toBeNull();

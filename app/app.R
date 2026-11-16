@@ -339,10 +339,12 @@ ui <- page_navbar(
           card(full_screen = TRUE, card_header("Point cloud"),
             card_body(padding = 0, myIOOutput("mydarCloud", height = "560px"))),
           card(full_screen = TRUE, card_header("Plan view over the orthophoto"),
-            card_body(myIOOutput("mydarPlan", height = "520px")))
+            card_body(
+              checkboxInput("mydar_plan_points", "Show class points (brush them to pick points on the profile)", value = FALSE),
+              myIOOutput("mydarPlan", height = "520px")))
         ),
         chart_card("Profile across the walk",
-          p(class = "small text-muted", "Brush an empty part of the plan view to find the same points here."),
+          p(class = "small text-muted", "Turn on class points on the plan view and brush an empty part of it to find the same points here."),
           myIOOutput("mydarProfile", height = "380px"),
           controls = tagList(
             sliderInput("mydar_bearing", "Line bearing (degrees from north)", min = 0, max = 175, value = 90, step = 5, width = "100%"),
@@ -904,7 +906,7 @@ server <- function(input, output, session) {
     validate(need(nrow(mydar_profile(mydar_walk, line$from, line$to, input$mydar_width)) > 0,
                   "No points within the corridor here; widen it or move the line."))
     linkCharts(
-      mydar_plan_view(mydar_walk, profile = line, height = "520px") |> setBrush(),
+      mydar_plan_view(mydar_walk, profile = line, points = isTRUE(input$mydar_plan_points), height = "520px") |> setBrush(),
       mydar_profile_view(mydar_walk, from = line$from, to = line$to, width = input$mydar_width),
       on = "point_id", group = "mydar_points"
     )

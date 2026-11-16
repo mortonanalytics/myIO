@@ -223,7 +223,15 @@ test_that("views build the expected layers from the bundled walk", {
   walk <- mydar_iphone_walk
 
   plan <- mydar_plan_view(walk, profile = list(from = c(0, 4), to = c(10, 4)))
-  expect_true(all(c("Orthophoto", "Ground", "Building", "Low vegetation", "Track", "Profile line", "Accuracy") %in% layer_labels(plan)))
+  expect_equal(layer_labels(plan), c("Orthophoto", "Track", "Profile line", "Accuracy"))
+  with_points <- mydar_plan_view(walk, points = TRUE)
+  expect_true(all(c("Ground", "Building", "Low vegetation") %in% layer_labels(with_points)))
+  ground <- with_points$x$config$layers[[which(layer_labels(with_points) == "Ground")]]
+  expect_lt(ground$options$opacity, 1)
+  expect_lte(ground$options$pointRadius, 1.5)
+  no_ortho <- walk
+  no_ortho$orthophoto <- NULL
+  expect_true("Ground" %in% layer_labels(mydar_plan_view(no_ortho)))
   expect_equal(layer_types(plan)[1], "image")
   expect_true(plan$x$config$scales$equalAspect)
   cap <- plan$x$config$layers[[which(layer_labels(plan) == "Accuracy")]]
@@ -306,9 +314,11 @@ test_that("mydar_dashboard links plan and profile on point_id, and the time char
     }, character(1))
   }
 
-  widgets <- widgets_of(mydar_dashboard(mydar_iphone_walk))
+  expect_false("Ground" %in% layer_labels(widgets_of(mydar_dashboard(mydar_iphone_walk))[[2]]))
+  widgets <- widgets_of(mydar_dashboard(mydar_iphone_walk, plan_points = TRUE))
   expect_length(widgets, 8)
   expect_equal(widgets[[1]]$x$config$layers[[1]]$type, "pointcloud")
+  expect_true("Ground" %in% layer_labels(widgets[[2]]))
   expect_equal(sum(key_columns(widgets) == "point_id", na.rm = TRUE), 2)
   expect_equal(sum(key_columns(widgets) == "t_s", na.rm = TRUE), 2)
   expect_true(isTRUE(widgets[[2]]$x$config$interactions$brush$enabled))

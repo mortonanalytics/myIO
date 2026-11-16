@@ -5,11 +5,11 @@
 #' myIO chart.
 #'
 #' \describe{
-#'   \item{\code{mydar_plan_view()}}{The walk from above: the orthophoto,
-#'     points colored by LAS class, the track, point features and, when
-#'     \code{profile} is given, the profile line, drawn to scale (equal
-#'     meters per pixel on both axes) with the walk's Shape and Map accuracy
-#'     as a caption.}
+#'   \item{\code{mydar_plan_view()}}{The walk from above: the orthophoto
+#'     with the track, point features and, when \code{profile} is given, the
+#'     profile line on it, drawn to scale (equal meters per pixel on both
+#'     axes) with the walk's Shape and Map accuracy as a caption. Points
+#'     colored by LAS class are an optional overlay (\code{points}).}
 #'   \item{\code{mydar_orthophoto_view()}}{The orthophoto alone, to scale,
 #'     with the track.}
 #'   \item{\code{mydar_terrain_view()}}{The DEM as a \code{"raster"} layer,
@@ -33,8 +33,10 @@
 #' @param walk A \code{mydar_walk}.
 #' @param profile Optional \code{list(from = c(x, y), to = c(x, y))}; draws the
 #'   profile line on the plan view.
-#' @param points If \code{TRUE} (default), draw the points (by class) over the
-#'   orthophoto.
+#' @param points Draw the points, colored by class, over the orthophoto, small
+#'   and translucent so the image shows through. Defaults to \code{TRUE} only
+#'   when the walk has no orthophoto. Brushing the plan view selects these
+#'   points, so turn them on to link it to a profile.
 #' @param from,to Profile line ends, each \code{c(x, y)} in the walk's
 #'   coordinates. When both are \code{NULL}, the line crosses the track at its
 #'   midpoint and spans the point cloud.
@@ -70,8 +72,9 @@ NULL
 
 #' @rdname mydar_views
 #' @export
-mydar_plan_view <- function(walk, profile = NULL, points = TRUE, height = "460px") {
+mydar_plan_view <- function(walk, profile = NULL, points = NULL, height = "460px") {
   pts <- mydar_need(walk, "points", "mydar_plan_view")
+  if (is.null(points)) points <- is.null(walk$orthophoto)
   check_flag(points, "points", "mydar_plan_view")
   pts <- pts[order(pts$class), , drop = FALSE]
 
@@ -80,7 +83,7 @@ mydar_plan_view <- function(walk, profile = NULL, points = TRUE, height = "460px
   if (points) {
     w <- addIoLayer(w, type = "point", label = "points", data = pts, color = mydar_class_colors(pts$class),
                     mapping = list(x_var = "x", y_var = "y", group = "class_name"),
-                    options = list(pointRadius = 1.6, opacity = if (is.null(walk$orthophoto)) 1 else 0.7))
+                    options = if (is.null(walk$orthophoto)) list(pointRadius = 2) else list(pointRadius = 1.2, opacity = 0.45))
   }
 
   if (!is.null(walk$track) && nrow(walk$track) > 1L) {
@@ -360,7 +363,8 @@ mydar_cloud_view <- function(walk, points = NULL, color = c("rgb", "class", "hei
 #' cloud and the plan view over the orthophoto first, both captioned with the
 #' walk's Shape and Map accuracy, then the profile, then the quality charts
 #' (map-position uncertainty, GPS residuals, point sigma, accuracy figures).
-#' Brushing points on the plan view highlights the same points on the profile.
+#' With \code{plan_points = TRUE}, the plan view shows the class points over
+#' the orthophoto, and brushing them highlights the same points on the profile.
 #' When the walk has GPS residuals, the GPS chart shares a time cursor with the
 #' uncertainty chart.
 #'
@@ -368,6 +372,8 @@ mydar_cloud_view <- function(walk, points = NULL, color = c("rgb", "class", "hei
 #' @inheritParams mydar_cloud_view
 #' @param profile Optional \code{list(from = c(x, y), to = c(x, y))} for the
 #'   profile line. Default: across the track at its midpoint.
+#' @param plan_points Show the class points on the plan view (see
+#'   \code{points} in \code{\link{mydar_plan_view}}); needed to brush it.
 #'
 #' @return A browsable \code{htmltools} tag list. Print it, return it from a
 #'   Shiny \code{renderUI()}, or save it with \code{htmltools::save_html()}.
@@ -376,13 +382,13 @@ mydar_cloud_view <- function(walk, points = NULL, color = c("rgb", "class", "hei
 #'   mydar_dashboard(mydar_iphone_walk)
 #' }
 #' @export
-mydar_dashboard <- function(walk, points = NULL, profile = NULL, width = 0.5) {
+mydar_dashboard <- function(walk, points = NULL, profile = NULL, width = 0.5, plan_points = FALSE) {
   mydar_require("htmltools", "mydar_dashboard")
   if (is.null(profile)) profile <- mydar_default_profile(walk)
   line <- mydar_check_line(profile$from, profile$to, "mydar_dashboard")
 
   linked_space <- linkCharts(
-    mydar_plan_view(walk, profile = line, height = "520px") |> setBrush(),
+    mydar_plan_view(walk, profile = line, points = plan_points || is.null(walk$orthophoto), height = "520px") |> setBrush(),
     mydar_profile_view(walk, from = line$from, to = line$to, width = width),
     on = "point_id", group = paste0("mydar_points_", new_chart_id())
   )

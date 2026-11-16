@@ -4,19 +4,30 @@
 \alias{mydar_dashboard}
 \title{myDAR walk dashboard}
 \usage{
-mydar_dashboard(walk, points = NULL, profile = NULL, width = 0.5)
+mydar_dashboard(
+  walk,
+  points = NULL,
+  profile = NULL,
+  width = 0.5,
+  plan_points = FALSE
+)
 }
 \arguments{
 \item{walk}{A \code{mydar_walk}.}
 
-\item{points}{If \code{TRUE} (default), draw the points (by class) over the
-orthophoto.}
+\item{points}{Draw the points, colored by class, over the orthophoto, small
+and translucent so the image shows through. Defaults to \code{TRUE} only
+when the walk has no orthophoto. Brushing the plan view selects these
+points, so turn them on to link it to a profile.}
 
 \item{profile}{Optional \code{list(from = c(x, y), to = c(x, y))} for the
 profile line. Default: across the track at its midpoint.}
 
 \item{width}{Corridor width in meters; points within \code{width / 2} of
 the line are kept.}
+
+\item{plan_points}{Show the class points on the plan view (see
+\code{points} in \code{\link{mydar_plan_view}}); needed to brush it.}
 }
 \value{
 A browsable \code{htmltools} tag list. Print it, return it from a
@@ -27,7 +38,8 @@ Lays out a walk the way the myDAR app's Results screen does: the 3D point
 cloud and the plan view over the orthophoto first, both captioned with the
 walk's Shape and Map accuracy, then the profile, then the quality charts
 (map-position uncertainty, GPS residuals, point sigma, accuracy figures).
-Brushing points on the plan view highlights the same points on the profile.
+With \code{plan_points = TRUE}, the plan view shows the class points over
+the orthophoto, and brushing them highlights the same points on the profile.
 When the walk has GPS residuals, the GPS chart shares a time cursor with the
 uncertainty chart.
 }

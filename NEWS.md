@@ -50,6 +50,15 @@
   options. The demo's Sports page uses it for the Tactical overlays controls,
   which used to reset the field chart on every toggle (#193).
 
+* Continuous x axes keep their tick labels level at every width and show
+  about one tick per 70 px of plot width (2 to 10), instead of rotating the
+  labels on charts narrower than 550 px. Named tick labels still rotate.
+
+* An inline legend no longer draws across the x-axis title: an item that does
+  not fit beside the title wraps, and when the legend wraps to a second row
+  the title moves up to clear it. Image and text layers are left out of the
+  layer legend.
+
 ## Bug fixes
 
 * Hovering lollipop, dumbbell, range bar, candlestick, heatmap, waffle,
