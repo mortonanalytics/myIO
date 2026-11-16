@@ -1,12 +1,12 @@
 #!/usr/bin/env Rscript
 # Builds data/mydar_iphone_walk.rda and
 # inst/extdata/mydar-iphone-walk-cloud.bin from one processed myDAR walk
-# folder (walk.copc.laz, terrain.tif, orthophoto.tif, walk.gpkg,
-# trajectory.csv).
+# folder (walk.copc.laz, terrain.tif, orthophoto.tif, walk.mesh.usdz,
+# walk.gpkg, trajectory.csv).
 #
 # The shipped dataset is Ryan's outdoor iPhone walk of 2026-11-15, recorded
 # with the myDAR app and reprocessed on a Mac with the myDAR CLI at autodar
-# commit a1388d8 (branch build/v1) from the phone's own capture files:
+# commit 5f3aeb4 (branch build/v1) from the phone's own capture files:
 #   mydar process walk.mcap --derived walk.derived.mcap -o <dir>
 # (the walk has no walk.pins.mcap; no --geoid was passed, which does not
 # matter here because heights are made local below).
@@ -19,6 +19,11 @@
 #     not kept (origin = NA).
 #   - the project CRS is dropped (walk$crs and the accuracy table's crs column).
 #   - feature layers are dropped (their attributes can hold recognized text).
+#   - the mesh (ARKit's scene mesh, vertex colors from the keyframes) is
+#     converted from the file's east-north-up frame into the project CRS
+#     through WGS84 (read_mydar_mesh(crs =)), so it lines up with the points,
+#     then shifted like everything else; its geodetic origin and accuracy
+#     metadata are not kept. Simplified to at most 12,000 triangles.
 #   - the orthophoto is kept as a plain PNG (pixels only: no CRS, no
 #     georeference, no metadata chunks) with its local extent.
 #   - the 500,000-point cloud file holds local x/y/z, color, class, sigma and
@@ -39,7 +44,7 @@ if (length(args) != 1L) stop("usage: Rscript data-raw/mydar_iphone_walk.R <walk-
 devtools::load_all(".", quiet = TRUE)
 
 # One read, so the dataset and the cloud file share the same local origin.
-big <- read_mydar_walk(args[[1]], max_points = 500000, local = TRUE)
+big <- read_mydar_walk(args[[1]], max_points = 500000, local = TRUE, max_triangles = 12000)
 mydar_write_cloud(big$points, "inst/extdata/mydar-iphone-walk-cloud.bin")
 
 walk <- big

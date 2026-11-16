@@ -138,6 +138,13 @@ test_that("the bundled walk carries no location: no origin, CRS, project coordin
   expect_equal(min(walk$terrain$z), 0)
   expect_output(print(walk), "origin withheld")
 
+  # The mesh: local vertices, faces that index them.
+  v <- walk$mesh$vertices
+  expect_true(all(abs(c(v$x, v$y)) < 1000))
+  expect_true(all(abs(v$z) < 100))
+  expect_true(all(walk$mesh$faces >= 0 & walk$mesh$faces < nrow(v)))
+  expect_null(attr(walk$mesh, "origin"))
+
   # The orthophoto is pixels only on a local extent.
   expect_equal(unique(myIO:::mydar_png_chunks(walk$orthophoto$png)), c("IHDR", "IDAT", "IEND"))
   expect_true(all(abs(walk$orthophoto$extent) < 1000))
@@ -179,6 +186,65 @@ test_that("the cloud file format round-trips within its quantization", {
   expect_equal(back$source, pts$source)
   expect_equal(back[, c("r", "g", "b")], pts[, c("r", "g", "b")], ignore_attr = TRUE)
   expect_equal(back$sigma_m, pts$sigma_m, tolerance = 0.04)
+})
+
+# A small USDA mesh the way the phone writes one: east-north-up meters about
+# a made-up test origin (not the walk's).
+write_usda <- function(points, faces, colors, frame = "enu", origin = c(45, -100, 1000)) {
+  path <- tempfile(fileext = ".usda")
+  fmt <- function(m) paste(sprintf("(%s)", apply(m, 1, paste, collapse = ", ")), collapse = ", ")
+  writeLines(c(
+    "#usda 1.0", "(", "    customLayerData = {",
+    sprintf('        string mydar_frame = "%s"', frame),
+    sprintf("        double3 mydar_enu_origin = (%s)", paste(origin, collapse = ", ")),
+    "    }", ")",
+    'def Mesh "Mesh"', "{",
+    sprintf("    int[] faceVertexCounts = [%s]", paste(rep(3, nrow(faces)), collapse = ", ")),
+    sprintf("    int[] faceVertexIndices = [%s]", paste(t(faces), collapse = ", ")),
+    sprintf("    point3f[] points = [%s]", fmt(points)),
+    sprintf("    color3f[] primvars:displayColor = [%s]", fmt(colors)),
+    "}"
+  ), path)
+  path
+}
+
+test_that("read_mydar_mesh reads a USDA mesh and converts east-north-up to a CRS", {
+  pts <- rbind(c(0, 0, 0), c(100, 0, 0), c(0, 100, 0), c(0, 0, 10))
+  faces <- rbind(c(0, 1, 2), c(0, 1, 3))
+  cols <- rbind(c(1, 0, 0), c(0, 1, 0), c(0, 0, 1), c(0.5, 0.5, 0.5))
+  path <- write_usda(pts, faces, cols)
+  on.exit(unlink(path))
+
+  local <- read_mydar_mesh(path)
+  expect_equal(as.matrix(local$vertices[, c("x", "y", "z")]), pts, ignore_attr = TRUE)
+  expect_equal(local$vertices$r, c(255L, 0L, 0L, 128L))
+  expect_equal(local$faces, faces, ignore_attr = TRUE)
+
+  skip_if_not_installed("sf")
+  geo <- read_mydar_mesh(path, crs = "EPSG:4326")
+  # The origin vertex is the origin; 100 m east raises longitude, north latitude.
+  expect_equal(geo$vertices$x[1], -100, tolerance = 1e-9)
+  expect_equal(geo$vertices$y[1], 45, tolerance = 1e-9)
+  expect_equal(geo$vertices$z[1], 1000, tolerance = 1e-6)
+  # Prime-vertical radius of WGS84 at 45 degrees.
+  n45 <- 6378137 / sqrt(1 - 0.00669438 * sin(pi / 4)^2)
+  expect_equal(geo$vertices$x[2] - (-100), 100 / (n45 * cos(pi / 4)) * 180 / pi, tolerance = 1e-3)
+  expect_equal(geo$vertices$y[3] - 45, 100 / 6367000 * 180 / pi, tolerance = 1e-2)
+  expect_equal(geo$vertices$z[4], 1010, tolerance = 1e-3)
+})
+
+test_that("mesh simplification keeps the triangle budget and valid indices", {
+  g <- expand.grid(x = 0:30, y = 0:30)
+  pts <- cbind(g$x * 0.1, g$y * 0.1, 0)
+  idx <- function(x, y) y * 31 + x
+  faces <- do.call(rbind, lapply(0:29, function(y) do.call(rbind, lapply(0:29, function(x)
+    rbind(c(idx(x, y), idx(x + 1, y), idx(x + 1, y + 1)), c(idx(x, y), idx(x + 1, y + 1), idx(x, y + 1)))))))
+  mesh <- list(vertices = data.frame(x = pts[, 1], y = pts[, 2], z = pts[, 3], r = 10L, g = 20L, b = 30L), faces = faces)
+  small <- myIO:::mydar_simplify_mesh(mesh, 400)
+  expect_lte(nrow(small$faces), 400)
+  expect_gt(nrow(small$faces), 50)
+  expect_true(all(small$faces >= 0 & small$faces < nrow(small$vertices)))
+  expect_equal(unique(small$vertices$g), 20L)
 })
 
 test_that("mydar_profile keeps points in the corridor, ordered along the line", {
@@ -235,7 +301,7 @@ test_that("views build the expected layers from the bundled walk", {
   expect_equal(layer_types(plan)[1], "image")
   expect_true(plan$x$config$scales$equalAspect)
   cap <- plan$x$config$layers[[which(layer_labels(plan) == "Accuracy")]]
-  expect_equal(vapply(cap$data, `[[`, character(1), "text"), c("Shape \u00b15.9 cm", "Map \u00b117 m"))
+  expect_equal(vapply(cap$data, `[[`, character(1), "text"), c("Shape \u00b15.9 cm", "Map \u00b116.8 m"))
   expect_true(mydar_orthophoto_view(walk)$x$config$scales$equalAspect)
   expect_true(mydar_terrain_view(walk)$x$config$scales$equalAspect)
   expect_false("Features" %in% layer_labels(plan))
@@ -281,13 +347,34 @@ test_that("mydar_cloud_view packs the cloud with the orthophoto, track and accur
   expect_equal(o$mode, "plan")
   expect_equal(o$pointSize, 3)
   expect_equal(o$caption$shape, "\u00b15.9 cm")
-  expect_equal(o$caption$shapeNote, "within 5 m \u00b7 5\u201315 m withheld")
-  expect_equal(o$caption$map, "\u00b117 m")
+  expect_equal(o$caption$shapeNote, "within 5 m \u00b7 past 5 m withheld, over 15 cm")
+  expect_equal(o$caption$map, "\u00b116.8 m")
+  expect_equal(o$caption$cameraNote, "Camera: withheld, its 95% error is over 15 cm.")
   expect_equal(o$caption$mapNote, "phone GPS")
   expect_match(o$ortho$src, "^data:image/png;base64,")
   expect_length(o$track, nrow(walk$track))
   expect_equal(o$classNames[["2"]], "Ground")
   expect_null(mydar_cloud_view(walk, ortho = FALSE)$x$config$layers[[1]]$options$ortho)
+
+  # The DEM grid for the drape, holding every DEM cell.
+  t <- o$terrain
+  dem <- readBin(jsonlite::base64_dec(t$z), "double", n = t$cols * t$rows, size = 4, endian = "little")
+  expect_equal(sum(is.finite(dem)), nrow(walk$terrain))
+  expect_equal(t$dx, attr(walk$terrain, "cell_size")[1])
+  # The mesh, its point source and the selectable points.
+  expect_equal(o$mesh$nv, nrow(walk$mesh$vertices))
+  expect_equal(o$mesh$nf, nrow(walk$mesh$faces))
+  expect_false(is.null(o$src))
+  expect_equal(o$selectable$ids, walk$points$point_id)
+  # The band: one entry per track point, uncertainty scaled 0 to 1.
+  u <- vapply(o$trackBand, `[`, numeric(1), 4)
+  expect_length(o$trackBand, sum(is.finite(walk$track_points$map_95_m)))
+  expect_equal(range(u), c(0, 1))
+  expect_equal(which.max(u), which.max(walk$track_points$map_95_m[order(walk$track_points$t_s)]))
+  p <- mydar_cloud_view(walk, profile = list(from = c(0, 1), to = c(5, 6)), surface = "mesh")$x$config$layers[[1]]$options
+  expect_equal(p$profile, list(c(0, 1), c(5, 6)))
+  expect_equal(p$surface, "mesh")
+  expect_null(mydar_cloud_view(walk, selectable = FALSE)$x$config$layers[[1]]$options$selectable)
   expect_error(mydar_cloud_view(walk, points = data.frame(a = 1)), "x, y and z")
   expect_error(mydar_cloud_view(walk, color = "rainbow"))
 })
@@ -299,7 +386,7 @@ test_that("views refuse a walk without the part they plot", {
   expect_error(mydar_plan_view(list()), "must be a mydar_walk")
 })
 
-test_that("mydar_dashboard links plan and profile on point_id, and the time charts only with GPS residuals", {
+test_that("mydar_dashboard leads with one map viewer linked to the profile, and links the time charts only with GPS residuals", {
   skip_if_not_installed("htmltools")
   # Every myIO widget in the page, in document order.
   widgets_of <- function(x) {
@@ -314,18 +401,19 @@ test_that("mydar_dashboard links plan and profile on point_id, and the time char
     }, character(1))
   }
 
-  expect_false("Ground" %in% layer_labels(widgets_of(mydar_dashboard(mydar_iphone_walk))[[2]]))
-  widgets <- widgets_of(mydar_dashboard(mydar_iphone_walk, plan_points = TRUE))
-  expect_length(widgets, 8)
-  expect_equal(widgets[[1]]$x$config$layers[[1]]$type, "pointcloud")
-  expect_true("Ground" %in% layer_labels(widgets[[2]]))
-  expect_equal(sum(key_columns(widgets) == "point_id", na.rm = TRUE), 2)
+  widgets <- widgets_of(mydar_dashboard(mydar_iphone_walk))
+  types <- vapply(widgets, function(w) w$x$config$layers[[1]]$type, character(1))
+  # Map, profile, uncertainty, GPS, sigma, accuracy, terrain; no separate plan.
+  expect_length(widgets, 7)
+  expect_equal(types[1], "pointcloud")
+  expect_false("image" %in% unlist(lapply(widgets, layer_types)))
+  expect_false(is.null(widgets[[1]]$x$config$layers[[1]]$options$profile))
+  expect_equal(key_columns(widgets)[1:2], c("point_id", "point_id"))
   expect_equal(sum(key_columns(widgets) == "t_s", na.rm = TRUE), 2)
-  expect_true(isTRUE(widgets[[2]]$x$config$interactions$brush$enabled))
 
   no_gps <- mydar_iphone_walk
   no_gps$gps_fixes <- no_gps$gps_fixes[0, ]
   widgets <- widgets_of(mydar_dashboard(no_gps))
-  expect_length(widgets, 7)
+  expect_length(widgets, 6)
   expect_equal(sum(key_columns(widgets) == "t_s", na.rm = TRUE), 0)
 })

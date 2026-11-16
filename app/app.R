@@ -330,21 +330,15 @@ ui <- page_navbar(
     p(class = "text-muted mt-3",
       "A real outdoor walk recorded with the myDAR iPhone app and processed with the myDAR CLI,",
       "shown in local coordinates only: meters from the walk's south-west corner, heights above the lowest ground cell.",
-      "The 3D view draws 500,000 of the walk's 887,038 points; switch it to 2D, or color it by class, height or sigma."),
+      "The map draws 500,000 of the walk's 887,038 points in one view: 2D is the plan over the orthophoto, 3D the cloud with the",
+      "orthophoto draped on the terrain and the phone's mesh. The orange band along the track darkens where map-position uncertainty rises."),
     navset_card_underline(
       id = "mydar_tab",
       nav_panel("Map and profile",
-        layout_columns(
-          col_widths = breakpoints(sm = 12, lg = c(7, 5)),
-          card(full_screen = TRUE, card_header("Point cloud"),
-            card_body(padding = 0, myIOOutput("mydarCloud", height = "560px"))),
-          card(full_screen = TRUE, card_header("Plan view over the orthophoto"),
-            card_body(
-              checkboxInput("mydar_plan_points", "Show class points (brush them to pick points on the profile)", value = FALSE),
-              myIOOutput("mydarPlan", height = "520px")))
-        ),
+        card(full_screen = TRUE, card_header("Map"),
+          card_body(padding = 0, myIOOutput("mydarCloud", height = "620px"))),
         chart_card("Profile across the walk",
-          p(class = "small text-muted", "Turn on class points on the plan view and brush an empty part of it to find the same points here."),
+          p(class = "small text-muted", "In the map's 2D view, turn on Select and drag a rectangle to find the same points here."),
           myIOOutput("mydarProfile", height = "380px"),
           controls = tagList(
             sliderInput("mydar_bearing", "Line bearing (degrees from north)", min = 0, max = 175, value = 90, step = 5, width = "100%"),
@@ -899,22 +893,29 @@ server <- function(input, output, session) {
 
   # -- myDAR walk --
 
-  # Brushing the plan view highlights the same points (point_id) on the profile;
-  # the uncertainty and GPS charts share a time cursor.
-  mydar_space <- reactive({
-    line <- mydar_profile_line(mydar_walk, input$mydar_bearing, input$mydar_offset)
+  # One map viewer (2D plan over the orthophoto, 3D cloud with the drape and
+  # mesh). Its 2D Select tool highlights the same points (point_id) on the
+  # profile; the uncertainty and GPS charts share a time cursor. The map is
+  # rendered once: moving the profile line updates it in place, so the
+  # 500,000 points are not sent again.
+  mydar_line <- reactive(mydar_profile_line(mydar_walk, input$mydar_bearing, input$mydar_offset))
+  output$mydarCloud <- renderMyIO({
+    line <- isolate(mydar_line())
+    map <- mydar_cloud_view(mydar_walk, points = mydar_iphone_cloud(), profile = line, height = "620px")
+    linkCharts(map, myIO(), on = "point_id", group = "mydar_points")[[1]]
+  })
+  observeEvent(mydar_line(), {
+    line <- mydar_line()
+    do.call(updateMyIOOptions, c(list(myIOProxy("mydarCloud")),
+      list(`Point cloud` = list(profile = list(line$from, line$to)))))
+  }, ignoreInit = TRUE)
+  output$mydarProfile <- renderMyIO({
+    line <- mydar_line()
     validate(need(nrow(mydar_profile(mydar_walk, line$from, line$to, input$mydar_width)) > 0,
                   "No points within the corridor here; widen it or move the line."))
-    linkCharts(
-      mydar_plan_view(mydar_walk, profile = line, points = isTRUE(input$mydar_plan_points), height = "520px") |> setBrush(),
-      mydar_profile_view(mydar_walk, from = line$from, to = line$to, width = input$mydar_width),
-      on = "point_id", group = "mydar_points"
-    )
+    profile <- mydar_profile_view(mydar_walk, from = line$from, to = line$to, width = input$mydar_width)
+    linkCharts(profile, myIO(), on = "point_id", group = "mydar_points")[[1]]
   })
-
-  output$mydarCloud <- renderMyIO(mydar_cloud_view(mydar_walk, points = mydar_iphone_cloud(), height = "560px"))
-  output$mydarPlan <- renderMyIO(mydar_space()[[1]])
-  output$mydarProfile <- renderMyIO(mydar_space()[[2]])
   output$mydarTerrain <- renderMyIO(mydar_terrain_view(mydar_walk, height = "420px"))
   mydar_time <- linkCharts(mydar_trajectory_view(mydar_walk), mydar_gps_view(mydar_walk),
                            on = "t_s", group = "mydar_time", cursor = TRUE)

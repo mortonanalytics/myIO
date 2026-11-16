@@ -4,6 +4,8 @@
 #   rgb:       Uint8 r, g, b interleaved (mapping red/green/blue, 0-255)
 #   cls:       Uint8 class code (mapping class)
 #   sigma:     Uint8, (log10(sigma_m) + 3) / 4 * 255, i.e. 1 mm to 10 m
+#   src:       Uint8 point source, 0 LiDAR, 1 camera (mapping source: "camera"
+#              or 1 is camera, anything else LiDAR)
 pointcloud_payload <- function(data, mapping) {
   col <- function(key) if (is.null(mapping[[key]])) NULL else as.numeric(data[[mapping[[key]]]])
   x <- col("x_var")
@@ -38,6 +40,11 @@ pointcloud_payload <- function(data, mapping) {
   }
   cls <- col("class")
   if (!is.null(cls)) out$cls <- b64(byte(cls[keep]), 1)
+  if (!is.null(mapping$source)) {
+    v <- data[[mapping$source]]
+    camera <- if (is.character(v) || is.factor(v)) as.character(v) == "camera" else as.numeric(v) == 1
+    out$src <- b64(as.integer(camera[keep] %in% TRUE), 1)
+  }
   sigma <- col("sigma")
   if (!is.null(sigma)) {
     s <- sigma[keep]
@@ -70,4 +77,36 @@ setEqualAspect <- function(myIO, enabled = TRUE) {
   check_flag(enabled, "enabled", "setEqualAspect")
   myIO$x$config$scales$equalAspect <- enabled
   myIO
+}
+
+# A regular grid of cell centers (x, y, z) as the pointcloud layer's
+# options$terrain: cols, rows, x0, y0 (first cell center), dx, dy, and z as
+# base64 Float32 in row-major order with y increasing, NaN where empty.
+pointcloud_terrain <- function(terrain, cell = attr(terrain, "cell_size")) {
+  if (length(cell) != 2L) cell <- c(min(diff(sort(unique(terrain$x)))), min(diff(sort(unique(terrain$y)))))
+  x0 <- min(terrain$x)
+  y0 <- min(terrain$y)
+  col <- round((terrain$x - x0) / cell[1])
+  row <- round((terrain$y - y0) / cell[2])
+  cols <- max(col) + 1L
+  rows <- max(row) + 1L
+  z <- rep(NaN, cols * rows)
+  z[row * cols + col + 1L] <- terrain$z
+  list(cols = cols, rows = rows, x0 = x0, y0 = y0, dx = cell[1], dy = cell[2],
+       z = jsonlite::base64_enc(writeBin(as.numeric(z), raw(), size = 4, endian = "little")))
+}
+
+# A triangle mesh (vertices x, y, z, r, g, b; faces: 0-based 3-column index
+# matrix) as the pointcloud layer's options$mesh.
+pointcloud_mesh <- function(mesh) {
+  v <- mesh$vertices
+  f <- mesh$faces
+  enc <- function(x, size) jsonlite::base64_enc(writeBin(x, raw(), size = size, endian = "little"))
+  list(
+    nv = nrow(v),
+    nf = nrow(f),
+    positions = enc(as.numeric(as.vector(rbind(v$x, v$y, v$z))), 4),
+    colors = enc(as.integer(as.vector(rbind(v$r, v$g, v$b))), 1),
+    faces = enc(as.integer(as.vector(t(f))), 4)
+  )
 }

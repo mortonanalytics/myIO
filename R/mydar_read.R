@@ -29,6 +29,7 @@
 #'   \code{$origin} (x, y, z); add it back to recover project coordinates.
 #'   \code{trajectory.csv} is in its own local frame (meters east, north and up
 #'   of the first GPS fix) and is left as written.
+#' @param max_triangles Passed to \code{read_mydar_mesh()}.
 #'
 #' @return \code{read_mydar_walk()} returns a \code{mydar_walk} list with
 #'   \describe{
@@ -56,6 +57,10 @@
 #'     \item{orthophoto}{From \code{orthophoto.tif}: \code{png}, the image
 #'       as PNG bytes with no georeference or metadata, and \code{extent},
 #'       \code{c(xmin, xmax, ymin, ymax)} in the walk's coordinates.}
+#'     \item{mesh}{From \code{walk.mesh.usdz}, when the phone recorded one:
+#'       \code{vertices} (\code{x}, \code{y}, \code{z}, \code{r}, \code{g},
+#'       \code{b}) and \code{faces}, a three-column matrix of 0-based vertex
+#'       indices, in the same coordinates as the points.}
 #'     \item{trajectory}{Poses from \code{trajectory.csv} with \code{t_s}
 #'       (seconds from the first pose).}
 #'     \item{crs}{The project CRS, e.g. \code{"EPSG:32612"}.}
@@ -74,7 +79,8 @@
 #' mydar_dashboard(walk)
 #' }
 #' @export
-read_mydar_walk <- function(dir, max_points = 20000, max_cells = 40000, local = TRUE) {
+read_mydar_walk <- function(dir, max_points = 20000, max_cells = 40000, local = TRUE,
+                            max_triangles = 20000) {
   check_string(dir, "dir", "read_mydar_walk")
   check_flag(local, "local", "read_mydar_walk")
   if (!dir.exists(dir)) {
@@ -94,6 +100,7 @@ read_mydar_walk <- function(dir, max_points = 20000, max_cells = 40000, local = 
   dem <- file_in("terrain.tif")
   traj <- file_in("trajectory.csv")
   ortho <- file_in("orthophoto.tif")
+  mesh <- file_in("walk.mesh.usdz")
 
   walk <- c(
     list(
@@ -104,10 +111,16 @@ read_mydar_walk <- function(dir, max_points = 20000, max_cells = 40000, local = 
     list(
       trajectory = if (!is.null(traj)) read_mydar_trajectory(traj),
       orthophoto = if (!is.null(ortho)) read_mydar_orthophoto(ortho),
+      mesh = NULL,
       crs = if (nrow(gpkg$accuracy) > 0 && "crs" %in% names(gpkg$accuracy)) gpkg$accuracy$crs[[1]] else NA_character_,
       origin = c(x = 0, y = 0, z = 0)
     )
   )
+
+  if (!is.null(mesh)) {
+    crs <- if (is.na(walk$crs)) NULL else walk$crs
+    walk$mesh <- read_mydar_mesh(mesh, crs = crs, max_triangles = max_triangles)
+  }
 
   if (isTRUE(local)) {
     walk <- mydar_shift_local(walk)
@@ -280,6 +293,9 @@ print.mydar_walk <- function(x, ...) {
   cat("  gps_fixes:    ", rows(x$gps_fixes), "\n", sep = "")
   cat("  features:     ", if (length(x$features)) paste(names(x$features), collapse = ", ") else "none", "\n", sep = "")
   cat("  trajectory:   ", rows(x$trajectory), " poses\n", sep = "")
+  if (!is.null(x$mesh)) {
+    cat("  mesh:         ", format(nrow(x$mesh$faces), big.mark = ","), " triangles\n", sep = "")
+  }
   if (!is.null(x$orthophoto)) {
     cat("  orthophoto:   ", x$orthophoto$size[["width"]], " x ", x$orthophoto$size[["height"]], " px\n", sep = "")
   }
@@ -364,6 +380,7 @@ mydar_shift_local <- function(walk) {
   for (df in walk$features) {
     if (nrow(df) > 0) { xs <- c(xs, df$x); ys <- c(ys, df$y) }
   }
+  if (!is.null(walk$mesh)) { xs <- c(xs, walk$mesh$vertices$x); ys <- c(ys, walk$mesh$vertices$y) }
   if (!any(is.finite(xs))) return(walk)
   # Heights: the lowest DEM cell (the DEM is the ground surface), else the
   # lowest ground-class point, else the lowest point.
@@ -391,6 +408,11 @@ mydar_shift_local <- function(walk) {
     walk$orthophoto$extent <- walk$orthophoto$extent - origin[c("x", "x", "y", "y")]
   }
   for (name in spatial) walk[[name]] <- shift(walk[[name]])
+  if (!is.null(walk$mesh)) {
+    keep_attr <- attr(walk$mesh, "n_triangles_total")
+    walk$mesh$vertices <- shift(walk$mesh$vertices)
+    attr(walk$mesh, "n_triangles_total") <- keep_attr
+  }
   walk$features <- lapply(walk$features, shift)
   walk$origin <- origin
   walk

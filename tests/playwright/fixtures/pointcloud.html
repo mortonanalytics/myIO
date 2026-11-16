@@ -23,11 +23,32 @@ function b64(bytes) {
   return btoa(s);
 }
 var u8 = function(a) { return new Uint8Array(a.buffer, a.byteOffset, a.byteLength); };
+// Test DEM: the same sloped ground as a 0.5 m grid, and a checkerboard
+// "orthophoto" over it.
+var cols = 21, rows = 41, dem = new Float32Array(cols * rows);
+for (var r = 0; r < rows; r++) for (var c = 0; c < cols; c++) dem[r * cols + c] = 0.2 * (r * 0.5) / 20 * 3;
+var img = document.createElement("canvas"); img.width = 64; img.height = 128;
+var ictx = img.getContext("2d");
+for (var yy = 0; yy < 128; yy += 16) for (var xx = 0; xx < 64; xx += 16) { ictx.fillStyle = ((xx + yy) / 16) % 2 ? "#c0392b" : "#f1c40f"; ictx.fillRect(xx, yy, 16, 16); }
+// Test mesh: the box's top as two triangles.
+var meshPos = new Float32Array([4, 9, 2.5, 6, 9, 2.5, 6, 11, 2.5, 4, 11, 2.5]);
+var meshCol = new Uint8Array([40, 120, 220, 40, 120, 220, 40, 120, 220, 40, 120, 220]);
+var meshFaces = new Uint32Array([0, 1, 2, 0, 2, 3]);
+var band = [], ids = [], sx = [], sy = [];
+for (var t = 0; t <= 20; t++) band.push([2 + t * 0.3, t, 1.5, t / 20]);
+for (var k = 0; k < 2000; k++) { ids.push(k + 1); sx.push((k * 0.6180339887 % 1) * 10); sy.push((k * 0.7548776662 % 1) * 20); }
 var layer = { id: 'pc', type: 'pointcloud', label: 'Point cloud', data: [], color: null,
   mapping: { x_var: 'x', y_var: 'y', z_var: 'z' },
   options: { n: n, bbox: [0, 10, 0, 20, 0, 3], positions: b64(u8(positions)), rgb: b64(rgb), cls: b64(cls), sigma: b64(sigma),
     color: 'rgb', mode: '3d', pointSize: 2, classColors: { '2': '#8C6D31', '6': '#D55E00' }, classNames: { '2': 'Ground', '6': 'Building' },
-    caption: { shape: '±2.4 cm', shapeNote: 'within 5 m', map: '±3.8 m', mapNote: 'phone GPS' } },
+    caption: { shape: '±2.4 cm', shapeNote: 'within 5 m', map: '±3.8 m', mapNote: 'phone GPS', cameraNote: 'Camera: withheld, its 95% error is over 15 cm.' },
+    terrain: { cols: cols, rows: rows, x0: 0, y0: 0, dx: 0.5, dy: 0.5, z: b64(u8(dem)) },
+    ortho: { src: img.toDataURL('image/png'), extent: [0, 10, 0, 20], z: 0 },
+    mesh: { nv: 4, nf: 2, positions: b64(u8(meshPos)), colors: b64(meshCol), faces: b64(u8(meshFaces)) },
+    track: band.map(function(p) { return [p[0], p[1], p[2]]; }),
+    trackBand: band,
+    profile: [[0, 10], [10, 10]],
+    selectable: { key: 'point_id', ids: ids, x: sx, y: sy } },
   transform: 'identity', transformMeta: {}, encoding: {}, sourceKey: '_source_key', derivedFrom: null, order: 1, visibility: true };
 var element = document.getElementById('cloud');
 window.chart = new myIOchart({ element: element, width: 900, height: 560, config: { specVersion: 2, layers: [layer],
@@ -36,5 +57,6 @@ window.chart = new myIOchart({ element: element, width: 900, height: 560, config
   axes: { xAxisFormat: 's', yAxisFormat: 's', toolTipFormat: 's' },
   interactions: { dragPoints: false, toggleY: { variable: null, format: null }, toolTipOptions: { suppressY: false } },
   theme: {}, transitions: { speed: 0 }, referenceLines: { x: null, y: null } } });
+window.chart.on('brushed', function(e) { window.__brushed = e; });
 window.ready = true;
 </script></body></html>
