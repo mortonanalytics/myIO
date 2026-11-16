@@ -69,6 +69,11 @@
 
 ## Bug fixes
 
+* Hover no longer throws `HTMLWidgets is not defined` outside R htmlwidgets
+  hosts (pymyIO's anywidget and standalone pages). The Shiny rollover and
+  slider checks now test for the global first, so donut and treemap tooltips
+  show again in pymyIO (pymyIO #41).
+
 * Funnel value labels placed outside a stage now start after the stage name,
   so on narrow charts they no longer overlap "Qualified", "Proposals" and
   similar names that run past their narrowing stage. A label that then does
