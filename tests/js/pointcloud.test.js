@@ -1,7 +1,8 @@
 import * as d3 from "d3";
 import { beforeEach, describe, expect, test } from "vitest";
 import {
-  PointCloudRenderer, decodeCloud, dragView, initialView, lookAt, perspective, sigmaFromByte, viewMatrices, zoomView
+  BAND_DARK, BAND_LIFT, BAND_LIGHT, PointCloudRenderer, buildDrape, buildMesh, buildRibbon, decodeCloud, decodeTerrain,
+  dragView, initialView, keysInRect, lookAt, perspective, sigmaFromByte, viewMatrices, zoomView
 } from "../../inst/htmlwidgets/myIO/src/renderers/PointCloudRenderer.js";
 import { getRenderer, registerBuiltInRenderers } from "../../inst/htmlwidgets/myIO/src/registry.js";
 import { validateComposition } from "../../inst/htmlwidgets/myIO/src/derive/validate.js";
@@ -164,5 +165,58 @@ describe("pointcloud", function() {
     expect(container.querySelector(".myIO-pointcloud-message").textContent).toMatch(/WebGL is not available/);
     new PointCloudRenderer().remove(chart);
     expect(container.querySelector(".myIO-pointcloud")).toBeNull();
+  });
+
+  test("decodes the point source and counts camera points", function() {
+    const opts = payload();
+    opts.src = b64(new Uint8Array([0, 1, 0]));
+    const cloud = decodeCloud(opts);
+    expect(Array.from(cloud.src)).toEqual([0, 1, 0]);
+    expect(cloud.cameraPoints).toBe(1);
+  });
+
+  test("drapes the orthophoto on the DEM: two triangles per complete grid square, uv over the image extent", function() {
+    // 3 x 2 grid of 1 m cells from (0, 0); the top-right cell is empty.
+    const z = new Float32Array([0, 1, 2, 0, 1, NaN]);
+    const grid = decodeTerrain({ cols: 3, rows: 2, x0: 0, y0: 0, dx: 1, dy: 1, z: b64(z) });
+    expect(grid.at(1.2, 0.1)).toBe(1);
+    expect(Number.isNaN(grid.at(2, 1))).toBe(true);
+    expect(Number.isNaN(grid.at(9, 9))).toBe(true);
+    const drape = buildDrape(grid, [0, 2, 0, 1]);
+    // Only the left square has four heights.
+    expect(drape.count).toBe(6);
+    expect(Array.from(drape.positions.slice(0, 3))).toEqual([0, 0, 0]);
+    expect(Math.max(...drape.uv)).toBeLessThanOrEqual(1);
+    expect(Math.min(...drape.uv)).toBeGreaterThanOrEqual(0);
+  });
+
+  test("expands the mesh to triangles with vertex colors and upward normals", function() {
+    const positions = new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1]);
+    const mesh = buildMesh({ nv: 4, nf: 2, positions: b64(positions), colors: b64(new Uint8Array([255, 0, 0, 0, 255, 0, 0, 0, 255, 9, 9, 9])),
+      faces: b64(new Uint32Array([0, 2, 1, 1, 2, 3])) });
+    expect(mesh.count).toBe(6);
+    expect(Array.from(mesh.colors.slice(0, 3))).toEqual([255, 0, 0]);
+    // The first triangle lies flat; its normal points up whatever its winding.
+    expect(Array.from(mesh.normals.slice(0, 3)).map((v) => v + 0)).toEqual([0, 0, 1]);
+  });
+
+  test("the track band runs light to dark orange with uncertainty and sits above the ground", function() {
+    const path = [[0, 0, 1.5, 0], [1, 0, 1.5, 0.5], [2, 0, 1.5, 1]];
+    const band = buildRibbon(path, 0.2, () => 10);
+    expect(band.count).toBe(12);
+    expect(band.positions[2]).toBeCloseTo(10 + BAND_LIFT);
+    expect(Array.from(band.colors.slice(0, 3)).map((v) => +v.toFixed(3))).toEqual(BAND_LIGHT.map((v) => +v.toFixed(3)));
+    const lastColor = Array.from(band.colors.slice(band.colors.length - 3)).map((v) => +v.toFixed(3));
+    expect(lastColor).toEqual(BAND_DARK.map((v) => +v.toFixed(3)));
+    // Across a gap in the ground the last known ground carries on.
+    const gappy = buildRibbon(path, 0.2, (x) => (x < 0.5 ? 4 : NaN));
+    expect(gappy.positions[gappy.positions.length - 1]).toBeCloseTo(4 + BAND_LIFT);
+  });
+
+  test("the select rectangle picks the selectable points inside it, either way round", function() {
+    const selectable = { key: "point_id", ids: [1, 2, 3], x: [0, 5, 10], y: [0, 5, 10] };
+    expect(keysInRect(selectable, [-1, 6, -1, 6])).toEqual([1, 2]);
+    expect(keysInRect(selectable, [6, -1, 6, -1])).toEqual([1, 2]);
+    expect(keysInRect(null, [0, 1, 0, 1])).toEqual([]);
   });
 });

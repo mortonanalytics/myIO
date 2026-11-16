@@ -4,13 +4,7 @@
 \alias{mydar_dashboard}
 \title{myDAR walk dashboard}
 \usage{
-mydar_dashboard(
-  walk,
-  points = NULL,
-  profile = NULL,
-  width = 0.5,
-  plan_points = FALSE
-)
+mydar_dashboard(walk, points = NULL, profile = NULL, width = 0.5)
 }
 \arguments{
 \item{walk}{A \code{mydar_walk}.}
@@ -25,21 +19,19 @@ profile line. Default: across the track at its midpoint.}
 
 \item{width}{Corridor width in meters; points within \code{width / 2} of
 the line are kept.}
-
-\item{plan_points}{Show the class points on the plan view (see
-\code{points} in \code{\link{mydar_plan_view}}); needed to brush it.}
 }
 \value{
 A browsable \code{htmltools} tag list. Print it, return it from a
   Shiny \code{renderUI()}, or save it with \code{htmltools::save_html()}.
 }
 \description{
-Lays out a walk the way the myDAR app's Results screen does: the 3D point
-cloud and the plan view over the orthophoto first, both captioned with the
-walk's Shape and Map accuracy, then the profile, then the quality charts
-(map-position uncertainty, GPS residuals, point sigma, accuracy figures).
-With \code{plan_points = TRUE}, the plan view shows the class points over
-the orthophoto, and brushing them highlights the same points on the profile.
+Lays out a walk the way the myDAR app's Results screen does: one map
+viewer first (\code{\link{mydar_cloud_view}}: 2D plan over the orthophoto
+or 3D cloud with the orthophoto draped on the DEM, with the track's
+uncertainty band, the profile line and the Shape / Map accuracy card), the
+profile below it, then the quality charts (map-position uncertainty, GPS
+residuals, point sigma, accuracy figures, terrain). In the viewer's 2D mode
+the Select tool picks points and the profile highlights the same ones.
 When the walk has GPS residuals, the GPS chart shares a time cursor with the
 uncertainty chart.
 }

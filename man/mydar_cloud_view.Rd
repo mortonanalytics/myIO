@@ -2,7 +2,7 @@
 % Please edit documentation in R/mydar_views.R
 \name{mydar_cloud_view}
 \alias{mydar_cloud_view}
-\title{3D view of a myDAR walk's point cloud}
+\title{Map view of a myDAR walk, in 2D and 3D}
 \usage{
 mydar_cloud_view(
   walk,
@@ -11,28 +11,40 @@ mydar_cloud_view(
   mode = c("3d", "plan"),
   point_size = 2,
   ortho = TRUE,
+  profile = NULL,
+  selectable = TRUE,
+  surface = c("points", "mesh"),
   height = "560px"
 )
 }
 \arguments{
-\item{walk}{A \code{mydar_walk}; its orthophoto, track and accuracy figures
-are drawn with the cloud.}
+\item{walk}{A \code{mydar_walk}; its orthophoto, DEM, mesh, track and
+accuracy figures are drawn with the cloud.}
 
 \item{points}{The points to draw. Defaults to \code{walk$points}; pass
 \code{\link{mydar_iphone_cloud}()} or \code{\link{read_mydar_points}(path,
 max_points = Inf)} for a denser cloud. Needs \code{x}, \code{y},
-\code{z}; uses \code{r}/\code{g}/\code{b}, \code{class} and
-\code{sigma_m} when present.}
+\code{z}; uses \code{r}/\code{g}/\code{b}, \code{class},
+\code{sigma_m} and \code{source} when present.}
 
-\item{color}{Starting color: \code{"rgb"} (camera color), \code{"class"},
-\code{"height"} or \code{"sigma"}. The view's chips switch it.}
+\item{color}{Starting color: \code{"rgb"} (photo color), \code{"class"},
+\code{"height"} or \code{"sigma"}. The view's controls switch it.}
 
-\item{mode}{Starting view: \code{"3d"} or \code{"plan"}.}
+\item{mode}{Starting view: \code{"3d"} or \code{"plan"} (2D).}
 
 \item{point_size}{Smallest point size in pixels; points also grow to
 cover about 2.5 cm on the ground so surfaces close up.}
 
-\item{ortho}{Draw the orthophoto under the points when the walk has one.}
+\item{ortho}{Draw the orthophoto (flat in 2D, draped in 3D) when the walk
+has one.}
+
+\item{profile}{Optional \code{list(from = c(x, y), to = c(x, y))}: the
+profile line to draw.}
+
+\item{selectable}{If \code{TRUE} (default), the 2D Select tool picks from
+\code{walk$points} and sends their \code{point_id}s to linked charts.}
+
+\item{surface}{Starting 3D surface, \code{"points"} or \code{"mesh"}.}
 
 \item{height}{Widget height, a CSS size.}
 }
@@ -40,11 +52,24 @@ cover about 2.5 cm on the ground so surfaces close up.}
 A \code{myIO} widget.
 }
 \description{
-Draws the cloud with WebGL (the \code{"pointcloud"} chart type): orbit,
-pan and zoom in 3D, or switch to a top-down 2D plan. Points can be colored
-by their camera color, class, height or sigma, with the orthophoto under
-them and the track over them. The walk's Shape and Map accuracy figures sit
-in a card on the view.
+One WebGL viewer (the \code{"pointcloud"} chart type) for the walk's
+imagery and points together, laid out like the myDAR app's Results map:
+\itemize{
+  \item a 2D / 3D switch on one canvas. 2D is the plan over the orthophoto
+    with a scale bar; 3D is the cloud with the orthophoto draped on the
+    DEM, so imagery and points line up in one scene.
+  \item layer chips that switch on and off independently: LiDAR, Camera
+    (when the walk has camera points), Classes (color the points by LAS
+    class) and Ortho; and a Photo / Height / Sigma choice of point color.
+  \item in 3D, a Points / Mesh switch when the walk has a mesh, drawn in
+    its vertex colors.
+  \item the track with its uncertainty band, light to dark orange as the
+    map-position uncertainty rises; the profile line; and the accuracy
+    card (Shape and Map, never merged).
+  \item in 2D, a Select tool: the rectangle's points are sent to charts
+    linked with \code{\link{linkCharts}} on \code{point_id}, e.g. the
+    profile.
+}
 }
 \details{
 Controls: drag to rotate (2D: pan), shift-drag or right-drag to pan, scroll
@@ -53,6 +78,6 @@ or pinch to zoom, double-click to reset.
 \examples{
 mydar_cloud_view(mydar_iphone_walk)
 \donttest{
-mydar_cloud_view(mydar_iphone_walk, points = mydar_iphone_cloud(), color = "class")
+mydar_cloud_view(mydar_iphone_walk, points = mydar_iphone_cloud(), mode = "plan")
 }
 }

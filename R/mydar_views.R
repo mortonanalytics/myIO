@@ -275,40 +275,60 @@ mydar_gps_view <- function(walk, height = "320px") {
   setAxisFormat(w, xAxis = ".1f", yAxis = ".2f", xLabel = "Time since start (s)", yLabel = "Residual (m)")
 }
 
-#' 3D view of a myDAR walk's point cloud
+#' Map view of a myDAR walk, in 2D and 3D
 #'
-#' Draws the cloud with WebGL (the \code{"pointcloud"} chart type): orbit,
-#' pan and zoom in 3D, or switch to a top-down 2D plan. Points can be colored
-#' by their camera color, class, height or sigma, with the orthophoto under
-#' them and the track over them. The walk's Shape and Map accuracy figures sit
-#' in a card on the view.
+#' One WebGL viewer (the \code{"pointcloud"} chart type) for the walk's
+#' imagery and points together, laid out like the myDAR app's Results map:
+#' \itemize{
+#'   \item a 2D / 3D switch on one canvas. 2D is the plan over the orthophoto
+#'     with a scale bar; 3D is the cloud with the orthophoto draped on the
+#'     DEM, so imagery and points line up in one scene.
+#'   \item layer chips that switch on and off independently: LiDAR, Camera
+#'     (when the walk has camera points), Classes (color the points by LAS
+#'     class) and Ortho; and a Photo / Height / Sigma choice of point color.
+#'   \item in 3D, a Points / Mesh switch when the walk has a mesh, drawn in
+#'     its vertex colors.
+#'   \item the track with its uncertainty band, light to dark orange as the
+#'     map-position uncertainty rises; the profile line; and the accuracy
+#'     card (Shape and Map, never merged).
+#'   \item in 2D, a Select tool: the rectangle's points are sent to charts
+#'     linked with \code{\link{linkCharts}} on \code{point_id}, e.g. the
+#'     profile.
+#' }
 #'
 #' Controls: drag to rotate (2D: pan), shift-drag or right-drag to pan, scroll
 #' or pinch to zoom, double-click to reset.
 #'
-#' @param walk A \code{mydar_walk}; its orthophoto, track and accuracy figures
-#'   are drawn with the cloud.
+#' @param walk A \code{mydar_walk}; its orthophoto, DEM, mesh, track and
+#'   accuracy figures are drawn with the cloud.
 #' @param points The points to draw. Defaults to \code{walk$points}; pass
 #'   \code{\link{mydar_iphone_cloud}()} or \code{\link{read_mydar_points}(path,
 #'   max_points = Inf)} for a denser cloud. Needs \code{x}, \code{y},
-#'   \code{z}; uses \code{r}/\code{g}/\code{b}, \code{class} and
-#'   \code{sigma_m} when present.
-#' @param color Starting color: \code{"rgb"} (camera color), \code{"class"},
-#'   \code{"height"} or \code{"sigma"}. The view's chips switch it.
-#' @param mode Starting view: \code{"3d"} or \code{"plan"}.
+#'   \code{z}; uses \code{r}/\code{g}/\code{b}, \code{class},
+#'   \code{sigma_m} and \code{source} when present.
+#' @param color Starting color: \code{"rgb"} (photo color), \code{"class"},
+#'   \code{"height"} or \code{"sigma"}. The view's controls switch it.
+#' @param mode Starting view: \code{"3d"} or \code{"plan"} (2D).
 #' @param point_size Smallest point size in pixels; points also grow to
 #'   cover about 2.5 cm on the ground so surfaces close up.
-#' @param ortho Draw the orthophoto under the points when the walk has one.
+#' @param ortho Draw the orthophoto (flat in 2D, draped in 3D) when the walk
+#'   has one.
+#' @param profile Optional \code{list(from = c(x, y), to = c(x, y))}: the
+#'   profile line to draw.
+#' @param selectable If \code{TRUE} (default), the 2D Select tool picks from
+#'   \code{walk$points} and sends their \code{point_id}s to linked charts.
+#' @param surface Starting 3D surface, \code{"points"} or \code{"mesh"}.
 #' @param height Widget height, a CSS size.
 #' @return A \code{myIO} widget.
 #' @examples
 #' mydar_cloud_view(mydar_iphone_walk)
 #' \donttest{
-#' mydar_cloud_view(mydar_iphone_walk, points = mydar_iphone_cloud(), color = "class")
+#' mydar_cloud_view(mydar_iphone_walk, points = mydar_iphone_cloud(), mode = "plan")
 #' }
 #' @export
 mydar_cloud_view <- function(walk, points = NULL, color = c("rgb", "class", "height", "sigma"),
-                             mode = c("3d", "plan"), point_size = 2, ortho = TRUE, height = "560px") {
+                             mode = c("3d", "plan"), point_size = 2, ortho = TRUE, profile = NULL,
+                             selectable = TRUE, surface = c("points", "mesh"), height = "560px") {
   if (!inherits(walk, "mydar_walk")) {
     stop("mydar_cloud_view(): `walk` must be a mydar_walk from read_mydar_walk().", call. = FALSE)
   }
@@ -318,7 +338,9 @@ mydar_cloud_view <- function(walk, points = NULL, color = c("rgb", "class", "hei
   }
   color <- match.arg(color)
   mode <- match.arg(mode)
+  surface <- match.arg(surface)
   check_flag(ortho, "ortho", "mydar_cloud_view")
+  check_flag(selectable, "selectable", "mydar_cloud_view")
   if (!is.numeric(point_size) || length(point_size) != 1L || !is.finite(point_size) || point_size <= 0) {
     stop("mydar_cloud_view(): `point_size` must be a single positive number.", call. = FALSE)
   }
@@ -327,11 +349,12 @@ mydar_cloud_view <- function(walk, points = NULL, color = c("rgb", "class", "hei
   if (all(c("r", "g", "b") %in% names(pts))) mapping <- c(mapping, list(red = "r", green = "g", blue = "b"))
   if ("class" %in% names(pts)) mapping$class <- "class"
   if ("sigma_m" %in% names(pts)) mapping$sigma <- "sigma_m"
+  if ("source" %in% names(pts)) mapping$source <- "source"
   if (color == "rgb" && is.null(mapping$red)) color <- "class"
 
   present <- MYDAR_CLASSES[MYDAR_CLASSES$class %in% unique(pts$class), , drop = FALSE]
   options <- list(
-    color = color, mode = if (mode == "plan") "plan" else "3d", pointSize = point_size,
+    color = color, mode = if (mode == "plan") "plan" else "3d", pointSize = point_size, surface = surface,
     classColors = as.list(stats::setNames(present$color, present$class)),
     classNames = as.list(stats::setNames(present$class_name, present$class)),
     caption = mydar_caption(walk)
@@ -340,6 +363,10 @@ mydar_cloud_view <- function(walk, points = NULL, color = c("rgb", "class", "hei
     tr <- walk$track[is.finite(walk$track$x) & is.finite(walk$track$z), , drop = FALSE]
     options$track <- lapply(seq_len(nrow(tr)), function(i) c(tr$x[i], tr$y[i], tr$z[i]))
   }
+  band <- mydar_track_band(walk)
+  if (!is.null(band)) options$trackBand <- band
+  if (!is.null(walk$terrain) && nrow(walk$terrain) > 0L) options$terrain <- pointcloud_terrain(walk$terrain)
+  if (!is.null(walk$mesh) && nrow(walk$mesh$faces) > 0L) options$mesh <- pointcloud_mesh(walk$mesh)
   if (ortho && !is.null(walk$orthophoto)) {
     ground <- if (!is.null(walk$terrain)) min(walk$terrain$z, na.rm = TRUE) else min(pts$z, na.rm = TRUE)
     e <- walk$orthophoto$extent
@@ -349,6 +376,14 @@ mydar_cloud_view <- function(walk, points = NULL, color = c("rgb", "class", "hei
       z = ground - 0.02
     )
   }
+  if (!is.null(profile)) {
+    line <- mydar_check_line(profile$from, profile$to, "mydar_cloud_view")
+    options$profile <- list(line$from, line$to)
+  }
+  if (selectable && !is.null(walk$points) && "point_id" %in% names(walk$points)) {
+    sp <- walk$points
+    options$selectable <- list(key = "point_id", ids = sp$point_id, x = round(sp$x, 3), y = round(sp$y, 3))
+  }
 
   myIO(height = height) |>
     addIoLayer(type = "pointcloud", label = "Point cloud", data = pts, mapping = mapping, options = options) |>
@@ -357,14 +392,30 @@ mydar_cloud_view <- function(walk, points = NULL, color = c("rgb", "class", "hei
     suppressLegend()
 }
 
+# The track's uncertainty band for the viewer: track points as
+# c(x, y, z, u), u the map-position 95% radius scaled to 0-1 over the walk
+# (0.5 everywhere when it does not change).
+mydar_track_band <- function(walk) {
+  tp <- walk$track_points
+  if (is.null(tp) || !all(c("x", "y", "map_95_m") %in% names(tp))) return(NULL)
+  tp <- tp[is.finite(tp$x) & is.finite(tp$y) & is.finite(tp$map_95_m), , drop = FALSE]
+  if (nrow(tp) < 2L) return(NULL)
+  if ("t_s" %in% names(tp)) tp <- tp[order(tp$t_s), , drop = FALSE]
+  r <- range(tp$map_95_m)
+  u <- if (r[2] > r[1]) (tp$map_95_m - r[1]) / (r[2] - r[1]) else rep(0.5, nrow(tp))
+  z <- if ("z" %in% names(tp)) tp$z else rep(0, nrow(tp))
+  lapply(seq_len(nrow(tp)), function(i) c(tp$x[i], tp$y[i], z[i], u[i]))
+}
+
 #' myDAR walk dashboard
 #'
-#' Lays out a walk the way the myDAR app's Results screen does: the 3D point
-#' cloud and the plan view over the orthophoto first, both captioned with the
-#' walk's Shape and Map accuracy, then the profile, then the quality charts
-#' (map-position uncertainty, GPS residuals, point sigma, accuracy figures).
-#' With \code{plan_points = TRUE}, the plan view shows the class points over
-#' the orthophoto, and brushing them highlights the same points on the profile.
+#' Lays out a walk the way the myDAR app's Results screen does: one map
+#' viewer first (\code{\link{mydar_cloud_view}}: 2D plan over the orthophoto
+#' or 3D cloud with the orthophoto draped on the DEM, with the track's
+#' uncertainty band, the profile line and the Shape / Map accuracy card), the
+#' profile below it, then the quality charts (map-position uncertainty, GPS
+#' residuals, point sigma, accuracy figures, terrain). In the viewer's 2D mode
+#' the Select tool picks points and the profile highlights the same ones.
 #' When the walk has GPS residuals, the GPS chart shares a time cursor with the
 #' uncertainty chart.
 #'
@@ -372,8 +423,6 @@ mydar_cloud_view <- function(walk, points = NULL, color = c("rgb", "class", "hei
 #' @inheritParams mydar_cloud_view
 #' @param profile Optional \code{list(from = c(x, y), to = c(x, y))} for the
 #'   profile line. Default: across the track at its midpoint.
-#' @param plan_points Show the class points on the plan view (see
-#'   \code{points} in \code{\link{mydar_plan_view}}); needed to brush it.
 #'
 #' @return A browsable \code{htmltools} tag list. Print it, return it from a
 #'   Shiny \code{renderUI()}, or save it with \code{htmltools::save_html()}.
@@ -382,13 +431,13 @@ mydar_cloud_view <- function(walk, points = NULL, color = c("rgb", "class", "hei
 #'   mydar_dashboard(mydar_iphone_walk)
 #' }
 #' @export
-mydar_dashboard <- function(walk, points = NULL, profile = NULL, width = 0.5, plan_points = FALSE) {
+mydar_dashboard <- function(walk, points = NULL, profile = NULL, width = 0.5) {
   mydar_require("htmltools", "mydar_dashboard")
   if (is.null(profile)) profile <- mydar_default_profile(walk)
   line <- mydar_check_line(profile$from, profile$to, "mydar_dashboard")
 
   linked_space <- linkCharts(
-    mydar_plan_view(walk, profile = line, points = plan_points || is.null(walk$orthophoto), height = "520px") |> setBrush(),
+    mydar_cloud_view(walk, points = points, profile = line, height = "600px"),
     mydar_profile_view(walk, from = line$from, to = line$to, width = width),
     on = "point_id", group = paste0("mydar_points_", new_chart_id())
   )
@@ -424,8 +473,7 @@ mydar_dashboard <- function(walk, points = NULL, profile = NULL, width = 0.5, pl
     htmltools::tags$div(
       class = "mydar-dashboard",
       heading("Map"),
-      cell(mydar_cloud_view(walk, points = points, height = "520px")),
-      cell(linked_space[[1]]),
+      cell(linked_space[[1]], wide = TRUE),
       heading("Profile"),
       cell(linked_space[[2]], wide = TRUE),
       heading("Quality"),

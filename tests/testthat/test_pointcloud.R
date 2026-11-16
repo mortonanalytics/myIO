@@ -49,3 +49,25 @@ test_that("setEqualAspect sets and clears the scale option", {
   expect_false(setEqualAspect(w, FALSE)$x$config$scales$equalAspect)
   expect_error(setEqualAspect(myIO(), "yes"))
 })
+
+test_that("pointcloud packs point source, a DEM grid and a mesh", {
+  df <- data.frame(x = c(0, 1), y = c(0, 1), z = c(0, 1), src = c("LiDAR", "camera"))
+  w <- addIoLayer(myIO(), type = "pointcloud", label = "c", data = df,
+                  mapping = list(x_var = "x", y_var = "y", z_var = "z", source = "src"))
+  expect_equal(decode_u(w$x$config$layers[[1]]$options$src, 1), c(0, 1))
+
+  terrain <- data.frame(x = c(0, 0.5, 0, 0.5), y = c(0, 0, 0.5, 0.5), z = c(1, 2, 3, 4))[-4, ]
+  attr(terrain, "cell_size") <- c(0.5, 0.5)
+  g <- myIO:::pointcloud_terrain(terrain)
+  expect_equal(c(g$cols, g$rows, g$x0, g$y0, g$dx), c(2, 2, 0, 0, 0.5))
+  z <- readBin(jsonlite::base64_dec(g$z), "double", n = 4, size = 4, endian = "little")
+  expect_equal(z[1:3], c(1, 2, 3))
+  expect_true(is.nan(z[4]))
+
+  mesh <- list(vertices = data.frame(x = c(0, 1, 0), y = c(0, 0, 1), z = 0, r = 1L, g = 2L, b = 3L),
+               faces = matrix(c(0L, 1L, 2L), ncol = 3))
+  m <- myIO:::pointcloud_mesh(mesh)
+  expect_equal(c(m$nv, m$nf), c(3, 1))
+  expect_equal(readBin(jsonlite::base64_dec(m$faces), "integer", n = 3, size = 4, endian = "little"), c(0L, 1L, 2L))
+  expect_equal(decode_u(m$colors, 1), rep(1:3, 3))
+})

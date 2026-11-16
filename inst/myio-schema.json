@@ -1453,14 +1453,16 @@
       "mode",
       "point_size",
       "ortho",
+      "profile",
+      "selectable",
+      "surface",
       "height"
     ],
     "mydar_dashboard": [
       "walk",
       "points",
       "profile",
-      "width",
-      "plan_points"
+      "width"
     ],
     "mydar_gps_view": [
       "walk",
@@ -1551,6 +1553,11 @@
     "read_mydar_gpkg": [
       "path"
     ],
+    "read_mydar_mesh": [
+      "path",
+      "crs",
+      "max_triangles"
+    ],
     "read_mydar_orthophoto": [
       "path",
       "max_pixels"
@@ -1570,7 +1577,8 @@
       "dir",
       "max_points",
       "max_cells",
-      "local"
+      "local",
+      "max_triangles"
     ],
     "renderMyIO": [
       "expr",

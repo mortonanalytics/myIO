@@ -1047,7 +1047,14 @@
 .myIO-pc-chips { display: flex; flex-wrap: wrap; gap: 6px; pointer-events: auto; }
 .myIO-pc-chip { border: 1px solid #c9d0da; background: #fff; color: #1d2430; font: inherit; font-weight: 600; padding: 4px 12px; border-radius: 999px; cursor: pointer; }
 .myIO-pc-chip.is-on { background: #1f5f8b; border-color: #1f5f8b; color: #fff; }
+.myIO-pc-chip-camera.is-on { background: #6b3fa0; border-color: #6b3fa0; }
+.myIO-pc-chip-classes.is-on { background: #2e6b3a; border-color: #2e6b3a; }
 .myIO-pc-chip-ortho.is-on { background: #5b3f8c; border-color: #5b3f8c; }
+.myIO-pc-select { pointer-events: auto; padding: 3px 12px; }
+.myIO-pc-seg-small { pointer-events: auto; }
+.myIO-pc-seg-small button { padding: 2px 10px; font-size: 12px; }
+.myIO-pc-band-swatch { width: 26px !important; height: 8px !important; border-radius: 4px !important; background: linear-gradient(90deg, rgb(254, 217, 178), rgb(217, 71, 15)); }
+.myIO-pc-rect { position: absolute; border: 1.5px dashed #1d2430; background: rgba(31, 95, 139, .12); pointer-events: none; }
 .myIO-pc-scale { position: absolute; right: 12px; bottom: 14px; height: 6px; border: 2px solid #1d2430; border-top: 0; font-size: 11px; line-height: 1; text-align: center; padding-bottom: 12px; box-sizing: content-box; pointer-events: none; }
 @media (max-width: 520px) {
   .myIO-pc-hint { display: none; }

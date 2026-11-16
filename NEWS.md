@@ -12,11 +12,17 @@
   URL) over the x/y extent of its rows, under every other layer: an
   orthophoto under a plan view, for example.
 
-* New `pointcloud` chart type draws hundreds of thousands of points with
-  WebGL: orbit, pan and zoom in 3D, or a top-down 2D plan with a scale bar.
-  Points can be colored by RGB, class, height or sigma (switchable in the
-  view), with an optional orthophoto under them, a track line over them and
-  a caption card. Map `x_var`, `y_var`, `z_var` and optionally `red`, `green`,
+* New `pointcloud` chart type: one map-first WebGL view, as the myDAR app's
+  Results screen. One canvas switches between a top-down 2D plan (with a
+  scale bar) and a 3D orbit view. Layer chips (LiDAR, Camera, Classes,
+  Ortho) toggle independently, and points can be colored by photo color,
+  height or sigma. In 2D the orthophoto lies under the points; in 3D it is
+  draped on the DEM (`options$terrain`). A Points / Mesh switch shows a
+  colored mesh (`options$mesh`). The track's uncertainty band
+  (`options$trackBand`) runs light to dark orange, and the view also takes a
+  profile line (`options$profile`) and a caption card. A 2D Select tool
+  sends the keys of the points in its rectangle (`options$selectable`) to
+  charts linked with `linkCharts()`. Map `x_var`, `y_var`, `z_var` and optionally `red`, `green`,
   `blue`, `class` and `sigma`; the points travel packed as binary, not one
   JSON row each.
 
@@ -33,12 +39,14 @@
   (with the Suggested packages rlas, terra and sf), thinning large clouds to
   `max_points`; `local = TRUE` moves every table to walk-local x, y and z.
   `mydar_cloud_view()` draws the cloud in 3D with the walk's Shape and Map
-  accuracy as a caption; `mydar_plan_view()` draws points, track and profile
-  line over the orthophoto to scale; `mydar_orthophoto_view()`,
+  accuracy as a caption, as one 2D / 3D map with the draped orthophoto, the
+  phone's mesh (`read_mydar_mesh()` reads `walk.mesh.usdz` and converts it
+  into the project CRS), the track's uncertainty band and the profile line;
+  `mydar_plan_view()` draws the plan over the orthophoto as SVG; `mydar_orthophoto_view()`,
   `mydar_terrain_view()`, `mydar_profile_view()`, `mydar_trajectory_view()`,
   `mydar_sigma_view()`, `mydar_accuracy_view()` and `mydar_gps_view()` cover
-  the rest, and `mydar_dashboard()` lays them out map first, then profile,
-  then quality. `mydar_iphone_walk` and `mydar_iphone_cloud()` are a real
+  the rest, and `mydar_dashboard()` lays them out map first (one viewer,
+  whose 2D Select tool drives the profile), then profile, then quality. `mydar_iphone_walk` and `mydar_iphone_cloud()` are a real
   iPhone walk (500,000 of its points for the 3D view), shown in local
   coordinates only; the demo app has a myDAR walk page built from them.
 
