@@ -155,3 +155,32 @@ describe("Shiny rollover input", function() {
     expect(payload).toEqual({ name: "East", dept: "Sales", team: "East", n: 40, id: "root.Sales.East" });
   });
 });
+
+// pymyIO #41: anywidget and standalone pages have no HTMLWidgets global.
+describe("rollover outside htmlwidgets hosts", function() {
+  var saved, errors, onError;
+  beforeEach(function() {
+    registerBuiltInRenderers();
+    saved = globalThis.HTMLWidgets;
+    delete globalThis.HTMLWidgets;
+    errors = [];
+    onError = function(e) { errors.push(e.error || e.message); e.preventDefault(); };
+    window.addEventListener("error", onError);
+  });
+  afterEach(function() {
+    window.removeEventListener("error", onError);
+    globalThis.HTMLWidgets = saved;
+  });
+
+  test.each([
+    ["point", [{ x: 1, y: 3 }, { x: 2, y: 5 }], { x_var: "x", y_var: "y" }, ".tag-point-chart-L", "x: 1"],
+    ["donut", [{ k: "A", v: 2 }, { k: "B", v: 3 }], { x_var: "k", y_var: "v" }, ".donut", "A"],
+    ["treemap", { name: "root", children: [{ name: "Sales", children: [{ name: "East", dept: "Sales", team: "East", n: 40 }] }] },
+      { level_1: "dept", level_2: "team", x_var: "team", y_var: "n" }, ".root", "dept: Sales"]
+  ])("%s hover shows its tooltip without throwing", function(type, data, mapping, selector, title) {
+    render(type, data, mapping, false);
+    var tip = hover(selector);
+    expect(errors).toEqual([]);
+    expect(tip.title).toContain(title);
+  });
+});
