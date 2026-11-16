@@ -653,7 +653,8 @@ mydar_caption <- function(walk) {
     v <- m * 100
     paste0("\u00b1", if (v < 10) formatC(v, format = "f", digits = 1) else formatC(round(v), format = "d"), " cm")
   }
-  meters <- function(m) paste0("\u00b1", if (m < 10) formatC(m, format = "f", digits = 1) else formatC(round(m), format = "d"), " m")
+  # As the app: one decimal below 100 m ("\u00b116.8 m").
+  meters <- function(m) paste0("\u00b1", if (m < 100) formatC(m, format = "f", digits = 1) else formatC(round(m), format = "d"), " m")
   out <- list()
   shape <- num("shape_95_within_5m_m")
   if (is.finite(shape)) {
@@ -664,7 +665,8 @@ mydar_caption <- function(walk) {
     if (is.finite(far)) {
       note <- paste0(note, " \u00b7 ", cm(far), " at 5\u201315 m")
     } else if (any(is.finite(withheld))) {
-      note <- paste0(note, " \u00b7 5\u201315 m withheld")
+      note <- paste0(note, " \u00b7 past 5 m withheld, over 15 cm")
+      out$cameraNote <- "Camera: withheld, its 95% error is over 15 cm."
     }
     out$shapeNote <- note
   }

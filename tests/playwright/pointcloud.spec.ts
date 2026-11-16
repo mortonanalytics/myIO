@@ -67,6 +67,9 @@ test("pointcloud draws 600k points and orbiting changes the view", async ({ page
 
   await expect(page.locator(".myIO-pc-figure-value").first()).toHaveText("±2.4 cm");
   await expect(page.locator(".myIO-pc-figure-label").nth(1)).toHaveText("Map position");
+  // No camera points and a withheld note: the Camera chip is off, with its reason.
+  await expect(page.getByRole("button", { name: "Camera" })).toBeDisabled();
+  await expect(page.locator(".myIO-pc-chip-note")).toHaveText("Camera: withheld, its 95% error is over 15 cm.");
 
   const box = (await canvas.boundingBox())!;
   const frames0 = await canvas.evaluate((c: HTMLCanvasElement) => +c.dataset.frames!);

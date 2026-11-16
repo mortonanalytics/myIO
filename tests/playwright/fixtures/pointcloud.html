@@ -41,7 +41,7 @@ var layer = { id: 'pc', type: 'pointcloud', label: 'Point cloud', data: [], colo
   mapping: { x_var: 'x', y_var: 'y', z_var: 'z' },
   options: { n: n, bbox: [0, 10, 0, 20, 0, 3], positions: b64(u8(positions)), rgb: b64(rgb), cls: b64(cls), sigma: b64(sigma),
     color: 'rgb', mode: '3d', pointSize: 2, classColors: { '2': '#8C6D31', '6': '#D55E00' }, classNames: { '2': 'Ground', '6': 'Building' },
-    caption: { shape: '±2.4 cm', shapeNote: 'within 5 m', map: '±3.8 m', mapNote: 'phone GPS' },
+    caption: { shape: '±2.4 cm', shapeNote: 'within 5 m', map: '±3.8 m', mapNote: 'phone GPS', cameraNote: 'Camera: withheld, its 95% error is over 15 cm.' },
     terrain: { cols: cols, rows: rows, x0: 0, y0: 0, dx: 0.5, dy: 0.5, z: b64(u8(dem)) },
     ortho: { src: img.toDataURL('image/png'), extent: [0, 10, 0, 20], z: 0 },
     mesh: { nv: 4, nf: 2, positions: b64(u8(meshPos)), colors: b64(meshCol), faces: b64(u8(meshFaces)) },

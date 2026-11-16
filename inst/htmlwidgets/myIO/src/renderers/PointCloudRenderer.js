@@ -685,6 +685,17 @@ function createView(chart, layer, opts) {
     const chipButtons = chips.selectAll("button.myIO-pc-chip-layer").data(layerChips).join("button")
       .attr("type", "button").attr("class", (d) => "myIO-pc-chip myIO-pc-chip-layer myIO-pc-chip-" + d[0]).text((d) => d[1])
       .on("click", (event, d) => { state[d[0]] = !state[d[0]]; syncControls(); requestDraw(); });
+    // A walk whose camera points were withheld shows the Camera chip off,
+    // with the reason next to it, as the app does.
+    const cameraNote = cloud.cameraPoints === 0 && opts.caption && opts.caption.cameraNote ? opts.caption.cameraNote : null;
+    if (cameraNote) {
+      const classesChip = chips.select(".myIO-pc-chip-classes").node();
+      const off = chips.insert("button", classesChip ? () => classesChip : null)
+        .attr("type", "button").attr("class", "myIO-pc-chip myIO-pc-chip-disabled").attr("disabled", true)
+        .attr("aria-disabled", "true").text("Camera");
+      off.attr("title", cameraNote);
+      bottom.insert("div", ".myIO-pc-seg-small").attr("class", "myIO-pc-chip-note").text(cameraNote);
+    }
     const colorModes = [["rgb", "Photo"], ["height", "Height"]];
     if (cloud.sigma) colorModes.push(["sigma", "Sigma"]);
     if (!cloud.rgb) colorModes.shift();
