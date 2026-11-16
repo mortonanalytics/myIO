@@ -20,12 +20,14 @@
 #'   point density across the walk. Use \code{Inf} to keep every point.
 #' @param max_cells Most DEM cells to keep. A larger DEM is aggregated by the
 #'   smallest whole factor that brings it under the limit (cell mean).
-#' @param local If \code{TRUE} (default), x and y of every spatial table are
-#'   shifted to meters from a whole-meter origin at the south-west corner of
-#'   the walk, so axes read in walk-scale meters. The origin is kept in
-#'   \code{$origin}; add it back to recover project coordinates. Heights are
-#'   never shifted. \code{trajectory.csv} is in its own local frame (meters east,
-#'   north and up of the first GPS fix) and is left as written.
+#' @param local If \code{TRUE} (default), every spatial table is moved to
+#'   walk-local coordinates by subtraction only: x and y become meters from a
+#'   whole-meter origin at the south-west corner of the walk, and z becomes
+#'   height above the lowest DEM (ground) cell, or above the lowest ground-class
+#'   point when the walk has no DEM. The subtracted origin is kept in
+#'   \code{$origin} (x, y, z); add it back to recover project coordinates.
+#'   \code{trajectory.csv} is in its own local frame (meters east, north and up
+#'   of the first GPS fix) and is left as written.
 #'
 #' @return \code{read_mydar_walk()} returns a \code{mydar_walk} list with
 #'   \describe{
@@ -52,8 +54,8 @@
 #'     \item{trajectory}{Poses from \code{trajectory.csv} with \code{t_s}
 #'       (seconds from the first pose).}
 #'     \item{crs}{The project CRS, e.g. \code{"EPSG:32612"}.}
-#'     \item{origin}{The x/y origin subtracted when \code{local = TRUE}, else
-#'       \code{c(x = 0, y = 0)}.}
+#'     \item{origin}{The x/y/z origin subtracted when \code{local = TRUE},
+#'       else \code{c(x = 0, y = 0, z = 0)}.}
 #'   }
 #'   The single-file readers return the matching element.
 #'
@@ -96,7 +98,7 @@ read_mydar_walk <- function(dir, max_points = 20000, max_cells = 40000, local = 
     list(
       trajectory = if (!is.null(traj)) read_mydar_trajectory(traj),
       crs = if (nrow(gpkg$accuracy) > 0 && "crs" %in% names(gpkg$accuracy)) gpkg$accuracy$crs[[1]] else NA_character_,
-      origin = c(x = 0, y = 0)
+      origin = c(x = 0, y = 0, z = 0)
     )
   )
 
@@ -236,7 +238,7 @@ print.mydar_walk <- function(x, ...) {
   if (anyNA(x$origin)) {
     cat("  local coordinates (origin withheld)\n")
   } else if (any(x$origin != 0)) {
-    cat("  local origin: ", format(x$origin[["x"]], nsmall = 0), ", ", format(x$origin[["y"]], nsmall = 0), "\n", sep = "")
+    cat("  local origin: ", paste(format(x$origin, nsmall = 0), collapse = ", "), "\n", sep = "")
   }
   invisible(x)
 }
@@ -315,12 +317,25 @@ mydar_shift_local <- function(walk) {
     if (nrow(df) > 0) { xs <- c(xs, df$x); ys <- c(ys, df$y) }
   }
   if (!any(is.finite(xs))) return(walk)
-  origin <- c(x = floor(min(xs, na.rm = TRUE)), y = floor(min(ys, na.rm = TRUE)))
+  # Heights: the lowest DEM cell (the DEM is the ground surface), else the
+  # lowest ground-class point, else the lowest point.
+  pts <- walk$points
+  z0 <- if (!is.null(walk$terrain) && any(is.finite(walk$terrain$z))) {
+    min(walk$terrain$z, na.rm = TRUE)
+  } else if (!is.null(pts) && any(pts$class == 2L)) {
+    min(pts$z[pts$class == 2L], na.rm = TRUE)
+  } else if (!is.null(pts) && nrow(pts) > 0) {
+    min(pts$z, na.rm = TRUE)
+  } else {
+    0
+  }
+  origin <- c(x = floor(min(xs, na.rm = TRUE)), y = floor(min(ys, na.rm = TRUE)), z = z0)
   shift <- function(df) {
     if (is.null(df)) return(NULL)
     keep <- attributes(df)[c("cell_size", "n_total")]
     df$x <- df$x - origin[["x"]]
     df$y <- df$y - origin[["y"]]
+    if ("z" %in% names(df)) df$z <- df$z - origin[["z"]]
     for (a in names(keep)) if (!is.null(keep[[a]])) attr(df, a) <- keep[[a]]
     df
   }

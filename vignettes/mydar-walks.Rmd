@@ -47,12 +47,14 @@ meters from the south-west corner of the walk (`walk$origin` holds the
 shift), so the axes read in walk-scale meters.
 
 The examples below use `mydar_iphone_walk`: a real outdoor walk recorded with
-the myDAR iPhone app, as the phone processed it, and shown in local
-coordinates only. Its x and y were moved to meters from the walk's south-west
-corner by a rigid shift; the shift and the project CRS are not included.
-Heights, classes, point sigma and the accuracy figures are as measured. It
-needs none of the optional packages. `data-raw/mydar_iphone_walk.R` in the
-myIO repository builds it from a walk folder.
+the myDAR iPhone app and processed with the myDAR CLI (autodar commit
+`a1388d8`), shown in local coordinates only. Its x and y were moved to meters
+from the walk's south-west corner and its heights to height above the lowest
+ground cell, by subtraction only; the subtracted origin and the project CRS
+are not included. Classes, point sigma, GPS residuals and the accuracy figures
+are as measured. It needs none of the optional packages.
+`data-raw/mydar_iphone_walk.R` in the myIO repository builds it from a walk
+folder.
 
 ```{r walk, eval = TRUE}
 walk <- mydar_iphone_walk
@@ -116,26 +118,26 @@ head(mydar_profile(walk, from = line$from, to = line$to))
 
 ```{r qa}
 mydar_trajectory_view(walk)
+mydar_gps_view(walk)
 mydar_sigma_view(walk)
 mydar_accuracy_view(walk)
 ```
 
-`sigma_m` is the per-point 1-sigma per axis that the cloud stores. On this
-walk LiDAR points sit near 2-3 cm and camera points (beyond LiDAR range) near
-a meter. The accuracy chart puts shape figures (how well distances inside the
-walk hold, by range band) next to map position (where the walk sits on the
-map). Here the map position comes from phone GPS, so it is far larger than the
+`mydar_gps_view()` plots each GPS fix's residual against the fused track,
+next to the 95% residual the processing expected. `sigma_m` is the per-point
+1-sigma per axis that the cloud stores, on a log10 axis because camera points
+(when a walk has them) run to meters while LiDAR stays near 2-3 cm; this walk
+is LiDAR only. The accuracy chart puts the shape figure (how well distances
+inside the walk hold) next to map position (where the walk sits on the map).
+Here the map position comes from phone GPS, so it is far larger than the
 shape figure within 5 m.
-
-`mydar_gps_view()` plots each GPS fix's residual against the fused track.
-It needs a `gps_fixes` table with residuals; the phone wrote no fixes for
-this walk, so it is left out here.
 
 ## All at once
 
 `mydar_dashboard()` lays out the views on one page. Brush the plan view and
-the same points light up on the profile. For a walk with GPS residuals it
-adds the GPS chart, which shares a time cursor with the uncertainty chart.
+the same points light up on the profile; hover the uncertainty or GPS chart
+and the other shows a cursor at the same moment (the GPS chart appears when
+the walk has GPS residuals).
 
 ```{r dashboard}
 mydar_dashboard(walk)

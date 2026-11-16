@@ -328,10 +328,11 @@ ui <- page_navbar(
   nav_panel("myDAR walk",
     icon = icon("route"),
     p(class = "text-muted mt-3",
-      "A real outdoor walk recorded with the myDAR iPhone app, as the phone processed it:",
-      "LiDAR and camera points with the phone's classes, the DEM, the track and the accuracy figures.",
-      "Shown in local coordinates only, meters from the walk's south-west corner.",
-      "6,000 of the walk's 897,935 points are shown. Brush an empty part of the plan view to find the same points on the profile."),
+      "A real outdoor walk recorded with the myDAR iPhone app and processed with the myDAR CLI:",
+      "LiDAR points with their classes, the DEM, the track, GPS fixes and the accuracy figures.",
+      "Shown in local coordinates only: meters from the walk's south-west corner, heights above the lowest ground cell.",
+      "6,000 of the walk's 887,038 points are shown. Brush an empty part of the plan view to find the same points on the profile;",
+      "hover either time chart to line up a moment on both."),
     layout_columns(
       col_widths = breakpoints(sm = 12, lg = c(6, 6)),
       chart_card("Plan view by class", myIOOutput("mydarPlan", height = "460px")),
@@ -348,8 +349,9 @@ ui <- page_navbar(
         ))
     ),
     layout_columns(
-      col_widths = 12,
-      chart_card("Map position uncertainty", myIOOutput("mydarTrajectory", height = "300px"))
+      col_widths = breakpoints(sm = 12, lg = c(6, 6)),
+      chart_card("Map position uncertainty", myIOOutput("mydarTrajectory", height = "320px")),
+      chart_card("GPS residuals", myIOOutput("mydarGps", height = "320px"))
     ),
     layout_columns(
       col_widths = breakpoints(sm = 12, lg = c(6, 6)),
@@ -885,7 +887,8 @@ server <- function(input, output, session) {
 
   # -- myDAR walk --
 
-  # Brushing the plan view highlights the same points (point_id) on the profile.
+  # Brushing the plan view highlights the same points (point_id) on the profile;
+  # the uncertainty and GPS charts share a time cursor.
   mydar_space <- reactive({
     line <- mydar_profile_line(mydar_walk, input$mydar_bearing, input$mydar_offset)
     validate(need(nrow(mydar_profile(mydar_walk, line$from, line$to, input$mydar_width)) > 0,
@@ -900,7 +903,10 @@ server <- function(input, output, session) {
   output$mydarPlan <- renderMyIO(mydar_space()[[1]])
   output$mydarProfile <- renderMyIO(mydar_space()[[2]])
   output$mydarTerrain <- renderMyIO(mydar_terrain_view(mydar_walk, height = "460px"))
-  output$mydarTrajectory <- renderMyIO(mydar_trajectory_view(mydar_walk))
+  mydar_time <- linkCharts(mydar_trajectory_view(mydar_walk), mydar_gps_view(mydar_walk),
+                           on = "t_s", group = "mydar_time", cursor = TRUE)
+  output$mydarTrajectory <- renderMyIO(mydar_time[[1]])
+  output$mydarGps <- renderMyIO(mydar_time[[2]])
   output$mydarSigma <- renderMyIO(mydar_sigma_view(mydar_walk))
   output$mydarAccuracy <- renderMyIO(mydar_accuracy_view(mydar_walk))
 

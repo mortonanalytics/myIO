@@ -157,7 +157,8 @@ mydar_profile_view <- function(walk, from = NULL, to = NULL, width = 0.5, height
                     options = list(curveType = "linear"))
   }
 
-  setAxisFormat(w, xAxis = ".1f", yAxis = ".2f", xLabel = "Distance along line (m)", yLabel = "Height (m)")
+  setAxisFormat(w, xAxis = ".1f", yAxis = ".2f", xLabel = "Distance along line (m)",
+                yLabel = if (mydar_is_local(walk, "z")) "Height above lowest ground (m)" else "Height (m)")
 }
 
 #' @rdname mydar_views
@@ -322,8 +323,14 @@ mydar_class_colors <- function(class_codes) {
 
 mydar_axis_label <- function(walk, axis) {
   name <- if (axis == "x") "Easting" else "Northing"
-  local <- anyNA(walk$origin) || any(walk$origin != 0)
-  if (local) paste(name, "from walk origin (m)") else paste(name, "(m)")
+  if (mydar_is_local(walk, axis)) paste(name, "from walk origin (m)") else paste(name, "(m)")
+}
+
+# TRUE when the walk's coordinates on this axis were moved to a local origin
+# (a known shift, or one withheld as NA).
+mydar_is_local <- function(walk, axis) {
+  o <- walk$origin[axis]
+  length(o) == 1L && !is.null(names(o)) && !is.na(names(o)) && (is.na(o) || o != 0)
 }
 
 # Equal x and y spans about the data's center, so a square plot keeps meters

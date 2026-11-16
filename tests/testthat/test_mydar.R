@@ -17,6 +17,7 @@ write_walk_dir <- function(walk) {
   las <- data.frame(X = p$x, Y = p$y, Z = p$z, Classification = as.integer(p$class),
                     sigma_m = p$sigma_m, source = as.integer(p$source == "camera"))
   header <- rlas::header_create(las)
+  for (axis in c("X", "Y", "Z")) header[[paste(axis, "scale factor")]] <- 1e-4
   header <- rlas::header_add_extrabytes(header, las$sigma_m, "sigma_m", "1-sigma per axis, meters")
   header <- rlas::header_add_extrabytes(header, las$source, "source", "0 LiDAR, 1 camera")
   rlas::write.las(file.path(dir, "walk.copc.laz"), header, las)
@@ -29,8 +30,9 @@ write_walk_dir <- function(walk) {
   track <- sf::st_sf(length_m = 1, geom = sf::st_sfc(sf::st_linestring(as.matrix(walk$track[, c("x", "y", "z")]))))
   sf::st_write(track, gpkg, "track", quiet = TRUE)
   sf::st_write(pts(walk$track_points, c("t_s", "map_95_m")), gpkg, "track_points", quiet = TRUE)
-  # An empty point layer: sf warns while taking the bounding box of no rows.
-  suppressWarnings(sf::st_write(pts(walk$gps_fixes, c("t_s", "h_acc_m", "used")), gpkg, "gps_fixes", quiet = TRUE))
+  gps_cols <- c("t_s", "h_acc_m", "used", "residual_m", "residual_95_m", "map_95_m")
+  # sf warns while taking the bounding box of an empty layer.
+  suppressWarnings(sf::st_write(pts(walk$gps_fixes, gps_cols), gpkg, "gps_fixes", quiet = TRUE))
   sf::st_write(walk$accuracy, gpkg, "accuracy", quiet = TRUE)
 
   traj <- walk$trajectory
@@ -55,27 +57,45 @@ test_that("read_mydar_walk reads the phone's file formats back into the same tab
   expect_equal(attr(walk$terrain, "cell_size"), attr(src$terrain, "cell_size"), tolerance = 1e-6)
   expect_equal(walk$track[, c("x", "y", "z")], src$track[, c("x", "y", "z")], tolerance = 1e-9)
   expect_equal(walk$track_points$map_95_m, src$track_points$map_95_m)
-  # The phone wrote an empty gps_fixes table; it reads as zero rows.
-  expect_equal(nrow(walk$gps_fixes), 0)
+  expect_equal(walk$gps_fixes$residual_m, src$gps_fixes$residual_m)
+  expect_equal(walk$gps_fixes$z, src$gps_fixes$z, tolerance = 1e-9)
   expect_equal(walk$trajectory$t_s, src$trajectory$t_s, tolerance = 1e-9)
   expect_equal(walk$accuracy$shape_95_within_5m_m, src$accuracy$shape_95_within_5m_m)
-  expect_equal(unname(walk$origin), c(0, 0))
+  expect_equal(unname(walk$origin), c(0, 0, 0))
 })
 
-test_that("local = TRUE shifts x/y rigidly and max_points / max_cells thin the walk", {
+test_that("local = TRUE shifts x, y and z by subtraction and max_points / max_cells thin the walk", {
   skip_without_readers()
   skip_if_not_installed("withr")
   src <- mydar_iphone_walk
-  dir <- write_walk_dir(src)
+  # Lift every height by 500 m so the z shift has something to remove.
+  lifted <- src
+  for (part in c("points", "terrain", "track", "track_points", "gps_fixes")) {
+    lifted[[part]]$z <- lifted[[part]]$z + 500
+  }
+  dir <- write_walk_dir(lifted)
   shifted <- read_mydar_walk(dir, max_points = 1000, max_cells = 500, local = TRUE)
   expect_equal(nrow(shifted$points), 1000)
   expect_equal(attr(shifted$points, "n_total"), nrow(src$points))
   expect_lte(nrow(shifted$terrain), 500)
   expect_true(all(shifted$points$x >= 0 & shifted$points$y >= 0))
+  expect_output(print(shifted), "1,000 of 6,000")
+
   full <- read_mydar_walk(dir, max_points = Inf, local = TRUE)
+  expect_equal(min(full$terrain$z), 0)
+  expect_equal(full$origin[["z"]], 500 + min(src$terrain$z), tolerance = 1e-6)
   expect_equal(full$points$x + full$origin[["x"]], src$points$x, tolerance = 1e-3)
   expect_equal(full$points$z, src$points$z, tolerance = 1e-3)
-  expect_output(print(shifted), "1,000 of 6,000")
+  expect_equal(full$track$z, src$track$z, tolerance = 1e-6)
+})
+
+test_that("an empty GeoPackage layer reads as zero rows", {
+  skip_without_readers()
+  skip_if_not_installed("withr")
+  walk <- mydar_iphone_walk
+  walk$gps_fixes <- walk$gps_fixes[0, ]
+  read <- read_mydar_walk(write_walk_dir(walk), max_points = 100, local = FALSE)
+  expect_equal(nrow(read$gps_fixes), 0)
 })
 
 test_that("readers fail clearly on missing files and missing packages", {
@@ -87,15 +107,19 @@ test_that("readers fail clearly on missing files and missing packages", {
   expect_error(fn("walk.copc.laz"), "install.packages\\('not.a.real.pkg'\\)")
 })
 
-test_that("the bundled walk carries no location: no origin, CRS or project coordinates", {
+test_that("the bundled walk carries no location: no origin, CRS, project coordinates or absolute heights", {
   walk <- mydar_iphone_walk
+  expect_named(walk$origin, c("x", "y", "z"))
   expect_true(all(is.na(walk$origin)))
   expect_true(is.na(walk$crs))
   expect_false("crs" %in% names(walk$accuracy))
   expect_length(walk$features, 0)
-  for (part in c("points", "terrain", "track", "track_points")) {
-    expect_true(all(abs(c(walk[[part]]$x, walk[[part]]$y)) < 1000), info = part)
+  for (part in c("points", "terrain", "track", "track_points", "gps_fixes")) {
+    df <- walk[[part]]
+    expect_true(all(abs(c(df$x, df$y)) < 1000, na.rm = TRUE), info = part)
+    expect_true(all(abs(df$z) < 100, na.rm = TRUE), info = part)
   }
+  expect_equal(min(walk$terrain$z), 0)
   expect_output(print(walk), "origin withheld")
 })
 
@@ -129,7 +153,7 @@ test_that("hillshade is uniform on a plane and darker on a slope facing away fro
   expect_true(all(toward > away))
 })
 
-# GPS fixes with residuals, for the GPS view (the bundled walk has none).
+# GPS fixes with an ignored fix, which the bundled walk does not have.
 with_gps <- function(walk) {
   walk$gps_fixes <- data.frame(t_s = c(1, 2, 3, 4), h_acc_m = c(4, 5, 5, 6), used = c(1, 1, 0, 1),
                                residual_m = c(0.2, 0.1, 0.5, 0.3), residual_95_m = c(9, 9, 10, 11),
@@ -157,16 +181,20 @@ test_that("views build the expected layers from the bundled walk", {
   expect_true("DEM" %in% layer_labels(profile))
   expect_error(mydar_profile_view(walk, from = c(100, 100), to = c(101, 100)), "no points within")
 
-  expect_equal(layer_types(mydar_trajectory_view(walk)), "line")
-  expect_equal(layer_types(mydar_trajectory_view(with_gps(walk))), c("line", "point"))
-  expect_error(mydar_gps_view(walk), "no gps_fixes")
-  gps <- mydar_gps_view(with_gps(walk))
-  expect_equal(layer_labels(gps), c("Used", "Ignored", "Expected 95%"))
+  no_gps <- walk
+  no_gps$gps_fixes <- no_gps$gps_fixes[0, ]
+  expect_equal(layer_types(mydar_trajectory_view(walk)), c("line", "point"))
+  expect_equal(layer_types(mydar_trajectory_view(no_gps)), "line")
+  expect_error(mydar_gps_view(no_gps), "no gps_fixes")
+  gps <- mydar_gps_view(walk)
+  expect_true(all(c("Used", "Expected 95%") %in% layer_labels(gps)))
+  expect_equal(layer_labels(mydar_gps_view(with_gps(walk))), c("Used", "Ignored", "Expected 95%"))
+  expect_equal(profile$x$config$axes$yAxisLabel, "Height above lowest ground (m)")
   expect_true(all(layer_types(mydar_sigma_view(walk)) %in% c("area", "point", "rangeBar")))
 
   acc <- mydar_accuracy_view(walk)$x$config$layers[[1]]
   figures <- vapply(acc$data, `[[`, character(1), "figure")
-  expect_equal(figures, c("Shape <5 m", "Shape 5-10 m", "Shape 10-15 m", "Shape 5-15 m", "Map median", "Map max"))
+  expect_equal(figures, c("Shape <5 m", "Map median", "Map max"))
 })
 
 test_that("views refuse a walk without the part they plot", {
@@ -176,7 +204,7 @@ test_that("views refuse a walk without the part they plot", {
   expect_error(mydar_plan_view(list()), "must be a mydar_walk")
 })
 
-test_that("mydar_dashboard links plan and profile on point_id, and adds the GPS chart only with residuals", {
+test_that("mydar_dashboard links plan and profile on point_id, and the time charts only with GPS residuals", {
   skip_if_not_installed("htmltools")
   widgets_of <- function(dash) {
     Filter(function(x) inherits(x, "myIO"), unlist(lapply(dash[[2]]$children[[1]], `[[`, "children"), recursive = FALSE))
@@ -189,12 +217,14 @@ test_that("mydar_dashboard links plan and profile on point_id, and adds the GPS 
   }
 
   widgets <- widgets_of(mydar_dashboard(mydar_iphone_walk))
-  expect_length(widgets, 6)
+  expect_length(widgets, 7)
   expect_equal(sum(key_columns(widgets) == "point_id", na.rm = TRUE), 2)
-  expect_equal(sum(key_columns(widgets) == "t_s", na.rm = TRUE), 0)
+  expect_equal(sum(key_columns(widgets) == "t_s", na.rm = TRUE), 2)
   expect_true(isTRUE(widgets[[1]]$x$config$interactions$brush$enabled))
 
-  widgets <- widgets_of(mydar_dashboard(with_gps(mydar_iphone_walk)))
-  expect_length(widgets, 7)
-  expect_equal(sum(key_columns(widgets) == "t_s", na.rm = TRUE), 2)
+  no_gps <- mydar_iphone_walk
+  no_gps$gps_fixes <- no_gps$gps_fixes[0, ]
+  widgets <- widgets_of(mydar_dashboard(no_gps))
+  expect_length(widgets, 6)
+  expect_equal(sum(key_columns(widgets) == "t_s", na.rm = TRUE), 0)
 })

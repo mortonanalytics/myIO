@@ -28,12 +28,14 @@ point density across the walk. Use \code{Inf} to keep every point.}
 \item{max_cells}{Most DEM cells to keep. A larger DEM is aggregated by the
 smallest whole factor that brings it under the limit (cell mean).}
 
-\item{local}{If \code{TRUE} (default), x and y of every spatial table are
-shifted to meters from a whole-meter origin at the south-west corner of
-the walk, so axes read in walk-scale meters. The origin is kept in
-\code{$origin}; add it back to recover project coordinates. Heights are
-never shifted. \code{trajectory.csv} is in its own local frame (meters east,
-north and up of the first GPS fix) and is left as written.}
+\item{local}{If \code{TRUE} (default), every spatial table is moved to
+walk-local coordinates by subtraction only: x and y become meters from a
+whole-meter origin at the south-west corner of the walk, and z becomes
+height above the lowest DEM (ground) cell, or above the lowest ground-class
+point when the walk has no DEM. The subtracted origin is kept in
+\code{$origin} (x, y, z); add it back to recover project coordinates.
+\code{trajectory.csv} is in its own local frame (meters east, north and up
+of the first GPS fix) and is left as written.}
 
 \item{path}{Path to one walk file.}
 }
@@ -63,8 +65,8 @@ north and up of the first GPS fix) and is left as written.}
     \item{trajectory}{Poses from \code{trajectory.csv} with \code{t_s}
       (seconds from the first pose).}
     \item{crs}{The project CRS, e.g. \code{"EPSG:32612"}.}
-    \item{origin}{The x/y origin subtracted when \code{local = TRUE}, else
-      \code{c(x = 0, y = 0)}.}
+    \item{origin}{The x/y/z origin subtracted when \code{local = TRUE},
+      else \code{c(x = 0, y = 0, z = 0)}.}
   }
   The single-file readers return the matching element.
 }
