@@ -16,9 +16,11 @@ Description: Create interactive 'd3.js' visualizations from R with built-in
     statistical transforms. Computes confidence intervals, regression fits,
     LOESS smoothing, moving averages, error bars, and uncertainty
     visualizations (quantile dot plots and fan charts) in R and renders them
-    as composable chart layers via 'htmlwidgets'. Supports 37 chart types
+    as composable chart layers via 'htmlwidgets'. Supports 38 chart types
     including boxplots, violin plots, Q-Q diagnostic plots, calendar heatmaps,
-    survival curves, and group comparisons with pairwise significance testing.
+    survival curves, raster grids such as elevation models, and group
+    comparisons with pairwise significance testing. Reads and plots myDAR
+    walk outputs (point cloud, terrain, track and accuracy figures).
     Also provides a machine-readable chart specification schema with validators
     so that large language model agents can author and verify charts. Works in
     'RStudio', 'Shiny', and 'R Markdown'.
@@ -27,6 +29,7 @@ URL: https://mortonanalytics.github.io/myIO/, https://github.com/mortonanalytics
 BugReports: https://github.com/mortonanalytics/myIO/issues
 Depends: R (>= 4.1.0)
 Encoding: UTF-8
+LazyData: true
 Language: en-US
 RoxygenNote: 7.3.2
 Suggests:
@@ -49,7 +52,10 @@ Suggests:
   openssl,
   later,
   mockery,
-  withr
+  withr,
+  rlas,
+  sf,
+  terra
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 Imports:

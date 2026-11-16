@@ -354,6 +354,7 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
       gauge = c("value"),
       histogram = c("value"),
       heatmap = c("x_var", "y_var", "value"),
+      raster = c("x_var", "y_var", "value"),
       candlestick = c("x_var", "open", "high", "low", "close"),
       waterfall = c("x_var", "y_var"),
       sankey = c("source", "target", "value"),
@@ -419,6 +420,20 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
 
   if (type == "heatmap" && !is.numeric(data[[mapping[["value"]]]])) {
     stop("addIoLayer(): Mapped field '", mapping[["value"]], "' must be numeric for type '", type, "'.", call. = FALSE)
+  }
+
+  if (type == "raster") {
+    for (key in intersect(c("x_var", "y_var", "value", "shade"), names(mapping))) {
+      col <- mapping[[key]]
+      if (!col %in% colnames(data)) {
+        stop("addIoLayer(): Column '", col, "' not found in data. ",
+             "Available columns: ", paste(colnames(data), collapse = ", "), ".",
+             call. = FALSE)
+      }
+      if (!is.numeric(data[[col]])) {
+        stop("addIoLayer(): Mapped field '", col, "' must be numeric for type 'raster'.", call. = FALSE)
+      }
+    }
   }
 
   if (type == "calendarHeatmap") {
