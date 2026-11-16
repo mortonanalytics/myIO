@@ -69,6 +69,11 @@
 
 ## Bug fixes
 
+* Funnel value labels placed outside a stage now start after the stage name,
+  so on narrow charts they no longer overlap "Qualified", "Proposals" and
+  similar names that run past their narrowing stage. A label that then does
+  not fit is hidden, and the tooltip still carries the value (#191).
+
 * Hovering lollipop, dumbbell, range bar, candlestick, heatmap, waffle,
   beeswarm, quantile dots, bump, radar, funnel, parallel, waterfall, and sankey
   charts now shows a tooltip and sends the Shiny `myIO-{id}-rollover` input.

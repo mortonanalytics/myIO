@@ -203,6 +203,32 @@ describe("Funnel value labels", function() {
     });
   });
 
+  // #191: the demo's sales funnel in a 361px widget. Lower stages narrow
+  // faster than their names, so an outside value used to start inside the
+  // name. jsdom measures 6.5px a character.
+  test("outside values start after the stage name and end inside the plot", function() {
+    var chart = makeFunnelChart();
+    chart.width = 361;
+    chart.height = 400;
+    var stages = ["Visitors", "Leads", "Qualified", "Proposals", "Closed"];
+    var layer = stagesLayer([10000, 5200, 2800, 1100, 450]);
+    layer.data.forEach(function(d, i) { d.stage = stages[i]; });
+    getRenderer("funnel").render(chart, layer);
+
+    var plotWidth = chart.width - chart.margin.left - chart.margin.right;
+    var labels = labelNodes();
+    var outside = 0;
+    valueNodes().forEach(function(node, i) {
+      if (node.getAttribute("text-anchor") !== "start" || node.getAttribute("fill-opacity") !== "1") return;
+      outside += 1;
+      var nameRight = +labels[i].getAttribute("x") + labels[i].textContent.length * 6.5 / 2;
+      var x = +node.getAttribute("x");
+      expect(x).toBeGreaterThanOrEqual(nameRight + 6);
+      expect(x + node.textContent.length * 6.5).toBeLessThanOrEqual(plotWidth);
+    });
+    expect(outside).toBeGreaterThan(0);
+  });
+
   test("a tall stage band still uses the two-line placement", function() {
     var chart = makeFunnelChart();
     getRenderer("funnel").render(chart, funnelLayer());
