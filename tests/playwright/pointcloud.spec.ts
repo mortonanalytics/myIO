@@ -47,7 +47,10 @@ async function picture(page: Page) {
     let painted = 0;
     const signature: number[] = [];
     for (let i = 0; i < px.length; i += 4) {
-      const differs = Math.abs(px[i] - 247) + Math.abs(px[i + 1] - 248) + Math.abs(px[i + 2] - 250) > 30;
+      // Background is light in 2D and dark (#14121e) in 3D.
+      const offLight = Math.abs(px[i] - 247) + Math.abs(px[i + 1] - 248) + Math.abs(px[i + 2] - 250) > 30;
+      const offDark = Math.abs(px[i] - 20) + Math.abs(px[i + 1] - 18) + Math.abs(px[i + 2] - 30) > 30;
+      const differs = offLight && offDark;
       if (differs) painted++;
       signature.push(differs ? 1 : 0);
     }
@@ -151,4 +154,50 @@ test("the 2D Select tool sends the keys inside its rectangle", async ({ page }) 
   expect(e.data.length).toBeGreaterThan(0);
   expect(e.data.length).toBeLessThan(2000);
   expect(Object.keys(e.data[0])).toEqual(["point_id"]);
+});
+
+// Average color of the canvas's top-left corner (the scene background there).
+async function cornerColor(page: Page) {
+  return page.evaluate(() => {
+    const gl = document.querySelector("canvas.myIO-pointcloud-canvas") as HTMLCanvasElement;
+    const copy = document.createElement("canvas");
+    copy.width = 40; copy.height = 25;
+    const ctx = copy.getContext("2d")!;
+    ctx.drawImage(gl, 0, 0, 40, 25);
+    const px = ctx.getImageData(0, 0, 4, 4).data;
+    let r = 0, g = 0, b = 0;
+    for (let i = 0; i < px.length; i += 4) { r += px[i]; g += px[i + 1]; b += px[i + 2]; }
+    const n = px.length / 4;
+    return [r / n, g / n, b / n];
+  });
+}
+
+test("3D is drawn on a dark background and 2D on the page theme's, with the phone path only in 2D", async ({ page }) => {
+  await page.goto(baseUrl + "/tests/playwright/fixtures/pointcloud.html");
+  await page.waitForFunction(() => (window as any).ready);
+  const canvas = page.locator("canvas.myIO-pointcloud-canvas");
+  await page.waitForFunction(() => +(document.querySelector("canvas.myIO-pointcloud-canvas") as HTMLCanvasElement).dataset.frames >= 1);
+  const dark = await cornerColor(page);
+  expect(Math.max(...dark)).toBeLessThan(60);
+  await expect(page.locator(".myIO-pointcloud")).toHaveClass(/is-3d/);
+  // In 3D the ground band carries the track; the hand-height path is left out.
+  await expect(canvas).toHaveAttribute("data-phone-path", "0");
+  // Controls stay readable: the card keeps its light panel.
+  const cardBg = await page.locator(".myIO-pc-card").evaluate((e) => getComputedStyle(e).backgroundColor);
+  expect(cardBg).toBe("rgb(255, 255, 255)");
+
+  await press(page, "2D");
+  // Clear the imagery and points so the corner shows the background.
+  await press(page, "Ortho");
+  await press(page, "LiDAR");
+  const light = await cornerColor(page);
+  expect(Math.min(...light)).toBeGreaterThan(200);
+  await expect(canvas).toHaveAttribute("data-phone-path", "1");
+
+  // A dark page theme (--chart-bg) carries into the 2D plan.
+  await page.evaluate(() => { (document.querySelector("#cloud") as HTMLElement).style.setProperty("--chart-bg", "#1a1a2e"); });
+  await press(page, "3D");
+  await press(page, "2D");
+  const themed = await cornerColor(page);
+  expect(Math.max(...themed)).toBeLessThan(60);
 });

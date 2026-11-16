@@ -1,7 +1,7 @@
 import * as d3 from "d3";
 import { beforeEach, describe, expect, test } from "vitest";
 import {
-  BAND_DARK, BAND_LIFT, BAND_LIGHT, PointCloudRenderer, buildDrape, buildMesh, buildRibbon, decodeCloud, decodeTerrain,
+  BAND_DARK, BAND_LIFT, BAND_LIGHT, PointCloudRenderer, buildDrape, buildMesh, buildRibbon, clipProfile, decodeCloud, decodeTerrain,
   dragView, initialView, keysInRect, lookAt, perspective, sigmaFromByte, viewMatrices, zoomView
 } from "../../inst/htmlwidgets/myIO/src/renderers/PointCloudRenderer.js";
 import { getRenderer, registerBuiltInRenderers } from "../../inst/htmlwidgets/myIO/src/registry.js";
@@ -218,5 +218,19 @@ describe("pointcloud", function() {
     expect(keysInRect(selectable, [-1, 6, -1, 6])).toEqual([1, 2]);
     expect(keysInRect(selectable, [6, -1, 6, -1])).toEqual([1, 2]);
     expect(keysInRect(null, [0, 1, 0, 1])).toEqual([]);
+  });
+
+  test("the profile line is clipped to the DEM, or to the cloud's box without one", function() {
+    // DEM covers x 2 to 6 along y = 0; the line runs from x = -10 to x = 20.
+    const ground = (x) => (x >= 2 && x <= 6 ? 1 : NaN);
+    const line = clipProfile([[-10, 0], [20, 0]], ground, [0, 10, -1, 1, 0, 3], 0.1, 300);
+    expect(line[0][0]).toBeCloseTo(2, 1);
+    expect(line[line.length - 1][0]).toBeCloseTo(6, 1);
+    expect(line[0][2]).toBeCloseTo(1.1);
+    const boxed = clipProfile([[-10, 0], [20, 0]], null, [0, 10, -1, 1, 0.5, 3], 0, 300);
+    expect(boxed[0][0]).toBeCloseTo(0, 1);
+    expect(boxed[boxed.length - 1][0]).toBeCloseTo(10, 1);
+    expect(boxed[0][2]).toBe(0.5);
+    expect(clipProfile([[50, 50], [60, 60]], ground, [0, 10, -1, 1, 0, 3], 0)).toBeNull();
   });
 });
