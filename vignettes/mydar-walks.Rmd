@@ -1,0 +1,163 @@
+---
+title: "Plotting myDAR walks"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Plotting myDAR walks}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+# Widgets are not evaluated here so the built vignette stays small; run the
+# chunks in R to see the charts.
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+library(myIO)
+```
+
+myDAR maps a site from a phone walk. Each walk produces a point cloud, a DEM,
+a GeoPackage with the track, GPS fixes and accuracy figures, and the device
+trajectory. myIO reads those files into data frames and plots them.
+
+## Reading a walk
+
+`read_mydar_walk()` reads a walk output directory:
+
+| File | Element | Reader |
+|---|---|---|
+| `walk.copc.laz` | `points` | `read_mydar_points()` (needs **rlas**) |
+| `terrain.tif` | `terrain` | `read_mydar_terrain()` (needs **terra**) |
+| `orthophoto.tif` | `orthophoto` | `read_mydar_orthophoto()` (needs **terra**) |
+| `walk.gpkg` | `track`, `track_points`, `gps_fixes`, `pins`, `features`, `accuracy` | `read_mydar_gpkg()` (needs **sf**) |
+| `trajectory.csv` | `trajectory` | `read_mydar_trajectory()` |
+
+myIO does not install rlas, terra or sf; the readers ask for them when they
+need them.
+
+```{r read, eval = FALSE}
+walk <- read_mydar_walk("path/to/walk", max_points = 20000)
+walk
+```
+
+The reader keeps `max_points` of the cloud (every k-th point in file order,
+which keeps the relative density across the walk; `Inf` keeps them all) and
+records the full count. The DEM is aggregated when it has more than
+`max_cells` cells. By default every table moves to walk-local coordinates by
+subtraction: x and y become meters from the walk's south-west corner, z the
+height above the lowest ground cell (`walk$origin` holds the shift). The
+orthophoto comes back as a plain PNG with its extent in the same
+coordinates.
+
+The examples below use `mydar_iphone_walk`: a real outdoor walk recorded with
+the myDAR iPhone app and processed with the myDAR CLI (autodar commit
+`a1388d8`), shown in local coordinates only. Its x and y were moved to meters
+from the walk's south-west corner and its heights to height above the lowest
+ground cell, by subtraction only; the subtracted origin and the project CRS
+are not included, and the orthophoto ships as pixels only. Classes, point
+sigma, GPS residuals and the accuracy figures are as measured. It keeps 6,000
+points for the SVG charts; `mydar_iphone_cloud()` returns 500,000 of the
+walk's points for the 3D view. Neither needs the optional packages.
+`data-raw/mydar_iphone_walk.R` in the myIO repository builds both from a walk
+folder.
+
+```{r walk, eval = TRUE}
+walk <- mydar_iphone_walk
+walk
+```
+
+A profile line across the middle of the track, used below:
+
+```{r line, eval = TRUE}
+ym <- mean(range(walk$track$y))
+line <- list(from = c(0, ym), to = c(22, ym))
+```
+
+## The views
+
+### 3D point cloud
+
+The cloud in 3D, the way the myDAR app's Results screen shows it: drag to
+orbit, shift-drag to pan, scroll or pinch to zoom, or switch to 2D for a
+top-down plan with a scale bar. The chips color the points by camera color,
+class, height or sigma and turn the orthophoto under them on and off. The
+card gives the walk's two accuracy figures, Shape and Map, separately.
+
+```{r cloud}
+mydar_cloud_view(walk, points = mydar_iphone_cloud())
+```
+
+### Plan view
+
+The orthophoto with the points (by LAS class), the track and the profile
+line over it, drawn to scale (`setEqualAspect()`), with the accuracy figures
+in the corner. `mydar_orthophoto_view()` shows the orthophoto alone.
+
+```{r plan}
+mydar_plan_view(walk, profile = line)
+```
+
+### Terrain
+
+The DEM uses the `raster` chart type: a grid of cells drawn as one image,
+colored by height and shaded by a hillshade. Hover a cell for its height.
+
+```{r terrain}
+mydar_terrain_view(walk, azimuth = 315, altitude = 45)
+```
+
+The raster type works for any regular grid: map `x_var`, `y_var` (cell
+centers) and `value`, and optionally `shade` (0-1).
+
+```{r raster-generic}
+grid <- expand.grid(x = seq(0, 5, by = 0.1), y = seq(0, 3, by = 0.1))
+grid$value <- sin(grid$x) * cos(grid$y)
+myIO() |>
+  addIoLayer(type = "raster", label = "value", data = grid,
+             mapping = list(x_var = "x", y_var = "y", value = "value"),
+             options = list(palette = "cividis"))
+```
+
+### Profile
+
+Points within a corridor along a line, as height against distance along the
+line, with the DEM height along the same line. `mydar_profile()` returns the
+corridor points as a data frame.
+
+```{r profile}
+mydar_profile_view(walk, from = line$from, to = line$to, width = 0.5)
+```
+
+```{r profile-table, eval = TRUE}
+head(mydar_profile(walk, from = line$from, to = line$to))
+```
+
+### Uncertainty and QA
+
+```{r qa}
+mydar_trajectory_view(walk)
+mydar_gps_view(walk)
+mydar_sigma_view(walk)
+mydar_accuracy_view(walk)
+```
+
+`mydar_gps_view()` plots each GPS fix's residual against the fused track,
+next to the 95% residual the processing expected. `sigma_m` is the per-point
+1-sigma per axis that the cloud stores, on a log10 axis because camera points
+(when a walk has them) run to meters while LiDAR stays near 2-3 cm; this walk
+is LiDAR only. The accuracy chart puts the shape figure (how well distances
+inside the walk hold) next to map position (where the walk sits on the map).
+Here the map position comes from phone GPS, so it is far larger than the
+shape figure within 5 m.
+
+## All at once
+
+`mydar_dashboard()` lays out the views on one page in the app's order: the
+3D cloud and the plan view first, then the profile, then the quality charts. Brush the plan view and
+the same points light up on the profile; hover the uncertainty or GPS chart
+and the other shows a cursor at the same moment (the GPS chart appears when
+the walk has GPS residuals).
+
+```{r dashboard}
+mydar_dashboard(walk, points = mydar_iphone_cloud())
+```

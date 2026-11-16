@@ -60,6 +60,9 @@ articles:
       - articles/crosstalk-linking
       - sparklines
       - articles/webr-quarto-live
+  - title: Data sources
+    contents:
+      - mydar-walks
   - title: Migration
     contents:
       - plotly-migration
@@ -86,6 +89,7 @@ reference:
     contents:
       - setAxisFormat
       - setAxisLimits
+      - setEqualAspect
       - defineCategoricalAxis
       - flipAxis
       - suppressAxis
@@ -119,6 +123,15 @@ reference:
       - setFacet
       - setLayerOpacity
       - setExportOptions
+  - title: myDAR walks
+    desc: Read myDAR walk outputs and plot them
+    contents:
+      - read_mydar_walk
+      - mydar_cloud_view
+      - mydar_views
+      - mydar_dashboard
+      - mydar_iphone_walk
+      - mydar_iphone_cloud
   - title: Big-data
     desc: Large-dataset virtualization, WebGL rendering, and DuckDB-WASM cache
     contents:

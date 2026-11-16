@@ -151,6 +151,20 @@ addIoLayer <- function(myIO,
     stop("addIoLayer(): Transform '", transform, "' is not valid for layer type '", type, "'.", call. = FALSE)
   }
 
+  # A point cloud ships its points packed in options, not as JSON rows.
+  if (type == "pointcloud") {
+    options <- c(options, pointcloud_payload(data, mapping))
+    myIO$x$config$layers <- c(
+      myIO$x$config$layers,
+      list(build_layer(
+        layer_type = type, layer_label = label, layer_data = list(),
+        layer_mapping = mapping, layer_color = color, layer_transform_meta = list(),
+        options = options, transform = transform, layer_id = layer_id, order = 1L
+      ))
+    )
+    return(myIO)
+  }
+
   if (length(grep("group", names(mapping))) == 0 || groups_in_renderer) {
     transformed <- transform_fn(data, transform_mapping, options)
     transformed_data <- transformed$data
@@ -354,6 +368,8 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
       gauge = c("value"),
       histogram = c("value"),
       heatmap = c("x_var", "y_var", "value"),
+      raster = c("x_var", "y_var", "value"),
+      pointcloud = c("x_var", "y_var", "z_var"),
       candlestick = c("x_var", "open", "high", "low", "close"),
       waterfall = c("x_var", "y_var"),
       sankey = c("source", "target", "value"),
@@ -419,6 +435,25 @@ validate_layer_inputs <- function(type, transform, mapping, label, data, existin
 
   if (type == "heatmap" && !is.numeric(data[[mapping[["value"]]]])) {
     stop("addIoLayer(): Mapped field '", mapping[["value"]], "' must be numeric for type '", type, "'.", call. = FALSE)
+  }
+
+  if (type %in% c("raster", "image", "pointcloud")) {
+    keys <- switch(type,
+      raster = c("x_var", "y_var", "value", "shade"),
+      image = c("x_var", "y_var"),
+      pointcloud = c("x_var", "y_var", "z_var", "red", "green", "blue", "class", "sigma")
+    )
+    for (key in intersect(keys, names(mapping))) {
+      col <- mapping[[key]]
+      if (!col %in% colnames(data)) {
+        stop("addIoLayer(): Column '", col, "' not found in data. ",
+             "Available columns: ", paste(colnames(data), collapse = ", "), ".",
+             call. = FALSE)
+      }
+      if (!is.numeric(data[[col]])) {
+        stop("addIoLayer(): Mapped field '", col, "' must be numeric for type '", type, "'.", call. = FALSE)
+      }
+    }
   }
 
   if (type == "calendarHeatmap") {
