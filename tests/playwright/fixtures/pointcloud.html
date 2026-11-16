@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>myIO · Point cloud</title>
+<script src="/inst/htmlwidgets/lib/d3.min.js"></script><script src="/inst/htmlwidgets/myIO/myIOapi.js"></script><link rel="stylesheet" href="/inst/htmlwidgets/myIO/style.css">
+</head><body style="margin:0"><div id="cloud" style="width:900px;height:560px"></div>
+<script>
+// Test geometry: a 10 x 20 m sloped ground grid with a 2 m box on it,
+// 600,000 points, colored by position.
+var n = 600000, positions = new Uint16Array(n * 3), rgb = new Uint8Array(n * 3), cls = new Uint8Array(n), sigma = new Uint8Array(n);
+for (var i = 0; i < n; i++) {
+  var u = (i * 0.6180339887) % 1, v = (i * 0.7548776662) % 1, onBox = i % 5 === 0;
+  var x = onBox ? 4 + 2 * u : 10 * u, y = onBox ? 9 + 2 * v : 20 * v;
+  var z = onBox ? 0.2 * y / 20 * 3 + 2 * ((i * 0.5698402910) % 1) : 0.2 * y / 20 * 3;
+  positions[i * 3] = Math.round(x / 10 * 65535);
+  positions[i * 3 + 1] = Math.round(y / 20 * 65535);
+  positions[i * 3 + 2] = Math.round(z / 3 * 65535);
+  rgb[i * 3] = Math.round(u * 255); rgb[i * 3 + 1] = Math.round(v * 255); rgb[i * 3 + 2] = onBox ? 220 : 60;
+  cls[i] = onBox ? 6 : 2;
+  sigma[i] = onBox ? 90 : 60;
+}
+function b64(bytes) {
+  var s = "", step = 0x8000;
+  for (var k = 0; k < bytes.length; k += step) s += String.fromCharCode.apply(null, bytes.subarray(k, k + step));
+  return btoa(s);
+}
+var u8 = function(a) { return new Uint8Array(a.buffer, a.byteOffset, a.byteLength); };
+var layer = { id: 'pc', type: 'pointcloud', label: 'Point cloud', data: [], color: null,
+  mapping: { x_var: 'x', y_var: 'y', z_var: 'z' },
+  options: { n: n, bbox: [0, 10, 0, 20, 0, 3], positions: b64(u8(positions)), rgb: b64(rgb), cls: b64(cls), sigma: b64(sigma),
+    color: 'rgb', mode: '3d', pointSize: 2, classColors: { '2': '#8C6D31', '6': '#D55E00' }, classNames: { '2': 'Ground', '6': 'Building' },
+    caption: { shape: '±2.4 cm', shapeNote: 'within 5 m', map: '±3.8 m', mapNote: 'phone GPS' } },
+  transform: 'identity', transformMeta: {}, encoding: {}, sourceKey: '_source_key', derivedFrom: null, order: 1, visibility: true };
+var element = document.getElementById('cloud');
+window.chart = new myIOchart({ element: element, width: 900, height: 560, config: { specVersion: 2, layers: [layer],
+  layout: { margin: { top: 0, bottom: 0, left: 0, right: 0 }, suppressLegend: true, suppressAxis: { xAxis: true, yAxis: true } },
+  scales: { xlim: { min: null, max: null }, ylim: { min: null, max: null }, categoricalScale: { xAxis: false, yAxis: false }, flipAxis: false, colorScheme: { enabled: false, colors: [], domain: [] } },
+  axes: { xAxisFormat: 's', yAxisFormat: 's', toolTipFormat: 's' },
+  interactions: { dragPoints: false, toggleY: { variable: null, format: null }, toolTipOptions: { suppressY: false } },
+  theme: {}, transitions: { speed: 0 }, referenceLines: { x: null, y: null } } });
+window.ready = true;
+</script></body></html>

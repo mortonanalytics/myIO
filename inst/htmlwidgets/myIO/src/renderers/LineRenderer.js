@@ -51,7 +51,8 @@ export class LineRenderer {
       .attr("d", valueLine);
 
     var fittingTransforms = ["lm", "loess", "polynomial", "smooth"];
-    if (fittingTransforms.indexOf(layer.transform) === -1) {
+    var showPoints = !(layer.options && layer.options.showPoints === false);
+    if (showPoints && fittingTransforms.indexOf(layer.transform) === -1) {
       this.renderPoints(chart, layer);
     }
   }

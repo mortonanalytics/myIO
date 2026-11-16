@@ -4,10 +4,13 @@
 \alias{mydar_dashboard}
 \title{myDAR walk dashboard}
 \usage{
-mydar_dashboard(walk, profile = NULL, width = 0.5)
+mydar_dashboard(walk, points = NULL, profile = NULL, width = 0.5)
 }
 \arguments{
 \item{walk}{A \code{mydar_walk}.}
+
+\item{points}{If \code{TRUE} (default), draw the points (by class) over the
+orthophoto.}
 
 \item{profile}{Optional \code{list(from = c(x, y), to = c(x, y))} for the
 profile line. Default: across the track at its midpoint.}
@@ -20,10 +23,13 @@ A browsable \code{htmltools} tag list. Print it, return it from a
   Shiny \code{renderUI()}, or save it with \code{htmltools::save_html()}.
 }
 \description{
-Lays out the main \code{mydar_*_view()} charts for one walk on one page.
+Lays out a walk the way the myDAR app's Results screen does: the 3D point
+cloud and the plan view over the orthophoto first, both captioned with the
+walk's Shape and Map accuracy, then the profile, then the quality charts
+(map-position uncertainty, GPS residuals, point sigma, accuracy figures).
 Brushing points on the plan view highlights the same points on the profile.
-When the walk has GPS residuals, the GPS chart is added and shares a time
-cursor with the uncertainty chart.
+When the walk has GPS residuals, the GPS chart shares a time cursor with the
+uncertainty chart.
 }
 \examples{
 if (requireNamespace("htmltools", quietly = TRUE)) {

@@ -5,12 +5,15 @@
 #' myIO chart.
 #'
 #' \describe{
-#'   \item{\code{mydar_plan_view()}}{Points seen from above, one color per LAS
-#'     class, with the walk track, point features and, when \code{profile} is
-#'     given, the profile line. Where points crowd together the class color
-#'     reads darker, so the chart doubles as a point-density map.}
+#'   \item{\code{mydar_plan_view()}}{The walk from above: the orthophoto,
+#'     points colored by LAS class, the track, point features and, when
+#'     \code{profile} is given, the profile line, drawn to scale (equal
+#'     meters per pixel on both axes) with the walk's Shape and Map accuracy
+#'     as a caption.}
+#'   \item{\code{mydar_orthophoto_view()}}{The orthophoto alone, to scale,
+#'     with the track.}
 #'   \item{\code{mydar_terrain_view()}}{The DEM as a \code{"raster"} layer,
-#'     colored by height and, by default, shaded by a hillshade.}
+#'     colored by height and, by default, shaded by a hillshade, to scale.}
 #'   \item{\code{mydar_profile_view()}}{Points within \code{width} of the line
 #'     from \code{from} to \code{to}, plotted as height against distance along
 #'     the line, with the DEM height along the same line.}
@@ -30,6 +33,8 @@
 #' @param walk A \code{mydar_walk}.
 #' @param profile Optional \code{list(from = c(x, y), to = c(x, y))}; draws the
 #'   profile line on the plan view.
+#' @param points If \code{TRUE} (default), draw the points (by class) over the
+#'   orthophoto.
 #' @param from,to Profile line ends, each \code{c(x, y)} in the walk's
 #'   coordinates. When both are \code{NULL}, the line crosses the track at its
 #'   midpoint and spans the point cloud.
@@ -50,6 +55,7 @@
 #' @examples
 #' walk <- mydar_iphone_walk
 #' mydar_plan_view(walk)
+#' mydar_orthophoto_view(walk)
 #' mydar_terrain_view(walk)
 #' mydar_profile_view(walk)
 #' mydar_trajectory_view(walk)
@@ -64,19 +70,23 @@ NULL
 
 #' @rdname mydar_views
 #' @export
-mydar_plan_view <- function(walk, profile = NULL, height = "420px") {
+mydar_plan_view <- function(walk, profile = NULL, points = TRUE, height = "460px") {
   pts <- mydar_need(walk, "points", "mydar_plan_view")
+  check_flag(points, "points", "mydar_plan_view")
   pts <- pts[order(pts$class), , drop = FALSE]
-  colors <- mydar_class_colors(pts$class)
 
-  w <- myIO(title = "Plan view by class", height = height) |>
-    addIoLayer(type = "point", label = "points", data = pts, color = colors,
-               mapping = list(x_var = "x", y_var = "y", group = "class_name"))
+  w <- myIO(title = "Plan view", height = height)
+  w <- mydar_add_orthophoto(w, walk)
+  if (points) {
+    w <- addIoLayer(w, type = "point", label = "points", data = pts, color = mydar_class_colors(pts$class),
+                    mapping = list(x_var = "x", y_var = "y", group = "class_name"),
+                    options = list(pointRadius = 1.6, opacity = if (is.null(walk$orthophoto)) 1 else 0.7))
+  }
 
   if (!is.null(walk$track) && nrow(walk$track) > 1L) {
-    w <- addIoLayer(w, type = "line", label = "Track", data = walk$track, color = "#111827",
+    w <- addIoLayer(w, type = "line", label = "Track", data = walk$track, color = "#1d2430",
                     mapping = list(x_var = "x", y_var = "y"),
-                    options = list(curveType = "linear"))
+                    options = list(curveType = "linear", showPoints = FALSE))
   }
 
   feature_rows <- mydar_feature_points(walk)
@@ -90,12 +100,34 @@ mydar_plan_view <- function(walk, profile = NULL, height = "420px") {
     w <- addIoLayer(w, type = "line", label = "Profile line", color = "#0072B2",
                     data = data.frame(x = c(line$from[1], line$to[1]), y = c(line$from[2], line$to[2])),
                     mapping = list(x_var = "x", y_var = "y"),
-                    options = list(curveType = "linear"))
+                    options = list(curveType = "linear", showPoints = FALSE))
   }
 
-  w |>
-    setAxisLimits(xlim = mydar_square_limits(pts)$x, ylim = mydar_square_limits(pts)$y) |>
-    setAxisFormat(xAxis = ".1f", yAxis = ".1f",
+  mydar_add_caption(w, walk) |>
+    setEqualAspect() |>
+    setAxisFormat(xAxis = ".0f", yAxis = ".0f",
+                  xLabel = mydar_axis_label(walk, "x"), yLabel = mydar_axis_label(walk, "y"))
+}
+
+#' @rdname mydar_views
+#' @export
+mydar_orthophoto_view <- function(walk, height = "460px") {
+  if (!inherits(walk, "mydar_walk")) {
+    stop("mydar_orthophoto_view(): `walk` must be a mydar_walk from read_mydar_walk().", call. = FALSE)
+  }
+  if (is.null(walk$orthophoto)) {
+    stop("mydar_orthophoto_view(): this walk has no orthophoto.", call. = FALSE)
+  }
+  w <- mydar_add_orthophoto(myIO(title = "Orthophoto", height = height), walk)
+  if (!is.null(walk$track) && nrow(walk$track) > 1L) {
+    w <- addIoLayer(w, type = "line", label = "Track", data = walk$track, color = "#1d2430",
+                    mapping = list(x_var = "x", y_var = "y"),
+                    options = list(curveType = "linear", showPoints = FALSE))
+  }
+  mydar_add_caption(w, walk) |>
+    setEqualAspect() |>
+    suppressLegend() |>
+    setAxisFormat(xAxis = ".0f", yAxis = ".0f",
                   xLabel = mydar_axis_label(walk, "x"), yLabel = mydar_axis_label(walk, "y"))
 }
 
@@ -114,8 +146,8 @@ mydar_terrain_view <- function(walk, hillshade = TRUE, azimuth = 315, altitude =
 
   myIO(title = if (hillshade) "Terrain (DEM, hillshaded)" else "Terrain (DEM)", height = height) |>
     addIoLayer(type = "raster", label = "Height", data = terrain, mapping = mapping, options = options) |>
-    setAxisLimits(xlim = mydar_square_limits(terrain)$x, ylim = mydar_square_limits(terrain)$y) |>
-    setAxisFormat(xAxis = ".1f", yAxis = ".1f",
+    setEqualAspect() |>
+    setAxisFormat(xAxis = ".0f", yAxis = ".0f",
                   xLabel = mydar_axis_label(walk, "x"), yLabel = mydar_axis_label(walk, "y"))
 }
 
@@ -154,7 +186,7 @@ mydar_profile_view <- function(walk, from = NULL, to = NULL, width = 0.5, height
   if (!is.null(dem) && nrow(dem) > 1L) {
     w <- addIoLayer(w, type = "line", label = "DEM", data = dem, color = "#111827",
                     mapping = list(x_var = "distance", y_var = "z"),
-                    options = list(curveType = "linear"))
+                    options = list(curveType = "linear", showPoints = FALSE))
   }
 
   setAxisFormat(w, xAxis = ".1f", yAxis = ".2f", xLabel = "Distance along line (m)",
@@ -240,14 +272,100 @@ mydar_gps_view <- function(walk, height = "320px") {
   setAxisFormat(w, xAxis = ".1f", yAxis = ".2f", xLabel = "Time since start (s)", yLabel = "Residual (m)")
 }
 
+#' 3D view of a myDAR walk's point cloud
+#'
+#' Draws the cloud with WebGL (the \code{"pointcloud"} chart type): orbit,
+#' pan and zoom in 3D, or switch to a top-down 2D plan. Points can be colored
+#' by their camera color, class, height or sigma, with the orthophoto under
+#' them and the track over them. The walk's Shape and Map accuracy figures sit
+#' in a card on the view.
+#'
+#' Controls: drag to rotate (2D: pan), shift-drag or right-drag to pan, scroll
+#' or pinch to zoom, double-click to reset.
+#'
+#' @param walk A \code{mydar_walk}; its orthophoto, track and accuracy figures
+#'   are drawn with the cloud.
+#' @param points The points to draw. Defaults to \code{walk$points}; pass
+#'   \code{\link{mydar_iphone_cloud}()} or \code{\link{read_mydar_points}(path,
+#'   max_points = Inf)} for a denser cloud. Needs \code{x}, \code{y},
+#'   \code{z}; uses \code{r}/\code{g}/\code{b}, \code{class} and
+#'   \code{sigma_m} when present.
+#' @param color Starting color: \code{"rgb"} (camera color), \code{"class"},
+#'   \code{"height"} or \code{"sigma"}. The view's chips switch it.
+#' @param mode Starting view: \code{"3d"} or \code{"plan"}.
+#' @param point_size Smallest point size in pixels; points also grow to
+#'   cover about 2.5 cm on the ground so surfaces close up.
+#' @param ortho Draw the orthophoto under the points when the walk has one.
+#' @param height Widget height, a CSS size.
+#' @return A \code{myIO} widget.
+#' @examples
+#' mydar_cloud_view(mydar_iphone_walk)
+#' \donttest{
+#' mydar_cloud_view(mydar_iphone_walk, points = mydar_iphone_cloud(), color = "class")
+#' }
+#' @export
+mydar_cloud_view <- function(walk, points = NULL, color = c("rgb", "class", "height", "sigma"),
+                             mode = c("3d", "plan"), point_size = 2, ortho = TRUE, height = "560px") {
+  if (!inherits(walk, "mydar_walk")) {
+    stop("mydar_cloud_view(): `walk` must be a mydar_walk from read_mydar_walk().", call. = FALSE)
+  }
+  pts <- if (is.null(points)) mydar_need(walk, "points", "mydar_cloud_view") else points
+  if (!is.data.frame(pts) || !all(c("x", "y", "z") %in% names(pts)) || nrow(pts) == 0L) {
+    stop("mydar_cloud_view(): `points` must be a data frame with x, y and z.", call. = FALSE)
+  }
+  color <- match.arg(color)
+  mode <- match.arg(mode)
+  check_flag(ortho, "ortho", "mydar_cloud_view")
+  if (!is.numeric(point_size) || length(point_size) != 1L || !is.finite(point_size) || point_size <= 0) {
+    stop("mydar_cloud_view(): `point_size` must be a single positive number.", call. = FALSE)
+  }
+
+  mapping <- list(x_var = "x", y_var = "y", z_var = "z")
+  if (all(c("r", "g", "b") %in% names(pts))) mapping <- c(mapping, list(red = "r", green = "g", blue = "b"))
+  if ("class" %in% names(pts)) mapping$class <- "class"
+  if ("sigma_m" %in% names(pts)) mapping$sigma <- "sigma_m"
+  if (color == "rgb" && is.null(mapping$red)) color <- "class"
+
+  present <- MYDAR_CLASSES[MYDAR_CLASSES$class %in% unique(pts$class), , drop = FALSE]
+  options <- list(
+    color = color, mode = if (mode == "plan") "plan" else "3d", pointSize = point_size,
+    classColors = as.list(stats::setNames(present$color, present$class)),
+    classNames = as.list(stats::setNames(present$class_name, present$class)),
+    caption = mydar_caption(walk)
+  )
+  if (!is.null(walk$track) && nrow(walk$track) > 1L) {
+    tr <- walk$track[is.finite(walk$track$x) & is.finite(walk$track$z), , drop = FALSE]
+    options$track <- lapply(seq_len(nrow(tr)), function(i) c(tr$x[i], tr$y[i], tr$z[i]))
+  }
+  if (ortho && !is.null(walk$orthophoto)) {
+    ground <- if (!is.null(walk$terrain)) min(walk$terrain$z, na.rm = TRUE) else min(pts$z, na.rm = TRUE)
+    e <- walk$orthophoto$extent
+    options$ortho <- list(
+      src = paste0("data:image/png;base64,", jsonlite::base64_enc(walk$orthophoto$png)),
+      extent = unname(c(e[["xmin"]], e[["xmax"]], e[["ymin"]], e[["ymax"]])),
+      z = ground - 0.02
+    )
+  }
+
+  myIO(height = height) |>
+    addIoLayer(type = "pointcloud", label = "Point cloud", data = pts, mapping = mapping, options = options) |>
+    setMargin(top = 0, bottom = 0, left = 0, right = 0) |>
+    suppressAxis(xAxis = TRUE, yAxis = TRUE) |>
+    suppressLegend()
+}
+
 #' myDAR walk dashboard
 #'
-#' Lays out the main \code{mydar_*_view()} charts for one walk on one page.
+#' Lays out a walk the way the myDAR app's Results screen does: the 3D point
+#' cloud and the plan view over the orthophoto first, both captioned with the
+#' walk's Shape and Map accuracy, then the profile, then the quality charts
+#' (map-position uncertainty, GPS residuals, point sigma, accuracy figures).
 #' Brushing points on the plan view highlights the same points on the profile.
-#' When the walk has GPS residuals, the GPS chart is added and shares a time
-#' cursor with the uncertainty chart.
+#' When the walk has GPS residuals, the GPS chart shares a time cursor with the
+#' uncertainty chart.
 #'
 #' @inheritParams mydar_views
+#' @inheritParams mydar_cloud_view
 #' @param profile Optional \code{list(from = c(x, y), to = c(x, y))} for the
 #'   profile line. Default: across the track at its midpoint.
 #'
@@ -258,13 +376,13 @@ mydar_gps_view <- function(walk, height = "320px") {
 #'   mydar_dashboard(mydar_iphone_walk)
 #' }
 #' @export
-mydar_dashboard <- function(walk, profile = NULL, width = 0.5) {
+mydar_dashboard <- function(walk, points = NULL, profile = NULL, width = 0.5) {
   mydar_require("htmltools", "mydar_dashboard")
   if (is.null(profile)) profile <- mydar_default_profile(walk)
   line <- mydar_check_line(profile$from, profile$to, "mydar_dashboard")
 
   linked_space <- linkCharts(
-    mydar_plan_view(walk, profile = line) |> setBrush(),
+    mydar_plan_view(walk, profile = line, height = "520px") |> setBrush(),
     mydar_profile_view(walk, from = line$from, to = line$to, width = width),
     on = "point_id", group = paste0("mydar_points_", new_chart_id())
   )
@@ -280,24 +398,33 @@ mydar_dashboard <- function(walk, profile = NULL, width = 0.5) {
   cell <- function(widget, wide = FALSE) {
     htmltools::tags$div(class = if (wide) "mydar-cell mydar-wide" else "mydar-cell", widget)
   }
-  cells <- list(cell(linked_space[[1]]))
-  if (!is.null(walk$terrain)) cells <- c(cells, list(cell(mydar_terrain_view(walk))))
-  cells <- c(cells, list(
-    cell(linked_space[[2]], wide = TRUE),
+  heading <- function(text) htmltools::tags$h3(class = "mydar-heading", text)
+  quality <- list(
     cell(time_charts[[1]]),
     if (has_gps) cell(time_charts[[2]]),
     cell(mydar_sigma_view(walk)),
     cell(mydar_accuracy_view(walk))
-  ))
+  )
+  if (!is.null(walk$terrain)) quality <- c(quality, list(cell(mydar_terrain_view(walk))))
 
   htmltools::browsable(htmltools::tagList(
     htmltools::tags$style(htmltools::HTML(paste(
       ".mydar-dashboard { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }",
       ".mydar-cell { min-width: 0; }",
       ".mydar-wide { grid-column: 1 / -1; }",
+      ".mydar-heading { grid-column: 1 / -1; margin: 12px 0 0; font: 600 18px/1.3 system-ui, sans-serif; color: #1d2430; }",
       "@media (max-width: 800px) { .mydar-dashboard { grid-template-columns: minmax(0, 1fr); } }"
     ))),
-    htmltools::tags$div(class = "mydar-dashboard", cells)
+    htmltools::tags$div(
+      class = "mydar-dashboard",
+      heading("Map"),
+      cell(mydar_cloud_view(walk, points = points, height = "520px")),
+      cell(linked_space[[1]]),
+      heading("Profile"),
+      cell(linked_space[[2]], wide = TRUE),
+      heading("Quality"),
+      quality
+    )
   ))
 }
 
@@ -331,17 +458,6 @@ mydar_axis_label <- function(walk, axis) {
 mydar_is_local <- function(walk, axis) {
   o <- walk$origin[axis]
   length(o) == 1L && !is.null(names(o)) && !is.na(names(o)) && (is.na(o) || o != 0)
-}
-
-# Equal x and y spans about the data's center, so a square plot keeps meters
-# square.
-mydar_square_limits <- function(df) {
-  xr <- range(df$x, na.rm = TRUE)
-  yr <- range(df$y, na.rm = TRUE)
-  half <- max(diff(xr), diff(yr)) / 2 * 1.05 + 0.1
-  cx <- mean(xr)
-  cy <- mean(yr)
-  list(x = list(min = cx - half, max = cx + half), y = list(min = cy - half, max = cy + half))
 }
 
 mydar_feature_points <- function(walk) {
@@ -461,4 +577,60 @@ mydar_accuracy_figures <- function(walk) {
   out <- spec[is.finite(spec$value_m), c("figure", "kind", "value_m"), drop = FALSE]
   rownames(out) <- NULL
   out
+}
+
+# The orthophoto as an "image" layer spanning its extent.
+mydar_add_orthophoto <- function(w, walk) {
+  o <- walk$orthophoto
+  if (is.null(o)) return(w)
+  e <- o$extent
+  addIoLayer(w, type = "image", label = "Orthophoto",
+             data = data.frame(x = c(e[["xmin"]], e[["xmax"]]), y = c(e[["ymin"]], e[["ymax"]])),
+             mapping = list(x_var = "x", y_var = "y"),
+             options = list(src = paste0("data:image/png;base64,", jsonlite::base64_enc(o$png))))
+}
+
+# The walk's two accuracy figures, the way the myDAR app states them: Shape in
+# centimeters, Map position in meters, never merged into one number.
+mydar_caption <- function(walk) {
+  acc <- walk$accuracy
+  num <- function(col) if (!is.null(acc) && col %in% names(acc)) suppressWarnings(as.numeric(acc[[col]][1])) else NA_real_
+  cm <- function(m) {
+    v <- m * 100
+    paste0("\u00b1", if (v < 10) formatC(v, format = "f", digits = 1) else formatC(round(v), format = "d"), " cm")
+  }
+  meters <- function(m) paste0("\u00b1", if (m < 10) formatC(m, format = "f", digits = 1) else formatC(round(m), format = "d"), " m")
+  out <- list()
+  shape <- num("shape_95_within_5m_m")
+  if (is.finite(shape)) {
+    out$shape <- cm(shape)
+    note <- "within 5 m"
+    far <- num("shape_95_5_to_15m_m")
+    withheld <- c(num("shape_95_5_to_10m_withheld_m"), num("shape_95_10_to_15m_withheld_m"))
+    if (is.finite(far)) {
+      note <- paste0(note, " \u00b7 ", cm(far), " at 5\u201315 m")
+    } else if (any(is.finite(withheld))) {
+      note <- paste0(note, " \u00b7 5\u201315 m withheld")
+    }
+    out$shapeNote <- note
+  }
+  map <- num("map_95_m")
+  if (is.finite(map)) {
+    pins <- num("pins_used")
+    out$map <- if (is.finite(pins) && pins > 0 && map < 1) cm(map) else meters(map)
+    basis <- if (!is.null(acc) && "map_basis" %in% names(acc)) as.character(acc$map_basis[1]) else NA_character_
+    out$mapNote <- if (is.finite(pins) && pins > 0) paste0(basis, ", ", pins, if (pins == 1) " pin" else " pins") else basis
+    if (is.na(out$mapNote)) out$mapNote <- NULL
+  }
+  out
+}
+
+# Caption text in the plot's top-left corner: "Shape ±N cm" and "Map ±N m".
+mydar_add_caption <- function(w, walk) {
+  cap <- mydar_caption(walk)
+  lines <- c(if (!is.null(cap$shape)) paste("Shape", cap$shape), if (!is.null(cap$map)) paste("Map", cap$map))
+  if (length(lines) == 0L) return(w)
+  addIoLayer(w, type = "text", label = "Accuracy", data = data.frame(text = lines, stringsAsFactors = FALSE),
+             mapping = list(x_var = "text", y_var = "text"),
+             options = list(position = "top-left"))
 }

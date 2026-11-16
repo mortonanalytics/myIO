@@ -3,6 +3,7 @@ agg
 Airgap
 airgapped
 Analytics
+autodar
 beeswarm
 BH
 bigdata
@@ -46,6 +47,8 @@ echarts
 flexdashboard
 geoms
 GeoPackage
+georeference
+georeferenced
 ggiraph
 ggplot
 ggplotly
@@ -78,6 +81,7 @@ Keyframe
 Keyframes
 keyframes
 LiDAR
+LiDAR's
 Lifecycle
 linkable
 LLM
@@ -100,6 +104,8 @@ nrd
 OHLC
 Okabe
 Ollama
+orthophoto
+orthophotos
 param
 plotly
 plotly's

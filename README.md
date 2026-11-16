@@ -8,7 +8,7 @@
 
 # myIO
 
-An R package for creating interactive `d3.js` visualizations using `htmlwidgets`. Supports 38 chart types including scatter plots, line charts, uncertainty views, statistical composites, and more — all composable through a piped API.
+An R package for creating interactive `d3.js` visualizations using `htmlwidgets`. Supports 40 chart types including scatter plots, line charts, uncertainty views, statistical composites, and more — all composable through a piped API.
 
 [Live Demo](https://www.morton-analytics.com/myio/)
 

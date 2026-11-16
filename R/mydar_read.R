@@ -5,13 +5,14 @@
 #' output directory; the other functions read one file each.
 #'
 #' A walk directory holds \code{walk.copc.laz} (the point cloud),
-#' \code{terrain.tif} (the DEM), \code{walk.gpkg} (track, GPS fixes, pins,
+#' \code{terrain.tif} (the DEM), \code{orthophoto.tif}, \code{walk.gpkg} (track, GPS fixes, pins,
 #' features and the \code{accuracy} table) and \code{trajectory.csv} (the
 #' device poses). Walks recorded without LiDAR have no point cloud or DEM;
 #' those parts of the result are \code{NULL}.
 #'
 #' The readers need packages that myIO does not install: \pkg{rlas} for the
-#' point cloud, \pkg{terra} for the DEM and \pkg{sf} for the GeoPackage.
+#' point cloud, \pkg{terra} for the DEM and orthophoto and \pkg{sf} for the
+#' GeoPackage.
 #'
 #' @param dir Path to a walk output directory.
 #' @param path Path to one walk file.
@@ -34,8 +35,9 @@
 #'     \item{points}{One row per kept point: \code{point_id} (row in the file),
 #'       \code{x}, \code{y}, \code{z}, \code{class} (LAS code),
 #'       \code{class_name}, \code{sigma_m} (the file's per-point 1-sigma, per
-#'       axis, in meters) and \code{source} (\code{"LiDAR"} or
-#'       \code{"camera"}).}
+#'       axis, in meters), \code{source} (\code{"LiDAR"} or
+#'       \code{"camera"}) and, when the cloud is colored, \code{r}, \code{g},
+#'       \code{b} (0-255).}
 #'     \item{terrain}{One row per DEM cell with a height: \code{x}, \code{y}
 #'       (cell center) and \code{z}. Attribute \code{cell_size} holds the
 #'       cell width and height.}
@@ -51,6 +53,9 @@
 #'       per vertex (\code{fid}, \code{vertex}, \code{x}, \code{y}, \code{z}
 #'       and the layer's attributes).}
 #'     \item{accuracy}{The one-row \code{accuracy} table.}
+#'     \item{orthophoto}{From \code{orthophoto.tif}: \code{png}, the image
+#'       as PNG bytes with no georeference or metadata, and \code{extent},
+#'       \code{c(xmin, xmax, ymin, ymax)} in the walk's coordinates.}
 #'     \item{trajectory}{Poses from \code{trajectory.csv} with \code{t_s}
 #'       (seconds from the first pose).}
 #'     \item{crs}{The project CRS, e.g. \code{"EPSG:32612"}.}
@@ -88,6 +93,7 @@ read_mydar_walk <- function(dir, max_points = 20000, max_cells = 40000, local = 
   laz <- file_in("walk.copc.laz")
   dem <- file_in("terrain.tif")
   traj <- file_in("trajectory.csv")
+  ortho <- file_in("orthophoto.tif")
 
   walk <- c(
     list(
@@ -97,6 +103,7 @@ read_mydar_walk <- function(dir, max_points = 20000, max_cells = 40000, local = 
     gpkg,
     list(
       trajectory = if (!is.null(traj)) read_mydar_trajectory(traj),
+      orthophoto = if (!is.null(ortho)) read_mydar_orthophoto(ortho),
       crs = if (nrow(gpkg$accuracy) > 0 && "crs" %in% names(gpkg$accuracy)) gpkg$accuracy$crs[[1]] else NA_character_,
       origin = c(x = 0, y = 0, z = 0)
     )
@@ -120,7 +127,7 @@ read_mydar_points <- function(path, max_points = 20000) {
 
   # myDAR flags camera points synthetic (LAS bit) by design; rlas warns about it.
   las <- withCallingHandlers(
-    rlas::read.las(path, select = "xyzc0"),
+    rlas::read.las(path, select = "xyzcRGB0"),
     warning = function(w) {
       if (grepl("flagged 'synthetic'", conditionMessage(w), fixed = TRUE)) {
         invokeRestart("muffleWarning")
@@ -147,6 +154,13 @@ read_mydar_points <- function(path, max_points = 20000) {
     source = ifelse(las$source[keep] == 1L, "camera", "LiDAR"),
     stringsAsFactors = FALSE
   )
+  if (all(c("R", "G", "B") %in% names(las))) {
+    # LAS stores 16-bit color; scale to 0-255 unless the file wrote 8-bit.
+    k <- if (max(las$R, las$G, las$B, na.rm = TRUE) > 255) 257 else 1
+    points$r <- as.integer(round(las$R[keep] / k))
+    points$g <- as.integer(round(las$G[keep] / k))
+    points$b <- as.integer(round(las$B[keep] / k))
+  }
   attr(points, "n_total") <- n
   points
 }
@@ -171,6 +185,37 @@ read_mydar_terrain <- function(path, max_cells = 40000) {
   rownames(terrain) <- NULL
   attr(terrain, "cell_size") <- as.numeric(terra::res(r))
   terrain
+}
+
+#' @rdname read_mydar_walk
+#' @param max_pixels Most orthophoto pixels to keep; a larger image is
+#'   averaged down by the smallest whole factor that fits.
+#' @export
+read_mydar_orthophoto <- function(path, max_pixels = 4e6) {
+  mydar_require("terra", "read_mydar_orthophoto")
+  mydar_check_file(path, "read_mydar_orthophoto")
+  r <- terra::rast(path)
+  if (terra::nlyr(r) < 3) {
+    stop("read_mydar_orthophoto(): ", path, " needs RGB or RGBA bands.", call. = FALSE)
+  }
+  factor <- ceiling(sqrt(terra::ncell(r) / max_pixels))
+  if (factor > 1) r <- terra::aggregate(r, fact = factor, fun = "mean", na.rm = TRUE)
+  e <- unname(as.vector(terra::ext(r)))
+  # Rewrite the pixels as a plain PNG: a fresh raster with no CRS and a unit
+  # extent, then keep only the PNG chunks that hold pixels, so no
+  # georeference or metadata travels with the image.
+  vals <- terra::values(r)
+  vals[is.na(vals)] <- 0
+  plain <- terra::rast(nrows = terra::nrow(r), ncols = terra::ncol(r), nlyrs = terra::nlyr(r),
+                       xmin = 0, xmax = terra::ncol(r), ymin = 0, ymax = terra::nrow(r), crs = "")
+  terra::values(plain) <- pmin(255, pmax(0, round(vals)))
+  png_path <- tempfile(fileext = ".png")
+  on.exit(unlink(list.files(dirname(png_path), paste0("^", basename(png_path)), full.names = TRUE)), add = TRUE)
+  terra::writeRaster(plain, png_path, filetype = "PNG", datatype = "INT1U", overwrite = TRUE,
+                     gdal = c("WORLDFILE=NO"))
+  png <- mydar_png_pixels_only(readBin(png_path, "raw", file.size(png_path)))
+  list(png = png, extent = c(xmin = e[1], xmax = e[2], ymin = e[3], ymax = e[4]),
+       size = c(width = terra::ncol(r), height = terra::nrow(r)))
 }
 
 #' @rdname read_mydar_walk
@@ -235,6 +280,9 @@ print.mydar_walk <- function(x, ...) {
   cat("  gps_fixes:    ", rows(x$gps_fixes), "\n", sep = "")
   cat("  features:     ", if (length(x$features)) paste(names(x$features), collapse = ", ") else "none", "\n", sep = "")
   cat("  trajectory:   ", rows(x$trajectory), " poses\n", sep = "")
+  if (!is.null(x$orthophoto)) {
+    cat("  orthophoto:   ", x$orthophoto$size[["width"]], " x ", x$orthophoto$size[["height"]], " px\n", sep = "")
+  }
   if (anyNA(x$origin)) {
     cat("  local coordinates (origin withheld)\n")
   } else if (any(x$origin != 0)) {
@@ -339,8 +387,44 @@ mydar_shift_local <- function(walk) {
     for (a in names(keep)) if (!is.null(keep[[a]])) attr(df, a) <- keep[[a]]
     df
   }
+  if (!is.null(walk$orthophoto)) {
+    walk$orthophoto$extent <- walk$orthophoto$extent - origin[c("x", "x", "y", "y")]
+  }
   for (name in spatial) walk[[name]] <- shift(walk[[name]])
   walk$features <- lapply(walk$features, shift)
   walk$origin <- origin
   walk
+}
+
+# Keeps only the PNG chunks that carry pixels (IHDR, PLTE, tRNS, IDAT, IEND),
+# dropping text, time, physical-size and any other metadata chunks.
+mydar_png_pixels_only <- function(png) {
+  signature <- as.raw(c(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a))
+  if (length(png) < 8 || !identical(png[1:8], signature)) {
+    stop("not a PNG file", call. = FALSE)
+  }
+  keep <- c("IHDR", "PLTE", "tRNS", "IDAT", "IEND")
+  out <- list(signature)
+  i <- 9L
+  while (i + 7L <= length(png)) {
+    len <- sum(as.integer(png[i:(i + 3L)]) * 256^(3:0))
+    type <- rawToChar(png[(i + 4L):(i + 7L)])
+    end <- i + 11L + len
+    if (type %in% keep) out[[length(out) + 1L]] <- png[i:end]
+    i <- end + 1L
+    if (type == "IEND") break
+  }
+  unlist(out)
+}
+
+# PNG chunk types in order, for checks.
+mydar_png_chunks <- function(png) {
+  types <- character(0)
+  i <- 9L
+  while (i + 7L <= length(png)) {
+    len <- sum(as.integer(png[i:(i + 3L)]) * 256^(3:0))
+    types <- c(types, rawToChar(png[(i + 4L):(i + 7L)]))
+    i <- i + 12L + len
+  }
+  types
 }

@@ -3,6 +3,7 @@
 \name{mydar_views}
 \alias{mydar_views}
 \alias{mydar_plan_view}
+\alias{mydar_orthophoto_view}
 \alias{mydar_terrain_view}
 \alias{mydar_profile}
 \alias{mydar_profile_view}
@@ -12,7 +13,9 @@
 \alias{mydar_gps_view}
 \title{Plot a myDAR walk}
 \usage{
-mydar_plan_view(walk, profile = NULL, height = "420px")
+mydar_plan_view(walk, profile = NULL, points = TRUE, height = "460px")
+
+mydar_orthophoto_view(walk, height = "460px")
 
 mydar_terrain_view(
   walk,
@@ -39,6 +42,9 @@ mydar_gps_view(walk, height = "320px")
 
 \item{profile}{Optional \code{list(from = c(x, y), to = c(x, y))}; draws the
 profile line on the plan view.}
+
+\item{points}{If \code{TRUE} (default), draw the points (by class) over the
+orthophoto.}
 
 \item{height}{Widget height, a CSS size.}
 
@@ -68,12 +74,15 @@ myIO chart.
 }
 \details{
 \describe{
-  \item{\code{mydar_plan_view()}}{Points seen from above, one color per LAS
-    class, with the walk track, point features and, when \code{profile} is
-    given, the profile line. Where points crowd together the class color
-    reads darker, so the chart doubles as a point-density map.}
+  \item{\code{mydar_plan_view()}}{The walk from above: the orthophoto,
+    points colored by LAS class, the track, point features and, when
+    \code{profile} is given, the profile line, drawn to scale (equal
+    meters per pixel on both axes) with the walk's Shape and Map accuracy
+    as a caption.}
+  \item{\code{mydar_orthophoto_view()}}{The orthophoto alone, to scale,
+    with the track.}
   \item{\code{mydar_terrain_view()}}{The DEM as a \code{"raster"} layer,
-    colored by height and, by default, shaded by a hillshade.}
+    colored by height and, by default, shaded by a hillshade, to scale.}
   \item{\code{mydar_profile_view()}}{Points within \code{width} of the line
     from \code{from} to \code{to}, plotted as height against distance along
     the line, with the DEM height along the same line.}
@@ -93,6 +102,7 @@ myIO chart.
 \examples{
 walk <- mydar_iphone_walk
 mydar_plan_view(walk)
+mydar_orthophoto_view(walk)
 mydar_terrain_view(walk)
 mydar_profile_view(walk)
 mydar_trajectory_view(walk)

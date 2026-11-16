@@ -328,35 +328,45 @@ ui <- page_navbar(
   nav_panel("myDAR walk",
     icon = icon("route"),
     p(class = "text-muted mt-3",
-      "A real outdoor walk recorded with the myDAR iPhone app and processed with the myDAR CLI:",
-      "LiDAR points with their classes, the DEM, the track, GPS fixes and the accuracy figures.",
-      "Shown in local coordinates only: meters from the walk's south-west corner, heights above the lowest ground cell.",
-      "6,000 of the walk's 887,038 points are shown. Brush an empty part of the plan view to find the same points on the profile;",
-      "hover either time chart to line up a moment on both."),
-    layout_columns(
-      col_widths = breakpoints(sm = 12, lg = c(6, 6)),
-      chart_card("Plan view by class", myIOOutput("mydarPlan", height = "460px")),
-      chart_card("Terrain (DEM, hillshaded)", myIOOutput("mydarTerrain", height = "460px"))
-    ),
-    layout_columns(
-      col_widths = 12,
-      chart_card("Profile across the walk",
-        myIOOutput("mydarProfile", height = "360px"),
-        controls = tagList(
-          sliderInput("mydar_bearing", "Line bearing (degrees from north)", min = 0, max = 175, value = 90, step = 5, width = "100%"),
-          sliderInput("mydar_offset", "Shift along the track (m)", min = -8, max = 8, value = 0, step = 0.5, width = "100%"),
-          sliderInput("mydar_width", "Corridor width (m)", min = 0.1, max = 2, value = 0.5, step = 0.1, width = "100%")
-        ))
-    ),
-    layout_columns(
-      col_widths = breakpoints(sm = 12, lg = c(6, 6)),
-      chart_card("Map position uncertainty", myIOOutput("mydarTrajectory", height = "320px")),
-      chart_card("GPS residuals", myIOOutput("mydarGps", height = "320px"))
-    ),
-    layout_columns(
-      col_widths = breakpoints(sm = 12, lg = c(6, 6)),
-      chart_card("Point sigma by source", myIOOutput("mydarSigma", height = "320px")),
-      chart_card("Accuracy figures", myIOOutput("mydarAccuracy", height = "320px"))
+      "A real outdoor walk recorded with the myDAR iPhone app and processed with the myDAR CLI,",
+      "shown in local coordinates only: meters from the walk's south-west corner, heights above the lowest ground cell.",
+      "The 3D view draws 500,000 of the walk's 887,038 points; switch it to 2D, or color it by class, height or sigma."),
+    navset_card_underline(
+      id = "mydar_tab",
+      nav_panel("Map and profile",
+        layout_columns(
+          col_widths = breakpoints(sm = 12, lg = c(7, 5)),
+          card(full_screen = TRUE, card_header("Point cloud"),
+            card_body(padding = 0, myIOOutput("mydarCloud", height = "560px"))),
+          card(full_screen = TRUE, card_header("Plan view over the orthophoto"),
+            card_body(myIOOutput("mydarPlan", height = "520px")))
+        ),
+        chart_card("Profile across the walk",
+          p(class = "small text-muted", "Brush an empty part of the plan view to find the same points here."),
+          myIOOutput("mydarProfile", height = "380px"),
+          controls = tagList(
+            sliderInput("mydar_bearing", "Line bearing (degrees from north)", min = 0, max = 175, value = 90, step = 5, width = "100%"),
+            sliderInput("mydar_offset", "Shift along the track (m)", min = -8, max = 8, value = 0, step = 0.5, width = "100%"),
+            sliderInput("mydar_width", "Corridor width (m)", min = 0.1, max = 2, value = 0.5, step = 0.1, width = "100%")
+          ))
+      ),
+      nav_panel("Quality",
+        p(class = "small text-muted mt-2", "Hover either time chart to line up a moment on both."),
+        layout_columns(
+          col_widths = breakpoints(sm = 12, lg = c(6, 6)),
+          chart_card("Map position uncertainty", myIOOutput("mydarTrajectory", height = "320px")),
+          chart_card("GPS residuals", myIOOutput("mydarGps", height = "320px"))
+        ),
+        layout_columns(
+          col_widths = breakpoints(sm = 12, lg = c(6, 6)),
+          chart_card("Point sigma by source", myIOOutput("mydarSigma", height = "320px")),
+          chart_card("Accuracy figures", myIOOutput("mydarAccuracy", height = "320px"))
+        ),
+        layout_columns(
+          col_widths = breakpoints(sm = 12, lg = 6),
+          chart_card("Terrain (DEM, hillshaded)", myIOOutput("mydarTerrain", height = "420px"))
+        )
+      )
     )
   ),
 
@@ -894,15 +904,16 @@ server <- function(input, output, session) {
     validate(need(nrow(mydar_profile(mydar_walk, line$from, line$to, input$mydar_width)) > 0,
                   "No points within the corridor here; widen it or move the line."))
     linkCharts(
-      mydar_plan_view(mydar_walk, profile = line, height = "460px") |> setBrush(),
+      mydar_plan_view(mydar_walk, profile = line, height = "520px") |> setBrush(),
       mydar_profile_view(mydar_walk, from = line$from, to = line$to, width = input$mydar_width),
       on = "point_id", group = "mydar_points"
     )
   })
 
+  output$mydarCloud <- renderMyIO(mydar_cloud_view(mydar_walk, points = mydar_iphone_cloud(), height = "560px"))
   output$mydarPlan <- renderMyIO(mydar_space()[[1]])
   output$mydarProfile <- renderMyIO(mydar_space()[[2]])
-  output$mydarTerrain <- renderMyIO(mydar_terrain_view(mydar_walk, height = "460px"))
+  output$mydarTerrain <- renderMyIO(mydar_terrain_view(mydar_walk, height = "420px"))
   mydar_time <- linkCharts(mydar_trajectory_view(mydar_walk), mydar_gps_view(mydar_walk),
                            on = "t_s", group = "mydar_time", cursor = TRUE)
   output$mydarTrajectory <- renderMyIO(mydar_time[[1]])

@@ -1,6 +1,6 @@
 import { getRendererForLayer } from "../registry.js";
 import { createHoverOverlay, hideChartTooltip, removeHoverOverlay, showChartTooltip } from "../tooltip.js";
-import { pointRadius, resolveColor, tagName } from "../utils/responsive.js";
+import { layerPointRadius, resolveColor, tagName } from "../utils/responsive.js";
 import { maybeEmitCursor, maybeClearCursor } from "./linked-cursor.js";
 
 const HOVER_TRANSITION_MS = 300;
@@ -246,7 +246,7 @@ export function bindRollover(chart, layers) {
       .style("stroke-opacity", null);
 
     if (layer.type === "point") {
-      selection.transition().duration(HOVER_TRANSITION_MS).attr("r", pointRadius(that));
+      selection.transition().duration(HOVER_TRANSITION_MS).attr("r", layerPointRadius(that, layer));
     }
   }
 

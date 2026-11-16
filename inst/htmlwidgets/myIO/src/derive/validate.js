@@ -12,6 +12,8 @@ const COMPAT_GROUP = {
   histogram: "axes-binned",
   heatmap: "axes-matrix",
   raster: "axes-continuous",
+  image: "axes-continuous",
+  pointcloud: "standalone-pointcloud",
   candlestick: "axes-continuous",
   waterfall: "axes-categorical",
   ridgeline: "axes-binned",

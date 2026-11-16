@@ -4,6 +4,7 @@
 \alias{read_mydar_walk}
 \alias{read_mydar_points}
 \alias{read_mydar_terrain}
+\alias{read_mydar_orthophoto}
 \alias{read_mydar_gpkg}
 \alias{read_mydar_trajectory}
 \title{Read a myDAR walk}
@@ -13,6 +14,8 @@ read_mydar_walk(dir, max_points = 20000, max_cells = 40000, local = TRUE)
 read_mydar_points(path, max_points = 20000)
 
 read_mydar_terrain(path, max_cells = 40000)
+
+read_mydar_orthophoto(path, max_pixels = 4e+06)
 
 read_mydar_gpkg(path)
 
@@ -38,6 +41,9 @@ point when the walk has no DEM. The subtracted origin is kept in
 of the first GPS fix) and is left as written.}
 
 \item{path}{Path to one walk file.}
+
+\item{max_pixels}{Most orthophoto pixels to keep; a larger image is
+averaged down by the smallest whole factor that fits.}
 }
 \value{
 \code{read_mydar_walk()} returns a \code{mydar_walk} list with
@@ -45,8 +51,9 @@ of the first GPS fix) and is left as written.}
     \item{points}{One row per kept point: \code{point_id} (row in the file),
       \code{x}, \code{y}, \code{z}, \code{class} (LAS code),
       \code{class_name}, \code{sigma_m} (the file's per-point 1-sigma, per
-      axis, in meters) and \code{source} (\code{"LiDAR"} or
-      \code{"camera"}).}
+      axis, in meters), \code{source} (\code{"LiDAR"} or
+      \code{"camera"}) and, when the cloud is colored, \code{r}, \code{g},
+      \code{b} (0-255).}
     \item{terrain}{One row per DEM cell with a height: \code{x}, \code{y}
       (cell center) and \code{z}. Attribute \code{cell_size} holds the
       cell width and height.}
@@ -62,6 +69,9 @@ of the first GPS fix) and is left as written.}
       per vertex (\code{fid}, \code{vertex}, \code{x}, \code{y}, \code{z}
       and the layer's attributes).}
     \item{accuracy}{The one-row \code{accuracy} table.}
+    \item{orthophoto}{From \code{orthophoto.tif}: \code{png}, the image
+      as PNG bytes with no georeference or metadata, and \code{extent},
+      \code{c(xmin, xmax, ymin, ymax)} in the walk's coordinates.}
     \item{trajectory}{Poses from \code{trajectory.csv} with \code{t_s}
       (seconds from the first pose).}
     \item{crs}{The project CRS, e.g. \code{"EPSG:32612"}.}
@@ -77,13 +87,14 @@ output directory; the other functions read one file each.
 }
 \details{
 A walk directory holds \code{walk.copc.laz} (the point cloud),
-\code{terrain.tif} (the DEM), \code{walk.gpkg} (track, GPS fixes, pins,
+\code{terrain.tif} (the DEM), \code{orthophoto.tif}, \code{walk.gpkg} (track, GPS fixes, pins,
 features and the \code{accuracy} table) and \code{trajectory.csv} (the
 device poses). Walks recorded without LiDAR have no point cloud or DEM;
 those parts of the result are \code{NULL}.
 
 The readers need packages that myIO does not install: \pkg{rlas} for the
-point cloud, \pkg{terra} for the DEM and \pkg{sf} for the GeoPackage.
+point cloud, \pkg{terra} for the DEM and orthophoto and \pkg{sf} for the
+GeoPackage.
 }
 \examples{
 \dontrun{

@@ -30,12 +30,12 @@ types like treemap or gauge cannot be mixed with other types.
 
 | Group | Types |
 |-------|-------|
-| Continuous axes | `line`, `point`, `area`, `candlestick`, `bracket`, `qq`, `raster` |
+| Continuous axes | `line`, `point`, `area`, `candlestick`, `bracket`, `qq`, `raster`, `image` |
 | Categorical axes | `bar`, `groupedBar`, `waterfall`, `boxplot`, `violin`, `comparison` |
 | Binned axes | `histogram`, `ridgeline` |
 | Matrix axes | `heatmap` |
 | Calendar | `calendarHeatmap` |
-| Standalone | `hexbin`, `treemap`, `donut`, `gauge`, `sankey` |
+| Standalone | `hexbin`, `treemap`, `donut`, `gauge`, `sankey`, `pointcloud` |
 
 Continuous, categorical, and binned groups can be combined with each other.
 Matrix and standalone groups cannot be mixed with other groups.
@@ -242,6 +242,46 @@ myIO() |>
 
 `mydar_terrain_view()` uses it for myDAR walk DEMs; see
 `vignette("mydar-walks")`.
+
+### Image
+
+An image layer stretches a picture over the x/y extent of its rows and draws
+it under every other layer, e.g. an orthophoto under points and a track. Give
+the picture as `options$src` (a `data:` URL or a web URL) and map `x_var` /
+`y_var` to its corners. Pair it with `setEqualAspect()` so a meter is the
+same length on both axes.
+
+```{r image, eval = FALSE}
+corners <- data.frame(x = c(0, 20), y = c(0, 15))
+myIO() |>
+  addIoLayer(type = "image", label = "Orthophoto", data = corners,
+             mapping = list(x_var = "x", y_var = "y"),
+             options = list(src = "https://example.org/ortho.png")) |>
+  setEqualAspect()
+```
+
+### Point cloud
+
+`pointcloud` draws large point clouds with WebGL in their own panel: drag to
+orbit, shift-drag to pan, scroll or pinch to zoom, and switch between 3D and
+a top-down 2D plan. Map `x_var`, `y_var`, `z_var`, and optionally `red`,
+`green`, `blue` (0-255), `class` and `sigma`; chips in the view switch the
+coloring between RGB, class, height and sigma. The points are sent packed as
+binary, so hundreds of thousands draw smoothly. Options: `color`, `mode`
+(`"3d"` or `"plan"`), `pointSize`, `classColors`, `classNames`, `ortho`
+(`list(src, extent, z)`), `track` (list of `c(x, y, z)`), and `caption`
+(`list(shape, shapeNote, map, mapNote)`). `mydar_cloud_view()` fills them in
+for a myDAR walk.
+
+```{r pointcloud, eval = FALSE}
+cloud <- mydar_iphone_cloud()
+myIO(height = "560px") |>
+  addIoLayer(type = "pointcloud", label = "Cloud", data = cloud,
+             mapping = list(x_var = "x", y_var = "y", z_var = "z",
+                            red = "r", green = "g", blue = "b", class = "class"),
+             options = list(color = "rgb")) |>
+  setMargin(top = 0, bottom = 0, left = 0, right = 0)
+```
 
 ### Calendar Heatmap
 

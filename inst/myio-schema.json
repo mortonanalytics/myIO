@@ -1142,6 +1142,63 @@
         ],
         "domainMerge": "union"
       }
+    },
+    "image": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": [
+        "x_var",
+        "y_var"
+      ],
+      "numeric_fields": [
+        "x_var",
+        "y_var"
+      ],
+      "valid_transforms": [
+        "identity"
+      ],
+      "group": "axes-continuous",
+      "data_contract": {
+        "x_var": {
+          "required": true,
+          "numeric": true
+        },
+        "y_var": {
+          "required": true,
+          "numeric": true
+        }
+      },
+      "scale_hints": {
+        "xScaleType": "linear",
+        "yScaleType": "linear",
+        "xExtentFields": [
+          "x_var"
+        ],
+        "yExtentFields": [
+          "y_var"
+        ],
+        "domainMerge": "union"
+      }
+    },
+    "pointcloud": {
+      "kind": "primitive",
+      "renderer_type": true,
+      "required_mappings": [
+        "x_var",
+        "y_var",
+        "z_var"
+      ],
+      "numeric_fields": [
+        "x_var",
+        "y_var",
+        "z_var"
+      ],
+      "valid_transforms": [
+        "identity"
+      ],
+      "group": "standalone-pointcloud",
+      "data_contract": {},
+      "scale_hints": null
     }
   },
   "renderer_types": [
@@ -1161,10 +1218,12 @@
     "heatmap",
     "hexbin",
     "histogram",
+    "image",
     "line",
     "lollipop",
     "parallel",
     "point",
+    "pointcloud",
     "quantile_dots",
     "radar",
     "rangeBar",
@@ -1247,7 +1306,9 @@
     "calendarHeatmap": "standalone-calendar",
     "quantile_dots": "axes-categorical",
     "fan": "axes-continuous",
-    "raster": "axes-continuous"
+    "raster": "axes-continuous",
+    "image": "axes-continuous",
+    "pointcloud": "standalone-pointcloud"
   },
   "transform_input_contracts": {
     "ci": {
@@ -1385,8 +1446,18 @@
       "walk",
       "height"
     ],
+    "mydar_cloud_view": [
+      "walk",
+      "points",
+      "color",
+      "mode",
+      "point_size",
+      "ortho",
+      "height"
+    ],
     "mydar_dashboard": [
       "walk",
+      "points",
       "profile",
       "width"
     ],
@@ -1394,9 +1465,15 @@
       "walk",
       "height"
     ],
+    "mydar_iphone_cloud": [],
+    "mydar_orthophoto_view": [
+      "walk",
+      "height"
+    ],
     "mydar_plan_view": [
       "walk",
       "profile",
+      "points",
       "height"
     ],
     "mydar_profile": [
@@ -1473,6 +1550,10 @@
     "read_mydar_gpkg": [
       "path"
     ],
+    "read_mydar_orthophoto": [
+      "path",
+      "max_pixels"
+    ],
     "read_mydar_points": [
       "path",
       "max_points"
@@ -1530,6 +1611,10 @@
       "myIO",
       "colorScheme",
       "setCategories"
+    ],
+    "setEqualAspect": [
+      "myIO",
+      "enabled"
     ],
     "setExportOptions": [
       "myIO",
