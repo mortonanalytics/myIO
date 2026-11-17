@@ -3,8 +3,10 @@
 // Ortho) that toggle independently; points colored by photo color, class,
 // height or sigma; in 3D the orthophoto draped on the DEM and, when the walk
 // has one, a Points / Mesh switch; the track with its uncertainty band; a
-// profile line; the accuracy card; and in 2D a Select tool whose rectangle
-// is sent to linked charts (linkCharts) as the points' keys.
+// profile line; the accuracy card; in 2D a Select tool whose rectangle is
+// sent to linked charts (linkCharts) as the points' keys; and, when the walk
+// has a track, the app's "along the walk" slider (options.slider = false
+// hides it).
 //
 // The points arrive packed (see R/pointcloud.R, pointcloud_payload()):
 // positions as interleaved Uint16 x, y, z scaled to options.bbox, colors as
@@ -236,6 +238,47 @@ export function keysInRect(selectable, rect) {
   return out;
 }
 
+// ---- along the walk --------------------------------------------------------
+
+// Cumulative length of the track [[x, y, z], ...] at each vertex.
+export function trackLengths(track) {
+  const out = [0];
+  for (let i = 1; i < track.length; i++) {
+    const a = track[i - 1], b = track[i];
+    out.push(out[i - 1] + Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]));
+  }
+  return out;
+}
+
+// The track point at `fraction` (0-1) of its length, interpolated between
+// vertices by cumulative length, as the app's onTrack(); null for a track of
+// fewer than two points or no length.
+export function onTrack(track, lengths, fraction) {
+  const total = lengths[lengths.length - 1];
+  if (track.length < 2 || !(total > 0)) return null;
+  const target = Math.max(0, Math.min(1, fraction)) * total;
+  let i = lengths.findIndex((l) => l >= target);
+  i = Math.max(1, Math.min(track.length - 1, i < 0 ? track.length - 1 : i));
+  const span = lengths[i] - lengths[i - 1];
+  const u = span > 0 ? (target - lengths[i - 1]) / span : 0;
+  const a = track[i - 1], b = track[i];
+  return [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, a[2] + (b[2] - a[2]) * u];
+}
+
+// A 3D view focused on a point of the walk cuts away what lies nearer the
+// viewer than half the view's height (in world units, at the focus) in front
+// of the focus, as the app does. Returns that depth from the camera, in
+// meters; geometry with a smaller depth is not drawn.
+export function cutDepth(view, aspect) {
+  const halfH = view.dist * Math.tan(FOVY / 2) * Math.min(1, aspect > 0 ? aspect : 1);
+  return Math.max(0, view.dist - halfH);
+}
+
+// The shaders apply the same test to every point and fragment.
+export function isCutAway(depth, cut) {
+  return cut > 0 && depth < cut;
+}
+
 // ---- camera ---------------------------------------------------------------
 
 // A view whose camera looks at the cloud from an oblique angle (or straight
@@ -243,6 +286,7 @@ export function keysInRect(selectable, rect) {
 // of the given aspect (width / height). It fits `points` (a sample of the
 // cloud) when given, keeping 99.5% of them inside, else the eight corners of
 // `box`; then it pans so the fitted points sit in the middle.
+const FOVY = Math.PI / 4;
 const START_AZ = -0.6;
 const START_EL = 0.62;
 const FIT_MARGIN = 0.93;
@@ -312,8 +356,7 @@ export function viewMatrices(view, width, height) {
   }
   const ce = Math.cos(view.el);
   const eye = [view.target[0] - Math.sin(view.az) * ce * view.dist, view.target[1] - Math.cos(view.az) * ce * view.dist, view.target[2] + Math.sin(view.el) * view.dist];
-  const fovy = Math.PI / 4;
-  return { view: lookAt(eye, view.target, [0, 0, 1]), proj: perspective(fovy, aspect, view.dist / 200, view.dist * 20), eye, projScale: height / (2 * Math.tan(fovy / 2)) };
+  return { view: lookAt(eye, view.target, [0, 0, 1]), proj: perspective(FOVY, aspect, view.dist / 200, view.dist * 20), eye, projScale: height / (2 * Math.tan(FOVY / 2)) };
 }
 
 // Drag by (dx, dy) pixels: rotate in 3D (pan with `pan`), pan in plan.
@@ -372,7 +415,7 @@ uniform vec3 bboxMin, bboxSpan;
 uniform float showLidar, showCamera;
 uniform int mode;
 uniform vec2 zRange, sigmaRange;
-uniform float pointSize, worldSize, projScale, pixelsPerMeter, isPlan;
+uniform float pointSize, worldSize, projScale, pixelsPerMeter, isPlan, cutDepth;
 uniform sampler2D ramp, classTex;
 varying vec3 vColor;
 varying float vDepth;
@@ -386,8 +429,15 @@ void main() {
   }
   vec3 world = bboxMin + position * bboxSpan;
   vec4 eye = view * vec4(world, 1.0);
-  gl_Position = proj * eye;
   float depth = -eye.z;
+  if (depth < cutDepth) {
+    gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+    gl_PointSize = 0.0;
+    vColor = vec3(0.0);
+    vDepth = 0.0;
+    return;
+  }
+  gl_Position = proj * eye;
   vDepth = depth;
   float worldPx = isPlan > 0.5 ? worldSize * pixelsPerMeter : worldSize * projScale / max(depth, 0.01);
   gl_PointSize = clamp(max(pointSize, worldPx), 1.0, 24.0);
@@ -469,6 +519,8 @@ function createView(chart, layer, opts) {
     surface: opts.surface === "mesh" && opts.mesh ? "mesh" : "points",
     selecting: false,
     selection: null,
+    along: 0,
+    focus: null,
     view: null
   };
 
@@ -552,7 +604,7 @@ function createView(chart, layer, opts) {
         projScale: regl.prop("projScale"), pixelsPerMeter: regl.prop("pixelsPerMeter"), isPlan: regl.prop("isPlan"),
         ramp, classTex,
         fogNear: regl.prop("fogNear"), fogFar: regl.prop("fogFar"),
-        background: regl.prop("background")
+        background: regl.prop("background"), cutDepth: regl.prop("cutDepth")
       },
       count: cloud.n,
       primitive: "points",
@@ -572,11 +624,12 @@ function createView(chart, layer, opts) {
 
     // Flat colored triangles: the track's uncertainty band.
     const drawTriangles = regl({
-      vert: `precision highp float; attribute vec3 position; attribute vec3 color; uniform mat4 view, proj; varying vec3 vColor;
-        void main() { vColor = color; gl_Position = proj * view * vec4(position, 1.0); }`,
-      frag: `precision highp float; varying vec3 vColor; uniform float alpha; void main() { gl_FragColor = vec4(vColor, alpha); }`,
+      vert: `precision highp float; attribute vec3 position; attribute vec3 color; uniform mat4 view, proj; varying vec3 vColor; varying float vDepth;
+        void main() { vColor = color; vec4 eye = view * vec4(position, 1.0); vDepth = -eye.z; gl_Position = proj * eye; }`,
+      frag: `precision highp float; varying vec3 vColor; varying float vDepth; uniform float alpha, cutDepth;
+        void main() { if (vDepth < cutDepth) discard; gl_FragColor = vec4(vColor, alpha); }`,
       attributes: { position: regl.prop("position"), color: regl.prop("color") },
-      uniforms: { view: regl.prop("view"), proj: regl.prop("proj"), alpha: regl.prop("alpha") },
+      uniforms: { view: regl.prop("view"), proj: regl.prop("proj"), alpha: regl.prop("alpha"), cutDepth: regl.prop("cutDepth") },
       count: regl.prop("count"),
       blend: { enable: true, func: { src: "src alpha", dst: "one minus src alpha" } },
       depth: { enable: regl.prop("depth"), mask: false }
@@ -590,8 +643,8 @@ function createView(chart, layer, opts) {
         vert: `precision highp float; attribute vec3 position, normal; attribute vec3 color; uniform mat4 view, proj;
           varying vec3 vColor; varying vec3 vNormal; varying float vDepth;
           void main() { vColor = color; vNormal = normal; vec4 eye = view * vec4(position, 1.0); vDepth = -eye.z; gl_Position = proj * eye; }`,
-        frag: `precision highp float; varying vec3 vColor; varying vec3 vNormal; varying float vDepth; uniform vec3 light, background; uniform float fogNear, fogFar;
-          void main() { float l = 0.55 + 0.45 * abs(dot(normalize(vNormal), light));
+        frag: `precision highp float; varying vec3 vColor; varying vec3 vNormal; varying float vDepth; uniform vec3 light, background; uniform float fogNear, fogFar, cutDepth;
+          void main() { if (vDepth < cutDepth) discard; float l = 0.55 + 0.45 * abs(dot(normalize(vNormal), light));
             float fog = clamp((vDepth - fogNear) / max(fogFar - fogNear, 1e-3), 0.0, 1.0) * 0.45;
             gl_FragColor = vec4(mix(vColor * l, background, fog), 1.0); }`,
         attributes: {
@@ -600,7 +653,7 @@ function createView(chart, layer, opts) {
           color: { buffer: regl.buffer({ data: meshGeom.colors, type: "uint8" }), normalized: true }
         },
         uniforms: { view: regl.prop("view"), proj: regl.prop("proj"), light: norm([0.3, -0.4, 0.85]), background: regl.prop("background"),
-          fogNear: regl.prop("fogNear"), fogFar: regl.prop("fogFar") },
+          fogNear: regl.prop("fogNear"), fogFar: regl.prop("fogFar"), cutDepth: regl.prop("cutDepth") },
         count: meshGeom.count,
         cull: { enable: false },
         depth: { enable: true }
@@ -619,13 +672,13 @@ function createView(chart, layer, opts) {
         const textured = (count, attributes, depth) => regl({
           vert: `precision highp float; attribute vec3 position; attribute vec2 uv; uniform mat4 view, proj; varying vec2 vUv; varying float vDepth;
             void main() { vUv = uv; vec4 eye = view * vec4(position, 1.0); vDepth = -eye.z; gl_Position = proj * eye; }`,
-          frag: `precision highp float; varying vec2 vUv; varying float vDepth; uniform sampler2D tex; uniform vec3 background; uniform float fogNear, fogFar;
-            void main() { vec4 c = texture2D(tex, vUv); if (c.a < 0.05) discard;
+          frag: `precision highp float; varying vec2 vUv; varying float vDepth; uniform sampler2D tex; uniform vec3 background; uniform float fogNear, fogFar, cutDepth;
+            void main() { if (vDepth < cutDepth) discard; vec4 c = texture2D(tex, vUv); if (c.a < 0.05) discard;
               float fog = clamp((vDepth - fogNear) / max(fogFar - fogNear, 1e-3), 0.0, 1.0) * 0.45;
               gl_FragColor = vec4(mix(c.rgb, background, fog), 1.0); }`,
           attributes,
           uniforms: { view: regl.prop("view"), proj: regl.prop("proj"), tex: texture, background: regl.prop("background"),
-            fogNear: regl.prop("fogNear"), fogFar: regl.prop("fogFar") },
+            fogNear: regl.prop("fogNear"), fogFar: regl.prop("fogFar"), cutDepth: regl.prop("cutDepth") },
           count,
           depth
         });
@@ -646,6 +699,8 @@ function createView(chart, layer, opts) {
     }
 
     const track = Array.isArray(opts.track) && opts.track.length > 1 ? opts.track.map((p) => [+p[0], +p[1], +p[2]]) : null;
+    const lengths = track ? trackLengths(track) : null;
+    const walkLength = lengths ? lengths[lengths.length - 1] : 0;
     const band = Array.isArray(opts.trackBand) && opts.trackBand.length > 1
       ? buildRibbon(opts.trackBand.map((p) => p.map(Number)), Math.max(0.15, Math.min(1, span * 0.012)), groundAt)
       : null;
@@ -667,6 +722,7 @@ function createView(chart, layer, opts) {
       if (mode !== state.view.mode) {
         state.view = initialView(fitBox, mode, aspect(), cloud.fitPoints);
         moved = false;
+        state.focus = null;
         if (mode !== "plan") setSelecting(false);
       }
       syncControls(); requestDraw();
@@ -726,8 +782,51 @@ function createView(chart, layer, opts) {
     const colorSeg = bottom.append("div").attr("class", "myIO-pc-seg myIO-pc-seg-small").attr("role", "group").attr("aria-label", "Point color");
     const colorButtons = colorSeg.selectAll("button").data(colorModes).join("button").attr("type", "button").text((d) => d[1])
       .on("click", (event, d) => { state.color = d[0]; state.classes = false; syncControls(); requestDraw(); });
+    // Along the walk, as in the app: a distance fraction of the track. In 3D
+    // it turns the orbit about that point and cuts away what is in front of
+    // it; in 2D it centers the plan on the point and marks it.
+    const alongRow = walkLength > 0 ? bottom.append("div").attr("class", "myIO-pc-along") : null;
+    let alongInput = null, wholeWalk = null;
+    if (alongRow) {
+      alongRow.append("svg").attr("class", "myIO-pc-along-icon").attr("viewBox", "0 0 20 20").attr("aria-hidden", "true")
+        .call((svg) => {
+          svg.append("path").attr("d", "M4 5 C 10 5, 6 15, 16 15").attr("fill", "none").attr("stroke", "currentColor").attr("stroke-width", 1.8).attr("stroke-dasharray", "2.5 2");
+          svg.append("circle").attr("cx", 4).attr("cy", 5).attr("r", 2.4).attr("fill", "currentColor");
+          svg.append("circle").attr("cx", 16).attr("cy", 15).attr("r", 2.4).attr("fill", "currentColor");
+        });
+      alongInput = alongRow.append("input").attr("type", "range").attr("class", "myIO-pc-along-input")
+        .attr("min", 0).attr("max", 1).attr("step", 0.005).attr("value", 0)
+        .attr("aria-label", "Position along the walk")
+        .on("input", (event) => lookAlong(+event.target.value))
+        // The chart's keyboard navigation on the SVG would take the arrow keys.
+        .on("keydown", (event) => event.stopPropagation());
+      // Once the slider has focused the view on a point of the walk, Whole
+      // walk clears the focus and the zoom and shows the full scan again.
+      wholeWalk = alongRow.append("button").attr("type", "button").attr("class", "myIO-pc-chip myIO-pc-whole")
+        .attr("title", "Show the whole scan again").text("Whole walk")
+        .on("click", () => { state.focus = null; refit(); });
+    }
+    const focusMark = host.append("div").attr("class", "myIO-pc-focus").attr("aria-hidden", "true").style("display", "none");
     const scale = host.append("div").attr("class", "myIO-pc-scale");
     const rectBox = host.append("div").attr("class", "myIO-pc-rect").style("display", "none");
+
+    function lookAlong(fraction) {
+      state.along = fraction;
+      const at = onTrack(track, lengths, fraction);
+      if (!at) return;
+      state.focus = at;
+      state.view = Object.assign({}, state.view, { target: state.view.mode === "plan" ? [at[0], at[1], state.view.target[2]] : at.slice() });
+      moved = true;
+      syncControls();
+      requestDraw();
+    }
+
+    function refit() {
+      state.view = initialView(fitBox, state.view.mode, aspect(), cloud.fitPoints);
+      moved = false;
+      syncControls();
+      requestDraw();
+    }
 
     function syncControls() {
       const plan = state.view.mode === "plan";
@@ -740,6 +839,14 @@ function createView(chart, layer, opts) {
         selectButton.style("display", plan ? null : "none").classed("is-on", state.selecting).attr("aria-pressed", String(state.selecting));
       }
       chipButtons.classed("is-on", (d) => !!state[d[0]]).attr("aria-pressed", (d) => String(!!state[d[0]]));
+      const showAlong = !!alongRow && current.slider !== false;
+      if (!showAlong) state.focus = null;
+      if (alongRow) {
+        alongRow.style("display", showAlong ? null : "none");
+        alongInput.property("value", state.along)
+          .attr("aria-valuetext", Math.round(state.along * walkLength) + " of " + Math.round(walkLength) + " meters");
+        wholeWalk.style("display", state.focus ? null : "none");
+      }
       colorButtons.classed("is-on", (d) => !state.classes && d[0] === state.color).attr("aria-pressed", (d) => String(!state.classes && d[0] === state.color));
       hint.text(state.selecting ? "Drag a rectangle to pick points; Esc clears"
         : plan ? "Drag to pan · scroll or pinch to zoom" : "Drag to rotate · shift-drag to pan · scroll or pinch to zoom");
@@ -789,7 +896,9 @@ function createView(chart, layer, opts) {
       host.classed("is-3d", !plan);
       const m = viewMatrices(state.view, w, h);
       const dpr = canvas.width / Math.max(1, canvas.clientWidth || canvas.width);
-      const fog = { fogNear: plan ? 1e6 : state.view.dist * 0.6, fogFar: plan ? 2e6 : state.view.dist * 1.8, background: bg.slice(0, 3) };
+      const cut = !plan && state.focus ? cutDepth(state.view, w / h) : 0;
+      canvas.dataset.cut = cut > 0 ? "1" : "0";
+      const fog = { fogNear: plan ? 1e6 : state.view.dist * 0.6, fogFar: plan ? 2e6 : state.view.dist * 1.8, background: bg.slice(0, 3), cutDepth: cut };
       if (state.ortho) {
         if (plan && drawFlatOrtho) drawFlatOrtho(Object.assign({ view: m.view, proj: m.proj }, fog));
         if (!plan && drawDrape) drawDrape(Object.assign({ view: m.view, proj: m.proj }, fog));
@@ -805,7 +914,7 @@ function createView(chart, layer, opts) {
           projScale: m.projScale || 1, pixelsPerMeter: m.pixelsPerMeter || 1, isPlan: plan ? 1 : 0
         }, fog));
       }
-      if (band && band.count) drawTriangles({ view: m.view, proj: m.proj, position: band.positions, color: band.colors, count: band.count, alpha: 0.85, depth: !plan });
+      if (band && band.count) drawTriangles({ view: m.view, proj: m.proj, position: band.positions, color: band.colors, count: band.count, alpha: 0.85, depth: !plan, cutDepth: cut });
       // The phone's path runs at hand height. In 2D it is the line inside the
       // band, as in the app; in 3D, with the band on the ground, it would
       // float above it, so the band alone shows the track there.
@@ -823,6 +932,12 @@ function createView(chart, layer, opts) {
         scale.style("display", "none");
       }
       placeSelection();
+      if (plan && state.focus) {
+        const p = planPixel(state.focus[0], state.focus[1]);
+        focusMark.style("display", null).style("left", p[0] + "px").style("top", p[1] + "px");
+      } else {
+        focusMark.style("display", "none");
+      }
       canvas.dataset.frames = String((+canvas.dataset.frames || 0) + 1);
     }
 
@@ -924,7 +1039,7 @@ function createView(chart, layer, opts) {
         state.view = zoomView(state.view, Math.exp(event.deltaY * 0.0015));
         requestDraw();
       })
-      .on("dblclick", () => { state.view = initialView(fitBox, state.view.mode, aspect(), cloud.fitPoints); moved = false; requestDraw(); });
+      .on("dblclick", () => { state.focus = null; refit(); });
 
     api.resize = () => {
       const [w, h] = sizeRoot();

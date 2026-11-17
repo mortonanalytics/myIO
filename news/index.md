@@ -4,6 +4,16 @@
 
 ### New features
 
+- The `pointcloud` viewer
+  ([`mydar_cloud_view()`](https://mortonanalytics.github.io/myIO/reference/mydar_cloud_view.md))
+  has the myDAR app’s slider along the walk when the walk has a track.
+  In 3D it turns the view about that point of the walk and cuts away
+  what lies nearer than half the view’s height in front of it, so a wall
+  does not hide the room behind; Whole walk returns to the full scan. In
+  2D it centers the plan on the point and marks it.
+  `mydar_cloud_view(slider = FALSE)`, or `options$slider = FALSE` on a
+  `pointcloud` layer, hides it.
+
 - New `raster` chart type draws a regular grid of numeric cells (an
   elevation model, a density surface) as one image on continuous axes,
   so point and line layers can sit on top. Map `x_var`, `y_var` (cell

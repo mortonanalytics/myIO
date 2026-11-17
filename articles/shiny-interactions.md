@@ -17,15 +17,15 @@ Toggle navigation
 
 ![](logo.png) myIO
 
-- [ Home](#tab-1567-1)
-- [ Comparisons](#tab-1567-2)
-- [ Trends & Time](#tab-1567-3)
-- [ Distributions](#tab-1567-4)
-- [ Relationships & Models](#tab-1567-5)
-- [ Sports](#tab-1567-6)
-- [ myDAR walk](#tab-1567-7)
-- [ Interactivity](#tab-1567-8)
-- [ Theme & Export](#tab-1567-9)
+- [ Home](#tab-9642-1)
+- [ Comparisons](#tab-9642-2)
+- [ Trends & Time](#tab-9642-3)
+- [ Distributions](#tab-9642-4)
+- [ Relationships & Models](#tab-9642-5)
+- [ Sports](#tab-9642-6)
+- [ myDAR walk](#tab-9642-7)
+- [ Interactivity](#tab-9642-8)
+- [ Theme & Export](#tab-9642-9)
 
 ![](logo.png)
 
@@ -400,8 +400,8 @@ over the orthophoto, 3D the cloud with the orthophoto draped on the
 terrain and the phone's mesh. The orange band along the track darkens
 where map-position uncertainty rises.
 
-- [Map and profile](#tab-2234-1)
-- [Quality](#tab-2234-2)
+- [Map and profile](#tab-7933-1)
+- [Quality](#tab-7933-2)
 
 Map
 
