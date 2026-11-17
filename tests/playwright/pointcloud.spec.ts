@@ -201,3 +201,54 @@ test("3D is drawn on a dark background and 2D on the page theme's, with the phon
   const themed = await cornerColor(page);
   expect(Math.max(...themed)).toBeLessThan(60);
 });
+
+test("the slider along the walk focuses and cuts away in 3D, marks the point in 2D, and Whole walk resets", async ({ page }) => {
+  await page.goto(baseUrl + "/tests/playwright/fixtures/pointcloud.html");
+  await page.waitForFunction(() => (window as any).ready);
+  const canvas = page.locator("canvas.myIO-pointcloud-canvas");
+  await page.waitForFunction(() => +(document.querySelector("canvas.myIO-pointcloud-canvas") as HTMLCanvasElement).dataset.frames! >= 1);
+  const slider = page.getByRole("slider", { name: "Position along the walk" });
+  const whole = page.getByRole("button", { name: "Whole walk" });
+  await expect(slider).toBeVisible();
+  await expect(whole).toBeHidden();
+  await expect(canvas).toHaveAttribute("data-cut", "0");
+  const full = await picture(page);
+
+  // The fixture's track runs 6 m east and 20 m north from (2, 0): 20.9 m.
+  await slider.fill("0.5");
+  await expect(slider).toHaveAttribute("aria-valuetext", "10 of 21 meters");
+  await expect(canvas).toHaveAttribute("data-cut", "1");
+  await expect(whole).toBeVisible();
+  const target = await page.evaluate(() => (window as any).chart.runtime.pointcloud.getView().target);
+  expect(target[0]).toBeCloseTo(5, 1);
+  expect(target[1]).toBeCloseTo(10, 1);
+  await page.waitForFunction(() => (window as any).chart.runtime.pointcloud.getView().target[1] > 9);
+  const focused = await picture(page);
+  expect(focused.signature).not.toBe(full.signature);
+
+  // Keyboard: the arrow keys move along the walk.
+  await slider.focus();
+  await page.keyboard.press("ArrowRight");
+  expect(+(await slider.inputValue())).toBeGreaterThan(0.5);
+
+  await whole.click();
+  await expect(whole).toBeHidden();
+  await expect(canvas).toHaveAttribute("data-cut", "0");
+
+  // 2D: the plan centers on the point and marks it; no cut-away.
+  await press(page, "2D");
+  await slider.fill("0.25");
+  await expect(page.locator(".myIO-pc-focus")).toBeVisible();
+  await expect(canvas).toHaveAttribute("data-cut", "0");
+  const plan = await page.evaluate(() => (window as any).chart.runtime.pointcloud.getView().target);
+  expect(plan[1]).toBeCloseTo(5, 0);
+  await whole.click();
+  await expect(page.locator(".myIO-pc-focus")).toBeHidden();
+});
+
+test("slider = false hides the slider along the walk", async ({ page }) => {
+  await page.goto(baseUrl + "/tests/playwright/fixtures/pointcloud.html?slider=0");
+  await page.waitForFunction(() => (window as any).ready);
+  await page.waitForFunction(() => +(document.querySelector("canvas.myIO-pointcloud-canvas") as HTMLCanvasElement).dataset.frames! >= 1);
+  await expect(page.getByRole("slider", { name: "Position along the walk" })).toBeHidden();
+});

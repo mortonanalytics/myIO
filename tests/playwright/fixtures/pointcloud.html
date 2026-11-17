@@ -50,6 +50,7 @@ var layer = { id: 'pc', type: 'pointcloud', label: 'Point cloud', data: [], colo
     profile: [[0, 10], [10, 10]],
     selectable: { key: 'point_id', ids: ids, x: sx, y: sy } },
   transform: 'identity', transformMeta: {}, encoding: {}, sourceKey: '_source_key', derivedFrom: null, order: 1, visibility: true };
+if (/[?&]slider=0/.test(location.search)) layer.options.slider = false;
 var element = document.getElementById('cloud');
 window.chart = new myIOchart({ element: element, width: 900, height: 560, config: { specVersion: 2, layers: [layer],
   layout: { margin: { top: 0, bottom: 0, left: 0, right: 0 }, suppressLegend: true, suppressAxis: { xAxis: true, yAxis: true } },

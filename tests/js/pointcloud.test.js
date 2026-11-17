@@ -1,8 +1,8 @@
 import * as d3 from "d3";
 import { beforeEach, describe, expect, test } from "vitest";
 import {
-  BAND_DARK, BAND_LIFT, BAND_LIGHT, PointCloudRenderer, buildDrape, buildMesh, buildRibbon, clipProfile, decodeCloud, decodeTerrain,
-  dragView, initialView, keysInRect, lookAt, perspective, sigmaFromByte, viewMatrices, zoomView
+  BAND_DARK, BAND_LIFT, BAND_LIGHT, PointCloudRenderer, buildDrape, buildMesh, buildRibbon, clipProfile, cutDepth, decodeCloud, decodeTerrain,
+  dragView, initialView, isCutAway, keysInRect, lookAt, onTrack, perspective, sigmaFromByte, trackLengths, viewMatrices, zoomView
 } from "../../inst/htmlwidgets/myIO/src/renderers/PointCloudRenderer.js";
 import { getRenderer, registerBuiltInRenderers } from "../../inst/htmlwidgets/myIO/src/registry.js";
 import { validateComposition } from "../../inst/htmlwidgets/myIO/src/derive/validate.js";
@@ -232,5 +232,39 @@ describe("pointcloud", function() {
     expect(boxed[boxed.length - 1][0]).toBeCloseTo(10, 1);
     expect(boxed[0][2]).toBe(0.5);
     expect(clipProfile([[50, 50], [60, 60]], ground, [0, 10, -1, 1, 0, 3], 0)).toBeNull();
+  });
+
+  test("the along-the-walk slider finds the track point by distance, not by vertex", function() {
+    // 3 m east, then 1 m north: 4 m in all, the middle vertex at 75%.
+    const track = [[0, 0, 1], [3, 0, 1], [3, 1, 1]];
+    const lengths = trackLengths(track);
+    expect(lengths).toEqual([0, 3, 4]);
+    expect(onTrack(track, lengths, 0)).toEqual([0, 0, 1]);
+    expect(onTrack(track, lengths, 0.5)).toEqual([2, 0, 1]);
+    expect(onTrack(track, lengths, 0.75)).toEqual([3, 0, 1]);
+    expect(onTrack(track, lengths, 0.875)).toEqual([3, 0.5, 1]);
+    expect(onTrack(track, lengths, 1)).toEqual([3, 1, 1]);
+    // A repeated vertex (zero-length span) does not divide by zero.
+    const still = [[0, 0, 0], [0, 0, 0], [2, 0, 0]];
+    expect(onTrack(still, trackLengths(still), 0.5)).toEqual([1, 0, 0]);
+    // No length, or one point: no position.
+    expect(onTrack([[1, 1, 1], [1, 1, 1]], [0, 0], 0.5)).toBeNull();
+    expect(onTrack([[1, 1, 1]], [0], 0.5)).toBeNull();
+  });
+
+  test("a focused 3D view cuts away what is nearer than half the view's height in front of the focus", function() {
+    const view = { mode: "3d", target: [0, 0, 0], dist: 10, az: 0, el: 0.5 };
+    const halfH = 10 * Math.tan(Math.PI / 8);
+    expect(cutDepth(view, 1.5)).toBeCloseTo(10 - halfH);
+    // A tall canvas uses its width, as the app uses the smaller side.
+    expect(cutDepth(view, 0.5)).toBeCloseTo(10 - halfH * 0.5);
+    const cut = cutDepth(view, 1.5);
+    expect(isCutAway(cut - 0.01, cut)).toBe(true);
+    expect(isCutAway(cut + 0.01, cut)).toBe(false);
+    // The focus itself and what lies behind it stay.
+    expect(isCutAway(10, cut)).toBe(false);
+    expect(isCutAway(20, cut)).toBe(false);
+    // Unfocused (cut 0): nothing is cut.
+    expect(isCutAway(0.001, 0)).toBe(false);
   });
 });

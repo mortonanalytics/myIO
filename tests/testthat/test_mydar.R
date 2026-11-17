@@ -379,6 +379,13 @@ test_that("mydar_cloud_view packs the cloud with the orthophoto, track and accur
   expect_error(mydar_cloud_view(walk, color = "rainbow"))
 })
 
+test_that("mydar_cloud_view shows the slider along the walk unless slider = FALSE", {
+  walk <- mydar_iphone_walk
+  expect_true(mydar_cloud_view(walk)$x$config$layers[[1]]$options$slider)
+  expect_false(mydar_cloud_view(walk, slider = FALSE)$x$config$layers[[1]]$options$slider)
+  expect_error(mydar_cloud_view(walk, slider = NA), "slider")
+})
+
 test_that("views refuse a walk without the part they plot", {
   walk <- mydar_iphone_walk
   walk$points <- NULL
