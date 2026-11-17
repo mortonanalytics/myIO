@@ -288,6 +288,11 @@ mydar_gps_view <- function(walk, height = "320px") {
 #'     class) and Ortho; and a Photo / Height / Sigma choice of point color.
 #'   \item in 3D, a Points / Mesh switch when the walk has a mesh, drawn in
 #'     its vertex colors.
+#'   \item when the walk has a track, the app's slider along the walk. In 3D
+#'     it turns the view about that point of the walk and cuts away what lies
+#'     in front of it, so a wall does not hide the room behind; Whole walk
+#'     goes back to the full scan. In 2D it centers the plan on the point and
+#'     marks it.
 #'   \item the track with its uncertainty band, light to dark orange as the
 #'     map-position uncertainty rises; the profile line; and the accuracy
 #'     card (Shape and Map, never merged).
@@ -318,6 +323,10 @@ mydar_gps_view <- function(walk, height = "320px") {
 #' @param selectable If \code{TRUE} (default), the 2D Select tool picks from
 #'   \code{walk$points} and sends their \code{point_id}s to linked charts.
 #' @param surface Starting 3D surface, \code{"points"} or \code{"mesh"}.
+#' @param slider If \code{TRUE} (default), show the slider along the walk
+#'   when the walk has a track of two or more points; \code{FALSE} hides it.
+#'   For a \code{"pointcloud"} layer built with \code{\link{addIoLayer}}, the
+#'   same switch is \code{options = list(slider = FALSE)}.
 #' @param height Widget height, a CSS size.
 #' @return A \code{myIO} widget.
 #' @examples
@@ -328,7 +337,8 @@ mydar_gps_view <- function(walk, height = "320px") {
 #' @export
 mydar_cloud_view <- function(walk, points = NULL, color = c("rgb", "class", "height", "sigma"),
                              mode = c("3d", "plan"), point_size = 2, ortho = TRUE, profile = NULL,
-                             selectable = TRUE, surface = c("points", "mesh"), height = "560px") {
+                             selectable = TRUE, surface = c("points", "mesh"), slider = TRUE,
+                             height = "560px") {
   if (!inherits(walk, "mydar_walk")) {
     stop("mydar_cloud_view(): `walk` must be a mydar_walk from read_mydar_walk().", call. = FALSE)
   }
@@ -341,6 +351,7 @@ mydar_cloud_view <- function(walk, points = NULL, color = c("rgb", "class", "hei
   surface <- match.arg(surface)
   check_flag(ortho, "ortho", "mydar_cloud_view")
   check_flag(selectable, "selectable", "mydar_cloud_view")
+  check_flag(slider, "slider", "mydar_cloud_view")
   if (!is.numeric(point_size) || length(point_size) != 1L || !is.finite(point_size) || point_size <= 0) {
     stop("mydar_cloud_view(): `point_size` must be a single positive number.", call. = FALSE)
   }
@@ -355,6 +366,7 @@ mydar_cloud_view <- function(walk, points = NULL, color = c("rgb", "class", "hei
   present <- MYDAR_CLASSES[MYDAR_CLASSES$class %in% unique(pts$class), , drop = FALSE]
   options <- list(
     color = color, mode = if (mode == "plan") "plan" else "3d", pointSize = point_size, surface = surface,
+    slider = slider,
     classColors = as.list(stats::setNames(present$color, present$class)),
     classNames = as.list(stats::setNames(present$class_name, present$class)),
     caption = mydar_caption(walk)

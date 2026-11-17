@@ -14,6 +14,7 @@ mydar_cloud_view(
   profile = NULL,
   selectable = TRUE,
   surface = c("points", "mesh"),
+  slider = TRUE,
   height = "560px"
 )
 }
@@ -46,6 +47,11 @@ profile line to draw.}
 
 \item{surface}{Starting 3D surface, \code{"points"} or \code{"mesh"}.}
 
+\item{slider}{If \code{TRUE} (default), show the slider along the walk
+when the walk has a track of two or more points; \code{FALSE} hides it.
+For a \code{"pointcloud"} layer built with \code{\link{addIoLayer}}, the
+same switch is \code{options = list(slider = FALSE)}.}
+
 \item{height}{Widget height, a CSS size.}
 }
 \value{
@@ -63,6 +69,11 @@ imagery and points together, laid out like the myDAR app's Results map:
     class) and Ortho; and a Photo / Height / Sigma choice of point color.
   \item in 3D, a Points / Mesh switch when the walk has a mesh, drawn in
     its vertex colors.
+  \item when the walk has a track, the app's slider along the walk. In 3D
+    it turns the view about that point of the walk and cuts away what lies
+    in front of it, so a wall does not hide the room behind; Whole walk
+    goes back to the full scan. In 2D it centers the plan on the point and
+    marks it.
   \item the track with its uncertainty band, light to dark orange as the
     map-position uncertainty rises; the profile line; and the accuracy
     card (Shape and Map, never merged).
