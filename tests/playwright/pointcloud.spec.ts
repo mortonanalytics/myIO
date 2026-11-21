@@ -137,6 +137,16 @@ test("one canvas switches between 3D and the 2D plan, and drapes the orthophoto 
   await expect(page.locator(".myIO-pc-scale")).toBeHidden();
 });
 
+test("the 2D scale bar stays readable on a dark chart background", async ({ page }) => {
+  await page.goto(baseUrl + "/tests/playwright/fixtures/pointcloud.html?bg=%231a1a2e");
+  await page.waitForFunction(() => (window as any).ready);
+  await press(page, "2D");
+  const scale = page.locator(".myIO-pc-scale");
+  await expect(scale).toBeVisible();
+  const ink = await scale.evaluate((el) => { const s = getComputedStyle(el); return [s.color, s.borderLeftColor, s.borderBottomColor]; });
+  expect(ink).toEqual(["rgb(243, 244, 246)", "rgb(243, 244, 246)", "rgb(243, 244, 246)"]);
+});
+
 test("the 2D Select tool sends the keys inside its rectangle", async ({ page }) => {
   await page.goto(baseUrl + "/tests/playwright/fixtures/pointcloud.html");
   await page.waitForFunction(() => (window as any).ready);
