@@ -2,7 +2,7 @@ import * as d3 from "d3";
 import { beforeEach, describe, expect, test } from "vitest";
 import {
   BAND_DARK, BAND_LIFT, BAND_LIGHT, PointCloudRenderer, buildDrape, buildMesh, buildRibbon, clipProfile, cutDepth, decodeCloud, decodeTerrain,
-  dragView, initialView, isCutAway, keysInRect, lookAt, onTrack, perspective, sigmaFromByte, trackLengths, viewMatrices, zoomView
+  dragView, initialView, isCutAway, keysInRect, lookAt, onTrack, perspective, scaleInk, sigmaFromByte, trackLengths, viewMatrices, zoomView
 } from "../../inst/htmlwidgets/myIO/src/renderers/PointCloudRenderer.js";
 import { getRenderer, registerBuiltInRenderers } from "../../inst/htmlwidgets/myIO/src/registry.js";
 import { validateComposition } from "../../inst/htmlwidgets/myIO/src/derive/validate.js";
@@ -32,6 +32,13 @@ function apply(m, p) {
 }
 
 describe("pointcloud", function() {
+  test("the 2D scale bar takes the ink that contrasts with the plan background", function() {
+    expect(scaleInk([0.969, 0.973, 0.98, 1])).toBe("#1d2430");
+    expect(scaleInk([1, 1, 1, 1])).toBe("#1d2430");
+    expect(scaleInk([26 / 255, 26 / 255, 46 / 255, 1])).toBe("#f3f4f6");
+    expect(scaleInk([0, 0, 0, 1])).toBe("#f3f4f6");
+  });
+
   beforeEach(function() {
     document.body.innerHTML = "";
   });
