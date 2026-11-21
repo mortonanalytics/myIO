@@ -31,6 +31,22 @@ function themeBackground(node) {
   const c = value ? d3.rgb(value) : null;
   return c && Number.isFinite(c.r) ? [c.r / 255, c.g / 255, c.b / 255, 1] : BACKGROUND;
 }
+
+// The 2D scale bar's ink: whichever of dark or light has the higher WCAG
+// contrast against the plan background, which follows --chart-bg.
+const SCALE_INK_DARK = "#1d2430", SCALE_INK_LIGHT = "#f3f4f6";
+function luminance(rgb) {
+  const f = (v) => (v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+  return 0.2126 * f(rgb[0]) + 0.7152 * f(rgb[1]) + 0.0722 * f(rgb[2]);
+}
+function hexLuminance(hex) {
+  const c = d3.rgb(hex);
+  return luminance([c.r / 255, c.g / 255, c.b / 255]);
+}
+export function scaleInk(bg) {
+  const l = luminance(bg) + 0.05;
+  return l / (hexLuminance(SCALE_INK_DARK) + 0.05) >= (hexLuminance(SCALE_INK_LIGHT) + 0.05) / l ? SCALE_INK_DARK : SCALE_INK_LIGHT;
+}
 // Points are drawn at least this wide in meters, so surfaces close up.
 const POINT_WORLD_SIZE = 0.025;
 
@@ -927,7 +943,7 @@ function createView(chart, layer, opts) {
         const target = 90 / ppm;
         const pow = Math.pow(10, Math.floor(Math.log10(target)));
         const nice = [1, 2, 5, 10].map((k) => k * pow).filter((v) => v <= target).pop() || pow;
-        scale.style("display", null).style("width", Math.round(nice * ppm) + "px").text(nice >= 1 ? nice + " m" : Math.round(nice * 100) + " cm");
+        scale.style("display", null).style("color", scaleInk(bg)).style("width", Math.round(nice * ppm) + "px").text(nice >= 1 ? nice + " m" : Math.round(nice * 100) + " cm");
       } else {
         scale.style("display", "none");
       }
