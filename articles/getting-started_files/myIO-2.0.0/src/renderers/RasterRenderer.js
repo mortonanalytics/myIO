@@ -157,20 +157,37 @@ export class RasterRenderer {
     image.lower();
 
     var format = d3.format(",.2f");
+    function showCell(event) {
+      // A touch event has no client coordinates of its own; use the finger's.
+      var at = event.touches && event.touches.length ? event.touches[0] : event;
+      var cell = cellAt(chart, grid, d3.pointer(at, chart.chart.node()));
+      if (!cell) {
+        hideChartTooltip(chart);
+        return;
+      }
+      if (typeof HTMLWidgets !== "undefined" && HTMLWidgets.shinyMode) {
+        Shiny.onInputChange("myIO-" + chart.element.id + "-rollover", JSON.stringify(cell));
+      }
+      showChartTooltip(chart, {
+        pointer: d3.pointer(at, chart.dom.element),
+        title: { text: layer.mapping.x_var + ": " + format(cell.x) + ", " + layer.mapping.y_var + ": " + format(cell.y) },
+        items: [{ color: chart.colorContinuous(cell.value), label: layer.mapping.value, value: format(cell.value) }]
+      });
+    }
     image
-      .on("mousemove", function(event) {
-        var cell = cellAt(chart, grid, d3.pointer(event, chart.chart.node()));
-        if (!cell) {
-          hideChartTooltip(chart);
-          return;
-        }
-        showChartTooltip(chart, {
-          pointer: d3.pointer(event, chart.dom.element),
-          title: { text: layer.mapping.x_var + ": " + format(cell.x) + ", " + layer.mapping.y_var + ": " + format(cell.y) },
-          items: [{ color: chart.colorContinuous(cell.value), label: layer.mapping.value, value: format(cell.value) }]
-        });
+      .on("mousemove", showCell)
+      .on("touchstart", function(event) {
+        event.preventDefault();
+        showCell(event);
+      })
+      .on("touchmove", function(event) {
+        event.preventDefault();
+        showCell(event);
       })
       .on("mouseout", function() {
+        hideChartTooltip(chart);
+      })
+      .on("touchend", function() {
         hideChartTooltip(chart);
       });
   }
