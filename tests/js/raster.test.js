@@ -6,6 +6,15 @@ import { validateComposition } from "../../inst/htmlwidgets/myIO/src/derive/vali
 
 globalThis.d3 = d3;
 
+var tooltip = vi.hoisted(function() { return { show: vi.fn(), hide: vi.fn() }; });
+vi.mock("../../inst/htmlwidgets/myIO/src/tooltip.js", async function(importOriginal) {
+  var actual = await importOriginal();
+  return Object.assign({}, actual, {
+    showChartTooltip: function() { tooltip.show.apply(null, arguments); return actual.showChartTooltip.apply(null, arguments); },
+    hideChartTooltip: function() { tooltip.hide.apply(null, arguments); return actual.hideChartTooltip.apply(null, arguments); }
+  });
+});
+
 // 3 x 2 grid of 0.1 m cells; the cell at (0.2, 0.0) is missing.
 var rows = [
   { x: 0.0, y: 0.1, z: 1, s: 1 }, { x: 0.1, y: 0.1, z: 2, s: 1 }, { x: 0.2, y: 0.1, z: 3, s: 0 },
@@ -97,5 +106,70 @@ describe("RasterRenderer", function() {
     expect(hit.x).toBeCloseTo(0.1);
     expect(cellAt(chart, grid, [chart.xScale(0.2), chart.yScale(0.0)])).toBeNull();
     expect(cellAt(chart, grid, [chart.xScale(0.5), chart.yScale(0.0)])).toBeNull();
+  });
+
+  describe("hover", function() {
+    function pointerAt(x, y) {
+      // mountChart's svg sits at the page origin, so client and chart-area pixels agree.
+      return { clientX: x, clientY: y };
+    }
+    function touch(type, at) {
+      var event = new Event(type, { bubbles: true, cancelable: true });
+      Object.defineProperty(event, "touches", { value: at ? [at] : [] });
+      return event;
+    }
+    var chart, image;
+    beforeEach(function() {
+      tooltip.show.mockClear();
+      tooltip.hide.mockClear();
+      globalThis.HTMLWidgets = { shinyMode: true };
+      globalThis.Shiny = { onInputChange: vi.fn() };
+      chart = mountChart();
+      new RasterRenderer().render(chart, { label: "dem", data: rows, mapping: mapping, options: {} });
+      image = chart.element.querySelector("image");
+    });
+    afterEach(function() {
+      delete globalThis.HTMLWidgets;
+      delete globalThis.Shiny;
+    });
+
+    test("sends the hovered cell to Shiny as myIO-{id}-rollover, and nothing over a gap", function() {
+      image.dispatchEvent(new MouseEvent("mousemove", Object.assign({ bubbles: true }, pointerAt(chart.xScale(0.11), chart.yScale(0.02)))));
+      var calls = globalThis.Shiny.onInputChange.mock.calls;
+      expect(calls.length).toBe(1);
+      expect(calls[0][0]).toBe("myIO-" + chart.element.id + "-rollover");
+      var cell = JSON.parse(calls[0][1]);
+      expect(cell.value).toBe(5);
+      expect(cell.x).toBeCloseTo(0.1);
+      expect(cell.y).toBeCloseTo(0.0);
+
+      image.dispatchEvent(new MouseEvent("mousemove", Object.assign({ bubbles: true }, pointerAt(chart.xScale(0.2), chart.yScale(0.0)))));
+      expect(calls.length).toBe(1);
+    });
+
+    test("does not touch Shiny outside shinyMode", function() {
+      globalThis.HTMLWidgets.shinyMode = false;
+      image.dispatchEvent(new MouseEvent("mousemove", Object.assign({ bubbles: true }, pointerAt(chart.xScale(0.11), chart.yScale(0.02)))));
+      expect(globalThis.Shiny.onInputChange).not.toHaveBeenCalled();
+      expect(tooltip.show).toHaveBeenCalledTimes(1);
+    });
+
+    test("touch shows the cell under the finger, sends it to Shiny, and hides on touchend", function() {
+      var start = touch("touchstart", pointerAt(chart.xScale(0.01), chart.yScale(0.11)));
+      image.dispatchEvent(start);
+      expect(start.defaultPrevented).toBe(true);
+      expect(tooltip.show).toHaveBeenCalledTimes(1);
+      expect(tooltip.show.mock.calls[0][1].items[0].value).toBe("1.00");
+      expect(JSON.parse(globalThis.Shiny.onInputChange.mock.calls[0][1]).value).toBe(1);
+
+      var move = touch("touchmove", pointerAt(chart.xScale(0.11), chart.yScale(0.02)));
+      image.dispatchEvent(move);
+      expect(move.defaultPrevented).toBe(true);
+      expect(tooltip.show.mock.calls[1][1].items[0].value).toBe("5.00");
+
+      tooltip.hide.mockClear();
+      image.dispatchEvent(touch("touchend"));
+      expect(tooltip.hide).toHaveBeenCalledTimes(1);
+    });
   });
 });
