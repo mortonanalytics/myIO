@@ -52,12 +52,14 @@ var layer = { id: 'pc', type: 'pointcloud', label: 'Point cloud', data: [], colo
   transform: 'identity', transformMeta: {}, encoding: {}, sourceKey: '_source_key', derivedFrom: null, order: 1, visibility: true };
 if (/[?&]slider=0/.test(location.search)) layer.options.slider = false;
 var element = document.getElementById('cloud');
+var bgParam = /[?&]bg=([^&]+)/.exec(location.search);
+var theme = bgParam ? { values: { '--chart-bg': decodeURIComponent(bgParam[1]) } } : {};
 window.chart = new myIOchart({ element: element, width: 900, height: 560, config: { specVersion: 2, layers: [layer],
   layout: { margin: { top: 0, bottom: 0, left: 0, right: 0 }, suppressLegend: true, suppressAxis: { xAxis: true, yAxis: true } },
   scales: { xlim: { min: null, max: null }, ylim: { min: null, max: null }, categoricalScale: { xAxis: false, yAxis: false }, flipAxis: false, colorScheme: { enabled: false, colors: [], domain: [] } },
   axes: { xAxisFormat: 's', yAxisFormat: 's', toolTipFormat: 's' },
   interactions: { dragPoints: false, toggleY: { variable: null, format: null }, toolTipOptions: { suppressY: false } },
-  theme: {}, transitions: { speed: 0 }, referenceLines: { x: null, y: null } } });
+  theme: theme, transitions: { speed: 0 }, referenceLines: { x: null, y: null } } });
 window.chart.on('brushed', function(e) { window.__brushed = e; });
 window.ready = true;
 </script></body></html>
